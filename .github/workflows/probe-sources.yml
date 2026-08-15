@@ -1,0 +1,18 @@
+name: quellen pruefen
+# Einmaliger Prueflauf fuer PulseHawk. Postet nichts, schreibt nichts ins Repo.
+# Er druckt nur, welche kostenlosen Quellen fuer Gold, Aktien, Krypto und
+# Waehrung aus einer GitHub Action heraus antworten. Danach wissen wir, worauf
+# FOLLOW THE MONEY gebaut werden kann, statt es zu vermuten.
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: quellen abfragen
+        run: python3 scripts/probe_sources.py
