@@ -1,37 +1,41 @@
 #!/usr/bin/env python3
 """
-pulsehawk - quellenpruefer, runde 2
+pulsehawk - quellenpruefer, runde 3
 
-Beantwortet genau eine frage: welche kostenlosen, schluessellosen datenquellen
-fuer gold, aktien, krypto und waehrung antworten aus einer github action heraus?
+Beantwortet genau eine frage: worauf koennen wir FOLLOW THE MONEY bauen?
 
-Er postet nichts, schreibt nichts ins repo. Er druckt nur.
+Er postet nichts, schreibt nichts ins repo, und er druckt den schluessel
+niemals. Er sagt nur, ob einer gesetzt ist.
 
-Stand nach runde 1 (15.08.2026, lauf im pulsehawk-site repo):
+Stand nach zwei runden (15.08.2026, laeufe im pulsehawk-site repo):
   laeuft   coingecko (btc, dominanz, marktkapitalisierung, pax-gold)
   laeuft   frankfurter (eurusd)
-  gesperrt stooq, antwortet mit einer html-seite samt robots-meta
-  gesperrt yahoo, HTTP 429 auf github-runner-adressen
-  offen    aktien, dafuer gab es nach runde 1 gar keine quelle
+  gesperrt stooq, html statt csv und HTTP 404 auf den leichtabruf
+  gesperrt yahoo, HTTP 429 auf beiden hosts
+  gesperrt fred, sechs von sechs reihen laufen in den timeout
+  ergebnis fuer aktien gibt es keinen schluessellosen weg
 
-Runde 2 prueft vor allem FRED, die zeitreihen-datenbank der federal reserve
-st. louis. Sie liefert csv ohne schluessel und ist als behoerdenquelle auch
-zitierfaehiger als ein finanzportal.
+Runde 3 prueft deshalb twelve data mit dem hinterlegten schluessel. Getestet
+wird bewusst ETFs statt indizes. Ein index ist eine rechengroesse, ein ETF ist
+ein topf mit echtem geld darin, und "wo sitzt das geld" ist die frage des
+formats.
 
-    python3 scripts/probe_sources.py
+    TWELVEDATA_API_KEY=... python3 scripts/probe_sources.py
 """
 
 import json
+import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 TIMEOUT = 25
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
-
-FRED = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=%s"
+TD_KEY = os.environ.get("TWELVEDATA_API_KEY", "").strip()
+TD = "https://api.twelvedata.com"
 
 
 def get(url, accept="*/*"):
@@ -42,52 +46,49 @@ def get(url, accept="*/*"):
     return r.status, body, (time.time() - t0) * 1000
 
 
-def _num(s):
-    try:
-        return float(s)
-    except (TypeError, ValueError):
-        return None
+def _hide(text):
+    """sicherheitsnetz. falls der schluessel je in eine meldung geraet."""
+    return text.replace(TD_KEY, "***") if TD_KEY else text
 
 
-def probe_csv(url):
-    """
-    Toleranter csv-test. Egal wie die spalten heissen, gesucht wird die letzte
-    zeile, deren zweites feld eine zahl ist. FRED schreibt an feiertagen einen
-    punkt statt eines wertes, solche zeilen werden uebersprungen.
-    """
-    st, body, ms = get(url, "text/csv,*/*")
-    text = body.decode("utf-8", "replace").strip()
-    if text[:1] == "<":
-        return False, "html statt csv, %r" % text[:56], ms
-    lines = [l for l in text.splitlines() if l.strip()]
-    if len(lines) < 2:
-        return False, "nur %d zeile(n), %r" % (len(lines), text[:56]), ms
-    letzte = None
-    for line in reversed(lines[1:]):
-        teile = [t.strip().strip('"') for t in line.split(",")]
-        if len(teile) >= 2 and _num(teile[1]) is not None:
-            letzte = (teile[0], _num(teile[1]))
-            break
-    if letzte is None:
-        return False, "keine zeile mit zahl, kopf %r" % lines[0][:50], ms
-    return True, "%d zeilen, zuletzt %s = %s" % (len(lines) - 1, letzte[0], letzte[1]), ms
+# ---------------------------------------------------------------- twelvedata
 
-
-def probe_yahoo(url):
+def td_quote(symbol):
+    """letzter kurs plus tagesveraenderung. ein credit."""
+    if not TD_KEY:
+        return False, "kein schluessel gesetzt", 0.0
+    url = "%s/quote?symbol=%s&apikey=%s" % (TD, urllib.parse.quote(symbol), TD_KEY)
     st, body, ms = get(url, "application/json")
     d = json.loads(body.decode("utf-8", "replace"))
-    res = (d.get("chart") or {}).get("result") or []
-    if not res:
-        return False, "keine result-liste", ms
-    r0 = res[0]
-    ts = r0.get("timestamp") or []
-    close = ((r0.get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
-    vals = [c for c in close if c is not None]
-    if not ts or not vals:
-        return False, "leere zeitreihe", ms
-    return True, "%d punkte, zuletzt %s = %.2f" % (
-        len(vals), time.strftime("%Y-%m-%d", time.gmtime(ts[-1])), vals[-1]), ms
+    if str(d.get("status", "")).lower() == "error":
+        return False, _hide(str(d.get("message", ""))[:74]), ms
+    close = d.get("close") or d.get("price")
+    if close is None:
+        return False, _hide(str(d)[:74]), ms
+    chg = d.get("percent_change")
+    return True, "%s = %s%s" % (d.get("symbol", symbol), close,
+                                ("  tag %s%%" % chg) if chg else ""), ms
 
+
+def td_series(symbol, points=90):
+    """zeitreihe, das braucht die grafik wirklich. prueft laenge und rand."""
+    if not TD_KEY:
+        return False, "kein schluessel gesetzt", 0.0
+    url = ("%s/time_series?symbol=%s&interval=1day&outputsize=%d&apikey=%s"
+           % (TD, urllib.parse.quote(symbol), points, TD_KEY))
+    st, body, ms = get(url, "application/json")
+    d = json.loads(body.decode("utf-8", "replace"))
+    if str(d.get("status", "")).lower() == "error":
+        return False, _hide(str(d.get("message", ""))[:74]), ms
+    vals = d.get("values") or []
+    if len(vals) < 2:
+        return False, "nur %d punkte" % len(vals), ms
+    neu, alt = vals[0], vals[-1]
+    return True, "%d punkte, %s bis %s, zuletzt %s" % (
+        len(vals), alt.get("datetime"), neu.get("datetime"), neu.get("close")), ms
+
+
+# ---------------------------------------------------------------- keyless
 
 def probe_json(url, pick, label):
     st, body, ms = get(url, "application/json")
@@ -99,33 +100,20 @@ def probe_json(url, pick, label):
 
 
 SOURCES = [
-    # --- aktien, die offene luecke aus runde 1 -----------------------------
-    ("aktien fred SP500",
-     lambda: probe_csv(FRED % "SP500")),
-    ("aktien fred NASDAQ100",
-     lambda: probe_csv(FRED % "NASDAQ100")),
-    ("aktien fred DJIA",
-     lambda: probe_csv(FRED % "DJIA")),
-    ("aktien fred WILL5000IND",
-     lambda: probe_csv(FRED % "WILL5000IND")),
-    ("aktien stooq leichtabruf",
-     lambda: probe_csv("https://stooq.com/q/l/?s=%5Espx&f=sd2t2ohlcv&h&e=csv")),
-    ("aktien stooq.pl leichtabruf",
-     lambda: probe_csv("https://stooq.pl/q/l/?s=%5Espx&f=sd2t2ohlcv&h&e=csv")),
-    ("aktien yahoo query2",
-     lambda: probe_yahoo("https://query2.finance.yahoo.com/v8/finance/chart/%5EGSPC"
-                         "?range=6mo&interval=1d")),
-    # --- gold, zweite quelle zum gegenpruefen von pax-gold -----------------
-    ("gold   fred goldpm",
-     lambda: probe_csv(FRED % "GOLDPMGBD228NLBM")),
+    # --- die luecke, aktien --------------------------------------------
+    ("aktien td SPY reihe",      lambda: td_series("SPY")),
+    ("aktien td SPY kurs",       lambda: td_quote("SPY")),
+    ("aktien td QQQ kurs",       lambda: td_quote("QQQ")),
+    ("aktien td SPX index",      lambda: td_quote("SPX")),
+    # --- gold, zweite quelle neben pax-gold ------------------------------
+    ("gold   td GLD reihe",      lambda: td_series("GLD")),
+    ("gold   td XAU/USD kurs",   lambda: td_quote("XAU/USD")),
     ("gold   coingecko pax-gold",
      lambda: probe_json("https://api.coingecko.com/api/v3/simple/price"
                         "?ids=pax-gold&vs_currencies=usd",
                         lambda d: (d.get("pax-gold") or {}).get("usd"), "paxg usd")),
-    # --- risikoappetit, kandidat fuer spaeter ------------------------------
-    ("extra  fred VIXCLS",
-     lambda: probe_csv(FRED % "VIXCLS")),
-    # --- kontrollgruppe, lief in runde 1 ----------------------------------
+    # --- krypto und waehrung, laufen bereits -----------------------------
+    ("krypto td BTC/USD reihe",  lambda: td_series("BTC/USD")),
     ("krypto coingecko dominanz",
      lambda: probe_json("https://api.coingecko.com/api/v3/global",
                         lambda d: round(((d.get("data") or {})
@@ -138,8 +126,11 @@ SOURCES = [
 
 
 def main():
-    print("pulsehawk quellenpruefer, runde 2")
-    print("laufzeitpunkt %s utc\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+    print("pulsehawk quellenpruefer, runde 3")
+    print("laufzeitpunkt %s utc" % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
+    print("twelvedata schluessel %s\n"
+          % ("gesetzt, %d zeichen" % len(TD_KEY) if TD_KEY else "FEHLT"))
+
     results = []
     for name, fn in SOURCES:
         try:
@@ -147,22 +138,22 @@ def main():
         except urllib.error.HTTPError as exc:
             ok, detail, ms = False, "HTTP %s" % exc.code, 0.0
         except Exception as exc:  # noqa: BLE001
-            ok, detail, ms = False, "%s" % str(exc)[:56], 0.0
+            ok, detail, ms = False, _hide(str(exc))[:60], 0.0
         results.append((ok, name, detail))
-        print("  %s %-28s %6.0f ms  %s"
+        print("  %s %-26s %6.0f ms  %s"
               % ("OK  " if ok else "FEHL", name, ms, detail))
-        time.sleep(1.2)
+        # twelvedata basic erlaubt 8 credits pro minute, deshalb nur dort
+        # bremsen. die schluessellosen quellen brauchen das nicht.
+        time.sleep(8 if " td " in name else 1)
 
     print("\n%d von %d quellen haben geantwortet"
           % (sum(1 for ok, _, _ in results if ok), len(results)))
-    for bereich in ("aktien", "gold"):
+    for bereich in ("aktien", "gold", "krypto"):
         treffer = [n.split(None, 1)[1].strip()
                    for ok, n, _ in results if ok and n.startswith(bereich)]
-        if treffer:
-            print("  %-7s nutzbar: %s" % (bereich, ", ".join(treffer)))
-        else:
-            print("  %-7s KEINE quelle. dann brauchen wir einen kostenlosen "
-                  "api-schluessel" % bereich)
+        print("  %-7s %s" % (bereich,
+                             ("nutzbar: " + ", ".join(treffer)) if treffer
+                             else "KEINE quelle"))
     return 0
 
 
