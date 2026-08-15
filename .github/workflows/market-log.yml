@@ -1,0 +1,63 @@
+name: marktlog
+
+# Schreibt einmal am tag eine zeile in data/market-log.json.
+# Postet nichts. Der schluessel wird nie gedruckt, das skript meldet nur,
+# ob einer gesetzt ist.
+#
+# 21:23 utc liegt nach dem us-boersenschluss, damit der tagesschluss von
+# GLD und SPY schon vorliegt. An wochenenden schreibt das skript fuer
+# diese beiden bewusst nichts, statt einen alten kurs auf heute zu datieren.
+
+on:
+  schedule:
+    - cron: "23 21 * * *"
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "taeglich oder backfill"
+        required: true
+        default: "taeglich"
+        type: choice
+        options:
+          - taeglich
+          - backfill
+
+permissions:
+  contents: write
+
+jobs:
+  loggen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: selbsttest
+        run: python3 scripts/market_log.py --selftest
+
+      - name: werte holen
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: |
+          if [ "${{ github.event.inputs.modus }}" = "backfill" ]; then
+            python3 scripts/market_log.py --backfill
+          else
+            python3 scripts/market_log.py
+          fi
+
+      - name: log sichern
+        run: |
+          git config user.name "pulsehawk bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/market-log.json
+          if git diff --cached --quiet; then
+            echo "nichts neues"
+            exit 0
+          fi
+          git commit -m "marktlog $(date -u +%Y-%m-%d)"
+          git pull --rebase origin main
+          git push
