@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 """
-pulsehawk - quellenpruefer
+pulsehawk - quellenpruefer, runde 2
 
 Beantwortet genau eine frage: welche kostenlosen, schluessellosen datenquellen
-fuer gold, den s&p 500 und krypto antworten aus einer github action heraus?
+fuer gold, aktien, krypto und waehrung antworten aus einer github action heraus?
 
-Claude kann das nicht selbst pruefen, seine sandbox hat keinen netzzugang nach
-aussen. Statt eine quelle zu versprechen, die vielleicht geht, misst dieses
-skript es. Ein lauf, eine tabelle, danach wissen wir es.
+Er postet nichts, schreibt nichts ins repo. Er druckt nur.
 
-Es postet nichts, es schreibt nichts ins repo. Es druckt nur.
+Stand nach runde 1 (15.08.2026, lauf im pulsehawk-site repo):
+  laeuft   coingecko (btc, dominanz, marktkapitalisierung, pax-gold)
+  laeuft   frankfurter (eurusd)
+  gesperrt stooq, antwortet mit einer html-seite samt robots-meta
+  gesperrt yahoo, HTTP 429 auf github-runner-adressen
+  offen    aktien, dafuer gab es nach runde 1 gar keine quelle
+
+Runde 2 prueft vor allem FRED, die zeitreihen-datenbank der federal reserve
+st. louis. Sie liefert csv ohne schluessel und ist als behoerdenquelle auch
+zitierfaehiger als ein finanzportal.
 
     python3 scripts/probe_sources.py
 """
@@ -21,9 +28,10 @@ import urllib.error
 import urllib.request
 
 TIMEOUT = 25
-# ohne echten user agent antworten yahoo und stooq oft gar nicht oder mit 403
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
+
+FRED = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=%s"
 
 
 def get(url, accept="*/*"):
@@ -34,20 +42,35 @@ def get(url, accept="*/*"):
     return r.status, body, (time.time() - t0) * 1000
 
 
-# ---------------------------------------------------------------- proben
+def _num(s):
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return None
 
-def probe_csv(url, want_cols):
-    """erwartet eine csv mit kopfzeile. gibt die letzte datenzeile zurueck."""
+
+def probe_csv(url):
+    """
+    Toleranter csv-test. Egal wie die spalten heissen, gesucht wird die letzte
+    zeile, deren zweites feld eine zahl ist. FRED schreibt an feiertagen einen
+    punkt statt eines wertes, solche zeilen werden uebersprungen.
+    """
     st, body, ms = get(url, "text/csv,*/*")
     text = body.decode("utf-8", "replace").strip()
+    if text[:1] == "<":
+        return False, "html statt csv, %r" % text[:56], ms
     lines = [l for l in text.splitlines() if l.strip()]
     if len(lines) < 2:
-        return False, "nur %d zeile(n), inhalt %r" % (len(lines), text[:70]), ms
-    head = lines[0].lower()
-    missing = [c for c in want_cols if c not in head]
-    if missing:
-        return False, "spalten fehlen %s, kopf %r" % (missing, lines[0][:70]), ms
-    return True, "%d zeilen, letzte %s" % (len(lines) - 1, lines[-1][:52]), ms
+        return False, "nur %d zeile(n), %r" % (len(lines), text[:56]), ms
+    letzte = None
+    for line in reversed(lines[1:]):
+        teile = [t.strip().strip('"') for t in line.split(",")]
+        if len(teile) >= 2 and _num(teile[1]) is not None:
+            letzte = (teile[0], _num(teile[1]))
+            break
+    if letzte is None:
+        return False, "keine zeile mit zahl, kopf %r" % lines[0][:50], ms
+    return True, "%d zeilen, zuletzt %s = %s" % (len(lines) - 1, letzte[0], letzte[1]), ms
 
 
 def probe_yahoo(url):
@@ -55,15 +78,15 @@ def probe_yahoo(url):
     d = json.loads(body.decode("utf-8", "replace"))
     res = (d.get("chart") or {}).get("result") or []
     if not res:
-        return False, "keine result-liste, %r" % str(d)[:70], ms
+        return False, "keine result-liste", ms
     r0 = res[0]
     ts = r0.get("timestamp") or []
     close = ((r0.get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
     vals = [c for c in close if c is not None]
     if not ts or not vals:
         return False, "leere zeitreihe", ms
-    day = time.strftime("%Y-%m-%d", time.gmtime(ts[-1]))
-    return True, "%d punkte, zuletzt %s = %.2f" % (len(vals), day, vals[-1]), ms
+    return True, "%d punkte, zuletzt %s = %.2f" % (
+        len(vals), time.strftime("%Y-%m-%d", time.gmtime(ts[-1])), vals[-1]), ms
 
 
 def probe_json(url, pick, label):
@@ -71,43 +94,43 @@ def probe_json(url, pick, label):
     d = json.loads(body.decode("utf-8", "replace"))
     v = pick(d)
     if v is None:
-        return False, "wert nicht gefunden, %r" % str(d)[:70], ms
+        return False, "wert nicht gefunden", ms
     return True, "%s = %s" % (label, v), ms
 
 
 SOURCES = [
-    # gold
-    ("gold   stooq xauusd",
-     lambda: probe_csv("https://stooq.com/q/d/l/?s=xauusd&i=d", ["date", "close"])),
-    ("gold   yahoo GC=F",
-     lambda: probe_yahoo("https://query1.finance.yahoo.com/v8/finance/chart/GC=F"
+    # --- aktien, die offene luecke aus runde 1 -----------------------------
+    ("aktien fred SP500",
+     lambda: probe_csv(FRED % "SP500")),
+    ("aktien fred NASDAQ100",
+     lambda: probe_csv(FRED % "NASDAQ100")),
+    ("aktien fred DJIA",
+     lambda: probe_csv(FRED % "DJIA")),
+    ("aktien fred WILL5000IND",
+     lambda: probe_csv(FRED % "WILL5000IND")),
+    ("aktien stooq leichtabruf",
+     lambda: probe_csv("https://stooq.com/q/l/?s=%5Espx&f=sd2t2ohlcv&h&e=csv")),
+    ("aktien stooq.pl leichtabruf",
+     lambda: probe_csv("https://stooq.pl/q/l/?s=%5Espx&f=sd2t2ohlcv&h&e=csv")),
+    ("aktien yahoo query2",
+     lambda: probe_yahoo("https://query2.finance.yahoo.com/v8/finance/chart/%5EGSPC"
                          "?range=6mo&interval=1d")),
+    # --- gold, zweite quelle zum gegenpruefen von pax-gold -----------------
+    ("gold   fred goldpm",
+     lambda: probe_csv(FRED % "GOLDPMGBD228NLBM")),
     ("gold   coingecko pax-gold",
      lambda: probe_json("https://api.coingecko.com/api/v3/simple/price"
                         "?ids=pax-gold&vs_currencies=usd",
                         lambda d: (d.get("pax-gold") or {}).get("usd"), "paxg usd")),
-    # aktien
-    ("aktien stooq ^spx",
-     lambda: probe_csv("https://stooq.com/q/d/l/?s=%5Espx&i=d", ["date", "close"])),
-    ("aktien yahoo ^GSPC",
-     lambda: probe_yahoo("https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC"
-                         "?range=6mo&interval=1d")),
-    # krypto, bekannt funktionierend, dient als kontrollgruppe
-    ("krypto coingecko btc",
-     lambda: probe_json("https://api.coingecko.com/api/v3/simple/price"
-                        "?ids=bitcoin&vs_currencies=usd",
-                        lambda d: (d.get("bitcoin") or {}).get("usd"), "btc usd")),
+    # --- risikoappetit, kandidat fuer spaeter ------------------------------
+    ("extra  fred VIXCLS",
+     lambda: probe_csv(FRED % "VIXCLS")),
+    # --- kontrollgruppe, lief in runde 1 ----------------------------------
     ("krypto coingecko dominanz",
      lambda: probe_json("https://api.coingecko.com/api/v3/global",
                         lambda d: round(((d.get("data") or {})
                                          .get("market_cap_percentage") or {})
                                         .get("btc", 0), 2), "btc dominanz prozent")),
-    ("krypto coingecko marktkap",
-     lambda: probe_json("https://api.coingecko.com/api/v3/global",
-                        lambda d: round(((d.get("data") or {})
-                                         .get("total_market_cap") or {})
-                                        .get("usd", 0) / 1e12, 3), "gesamt billionen usd")),
-    # waehrung, fuer die euro-umrechnung
     ("fx     frankfurter eurusd",
      lambda: probe_json("https://api.frankfurter.app/latest?from=EUR&to=USD",
                         lambda d: (d.get("rates") or {}).get("USD"), "eurusd")),
@@ -115,9 +138,8 @@ SOURCES = [
 
 
 def main():
-    print("pulsehawk quellenpruefer")
+    print("pulsehawk quellenpruefer, runde 2")
     print("laufzeitpunkt %s utc\n" % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
-    ok_count = 0
     results = []
     for name, fn in SOURCES:
         try:
@@ -125,21 +147,22 @@ def main():
         except urllib.error.HTTPError as exc:
             ok, detail, ms = False, "HTTP %s" % exc.code, 0.0
         except Exception as exc:  # noqa: BLE001
-            ok, detail, ms = False, "%s" % str(exc)[:60], 0.0
-        results.append((ok, name, detail, ms))
-        print("  %s %-26s %6.0f ms  %s"
+            ok, detail, ms = False, "%s" % str(exc)[:56], 0.0
+        results.append((ok, name, detail))
+        print("  %s %-28s %6.0f ms  %s"
               % ("OK  " if ok else "FEHL", name, ms, detail))
-        if ok:
-            ok_count += 1
-        time.sleep(1.5)  # hoeflich bleiben, coingecko drosselt sonst
+        time.sleep(1.2)
 
-    print("\n%d von %d quellen haben geantwortet" % (ok_count, len(SOURCES)))
-    for bereich, praefix in (("gold", "gold"), ("aktien", "aktien")):
-        treffer = [n for ok, n, _, _ in results if ok and n.startswith(praefix)]
+    print("\n%d von %d quellen haben geantwortet"
+          % (sum(1 for ok, _, _ in results if ok), len(results)))
+    for bereich in ("aktien", "gold"):
+        treffer = [n.split(None, 1)[1].strip()
+                   for ok, n, _ in results if ok and n.startswith(bereich)]
         if treffer:
-            print("  %-7s nutzbar: %s" % (bereich, ", ".join(t.split()[1] for t in treffer)))
+            print("  %-7s nutzbar: %s" % (bereich, ", ".join(treffer)))
         else:
-            print("  %-7s KEINE quelle, follow the money braucht hier eine loesung" % bereich)
+            print("  %-7s KEINE quelle. dann brauchen wir einen kostenlosen "
+                  "api-schluessel" % bereich)
     return 0
 
 
