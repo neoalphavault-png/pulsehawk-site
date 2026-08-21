@@ -56,6 +56,14 @@
   .btns a { display:inline-block; padding:11px 20px; border-radius:10px; text-decoration:none; font-size:14px; font-weight:700;
             background:rgba(73,234,203,0.10); color:var(--teal); border:1px solid rgba(73,234,203,0.4); }
   .btns a:hover { background:rgba(73,234,203,0.18); }
+  p a { color:var(--teal); text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
+  p a:hover { border-bottom-color:var(--teal); }
+  .pages { margin-top:16px; }
+  .pages a { display:block; text-decoration:none; background:var(--card); border:1px solid var(--line);
+             border-radius:14px; padding:18px 20px; margin-top:10px; }
+  .pages a:hover { border-color:rgba(73,234,203,0.45); }
+  .pages .t { font-size:16px; font-weight:700; color:var(--teal); }
+  .pages .d { font-size:14px; color:var(--dim); margin-top:5px; line-height:21px; }
   footer { border-top:1px solid var(--line); margin-top:60px; padding-top:18px; display:flex; justify-content:space-between;
            flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
   footer a { color:var(--dim); text-decoration:none; }
@@ -87,8 +95,17 @@
     <p>Alerts and core data will always be free to follow. That is not generosity, it is the model. A feed people rely on is the product.</p></div>
 
   <h2>Where we <span>start</span></h2>
-  <p><b>The first format is live now.</b> Every Sunday we publish where the market stands inside the Bitcoin cycle, counted in days from the halving and from the last top, next to the three cycles before it. Two more formats follow over the coming weeks, and the cadence grows from there. Everything we publish is dated and archived, so it can be checked later.</p>
+  <p><b>The first format is live now.</b> Every Sunday we publish where the market stands inside the Bitcoin cycle, counted in <a href="/bitcoin-halving-to-top.html">days from the halving to the cycle top</a>, next to the three cycles before it. Two more formats follow over the coming weeks, and the cadence grows from there. Everything we publish is dated and archived, so it can be checked later.</p>
   <p>Coverage begins where verification is strongest and attention is thinnest: on-chain data for proof-of-work and emerging networks that the big analytics platforms ignore. Whale wallet tracking, exchange flow analysis, supply and emission data, all monitored around the clock by automated systems and published as alerts, daily numbers and weekly readings. From there, coverage expands one market at a time, only when we can meet our own standard for it.</p>
+
+  <h2>Data <span>pages</span></h2>
+  <p>Every weekly format also gets a permanent page. The graphic goes out on the feed, the page keeps the numbers current and shows where each one came from.</p>
+  <div class="pages">
+    <a href="/bitcoin-halving-to-top.html">
+      <div class="t">How many days after the halving did Bitcoin top?</div>
+      <div class="d">Four cycles, four halving dates, four top dates, counted from one source. With a live count of where this cycle stands today.</div>
+    </a>
+  </div>
 
   <h2>Who is <span>building this</span></h2>
   <p>PulseHawk is built by a small independent team in Germany, operated by Vizora Digital UG (haftungsbeschränkt). We come from the data side, not the marketing side. The tooling behind PulseHawk already runs in production today, tracking one of the largest single wallets in the proof-of-work space around the clock, and it has a simple track record: every claim it ever published can still be checked.</p>
