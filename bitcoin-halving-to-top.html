@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How Many Days After the Halving Did Bitcoin Top?</title>
-<meta name="description" content="The last three Bitcoin cycles topped 367, 525 and 548 days after their halving. This one topped on day 534. Every date with its source, plus a live count.">
+<title>The Bitcoin 4 Year Cycle, Halving to Top in Days</title>
+<meta name="description" content="In the Bitcoin 4 year cycle the top came on day 367, 525, 548 and 534 after the halving. Chart, every date with its source, and a live day count.">
 <link rel="canonical" href="https://pulsehawk.io/bitcoin-halving-to-top.html">
 <link rel="icon" type="image/png" href="favicon.png">
-<meta property="og:title" content="How Many Days After the Halving Did Bitcoin Top?">
-<meta property="og:description" content="Four cycles, four halving dates, four top dates, counted from one source. Plus a live count of where this cycle stands today.">
+<meta property="og:title" content="The Bitcoin 4 Year Cycle, Halving to Top in Days">
+<meta property="og:description" content="Four cycles charted, halving to top, counted from one source. Plus a live count of where the current cycle stands today.">
 <meta property="og:url" content="https://pulsehawk.io/bitcoin-halving-to-top.html">
 <meta property="og:type" content="article">
 <script type="application/ld+json">
@@ -16,6 +16,8 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
+    {"@type":"Question","name":"How long is the Bitcoin 4 year cycle from halving to top?",
+     "acceptedAnswer":{"@type":"Answer","text":"367 days in the 2012 cycle, 525 in the 2016 cycle, 548 in the 2020 cycle and 534 in the 2024 cycle. The last three sit between 525 and 548 days."}},
     {"@type":"Question","name":"How many days after the halving does Bitcoin peak?",
      "acceptedAnswer":{"@type":"Answer","text":"There is no single number. The 2012 cycle peaked 367 days after its halving, the 2016 cycle 525 days, the 2020 cycle 548 days and the 2024 cycle 534 days. The last three fall between 525 and 548 days."}},
     {"@type":"Question","name":"When was the 2024 Bitcoin halving?",
@@ -66,6 +68,14 @@
   .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
   .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
 
+  .chart { margin-top:18px; background:var(--card); border:1px solid var(--line);
+           border-radius:16px; padding:20px 18px 12px; }
+  .chart svg { width:100%; height:auto; display:block; }
+  .chart .lbl { font-size:13px; fill:var(--dim); font-weight:600; }
+  .chart .val { font-size:13px; fill:var(--txt); font-weight:700; }
+  .chart .tick { font-size:11px; fill:var(--dimmer); }
+  .chart .gl { stroke:var(--line); stroke-width:1; }
+  .chart .cap { font-size:12.5px; color:var(--dimmer); margin-top:10px; }
   .scroll { overflow-x:auto; margin-top:16px; }
   table { border-collapse:collapse; width:100%; min-width:520px; }
   th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); font-size:14.5px; }
@@ -97,12 +107,12 @@
   <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
 </div>
 
-<div class="eyebrow">Halving to top</div>
-<h1>How many days after the halving did Bitcoin top?</h1>
+<div class="eyebrow">Bitcoin 4 year cycle</div>
+<h1>The Bitcoin 4 year cycle, from halving to top</h1>
 
-<p class="lead">The three completed cycles topped <b>367, 525 and 548 days</b> after their
-halving. The current cycle topped on <b>day 534</b>, on 6 October 2025. Every date below
-comes from the same source, so the four rows can actually be compared.</p>
+<p class="lead">In the three completed four year cycles the top came <b>367, 525 and 548
+days</b> after the halving. The current cycle topped on <b>day 534</b>, on 6 October 2025.
+Every date below comes from the same source, so the four cycles can actually be compared.</p>
 
 <div class="live">
   <div>
@@ -119,7 +129,33 @@ comes from the same source, so the four rows can actually be compared.</p>
 <p style="font-size:13px;margin-top:8px">Both counters update by themselves. They are
 plain arithmetic from two fixed dates, not a live price feed.</p>
 
-<h2>Every cycle, halving to top</h2>
+<h2>The four cycles, charted</h2>
+
+<div class="chart">
+<svg viewBox="0 0 720 178" role="img" aria-label="Days from each Bitcoin halving to the following cycle top, 367, 525, 548 and 534 days">
+  <line class="gl" x1="96" x2="96" y1="4" y2="150"/>
+  <text class="tick" x="96" y="168" text-anchor="middle">halving</text>
+  <line class="gl" x1="294" x2="294" y1="4" y2="150"/>
+  <text class="tick" x="294" y="168" text-anchor="middle">day 200</text>
+  <line class="gl" x1="492" x2="492" y1="4" y2="150"/>
+  <text class="tick" x="492" y="168" text-anchor="middle">day 400</text>
+  <line class="gl" x1="690" x2="690" y1="4" y2="150"/>
+  <text class="tick" x="690" y="168" text-anchor="middle">day 600</text>
+  <text class="lbl" x="0" y="24">2012 cycle</text>
+  <rect x="96" y="10" width="363.3" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="468.3" y="24">367</text>
+  <text class="lbl" x="0" y="62">2016 cycle</text>
+  <rect x="96" y="48" width="519.8" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="624.8" y="62">525</text>
+  <text class="lbl" x="0" y="100">2020 cycle</text>
+  <rect x="96" y="86" width="542.5" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="647.5" y="100">548</text>
+  <text class="lbl" x="0" y="138">2024 cycle</text>
+  <rect x="96" y="124" width="528.7" height="18" rx="5" fill="var(--btc)"/>
+  <text class="val" x="633.7" y="138">534</text>
+</svg>
+  <div class="cap">Days from each halving to the following cycle top. The 2024 cycle is highlighted.</div>
+</div>
 
 <div class="scroll">
 <table>
@@ -179,6 +215,10 @@ need no data source, which is why they cannot go stale or go wrong.</p>
 <h2>Questions people ask</h2>
 
 <div class="faq">
+  <div class="q">How long is the Bitcoin 4 year cycle from halving to top?</div>
+  <p>367 days in the 2012 cycle, 525 in the 2016 cycle, 548 in the 2020 cycle and 534 in the
+  2024 cycle.</p>
+
   <div class="q">How many days after the halving does Bitcoin peak?</div>
   <p>There is no single number. The four cycles so far peaked on day 367, 525, 548 and 534.
   The last three sit between 525 and 548.</p>
