@@ -58,14 +58,12 @@
   p b { color:var(--txt); font-weight:600; }
   a { color:var(--teal); }
   p a { text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
-
   .live { background:var(--card); border:1px solid var(--line); border-radius:16px;
           padding:22px 24px; margin-top:22px; display:flex; flex-wrap:wrap; gap:26px; }
   .live div { flex:1 1 190px; }
   .live .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
   .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
   .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
-
   .chart { margin-top:18px; background:var(--card); border:1px solid var(--line);
            border-radius:16px; padding:20px 18px 12px; }
   .chart svg { width:100%; height:auto; display:block; }
@@ -80,14 +78,11 @@
   th { font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dimmer); font-weight:700; }
   td.n { text-align:right; font-weight:700; color:var(--txt); }
   tr.now td { color:var(--btc); }
-
   .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
   .note p { color:var(--txt); }
-
   .faq { margin-top:14px; }
   .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
   .faq p { margin-top:7px; }
-
   footer { border-top:1px solid var(--line); margin-top:56px; padding-top:18px; display:flex;
            justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
   footer a { color:var(--dim); text-decoration:none; }
@@ -95,23 +90,18 @@
 </head>
 <body>
 <div class="wrap">
-
 <a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
-
-
 <div class="pnav">
   <a href="/bitcoin-halving-to-top.html">halving to top</a>
   <span>top to bottom</span>
+  <a href="/bitcoin-dominance.html">dominance</a>
 </div>
-
 <div class="eyebrow">Bitcoin 4 year cycle</div>
 <h1>The Bitcoin cycle bottom, how long after the top</h1>
-
 <p class="lead">In the three completed four year cycles the bottom came <b>410, 364 and 376
 days</b> after the top. That is a spread of about six weeks. This page counts the days and
 makes no forecast, which is the one thing that separates it from most of what you will find
 on this question.</p>
-
 <div class="live">
   <div>
     <div class="k">Days since the last top</div>
@@ -126,9 +116,7 @@ on this question.</p>
 </div>
 <p style="font-size:13px;margin-top:8px">The left counter updates by itself. It is plain
 arithmetic from one fixed date, not a live price feed.</p>
-
 <h2>The completed cycles, charted</h2>
-
 <div class="chart">
 <svg viewBox="0 0 720 178" role="img" aria-label="Days from each Bitcoin cycle top to the following bottom, 410, 364 and 376 days, with the current cycle at 319 days and counting">
   <line class="gl" x1="108.0" x2="108.0" y1="4" y2="150"/>
@@ -154,7 +142,6 @@ arithmetic from one fixed date, not a live price feed.</p>
 </svg>
   <div class="cap">Days from each cycle top to the following low. The current cycle has no bottom yet, so its bar is open.</div>
 </div>
-
 <div class="scroll">
 <table>
   <thead>
@@ -168,72 +155,53 @@ arithmetic from one fixed date, not a live price feed.</p>
   </tbody>
 </table>
 </div>
-
 <p>A cycle low can only be named in hindsight. The bottom row has no bottom date for the
 simple reason that nobody can know one yet, and any page that fills that cell is guessing.</p>
-
 <h2>Why you will see other numbers</h2>
-
 <p>The bottom dates for 2015 and 2018 are agreed on almost everywhere. The 2022 low is not.
 <b>Some sources put it on 10 November 2022 and others on 21 November 2022</b>, depending on
 the exchange and on whether intraday lows or daily closes are used.</p>
-
 <p>Take the earlier date and that cycle ran 365 days instead of 376. The useful part is that
 it barely matters. <b>Either way all three completed cycles land between 364 and 410 days.</b>
 A range that survives a change of source is worth more than a single number that does not.</p>
-
 <div class="note">
 <p>Bottom prices are marked "about" on purpose. Different venues printed lows within a few
 percent of each other on the same day, and pretending otherwise would be false precision.</p>
 </div>
-
 <h2>What this does not tell you</h2>
-
 <p>It does not tell you when this cycle bottoms. Three cycles are three data points, they
 differ by 46 days, and the market they trade in is not the market of 2015. Search this
 question and most results will name you a month. We will not, and that is deliberate.</p>
-
 <p>It also does not tell you a price. We publish no price targets, in any format, ever. The
 bottom prices in the table are history, not a template.</p>
-
 <h2>How we count</h2>
-
 <p>Calendar days between the top date and the bottom date, in UTC, with the top day counted
 as day zero. Top dates match the ones used on our
 <a href="/bitcoin-halving-to-top.html">halving to top page</a>, so the two pages can be read
 together. Bottom dates and prices come from published cycle low data, cross checked against
 CoinGecko research and Bitcoin Magazine's bear market record.</p>
-
 <h2>Questions people ask</h2>
-
 <div class="faq">
   <div class="q">How long does it take Bitcoin to go from top to bottom?</div>
   <p>410, 364 and 376 days in the three completed cycles. All three sit between 364 and 410
   days.</p>
-
   <div class="q">When was the last cycle top?</div>
   <p>6 October 2025, at 126,198 US dollars.</p>
-
   <div class="q">When did Bitcoin bottom in previous cycles?</div>
   <p>14 January 2015, 15 December 2018 and 21 November 2022.</p>
-
   <div class="q">Will the next bottom follow the same pattern?</div>
   <p>Nobody knows, and this page does not guess. What it means is your call.</p>
-
   <div class="q">Why do sources disagree on the 2022 low?</div>
   <p>Different exchanges and different use of closes against intraday lows. See the section
   above. It moves that one count from 376 to 365.</p>
-
   <div class="q">Where do the numbers come from?</div>
   <p>Every date is in the table. You can check each one against any price chart in a couple
   of minutes, and that is the point.</p>
 </div>
-
 <footer>
   <div>PulseHawk. Market data with receipts. No hype, no price targets.</div>
   <div><a href="/">home</a> &nbsp; <a href="/impressum.html">impressum</a> &nbsp; <a href="/datenschutz.html">datenschutz</a></div>
 </footer>
-
 </div>
 <script>
 (function(){
