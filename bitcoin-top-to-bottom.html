@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How Long From the Bitcoin Top to the Bottom?</title>
-<meta name="description" content="The three completed Bitcoin cycles took 410, 364 and 376 days from the top to the bottom. A live count of where this one stands, and no prediction.">
+<title>Bitcoin Cycle Bottom, How Long After the Top</title>
+<meta name="description" content="In the Bitcoin 4 year cycle the bottom came 410, 364 and 376 days after the top. Chart, every date with its source, a live count, and no prediction.">
 <link rel="canonical" href="https://pulsehawk.io/bitcoin-top-to-bottom.html">
 <link rel="icon" type="image/png" href="favicon.png">
-<meta property="og:title" content="How Long From the Bitcoin Top to the Bottom?">
+<meta property="og:title" content="Bitcoin Cycle Bottom, How Long After the Top">
 <meta property="og:description" content="410, 364 and 376 days in the three completed cycles. Every date with its source, plus a live count of days since the last top.">
 <meta property="og:url" content="https://pulsehawk.io/bitcoin-top-to-bottom.html">
 <meta property="og:type" content="article">
@@ -66,6 +66,14 @@
   .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
   .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
 
+  .chart { margin-top:18px; background:var(--card); border:1px solid var(--line);
+           border-radius:16px; padding:20px 18px 12px; }
+  .chart svg { width:100%; height:auto; display:block; }
+  .chart .lbl { font-size:13px; fill:var(--dim); font-weight:600; }
+  .chart .val { font-size:13px; fill:var(--txt); font-weight:700; }
+  .chart .tick { font-size:11px; fill:var(--dimmer); }
+  .chart .gl { stroke:var(--line); stroke-width:1; }
+  .chart .cap { font-size:12.5px; color:var(--dimmer); margin-top:10px; }
   .scroll { overflow-x:auto; margin-top:16px; }
   table { border-collapse:collapse; width:100%; min-width:560px; }
   th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); font-size:14.5px; }
@@ -96,11 +104,11 @@
   <span>top to bottom</span>
 </div>
 
-<div class="eyebrow">Top to bottom</div>
-<h1>How long from the Bitcoin top to the bottom?</h1>
+<div class="eyebrow">Bitcoin 4 year cycle</div>
+<h1>The Bitcoin cycle bottom, how long after the top</h1>
 
-<p class="lead">The three completed cycles took <b>410, 364 and 376 days</b> from the cycle
-top to the cycle low. That is a spread of about six weeks. This page counts the days and
+<p class="lead">In the three completed four year cycles the bottom came <b>410, 364 and 376
+days</b> after the top. That is a spread of about six weeks. This page counts the days and
 makes no forecast, which is the one thing that separates it from most of what you will find
 on this question.</p>
 
@@ -119,7 +127,33 @@ on this question.</p>
 <p style="font-size:13px;margin-top:8px">The left counter updates by itself. It is plain
 arithmetic from one fixed date, not a live price feed.</p>
 
-<h2>Every completed cycle, top to bottom</h2>
+<h2>The completed cycles, charted</h2>
+
+<div class="chart">
+<svg viewBox="0 0 720 178" role="img" aria-label="Days from each Bitcoin cycle top to the following bottom, 410, 364 and 376 days, with the current cycle at 319 days and counting">
+  <line class="gl" x1="108.0" x2="108.0" y1="4" y2="150"/>
+  <text class="tick" x="108.0" y="168" text-anchor="middle">the top</text>
+  <line class="gl" x1="302.0" x2="302.0" y1="4" y2="150"/>
+  <text class="tick" x="302.0" y="168" text-anchor="middle">day 150</text>
+  <line class="gl" x1="496.0" x2="496.0" y1="4" y2="150"/>
+  <text class="tick" x="496.0" y="168" text-anchor="middle">day 300</text>
+  <line class="gl" x1="690.0" x2="690.0" y1="4" y2="150"/>
+  <text class="tick" x="690.0" y="168" text-anchor="middle">day 450</text>
+  <text class="lbl" x="0" y="24">2013 to 2015</text>
+  <rect x="108" y="10" width="530.3" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="647.3" y="24">410</text>
+  <text class="lbl" x="0" y="62">2017 to 2018</text>
+  <rect x="108" y="48" width="470.8" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="587.8" y="62">364</text>
+  <text class="lbl" x="0" y="100">2021 to 2022</text>
+  <rect x="108" y="86" width="486.3" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="603.3" y="100">376</text>
+  <text class="lbl" x="0" y="138">2025 to now</text>
+  <rect id="bar" x="108" y="124" width="412.6" height="18" rx="5" fill="var(--btc)"/>
+  <text id="d3" class="val" x="529.6" y="138" fill="var(--btc)">319 and counting</text>
+</svg>
+  <div class="cap">Days from each cycle top to the following low. The current cycle has no bottom yet, so its bar is open.</div>
+</div>
 
 <div class="scroll">
 <table>
@@ -214,6 +248,12 @@ CoinGecko research and Bitcoin Magazine's bear market record.</p>
     var s = n.toLocaleString("en-US");
     var a = document.getElementById("d1"); if (a) { a.textContent = s; }
     var b = document.getElementById("d2"); if (b) { b.textContent = s; }
+    // der balken im diagramm, gleiche skala wie die achse, 0 bis 450 tage
+    var bar = document.getElementById("bar");
+    var lab = document.getElementById("d3");
+    var w = 582 * Math.min(n, 450) / 450;
+    if (bar) { bar.setAttribute("width", w.toFixed(1)); }
+    if (lab) { lab.setAttribute("x", (108 + w + 9).toFixed(1)); lab.textContent = s + " and counting"; }
   }
 })();
 </script>
