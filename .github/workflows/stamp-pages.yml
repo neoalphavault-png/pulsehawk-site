@@ -20,6 +20,14 @@ on:
 permissions:
   contents: write
 
+# Zwei Laeufe duerfen sich nie ueberschneiden. Zwei Commits innerhalb
+# weniger Sekunden bringen die Auslieferung von GitHub Pages durcheinander,
+# sie findet dann zwei Bauergebnisse und weiss nicht, welches gilt. Genau
+# das ist am 21.08.2026 einmal passiert.
+concurrency:
+  group: seitenstempel
+  cancel-in-progress: false
+
 jobs:
   stempeln:
     runs-on: ubuntu-latest
