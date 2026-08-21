@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Many Days After the Halving Did Bitcoin Top?</title>
+<meta name="description" content="The last three Bitcoin cycles topped 367, 525 and 548 days after their halving. This one topped on day 534. Every date with its source, plus a live count.">
+<link rel="canonical" href="https://pulsehawk.io/bitcoin-halving-to-top.html">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="How Many Days After the Halving Did Bitcoin Top?">
+<meta property="og:description" content="Four cycles, four halving dates, four top dates, counted from one source. Plus a live count of where this cycle stands today.">
+<meta property="og:url" content="https://pulsehawk.io/bitcoin-halving-to-top.html">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How many days after the halving does Bitcoin peak?",
+     "acceptedAnswer":{"@type":"Answer","text":"There is no single number. The 2012 cycle peaked 367 days after its halving, the 2016 cycle 525 days, the 2020 cycle 548 days and the 2024 cycle 534 days. The last three fall between 525 and 548 days."}},
+    {"@type":"Question","name":"When was the 2024 Bitcoin halving?",
+     "acceptedAnswer":{"@type":"Answer","text":"20 April 2024, at block 840,000, when the block reward fell from 6.25 BTC to 3.125 BTC."}},
+    {"@type":"Question","name":"When did Bitcoin top in the current cycle?",
+     "acceptedAnswer":{"@type":"Answer","text":"6 October 2025, at 126,198 US dollars. That is 534 days after the 20 April 2024 halving."}},
+    {"@type":"Question","name":"Why do different sites give different day counts?",
+     "acceptedAnswer":{"@type":"Answer","text":"Because they use different top dates. The 2017 peak is listed as 16 December by CoinGecko and CoinMarketCap and as 17 December by sites reading a different exchange. One day of difference changes the count by one."}},
+    {"@type":"Question","name":"Does the day count predict the next top?",
+     "acceptedAnswer":{"@type":"Answer","text":"No. Three completed cycles are three data points, and one of them sits 158 days away from the other two. This page counts what happened. It makes no forecast and names no price."}},
+    {"@type":"Question","name":"How is the count measured?",
+     "acceptedAnswer":{"@type":"Answer","text":"Calendar days between the halving date and the cycle top date, using UTC dates. The halving day itself is day zero."}}
+  ]
+}
+</script>
+<style>
+  :root { --bg:#080B0F; --card:#0B0E12; --line:#1A1D21; --teal:#49EACB;
+          --btc:#D95926; --txt:#FFFFFF; --dim:#9BA3AB; --dimmer:#7A828C; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Helvetica Neue',Arial,sans-serif;
+         background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(73,234,203,0.10), transparent 60%); }
+  .wrap { max-width:720px; margin:0 auto; padding:34px 20px 60px; }
+  .nav { display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav img { width:30px; }
+  .nav b { font-size:17px; letter-spacing:4px; color:var(--txt); font-weight:800; }
+  .nav b span { color:var(--teal); }
+  .eyebrow { font-size:12px; letter-spacing:4px; color:var(--dimmer); text-transform:uppercase;
+             margin-top:42px; font-weight:700; }
+  h1 { font-size:34px; line-height:1.18; letter-spacing:-0.6px; margin-top:12px; }
+  .lead { font-size:17px; line-height:27px; color:var(--txt); margin-top:18px; }
+  .lead b { color:var(--teal); font-weight:700; }
+  h2 { font-size:21px; letter-spacing:-0.3px; margin:40px 0 0; }
+  h3 { font-size:16px; margin:24px 0 0; color:var(--txt); }
+  p { font-size:15.5px; line-height:25px; color:var(--dim); margin-top:12px; }
+  p b { color:var(--txt); font-weight:600; }
+  a { color:var(--teal); }
+
+  .live { background:var(--card); border:1px solid var(--line); border-radius:16px;
+          padding:22px 24px; margin-top:22px; display:flex; flex-wrap:wrap; gap:26px; }
+  .live div { flex:1 1 190px; }
+  .live .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
+  .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
+
+  .scroll { overflow-x:auto; margin-top:16px; }
+  table { border-collapse:collapse; width:100%; min-width:520px; }
+  th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); font-size:14.5px; }
+  th { font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dimmer); font-weight:700; }
+  td.n { text-align:right; font-weight:700; color:var(--txt); }
+  tr.now td { color:var(--btc); }
+  tr.now td.n { color:var(--btc); }
+
+  .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
+  .note p { color:var(--txt); }
+
+  .faq { margin-top:14px; }
+  .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
+  .faq p { margin-top:7px; }
+
+  footer { border-top:1px solid var(--line); margin-top:56px; padding-top:18px; display:flex;
+           justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
+  footer a { color:var(--dim); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
+
+<div class="eyebrow">Bitcoin cycles</div>
+<h1>How many days after the halving did Bitcoin top?</h1>
+
+<p class="lead">The three completed cycles topped <b>367, 525 and 548 days</b> after their
+halving. The current cycle topped on <b>day 534</b>, on 6 October 2025. Every date below
+comes from the same source, so the four rows can actually be compared.</p>
+
+<div class="live">
+  <div>
+    <div class="k">Days since the 2024 halving</div>
+    <div class="v" id="d1">853</div>
+    <div class="s">halving was 20 April 2024</div>
+  </div>
+  <div>
+    <div class="k">Days since this cycle's top</div>
+    <div class="v" id="d2">319</div>
+    <div class="s">top was 6 October 2025</div>
+  </div>
+</div>
+<p style="font-size:13px;margin-top:8px">Both counters update by themselves. They are
+plain arithmetic from two fixed dates, not a live price feed.</p>
+
+<h2>Every cycle, halving to top</h2>
+
+<div class="scroll">
+<table>
+  <thead>
+    <tr><th>Cycle</th><th>Halving</th><th>Cycle top</th><th>Price at the top</th><th style="text-align:right">Days</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>2012</td><td>28 Nov 2012</td><td>30 Nov 2013</td><td>1,127 USD</td><td class="n">367</td></tr>
+    <tr><td>2016</td><td>9 Jul 2016</td><td>16 Dec 2017</td><td>19,665 USD</td><td class="n">525</td></tr>
+    <tr><td>2020</td><td>11 May 2020</td><td>10 Nov 2021</td><td>69,044 USD</td><td class="n">548</td></tr>
+    <tr class="now"><td>2024</td><td>20 Apr 2024</td><td>6 Oct 2025</td><td>126,198 USD</td><td class="n">534</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Read down the last column and the pattern is narrower than most people expect, but only
+for three of the four rows. The 2016, 2020 and 2024 cycles topped within 23 days of each
+other. The 2012 cycle topped 158 days earlier than any of them.</p>
+
+<h2>Why you will see other numbers</h2>
+
+<p>Search this question and you will find 366, 367 and 368 for the first cycle, and 525 or
+526 for the second. Almost nobody explains the difference, so here it is.</p>
+
+<p><b>The top date is not a fact, it is a reading.</b> Bitcoin trades on many venues at once.
+The 2017 peak lands on 16 December on CoinGecko and CoinMarketCap, and on 17 December on
+sites that read a different exchange. One day of difference moves the count by one. The same
+applies to the 2013 peak.</p>
+
+<p><b>The halving date can shift too.</b> The 2012 halving crossed midnight UTC, which is why
+some sources date it 27 November and others 28 November.</p>
+
+<div class="note">
+<p>Our rule is simple. One source for all four rows, named on the page. A table that mixes
+sources produces numbers that look precise and cannot be compared.</p>
+</div>
+
+<h2>What this does not tell you</h2>
+
+<p>It does not tell you when the next top comes. Three completed cycles are three data
+points, and one of them sits five months away from the other two. Anyone who turns four
+numbers into a date is guessing with extra steps.</p>
+
+<p>It also does not tell you anything about price. We publish no price targets, in any
+format, ever. This page counts days between two dates that already happened.</p>
+
+<h2>How we count</h2>
+
+<p>Calendar days between the halving date and the cycle top date, both in UTC. The halving
+day itself is day zero, so a top on the next day would be day one. Halving dates come from
+the block at which the reward changed. Top dates and prices come from daily close data as
+published by CoinMarketCap, cross checked against CoinGecko research.</p>
+
+<p>The live counters at the top of the page run from 20 April 2024 and 6 October 2025. They
+need no data source, which is why they cannot go stale or go wrong.</p>
+
+<h2>Questions people ask</h2>
+
+<div class="faq">
+  <div class="q">How many days after the halving does Bitcoin peak?</div>
+  <p>There is no single number. The four cycles so far peaked on day 367, 525, 548 and 534.
+  The last three sit between 525 and 548.</p>
+
+  <div class="q">When was the 2024 Bitcoin halving?</div>
+  <p>20 April 2024, at block 840,000. The block reward fell from 6.25 BTC to 3.125 BTC.</p>
+
+  <div class="q">When did Bitcoin top in this cycle?</div>
+  <p>6 October 2025, at 126,198 US dollars. There was an earlier high of 124,128 dollars on
+  14 August 2025, which several older articles still list as the cycle top.</p>
+
+  <div class="q">Why do different sites give different day counts?</div>
+  <p>Because they use different top dates, and sometimes a different halving date. See the
+  section above. The gap is one or two days, never more.</p>
+
+  <div class="q">Does the day count predict the next top?</div>
+  <p>No. It is a count of what happened. What it means is your call.</p>
+
+  <div class="q">Where do the numbers come from?</div>
+  <p>All of them are on this page with their dates. You can check every row against any price
+  chart in about two minutes, and that is the point.</p>
+</div>
+
+<footer>
+  <div>PulseHawk. Market data with receipts. No hype, no price targets.</div>
+  <div><a href="/">home</a> &nbsp; <a href="/impressum.html">impressum</a> &nbsp; <a href="/datenschutz.html">datenschutz</a></div>
+</footer>
+
+</div>
+<script>
+(function(){
+  var tage = function(iso){
+    var a = new Date(iso + "T00:00:00Z");
+    var b = new Date();
+    var heute = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate());
+    return Math.floor((heute - a.getTime()) / 86400000);
+  };
+  var setz = function(id, iso){
+    var e = document.getElementById(id);
+    var n = tage(iso);
+    if (e && isFinite(n) && n > 0) { e.textContent = n.toLocaleString("en-US"); }
+  };
+  setz("d1", "2024-04-20");
+  setz("d2", "2025-10-06");
+})();
+</script>
+</body>
+</html>
