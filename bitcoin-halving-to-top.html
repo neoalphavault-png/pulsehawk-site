@@ -42,6 +42,12 @@
   .nav img { width:30px; }
   .nav b { font-size:17px; letter-spacing:4px; color:var(--txt); font-weight:800; }
   .nav b span { color:var(--teal); }
+  .pnav { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .pnav a, .pnav span { font-size:13px; padding:7px 13px; border-radius:999px;
+            text-decoration:none; border:1px solid var(--line); color:var(--dimmer); }
+  .pnav a:hover { border-color:rgba(73,234,203,0.45); color:var(--dim); }
+  .pnav span { background:rgba(73,234,203,0.10); border-color:rgba(73,234,203,0.45);
+               color:var(--teal); font-weight:700; }
   .eyebrow { font-size:12px; letter-spacing:4px; color:var(--dimmer); text-transform:uppercase;
              margin-top:42px; font-weight:700; }
   h1 { font-size:34px; line-height:1.18; letter-spacing:-0.6px; margin-top:12px; }
@@ -85,7 +91,13 @@
 
 <a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
 
-<div class="eyebrow">Bitcoin cycles</div>
+
+<div class="pnav">
+  <span>halving to top</span>
+  <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
+</div>
+
+<div class="eyebrow">Halving to top</div>
 <h1>How many days after the halving did Bitcoin top?</h1>
 
 <p class="lead">The three completed cycles topped <b>367, 525 and 548 days</b> after their
