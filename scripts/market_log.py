@@ -1,36 +1,50 @@
 #!/usr/bin/env python3
+
 """
 pulsehawk - marktlogger
 
 Er schreibt jeden tag eine zeile in data/market-log.json. Aus diesen zeilen
 wachsen zwei dinge, die wir sonst nie bekommen wuerden.
 
-  1. die altcoin-reihe. coingecko liefert dominanz und gesamtmarktkapital
-     nur als tageswert, ohne historie. wer sie haben will, muss sie selbst
-     mitschreiben. jeder tag den wir nicht loggen, fehlt spaeter fuer immer.
-  2. eine sauber nach kalendertagen ausgerichtete reihe fuer FOLLOW THE MONEY.
-     twelve data und coingecko liefern gleich viele punkte ueber verschiedene
-     zeitraeume, weil krypto sieben tage die woche handelt. wir speichern
-     deshalb pro kalendertag, nicht pro datenpunkt.
-  3. der nenner. seit 20.08.2026 laeuft eurusd mit, weil FOLLOW THE MONEY die
-     wochenbewegung um den dollar bereinigt. ohne diese spalte ist jede
-     prozentzahl in der grafik zur haelfte eine aussage ueber den massstab
-     und nicht ueber den wert. den dollarindex selbst gibt es im freien tarif
-     nicht, eurusd ist der ehrliche ersatz und wird auch so beschriftet.
-  4. die flussfelder. ebenfalls seit 20.08.2026, weil FOLLOW THE MONEY nicht
-     fragt, ob eine rendite echt war, sondern wohin geld gerade geht. dafuer
-     reichen preise nicht. der gesamtmarkt steigt auch dann, wenn kein
-     einziger dollar dazugekommen ist. die umlaufenden stablecoins sind die
-     einzige frei erreichbare zahl, die tatsaechlich geld misst, und der
-     umsatz sagt, ob eine bewegung getragen war. beides laeuft ab jetzt mit.
+1. die altcoin-reihe. coingecko liefert dominanz und gesamtmarktkapital
+   nur als tageswert, ohne historie. wer sie haben will, muss sie selbst
+   mitschreiben. jeder tag den wir nicht loggen, fehlt spaeter fuer immer.
+
+2. eine sauber nach kalendertagen ausgerichtete reihe fuer FOLLOW THE MONEY.
+   twelve data und coingecko liefern gleich viele punkte ueber verschiedene
+   zeitraeume, weil krypto sieben tage die woche handelt. wir speichern
+   deshalb pro kalendertag, nicht pro datenpunkt.
+
+3. der nenner. seit 20.08.2026 laeuft eurusd mit, weil FOLLOW THE MONEY die
+   wochenbewegung um den dollar bereinigt. ohne diese spalte ist jede
+   prozentzahl in der grafik zur haelfte eine aussage ueber den massstab
+   und nicht ueber den wert. den dollarindex selbst gibt es im freien tarif
+   nicht, eurusd ist der ehrliche ersatz und wird auch so beschriftet.
+
+4. die flussfelder. ebenfalls seit 20.08.2026, weil FOLLOW THE MONEY nicht
+   fragt, ob eine rendite echt war, sondern wohin geld gerade geht. dafuer
+   reichen preise nicht. der gesamtmarkt steigt auch dann, wenn kein
+   einziger dollar dazugekommen ist. die umlaufenden stablecoins sind die
+   einzige frei erreichbare zahl, die tatsaechlich geld misst, und der
+   umsatz sagt, ob eine bewegung getragen war. beides laeuft ab jetzt mit.
+
+5. der plausibilitaetswaechter. seit 22.08.2026. am 20.08. hat der logger
+   "stables": 51836205127375208 geschrieben, das 168000fache des richtigen
+   wertes. das war keine marktbewegung, das war ein kaputter punkt bei der
+   quelle. wir koennen die quelle nicht reparieren, wir koennen uns nur
+   weigern, den punkt zu uebernehmen. ein logger, der eine luecke laesst,
+   ist besser als einer, der unsinn schreibt. eine luecke sieht man, eine
+   falsche zahl rechnet man weiter.
 
 Er postet nichts und er druckt den schluessel niemals.
 
-    python3 scripts/market_log.py            taeglicher lauf
-    python3 scripts/market_log.py --backfill einmalig, holt 90 tage historie
-    python3 scripts/market_log.py --selftest rechnet ohne netz
+python3 scripts/market_log.py            taeglicher lauf
+python3 scripts/market_log.py --backfill einmalig, holt 90 tage historie
+python3 scripts/market_log.py --pruefen  nur nachsehen, schreibt nichts
+python3 scripts/market_log.py --selftest rechnet ohne netz
 """
 
+import datetime
 import json
 import os
 import sys
@@ -46,43 +60,73 @@ LOG = os.path.join(REPO, "data", "market-log.json")
 TIMEOUT = 25
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
+
 TD_KEY = os.environ.get("TWELVEDATA_API_KEY", "").strip()
 TD = "https://api.twelvedata.com"
 CG = "https://api.coingecko.com/api/v3"
-FX = "https://api.frankfurter.app"  # ezb-referenzkurse, kein schluessel
+FX = "https://api.frankfurter.app"
 DL = ["https://api.llama.fi", "https://stablecoins.llama.fi"]  # ohne schluessel
 
-# die vier sprossen der risikoleiter. gold, aktien, bitcoin, altcoins.
-# eth steht so lange fuer die oberste sprosse, bis unsere eigene
-# dominanzreihe lang genug ist, um daraus den altcoin-anteil zu rechnen.
-#
-# ab 20.08.2026 kommen die felder fuer FOLLOW THE MONEY dazu. sie stehen
-# bewusst hinten, damit die reihenfolge in bestehenden zeilen ruhig bleibt
-# und der diff im repo lesbar ist.
-#
-#   stables   umlaufende stablecoins in dollar. das ist die einzige zahl in
-#             dieser liste, die wirklich geld misst und nicht preis. wer
-#             usdt praegt, hat vorher dollar hingelegt. steigt die reihe,
-#             ist geld in krypto hineingegangen. faellt sie, heraus.
-#   spy_vol   umsatz im aktienindex. eine bewegung mit umsatz ist etwas
-#             anderes als dieselbe bewegung ohne. kostet keinen zusaetzlichen
-#             aufruf, der wert steht in derselben antwort wie der kurs.
-#   xlk xly   die zyklische seite, technologie und konsumgueter.
-#   xlu xlp   die defensive seite, versorger und grundbedarf.
-#             das verhaeltnis der beiden seiten ist der ehrliche ersatz fuer
-#             finviz. es sagt, ob innerhalb des aktienmarktes gerade risiko
-#             gesucht oder gemieden wird.
-#
-# nicht gespeichert, weil aus den obigen ausrechenbar und sonst driftend
-#   gold gegen aktien   gld geteilt durch spy
-#   stablecoin ratio    marktkapital bitcoin geteilt durch stables
 FIELDS = ["gld", "spy", "btc", "eth", "btc_dom", "total_mcap", "eurusd",
           "stables", "spy_vol", "xlk", "xly", "xlu", "xlp"]
 
-# die sechs aktienpapiere, die wir bei twelve data abfragen. reihenfolge
-# ist die abfragereihenfolge, jeder eintrag kostet einen credit.
 TD_SYMBOLE = [("gld", "GLD"), ("spy", "SPY"), ("xlk", "XLK"),
               ("xly", "XLY"), ("xlu", "XLU"), ("xlp", "XLP")]
+
+# ---------------------------------------------------------------------------
+# der plausibilitaetswaechter
+#
+# zwei netze, unabhaengig voneinander gespannt.
+#
+# BAND   was ueberhaupt eine ernstzunehmende zahl sein kann. gilt immer,
+#        auch beim allerersten wert eines feldes, wo es nichts zum
+#        vergleichen gibt. genau dieses netz haette den 20.08. gefangen.
+#        die grenzen sind absichtlich weit. sie sollen unsinn abfangen,
+#        keine marktmeinung durchsetzen. gold darf sich verdoppeln.
+#
+# DRIFT  wie weit sich ein feld an einem tag bewegen darf, gemessen am
+#        letzten bekannten wert. gilt nur, wenn es einen vorwert gibt, und
+#        die spanne waechst mit der zahl der tage dazwischen, damit eine
+#        luecke im log nicht jeden folgewert verwirft. ein feld ohne
+#        eintrag hier wird nur vom band geprueft. spy_vol steht bewusst
+#        nicht drin, umsatz springt an echten tagen wirklich um das
+#        vierfache, das ist die aussage und kein fehler.
+# ---------------------------------------------------------------------------
+
+BAND = {
+    "gld":        (50.0, 2000.0),
+    "spy":        (100.0, 5000.0),
+    "xlk":        (10.0, 2000.0),
+    "xly":        (10.0, 2000.0),
+    "xlu":        (10.0, 2000.0),
+    "xlp":        (10.0, 2000.0),
+    "btc":        (1000.0, 10000000.0),
+    "eth":        (10.0, 1000000.0),
+    "btc_dom":    (20.0, 95.0),
+    "total_mcap": (1e11, 1e15),
+    "eurusd":     (0.5, 2.0),
+    "stables":    (1e10, 1e13),
+    "spy_vol":    (1e6, 1e9),
+}
+
+DRIFT = {
+    "gld": 0.08,
+    "spy": 0.08,
+    "xlk": 0.10,
+    "xly": 0.10,
+    "xlu": 0.08,
+    "xlp": 0.08,
+    "btc": 0.20,
+    "eth": 0.25,
+    "btc_dom": 0.05,
+    "total_mcap": 0.20,
+    "eurusd": 0.04,
+    "stables": 0.03,
+}
+
+# eine luecke von einem halben jahr darf die spanne nicht ins unendliche
+# oeffnen, sonst prueft die drift am ende gar nichts mehr.
+DRIFT_MAX_TAGE = 30
 
 
 def _hide(text):
@@ -96,14 +140,12 @@ def get_json(url, accept="application/json"):
         return json.loads(r.read().decode("utf-8", "replace"))
 
 
-# ------------------------------------------------------------------ speicher
-
 def load_log(path=LOG):
     if not os.path.exists(path):
         return []
     with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
-    return data if isinstance(data, list) else []
+        return data if isinstance(data, list) else []
 
 
 def merge(rows, new_rows):
@@ -139,7 +181,198 @@ def save_log(rows, path=LOG):
         fh.write("\n")
 
 
-# ------------------------------------------------------------------- quellen
+# ---------------------------------------------------------------------------
+# pruefung
+# ---------------------------------------------------------------------------
+
+def tage_zwischen(a, b):
+    """kalendertage zwischen zwei ISO-daten, immer positiv."""
+    try:
+        da = datetime.date(*[int(x) for x in str(a).split("-")])
+        db = datetime.date(*[int(x) for x in str(b).split("-")])
+    except (ValueError, TypeError):
+        return 1
+    return abs((db - da).days)
+
+
+def band_ok(key, wert):
+    """liegt der wert im bereich dessen, was diese groesse sein kann."""
+    grenzen = BAND.get(key)
+    if grenzen is None or wert is None:
+        return True
+    try:
+        zahl = float(wert)
+    except (TypeError, ValueError):
+        return False
+    return grenzen[0] <= zahl <= grenzen[1]
+
+
+def drift_ok(key, wert, vorwert, tage):
+    """
+    hat sich der wert seit dem letzten bekannten stand ploetzlicher
+    bewegt, als diese groesse sich bewegen kann. gibt zusaetzlich das
+    verhaeltnis zurueck, damit die meldung sagen kann, um welchen faktor.
+    """
+    d = DRIFT.get(key)
+    if d is None or wert is None or not vorwert:
+        return True, 1.0
+    try:
+        q = float(wert) / float(vorwert)
+    except (TypeError, ValueError, ZeroDivisionError):
+        return True, 1.0
+    n = max(1, min(int(tage), DRIFT_MAX_TAGE))
+    unten = (1.0 - d) ** n
+    oben = (1.0 + d) ** n
+    return (unten <= q <= oben), q
+
+
+def letzte_werte(rows):
+    """
+    fuer jedes feld der juengste bekannte wert, als (tag, wert).
+    der log liegt immer nach tag sortiert vor, save_log sortiert ihn.
+    zur sicherheit sortieren wir hier trotzdem, ein einziger falsch
+    einsortierter tag wuerde sonst jeden vergleich danach verdrehen.
+    """
+    out = {}
+    for r in sorted(rows, key=lambda x: x.get("d") or ""):
+        if not r.get("d"):
+            continue
+        for key in FIELDS:
+            if r.get(key) is not None:
+                out[key] = (r["d"], r[key])
+    return out
+
+
+def pruefe_zeilen(neu, rows):
+    """
+    nimmt die frisch geholten zeilen und gibt sie zurueck, aber ohne die
+    werte, die nicht bestehen. verworfen wird immer nur der einzelne wert,
+    nie die ganze zeile. wenn gold heute unsinn liefert, ist das kein grund
+    bitcoin wegzuwerfen.
+
+    der vergleichsstand waechst waehrend der pruefung mit, damit auch ein
+    backfill die tage untereinander vergleicht und nicht nur gegen einen
+    leeren log.
+    """
+    stand = letzte_werte(rows)
+    sauber = []
+    meldungen = []
+    for row in sorted(neu, key=lambda x: x.get("d") or ""):
+        tag = row.get("d")
+        if not tag:
+            continue
+        out = {"d": tag}
+        for key in FIELDS:
+            wert = row.get(key)
+            if wert is None:
+                continue
+            if not band_ok(key, wert):
+                lo, hi = BAND[key]
+                meldungen.append(
+                    "%s %s verworfen. %s liegt ausserhalb von %s bis %s"
+                    % (tag, key, wert, _kurz(lo), _kurz(hi)))
+                continue
+            vor = stand.get(key)
+            if vor is not None:
+                ok, q = drift_ok(key, wert, vor[1], tage_zwischen(vor[0], tag))
+                if not ok:
+                    meldungen.append(
+                        "%s %s verworfen. %s ist das %sfache von %s am %s"
+                        % (tag, key, wert, _faktor(q), vor[1], vor[0]))
+                    continue
+            out[key] = wert
+            stand[key] = (tag, wert)
+        if len(out) > 1:
+            sauber.append(out)
+        else:
+            meldungen.append("%s ganze zeile verworfen, kein wert hat bestanden" % tag)
+    return sauber, meldungen
+
+
+def saeubere_log(rows):
+    """
+    geht den bestehenden log durch und entfernt werte, die nicht einmal im
+    band liegen.
+
+    nur das band, niemals die drift. eine zahl, die diese groesse gar nicht
+    sein kann, ist ein fehler und darf weg. eine zahl, die nur schnell
+    gestiegen ist, kann echt sein, und alte eintraege rueckwirkend nach
+    meinung zu loeschen waere genau das, was wir anderen vorwerfen.
+
+    dadurch heilt sich der log beim naechsten lauf von selbst. der kaputte
+    20.08. verschwindet, ohne dass jemand eine datei von hand anfasst.
+    """
+    out = []
+    meldungen = []
+    for r in rows:
+        neu = {}
+        for key, wert in r.items():
+            if key == "d" or wert is None:
+                neu[key] = wert
+                continue
+            if band_ok(key, wert):
+                neu[key] = wert
+            else:
+                lo, hi = BAND[key]
+                meldungen.append(
+                    "%s %s entfernt. %s liegt ausserhalb von %s bis %s"
+                    % (r.get("d"), key, wert, _kurz(lo), _kurz(hi)))
+        out.append(neu)
+    return out, meldungen
+
+
+def pruefe_log(rows):
+    """
+    nur nachsehen, nichts aendern. meldet band und drift, damit man den
+    bestand einmal ansehen kann, ohne dass etwas geschrieben wird.
+    """
+    meldungen = []
+    stand = {}
+    for r in sorted(rows, key=lambda x: x.get("d") or ""):
+        tag = r.get("d")
+        if not tag:
+            continue
+        for key in FIELDS:
+            wert = r.get(key)
+            if wert is None:
+                continue
+            if not band_ok(key, wert):
+                lo, hi = BAND[key]
+                meldungen.append("%s %s ausserhalb des bandes. %s, erlaubt %s bis %s"
+                                 % (tag, key, wert, _kurz(lo), _kurz(hi)))
+                continue
+            vor = stand.get(key)
+            if vor is not None:
+                ok, q = drift_ok(key, wert, vor[1], tage_zwischen(vor[0], tag))
+                if not ok:
+                    meldungen.append("%s %s auffaelliger sprung. %s ist das %sfache "
+                                     "von %s am %s"
+                                     % (tag, key, wert, _faktor(q), vor[1], vor[0]))
+            stand[key] = (tag, wert)
+    return meldungen
+
+
+def _kurz(zahl):
+    """grosse grenzen lesbar machen, damit die meldung nicht aus nullen besteht."""
+    zahl = float(zahl)
+    for teiler, zeichen in ((1e12, "T"), (1e9, "B"), (1e6, "M")):
+        if abs(zahl) >= teiler:
+            return "%g%s" % (zahl / teiler, zeichen)
+    return "%g" % zahl
+
+
+def _faktor(q):
+    """das verhaeltnis lesbar machen, auch wenn es absurd gross ist."""
+    if q >= 1000:
+        return "%.0f" % q
+    if q >= 10:
+        return "%.1f" % q
+    return "%.2f" % q
+
+
+# ---------------------------------------------------------------------------
+# quellen
+# ---------------------------------------------------------------------------
 
 def td_roh(symbol, points):
     """
@@ -206,7 +439,6 @@ def dl_parse(data):
 def dl_stablecoins(tage=None):
     """
     umlaufende stablecoins in dollar, von defillama. kein schluessel.
-
     das ist die einzige frei erreichbare zahl, die geld misst und nicht
     preis. sie faellt nicht, wenn der markt faellt, sondern nur, wenn
     jemand stablecoins zurueckgibt und dollar mitnimmt.
@@ -215,9 +447,11 @@ def dl_stablecoins(tage=None):
     mit einem unix-datum und einer summe. die summe steht je nach fassung
     als zahl oder als karte {peggedUSD: ..., peggedEUR: ...}. wir summieren
     in beiden faellen alles auf, das ist die zahl, die auf der webseite
-    oben steht. der sandkasten hat kein netz, diese verzweigung ist deshalb
-    absichtlich breit und wird beim ersten echten lauf in der action
-    bestaetigt oder korrigiert.
+    oben steht.
+
+    am 20.08.2026 hat genau diese quelle einen punkt geliefert, der um das
+    168000fache danebenlag. der plausibilitaetswaechter faengt so etwas ab,
+    bevor es in den log kommt.
     """
     fehler = []
     for host in DL:
@@ -293,11 +527,13 @@ def cg_price(ids):
     return {k: (v or {}).get("usd") for k, v in data.items()}
 
 
-# --------------------------------------------------------------------- laeufe
-
 def today():
     return time.strftime("%Y-%m-%d", time.gmtime())
 
+
+# ---------------------------------------------------------------------------
+# laeufe
+# ---------------------------------------------------------------------------
 
 def run_backfill(days=90):
     """
@@ -311,9 +547,6 @@ def run_backfill(days=90):
         rows.setdefault(day, {"d": day})[key] = value
 
     vorher = time.strftime("%Y-%m-%d", time.gmtime(time.time() - days * 86400))
-
-    # der aktienteil laeuft ueber td_roh, weil der umsatz in derselben
-    # antwort steht. ein feld mehr, kein aufruf mehr.
     plan = []
     for key, symbol in TD_SYMBOLE:
         plan.append((key, (lambda s=symbol: td_roh(s, days)), 8))
@@ -321,12 +554,11 @@ def run_backfill(days=90):
              ("eth", lambda: cg_chart("ethereum", days), 2),
              ("eurusd", lambda: fx_series(vorher, today()), 1),
              ("stables", lambda: dl_stablecoins(days), 1)]
-
     for key, fetch, pause in plan:
         try:
             series = fetch()
         except Exception as exc:  # noqa: BLE001
-            print("  FEHL %-7s %s" % (key, _hide(str(exc))[:90]))
+            print("  FEHL  %-7s %s" % (key, _hide(str(exc))[:90]))
             continue
         for day, value in series.items():
             if isinstance(value, dict):
@@ -335,10 +567,9 @@ def run_backfill(days=90):
                     put(day, "spy_vol", value["volume"])
             else:
                 put(day, key, value)
-        print("  OK   %-7s %d tage, %s bis %s"
+        print("  OK    %-7s %d tage, %s bis %s"
               % (key, len(series), min(series), max(series)))
         time.sleep(pause)
-
     return [rows[day] for day in sorted(rows)]
 
 
@@ -351,20 +582,17 @@ def run_daily():
         try:
             series = td_roh(symbol, 5)
         except Exception as exc:  # noqa: BLE001
-            print("  FEHL %-9s %s" % (key, _hide(str(exc))[:90]))
+            print("  FEHL  %-9s %s" % (key, _hide(str(exc))[:90]))
             time.sleep(8)
             continue
         newest = max(series)
-        # an wochenenden und feiertagen liefert der etf keinen neuen tag.
-        # dann schreiben wir nichts, statt einen alten kurs auf heute zu
-        # datieren. die luecke ist die ehrliche antwort.
         if newest == day:
             row[key] = series[newest]["close"]
             if key == "spy" and series[newest].get("volume") is not None:
                 row["spy_vol"] = series[newest]["volume"]
-            print("  OK   %-9s %s" % (key, row[key]))
+            print("  OK    %-9s %s" % (key, row[key]))
         else:
-            print("  leer %-9s letzter handelstag %s" % (key, newest))
+            print("  leer  %-9s letzter handelstag %s" % (key, newest))
         time.sleep(8)
 
     try:
@@ -373,62 +601,61 @@ def run_daily():
             row["btc"] = round(float(prices["bitcoin"]), 6)
         if prices.get("ethereum") is not None:
             row["eth"] = round(float(prices["ethereum"]), 6)
-        print("  OK   krypto    btc %s  eth %s"
+        print("  OK    krypto    btc %s eth %s"
               % (row.get("btc"), row.get("eth")))
     except Exception as exc:  # noqa: BLE001
-        print("  FEHL krypto %s" % str(exc)[:90])
-
+        print("  FEHL  krypto    %s" % str(exc)[:90])
     time.sleep(2)
+
     try:
         fx_tag, fx_kurs = fx_latest()
-        # dieselbe regel wie bei gold und aktien. nur schreiben, wenn der
-        # kurs auch wirklich von heute ist.
         if fx_tag == day:
             row["eurusd"] = fx_kurs
-            print("  OK   eurusd    %s" % fx_kurs)
+            print("  OK    eurusd    %s" % fx_kurs)
         else:
-            print("  leer eurusd    letzte veroeffentlichung %s" % fx_tag)
+            print("  leer  eurusd    letzte veroeffentlichung %s" % fx_tag)
     except Exception as exc:  # noqa: BLE001
-        print("  FEHL eurusd %s" % str(exc)[:90])
-
+        print("  FEHL  eurusd    %s" % str(exc)[:90])
     time.sleep(1)
+
     try:
         dom, total = cg_global()
         if dom is not None:
             row["btc_dom"] = dom
         if total is not None:
             row["total_mcap"] = total
-        print("  OK   global    dominanz %s prozent  gesamt %s"
+        print("  OK    global    dominanz %s prozent gesamt %s"
               % (row.get("btc_dom"), row.get("total_mcap")))
     except Exception as exc:  # noqa: BLE001
-        print("  FEHL global %s" % str(exc)[:90])
-
+        print("  FEHL  global    %s" % str(exc)[:90])
     time.sleep(1)
+
     try:
         reihe = dl_stablecoins(7)
         newest = max(reihe)
-        # dieselbe regel wie ueberall. defillama traegt den tag oft erst
-        # spaet nach, dann bleibt die spalte heute leer und faellt beim
-        # naechsten lauf von selbst nach.
         if newest == day:
             row["stables"] = reihe[newest]
-            print("  OK   stables   %s" % reihe[newest])
+            print("  OK    stables   %s" % reihe[newest])
         else:
-            print("  leer stables   letzter punkt %s" % newest)
+            print("  leer  stables   letzter punkt %s" % newest)
     except Exception as exc:  # noqa: BLE001
-        print("  FEHL stables %s" % str(exc)[:90])
+        print("  FEHL  stables   %s" % str(exc)[:90])
 
     return [row] if len(row) > 1 else []
 
 
-# ------------------------------------------------------------------ selftest
+# ---------------------------------------------------------------------------
+# selbsttest
+# ---------------------------------------------------------------------------
 
 def run_selftest():
     fails = []
+    zaehler = [0]
 
     def check(name, got, want):
+        zaehler[0] += 1
         if got != want:
-            fails.append("%s\n    ist  %r\n    soll %r" % (name, got, want))
+            fails.append("%s\n     ist  %r\n     soll %r" % (name, got, want))
 
     # merge legt neue tage an und sortiert
     got = merge([{"d": "2026-08-02", "btc": 2}], [{"d": "2026-08-01", "btc": 1}])
@@ -507,41 +734,168 @@ def run_selftest():
     # ein leerer log faellt nicht um
     check("leerer log", merge([], []), [])
 
+    # ------------------------------------------------------------------
+    # plausibilitaetswaechter
+    # ------------------------------------------------------------------
+
+    # der fall vom 20.08.2026, wegen dem es diesen waechter gibt
+    check("band faengt den 20.08.", band_ok("stables", 51836205127375208), False)
+    check("band laesst den echten wert durch", band_ok("stables", 308057841723), True)
+
+    # dominanz ist ein prozentsatz und kann nicht 0 oder 120 sein
+    check("dominanz null faellt", band_ok("btc_dom", 0.0), False)
+    check("dominanz 120 faellt", band_ok("btc_dom", 120.0), False)
+    check("dominanz 58.7 besteht", band_ok("btc_dom", 58.7), True)
+
+    # ein feld ohne band wird nicht geprueft, statt blind verworfen
+    check("unbekanntes feld besteht", band_ok("gibtsnicht", 1e30), True)
+
+    # tage zaehlen, in beide richtungen gleich
+    check("tage zwischen", tage_zwischen("2026-08-14", "2026-08-21"), 7)
+    check("tage zwischen rueckwaerts", tage_zwischen("2026-08-21", "2026-08-14"), 7)
+
+    # der erste wert eines feldes hat nichts zum vergleichen und besteht
+    got, meld = pruefe_zeilen([{"d": "2026-08-21", "stables": 308057841723}], [])
+    check("erster wert besteht", got,
+          [{"d": "2026-08-21", "stables": 308057841723}])
+    check("erster wert ohne meldung", meld, [])
+
+    # der kaputte wert kommt gar nicht erst in den log
+    got, meld = pruefe_zeilen(
+        [{"d": "2026-08-20", "stables": 51836205127375208, "btc": 118000.0}],
+        [{"d": "2026-08-19", "stables": 308000000000, "btc": 117000.0}])
+    check("kaputter wert wird verworfen", got,
+          [{"d": "2026-08-20", "btc": 118000.0}])
+    check("und wird gemeldet", len(meld), 1)
+
+    # ein sprung innerhalb des bandes faellt trotzdem durch die drift
+    got, _ = pruefe_zeilen(
+        [{"d": "2026-08-21", "stables": 600000000000}],
+        [{"d": "2026-08-20", "stables": 308000000000}])
+    check("drift faengt den sprung", got, [])
+
+    # eine luecke im log verwirft nicht den ersten wert danach
+    got, _ = pruefe_zeilen(
+        [{"d": "2026-08-21", "btc": 150000.0}],
+        [{"d": "2026-08-01", "btc": 100000.0}])
+    check("luecke verwirft nicht", got, [{"d": "2026-08-21", "btc": 150000.0}])
+
+    # umsatz darf springen, das ist die aussage und kein fehler
+    got, _ = pruefe_zeilen(
+        [{"d": "2026-08-21", "spy_vol": 159230406}],
+        [{"d": "2026-08-20", "spy_vol": 41234567}])
+    check("umsatz darf springen", got, [{"d": "2026-08-21", "spy_vol": 159230406}])
+
+    # ein verworfener wert reisst die uebrigen felder nicht mit
+    got, _ = pruefe_zeilen(
+        [{"d": "2026-08-21", "gld": 9999999.0, "spy": 640.0}],
+        [{"d": "2026-08-20", "gld": 400.0, "spy": 638.0}])
+    check("zeile bleibt stehen", got, [{"d": "2026-08-21", "spy": 640.0}])
+
+    # der bestand heilt sich selbst, nur beim band, nie bei der drift
+    rows, meld = saeubere_log([
+        {"d": "2026-08-19", "stables": 308000000000, "btc": 117000.0},
+        {"d": "2026-08-20", "stables": 51836205127375208, "btc": 118000.0}])
+    check("heilung entfernt den wert", rows,
+          [{"d": "2026-08-19", "stables": 308000000000, "btc": 117000.0},
+           {"d": "2026-08-20", "btc": 118000.0}])
+    check("heilung meldet einmal", len(meld), 1)
+
+    rows, meld = saeubere_log([
+        {"d": "2026-08-19", "btc": 60000.0},
+        {"d": "2026-08-20", "btc": 118000.0}])
+    check("heilung fasst schnelle bewegung nicht an", len(meld), 0)
+    check("heilung laesst die zeilen ganz", rows,
+          [{"d": "2026-08-19", "btc": 60000.0},
+           {"d": "2026-08-20", "btc": 118000.0}])
+
+    # nachsehen meldet, ohne etwas zu aendern
+    meld = pruefe_log([{"d": "2026-08-20", "stables": 51836205127375208}])
+    check("nachsehen findet den fehler", len(meld), 1)
+    check("sauberer log meldet nichts",
+          pruefe_log([{"d": "2026-08-20", "stables": 308000000000}]), [])
+
+    # ein backfill vergleicht die neuen tage auch untereinander
+    got, _ = pruefe_zeilen([{"d": "2026-08-19", "stables": 308000000000},
+                            {"d": "2026-08-20", "stables": 51836205127375208},
+                            {"d": "2026-08-21", "stables": 309000000000}], [])
+    check("backfill prueft in sich", [r["d"] for r in got],
+          ["2026-08-19", "2026-08-21"])
+
     if fails:
         print("selftest FEHLGESCHLAGEN")
         for f in fails:
             print("  " + f)
         return 1
-    print("selftest ok, 14 faelle")
+
+    print("selftest ok, %d faelle" % zaehler[0])
     return 0
 
+
+# ---------------------------------------------------------------------------
 
 def main(argv):
     if "--selftest" in argv:
         return run_selftest()
 
+    if "--pruefen" in argv:
+        rows = load_log()
+        print("pulsehawk marktlogger, nur nachsehen")
+        print("log hat %d tage" % len(rows))
+        meldungen = pruefe_log(rows)
+        if not meldungen:
+            print("\nnichts auffaellig, alle werte im band und ohne sprung")
+            return 0
+        print("\n%d auffaelligkeiten" % len(meldungen))
+        for m in meldungen:
+            print("  " + m)
+        return 0
+
     modus = "backfill" if "--backfill" in argv else "taeglich"
+
     print("pulsehawk marktlogger, %s" % modus)
     print("laufzeitpunkt %s utc" % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
     print("twelvedata schluessel %s\n"
           % ("gesetzt, %d zeichen" % len(TD_KEY) if TD_KEY else "FEHLT"))
 
     neu = run_backfill() if modus == "backfill" else run_daily()
-    if not neu:
+
+    alt = load_log()
+
+    # erst den bestand heilen, damit ein alter kaputter wert nicht als
+    # vergleichsmassstab fuer den neuen dient.
+    alt, geheilt = saeubere_log(alt)
+    if geheilt:
+        print("\nbestand geheilt")
+        for m in geheilt:
+            print("  " + m)
+
+    neu, verworfen = pruefe_zeilen(neu, alt)
+    if verworfen:
+        print("\nplausibilitaetswaechter")
+        for m in verworfen:
+            print("  " + m)
+
+    if not neu and not geheilt:
         print("\nkeine neuen werte, log bleibt unveraendert")
         return 0
 
-    rows = merge(load_log(), neu)
+    rows = merge(alt, neu)
     save_log(rows)
-    voll = [r for r in rows if all(r.get(k) is not None for k in ("gld", "spy", "btc", "eth"))]
+
+    voll = [r for r in rows if all(r.get(k) is not None
+                                   for k in ("gld", "spy", "btc", "eth"))]
     mit_dom = [r for r in rows if r.get("btc_dom") is not None]
+
     print("\nlog hat jetzt %d tage, %s bis %s" % (len(rows), rows[0]["d"], rows[-1]["d"]))
     print("  davon %d tage mit allen vier kursen" % len(voll))
     print("  davon %d tage mit dominanz, die altcoin-reihe waechst ab hier"
           % len(mit_dom))
+
     mit_fx = [r for r in rows if r.get("eurusd") is not None]
     print("  davon %d tage mit eurusd, der nenner fuer FOLLOW THE MONEY"
           % len(mit_fx))
+
     return 0
 
 
