@@ -1,20 +1,28 @@
 name: seitenstempel
 
-# Schreibt die Tageszaehler taeglich in den Quelltext der Zyklusseiten.
+# Schreibt die Tageszahlen fest in den Quelltext der Datenseiten.
 # Der Browser rechnet sie ohnehin, aber Antwortmaschinen lesen oft nur den
 # rohen Quelltext und fuehren kein JavaScript aus. Ohne diesen Lauf saehen
 # die fuer immer die Zahl vom Tag der Auslieferung.
 #
-# Laeuft eigenstaendig und fasst den Marktlogger nicht an.
+# ZWEI TERMINE, UND DAS HAT EINEN GRUND
+# Die zwei Zyklusseiten zaehlen Tage. Ihre Zahl wechselt um Mitternacht UTC,
+# also will man frueh am Tag stempeln.
+# Die Dominanzseite liest data/market-log.json. Der Marktlogger schreibt
+# dort erst um 21:23 UTC hinein. Ein Lauf um 04:17 findet deshalb nur den
+# Wert von gestern.
+# Also beides. 04:17 macht die Tageszaehler frisch, 21:40 holt die Dominanz
+# vom selben Tag nach.
 #
-# ⚠️ Ab jetzt gilt fuer bitcoin-halving-to-top.html und
-# bitcoin-top-to-bottom.html dieselbe Regel wie fuer index.html im Repo
-# kaspa-pulse. Niemals eine alte lokale Kopie hochladen, der Bot hat die
-# Datei inzwischen veraendert.
+# ⚠️ Fuer bitcoin-halving-to-top.html, bitcoin-top-to-bottom.html und
+# bitcoin-dominance.html gilt ab jetzt dieselbe Regel wie fuer index.html im
+# Repo kaspa-pulse. Niemals eine alte lokale Kopie hochladen, der Bot hat
+# die Datei inzwischen veraendert.
 
 on:
   schedule:
-    - cron: "17 4 * * *"    # taeglich 04:17 utc, weit weg vom marktlogger
+    - cron: "17 4 * * *"     # frueh, fuer die tageszaehler
+    - cron: "40 21 * * *"    # nach dem marktlogger, fuer die dominanz
   workflow_dispatch:
 
 permissions:
