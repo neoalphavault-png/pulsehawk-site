@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Long From the Bitcoin Top to the Bottom?</title>
+<meta name="description" content="The three completed Bitcoin cycles took 410, 364 and 376 days from the top to the bottom. A live count of where this one stands, and no prediction.">
+<link rel="canonical" href="https://pulsehawk.io/bitcoin-top-to-bottom.html">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="How Long From the Bitcoin Top to the Bottom?">
+<meta property="og:description" content="410, 364 and 376 days in the three completed cycles. Every date with its source, plus a live count of days since the last top.">
+<meta property="og:url" content="https://pulsehawk.io/bitcoin-top-to-bottom.html">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How long does it take Bitcoin to go from the cycle top to the bottom?",
+     "acceptedAnswer":{"@type":"Answer","text":"In the three completed cycles it took 410 days, 364 days and 376 days. All three land between 364 and 410 days, which is a spread of about six weeks."}},
+    {"@type":"Question","name":"When was the last Bitcoin cycle top?",
+     "acceptedAnswer":{"@type":"Answer","text":"6 October 2025, at 126,198 US dollars."}},
+    {"@type":"Question","name":"When did Bitcoin bottom in previous cycles?",
+     "acceptedAnswer":{"@type":"Answer","text":"14 January 2015 at about 175 dollars, 15 December 2018 at about 3,185 dollars, and 21 November 2022 at about 15,476 dollars."}},
+    {"@type":"Question","name":"Will the next bottom follow the same pattern?",
+     "acceptedAnswer":{"@type":"Answer","text":"Nobody knows, and this page does not guess. Three cycles are three data points, and they differ by 46 days. This page counts what happened and names no date and no price."}},
+    {"@type":"Question","name":"Why do sources disagree on the 2022 low?",
+     "acceptedAnswer":{"@type":"Answer","text":"Some put it on 10 November 2022 and some on 21 November 2022, depending on the exchange and on whether intraday lows or daily closes are used. With the earlier date that cycle took 365 days instead of 376. Both readings still fall inside the same range."}},
+    {"@type":"Question","name":"How many days has it been since the last top?",
+     "acceptedAnswer":{"@type":"Answer","text":"The counter at the top of this page shows the current number. It is calculated from 6 October 2025 and updates by itself."}}
+  ]
+}
+</script>
+<style>
+  :root { --bg:#080B0F; --card:#0B0E12; --line:#1A1D21; --teal:#49EACB;
+          --btc:#D95926; --txt:#FFFFFF; --dim:#9BA3AB; --dimmer:#7A828C; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Helvetica Neue',Arial,sans-serif;
+         background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(73,234,203,0.10), transparent 60%); }
+  .wrap { max-width:720px; margin:0 auto; padding:34px 20px 60px; }
+  .nav { display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav img { width:30px; }
+  .nav b { font-size:17px; letter-spacing:4px; color:var(--txt); font-weight:800; }
+  .nav b span { color:var(--teal); }
+  .eyebrow { font-size:12px; letter-spacing:4px; color:var(--dimmer); text-transform:uppercase;
+             margin-top:42px; font-weight:700; }
+  h1 { font-size:34px; line-height:1.18; letter-spacing:-0.6px; margin-top:12px; }
+  .lead { font-size:17px; line-height:27px; color:var(--txt); margin-top:18px; }
+  .lead b { color:var(--teal); font-weight:700; }
+  h2 { font-size:21px; letter-spacing:-0.3px; margin:40px 0 0; }
+  p { font-size:15.5px; line-height:25px; color:var(--dim); margin-top:12px; }
+  p b { color:var(--txt); font-weight:600; }
+  a { color:var(--teal); }
+  p a { text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
+
+  .live { background:var(--card); border:1px solid var(--line); border-radius:16px;
+          padding:22px 24px; margin-top:22px; display:flex; flex-wrap:wrap; gap:26px; }
+  .live div { flex:1 1 190px; }
+  .live .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
+  .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
+
+  .scroll { overflow-x:auto; margin-top:16px; }
+  table { border-collapse:collapse; width:100%; min-width:560px; }
+  th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); font-size:14.5px; }
+  th { font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dimmer); font-weight:700; }
+  td.n { text-align:right; font-weight:700; color:var(--txt); }
+  tr.now td { color:var(--btc); }
+
+  .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
+  .note p { color:var(--txt); }
+
+  .faq { margin-top:14px; }
+  .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
+  .faq p { margin-top:7px; }
+
+  footer { border-top:1px solid var(--line); margin-top:56px; padding-top:18px; display:flex;
+           justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
+  footer a { color:var(--dim); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
+
+<div class="eyebrow">Bitcoin cycles</div>
+<h1>How long from the Bitcoin top to the bottom?</h1>
+
+<p class="lead">The three completed cycles took <b>410, 364 and 376 days</b> from the cycle
+top to the cycle low. That is a spread of about six weeks. This page counts the days and
+makes no forecast, which is the one thing that separates it from most of what you will find
+on this question.</p>
+
+<div class="live">
+  <div>
+    <div class="k">Days since the last top</div>
+    <div class="v" id="d1">319</div>
+    <div class="s">top was 6 October 2025</div>
+  </div>
+  <div>
+    <div class="k">Shortest completed cycle</div>
+    <div class="v">364</div>
+    <div class="s">top to bottom, 2017 to 2018</div>
+  </div>
+</div>
+<p style="font-size:13px;margin-top:8px">The left counter updates by itself. It is plain
+arithmetic from one fixed date, not a live price feed.</p>
+
+<h2>Every completed cycle, top to bottom</h2>
+
+<div class="scroll">
+<table>
+  <thead>
+    <tr><th>Cycle</th><th>Top</th><th>Bottom</th><th>Bottom price</th><th style="text-align:right">Days</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>2013 to 2015</td><td>30 Nov 2013</td><td>14 Jan 2015</td><td>about 175 USD</td><td class="n">410</td></tr>
+    <tr><td>2017 to 2018</td><td>16 Dec 2017</td><td>15 Dec 2018</td><td>about 3,185 USD</td><td class="n">364</td></tr>
+    <tr><td>2021 to 2022</td><td>10 Nov 2021</td><td>21 Nov 2022</td><td>about 15,476 USD</td><td class="n">376</td></tr>
+    <tr class="now"><td>2025 to now</td><td>6 Oct 2025</td><td>not known</td><td>not known</td><td class="n" id="d2">319</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>A cycle low can only be named in hindsight. The bottom row has no bottom date for the
+simple reason that nobody can know one yet, and any page that fills that cell is guessing.</p>
+
+<h2>Why you will see other numbers</h2>
+
+<p>The bottom dates for 2015 and 2018 are agreed on almost everywhere. The 2022 low is not.
+<b>Some sources put it on 10 November 2022 and others on 21 November 2022</b>, depending on
+the exchange and on whether intraday lows or daily closes are used.</p>
+
+<p>Take the earlier date and that cycle ran 365 days instead of 376. The useful part is that
+it barely matters. <b>Either way all three completed cycles land between 364 and 410 days.</b>
+A range that survives a change of source is worth more than a single number that does not.</p>
+
+<div class="note">
+<p>Bottom prices are marked "about" on purpose. Different venues printed lows within a few
+percent of each other on the same day, and pretending otherwise would be false precision.</p>
+</div>
+
+<h2>What this does not tell you</h2>
+
+<p>It does not tell you when this cycle bottoms. Three cycles are three data points, they
+differ by 46 days, and the market they trade in is not the market of 2015. Search this
+question and most results will name you a month. We will not, and that is deliberate.</p>
+
+<p>It also does not tell you a price. We publish no price targets, in any format, ever. The
+bottom prices in the table are history, not a template.</p>
+
+<h2>How we count</h2>
+
+<p>Calendar days between the top date and the bottom date, in UTC, with the top day counted
+as day zero. Top dates match the ones used on our
+<a href="/bitcoin-halving-to-top.html">halving to top page</a>, so the two pages can be read
+together. Bottom dates and prices come from published cycle low data, cross checked against
+CoinGecko research and Bitcoin Magazine's bear market record.</p>
+
+<h2>Questions people ask</h2>
+
+<div class="faq">
+  <div class="q">How long does it take Bitcoin to go from top to bottom?</div>
+  <p>410, 364 and 376 days in the three completed cycles. All three sit between 364 and 410
+  days.</p>
+
+  <div class="q">When was the last cycle top?</div>
+  <p>6 October 2025, at 126,198 US dollars.</p>
+
+  <div class="q">When did Bitcoin bottom in previous cycles?</div>
+  <p>14 January 2015, 15 December 2018 and 21 November 2022.</p>
+
+  <div class="q">Will the next bottom follow the same pattern?</div>
+  <p>Nobody knows, and this page does not guess. What it means is your call.</p>
+
+  <div class="q">Why do sources disagree on the 2022 low?</div>
+  <p>Different exchanges and different use of closes against intraday lows. See the section
+  above. It moves that one count from 376 to 365.</p>
+
+  <div class="q">Where do the numbers come from?</div>
+  <p>Every date is in the table. You can check each one against any price chart in a couple
+  of minutes, and that is the point.</p>
+</div>
+
+<footer>
+  <div>PulseHawk. Market data with receipts. No hype, no price targets.</div>
+  <div><a href="/">home</a> &nbsp; <a href="/impressum.html">impressum</a> &nbsp; <a href="/datenschutz.html">datenschutz</a></div>
+</footer>
+
+</div>
+<script>
+(function(){
+  var tage = function(iso){
+    var a = new Date(iso + "T00:00:00Z");
+    var b = new Date();
+    var heute = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate());
+    return Math.floor((heute - a.getTime()) / 86400000);
+  };
+  var n = tage("2025-10-06");
+  if (isFinite(n) && n > 0) {
+    var s = n.toLocaleString("en-US");
+    var a = document.getElementById("d1"); if (a) { a.textContent = s; }
+    var b = document.getElementById("d2"); if (b) { b.textContent = s; }
+  }
+})();
+</script>
+</body>
+</html>
