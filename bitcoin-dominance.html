@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitcoin Dominance Right Now, Counted Every Day</title>
+<meta name="description" content="Bitcoin dominance today, with the date it was read and the days behind it. Plus the one thing almost nobody says about what the number can and cannot mean.">
+<link rel="canonical" href="https://pulsehawk.io/bitcoin-dominance.html">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="Bitcoin Dominance Right Now, Counted Every Day">
+<meta property="og:description" content="The current reading with its date, our own daily series, and why dominance can move without a single dollar changing hands.">
+<meta property="og:url" content="https://pulsehawk.io/bitcoin-dominance.html">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What is Bitcoin dominance right now?",
+     "acceptedAnswer":{"@type":"Answer","text":"The figure at the top of this page is the current reading, shown with the date it was taken. It comes from our own daily record, which we have kept since 15 August 2026."}},
+    {"@type":"Question","name":"What does Bitcoin dominance mean?",
+     "acceptedAnswer":{"@type":"Answer","text":"It is the share of the total crypto market value that sits in Bitcoin. At 60 percent dominance, sixty cents of every dollar of crypto market value is Bitcoin."}},
+    {"@type":"Question","name":"Does rising Bitcoin dominance mean money is moving into Bitcoin?",
+     "acceptedAnswer":{"@type":"Answer","text":"Not necessarily. Dominance is a ratio of two market values, and both are price times supply. If altcoins fall while Bitcoin stands still, dominance rises without a single dollar changing hands. It is a measure of position, not of flow."}},
+    {"@type":"Question","name":"What dominance level means altcoin season?",
+     "acceptedAnswer":{"@type":"Answer","text":"There is no level that means it. Altcoin season is defined after the fact, by how many large altcoins outperformed Bitcoin over a window. Any single dominance number that is presented as the trigger is somebody's rule of thumb, not a measurement."}},
+    {"@type":"Question","name":"Where does the number come from?",
+     "acceptedAnswer":{"@type":"Answer","text":"CoinGecko's global endpoint, read once a day and written into our own file. We keep the record ourselves because that endpoint gives the current value only and no history."}},
+    {"@type":"Question","name":"How often does this page update?",
+     "acceptedAnswer":{"@type":"Answer","text":"Every day. The page also reads the record directly in your browser, so the figure you see is the newest one on file."}}
+  ]
+}
+</script>
+<style>
+  :root { --bg:#080B0F; --card:#0B0E12; --line:#1A1D21; --teal:#49EACB;
+          --btc:#D95926; --alt:#199E70; --txt:#FFFFFF; --dim:#9BA3AB; --dimmer:#7A828C; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Helvetica Neue',Arial,sans-serif;
+         background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(73,234,203,0.10), transparent 60%); }
+  .wrap { max-width:720px; margin:0 auto; padding:34px 20px 60px; }
+  .nav { display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav img { width:30px; }
+  .nav b { font-size:17px; letter-spacing:4px; color:var(--txt); font-weight:800; }
+  .nav b span { color:var(--teal); }
+  .pnav { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .pnav a, .pnav span { font-size:13px; padding:7px 13px; border-radius:999px;
+            text-decoration:none; border:1px solid var(--line); color:var(--dimmer); }
+  .pnav a:hover { border-color:rgba(73,234,203,0.45); color:var(--dim); }
+  .pnav span { background:rgba(73,234,203,0.10); border-color:rgba(73,234,203,0.45);
+               color:var(--teal); font-weight:700; }
+  .eyebrow { font-size:12px; letter-spacing:4px; color:var(--dimmer); text-transform:uppercase;
+             margin-top:42px; font-weight:700; }
+  h1 { font-size:34px; line-height:1.18; letter-spacing:-0.6px; margin-top:12px; }
+  .lead { font-size:17px; line-height:27px; color:var(--txt); margin-top:18px; }
+  .lead b { color:var(--teal); font-weight:700; }
+  h2 { font-size:21px; letter-spacing:-0.3px; margin:40px 0 0; }
+  p { font-size:15.5px; line-height:25px; color:var(--dim); margin-top:12px; }
+  p b { color:var(--txt); font-weight:600; }
+  a { color:var(--teal); }
+  p a { text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
+
+  .live { background:var(--card); border:1px solid var(--line); border-radius:16px;
+          padding:22px 24px; margin-top:22px; display:flex; flex-wrap:wrap; gap:26px; }
+  .live div { flex:1 1 190px; }
+  .live .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
+  .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
+
+  .split { margin-top:18px; background:var(--card); border:1px solid var(--line);
+           border-radius:16px; padding:20px 20px 16px; }
+  .split .bar { display:flex; height:26px; border-radius:8px; overflow:hidden; }
+  .split .bar i { display:block; }
+  .split .bar .b { background:var(--btc); }
+  .split .bar .r { background:var(--alt); }
+  .split .leg { display:flex; justify-content:space-between; margin-top:10px;
+                font-size:13px; color:var(--dim); }
+  .split .leg b { color:var(--txt); font-weight:700; }
+  .split .cap { font-size:12.5px; color:var(--dimmer); margin-top:10px; }
+
+  .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
+  .note p { color:var(--txt); }
+
+  .faq { margin-top:14px; }
+  .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
+  .faq p { margin-top:7px; }
+
+  footer { border-top:1px solid var(--line); margin-top:56px; padding-top:18px; display:flex;
+           justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
+  footer a { color:var(--dim); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
+
+<div class="pnav">
+  <a href="/bitcoin-halving-to-top.html">halving to top</a>
+  <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
+  <span>dominance</span>
+</div>
+
+<div class="eyebrow">Bitcoin dominance</div>
+<h1>Bitcoin dominance right now</h1>
+
+<p class="lead">Bitcoin dominance is <b id="dom">not counted yet</b>, read on
+<b id="domdate">the date below</b>. That is the share of the whole crypto market that sits in
+Bitcoin. The number below is not a screenshot of somebody else's chart, it comes from a record
+we keep ourselves, every day.</p>
+
+<div class="live">
+  <div>
+    <div class="k">Bitcoin dominance</div>
+    <div class="v" id="dom2">not counted yet</div>
+    <div class="s">read on <span id="domdate2">the date below</span></div>
+  </div>
+  <div>
+    <div class="k">Whole crypto market</div>
+    <div class="v" id="mcap">not counted yet</div>
+    <div class="s">Bitcoin plus everything else</div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="bar"><i class="b" id="barb" style="width:60%"></i><i class="r" id="barr" style="width:40%"></i></div>
+  <div class="leg">
+    <div><b id="legb">Bitcoin</b></div>
+    <div><b id="legr">everything else</b></div>
+  </div>
+  <div class="cap">The same number as a picture. One bar, split at the dominance reading.</div>
+</div>
+
+<h2>The thing almost nobody says about this number</h2>
+
+<p><b>Dominance can move a long way without a single dollar changing hands.</b> It is a
+ratio of two market values, and a market value is price times supply. If altcoins fall
+fifteen percent while Bitcoin stands perfectly still, dominance rises. No money moved. The
+denominator shrank.</p>
+
+<p>That is why we file this number under position and not under flow. It tells you where
+value currently sits. It does not tell you where money went, and anybody who reads it that
+way is reading a price chart as if it were a bank statement.</p>
+
+<div class="note">
+<p>The only freely available number in this corner that really measures money is the
+supply of stablecoins, because somebody had to hand over a real dollar for each one. Every
+other figure here, dominance included, is price wearing a percentage sign.</p>
+</div>
+
+<h2>Why we keep the record ourselves</h2>
+
+<p>CoinGecko publishes dominance as a current value with no history behind it. Ask for it
+today and you get today. There is no way to ask what it was six weeks ago.</p>
+
+<p><b>So we write it down.</b> Once a day, since 15 August 2026, into a file in our own
+repository. Every day nobody records is a day gone for good, which is the entire reason the
+job exists. The series is young and we will not pretend otherwise, but it grows by one row
+every single day and nobody can take those rows back.</p>
+
+<h2>What this does not tell you</h2>
+
+<p>It does not tell you when altcoin season starts. That gets decided after the fact, by
+counting how many large altcoins beat Bitcoin over some window. Any single dominance level
+sold to you as the trigger is a rule of thumb somebody made up, not a measurement.</p>
+
+<p>It does not tell you what happens next, and we publish no price targets, in any format,
+ever. It tells you where the market sits today, with the date attached, so you can check it
+yourself.</p>
+
+<h2>Questions people ask</h2>
+
+<div class="faq">
+  <div class="q">What is Bitcoin dominance right now?</div>
+  <p>The figure at the top of this page, with the date it was taken next to it.</p>
+
+  <div class="q">What does Bitcoin dominance mean?</div>
+  <p>The share of total crypto market value that is Bitcoin. At 60 percent, sixty cents of
+  every dollar of crypto market value is Bitcoin.</p>
+
+  <div class="q">Does rising dominance mean money is moving into Bitcoin?</div>
+  <p>Not necessarily. See the section above. Falling altcoins lift dominance on their own.</p>
+
+  <div class="q">What dominance level means altcoin season?</div>
+  <p>There is no such level. Anyone naming one is sharing a habit, not a number.</p>
+
+  <div class="q">Where does the number come from?</div>
+  <p>CoinGecko's global endpoint, read once a day and written into our own file, which the
+  page reads back in your browser.</p>
+
+  <div class="q">How often does this page update?</div>
+  <p>Every day.</p>
+</div>
+
+<footer>
+  <div>PulseHawk. Market data with receipts. No hype, no price targets.</div>
+  <div><a href="/">home</a> &nbsp; <a href="/impressum.html">impressum</a> &nbsp; <a href="/datenschutz.html">datenschutz</a></div>
+</footer>
+
+</div>
+<script>
+(function(){
+  // Die Seite liest den eigenen Datensatz im Browser. Gleiche Herkunft,
+  // also kein Umweg und keine fremde Schnittstelle. Der taegliche Stempel
+  // schreibt dieselben Werte zusaetzlich fest in den Quelltext, fuer alles
+  // was kein JavaScript ausfuehrt.
+  var MONATE = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+  var setz = function(id, wert){
+    var e = document.getElementById(id);
+    if (e) { e.textContent = wert; }
+  };
+  var lang = function(iso){
+    var t = iso.split("-");
+    return parseInt(t[2], 10) + " " + MONATE[parseInt(t[1], 10) - 1] + " " + t[0];
+  };
+  var geld = function(n){
+    if (n >= 1e12) { return "$" + (n / 1e12).toFixed(2) + "T"; }
+    if (n >= 1e9)  { return "$" + (n / 1e9).toFixed(0) + "B"; }
+    return "$" + n.toFixed(0);
+  };
+  fetch("/data/market-log.json", {cache: "no-store"}).then(function(r){
+    return r.ok ? r.json() : null;
+  }).then(function(rows){
+    if (!rows || !rows.length) { return; }
+    var zeile = null;
+    for (var i = rows.length - 1; i >= 0; i--) {
+      if (rows[i] && typeof rows[i].btc_dom === "number") { zeile = rows[i]; break; }
+    }
+    if (!zeile) { return; }
+    var d = zeile.btc_dom.toFixed(1) + "%";
+    setz("dom", d); setz("dom2", d);
+    setz("domdate", lang(zeile.d)); setz("domdate2", lang(zeile.d));
+    if (typeof zeile.total_mcap === "number") { setz("mcap", geld(zeile.total_mcap)); }
+    var b = document.getElementById("barb"), r2 = document.getElementById("barr");
+    if (b && r2) {
+      b.style.width = zeile.btc_dom.toFixed(1) + "%";
+      r2.style.width = (100 - zeile.btc_dom).toFixed(1) + "%";
+    }
+    setz("legb", "Bitcoin " + d);
+    setz("legr", "everything else " + (100 - zeile.btc_dom).toFixed(1) + "%");
+  }).catch(function(){ /* der gestempelte wert im quelltext bleibt stehen */ });
+})();
+</script>
+</body>
+</html>
