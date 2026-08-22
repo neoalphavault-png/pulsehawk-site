@@ -67,9 +67,10 @@ from market_log import (BAND, TD, TD_KEY, get_json, load_log,
 
 BC = "https://api.blockchain.info"
 
-# unter so vielen jahren ist das archiv fuer THE MARKET FORGETS wertlos,
-# und dann soll der lauf rot werden statt still gutzugehen.
-MINDESTJAHRE = 8
+# THE MARKET FORGETS vergleicht ueber zehn Jahre. Weniger als das macht
+# das Archiv fuer den Zweck wertlos, und dann soll der Lauf rot werden
+# statt still gutzugehen.
+MINDESTJAHRE = 10
 
 REPO = os.path.dirname(HERE)
 ARCHIV = os.path.join(REPO, "data", "history.json")
@@ -266,7 +267,13 @@ def lauf_backfill():
     reihen = {}
     tage = JAHRE * 365
 
-    # bitcoin, zwei quellen, die erste die traegt gewinnt
+    # BITCOIN, ALLE QUELLEN FRAGEN, DIE LAENGSTE REIHE GEWINNT
+    # Nicht die erste, die gerade so ueber die Schwelle kommt. Am
+    # 23.08.2026 lieferte Twelve Data neun Jahre, der Lauf war damit
+    # zufrieden und hoerte auf, und der Zehnjahresvergleich war trotzdem
+    # unmoeglich. Die Reihen werden nie gemischt, das waeren zwei
+    # verschiedene Definitionen von Kurs in einer Spalte.
+    beste, bester_name, beste_spanne = None, None, -1.0
     for name, holen in (("twelve data", lambda: td_verlauf("BTC/USD", tage)),
                         ("blockchain.com", bc_verlauf)):
         try:
@@ -277,15 +284,18 @@ def lauf_backfill():
             continue
         if not reihe:
             print("  leer  btc     %-15s nichts zurueck" % name)
+            time.sleep(4)
             continue
         spanne = (datum(max(reihe)) - datum(min(reihe))).days / 365.25
         print("  OK    btc     %-15s %d tage, %s bis %s, %.1f jahre"
-              % (name, len(reihe), min(reihe), max(reihe), spanne))
-        reihen["btc"] = reihe
-        if spanne >= MINDESTJAHRE:
-            break
-        print("  ...   btc     zu kurz, naechste quelle")
+              % (name, len(reihe), len(reihe) and min(reihe), max(reihe), spanne))
+        if spanne > beste_spanne:
+            beste, bester_name, beste_spanne = reihe, name, spanne
         time.sleep(4)
+    if beste:
+        print("  ...   btc     genommen wird %s mit %.1f jahren"
+              % (bester_name, beste_spanne))
+        reihen["btc"] = beste
 
     for feld, symbol in (("gld", "GLD"), ("spy", "SPY")):
         try:
@@ -364,10 +374,15 @@ def rueckblick(rows, ziel, feld="btc", spannen=(1, 5, 10)):
     for n in spannen:
         alt, versatz = naechste_zeile(rows, jahre_zurueck(ziel, n), feld)
         if not alt:
+            # eine fehlende spanne wird genannt und nicht verschwiegen.
+            # am 23.08.2026 fiel der zehnjahresvergleich stillschweigend
+            # aus der ausgabe, weil das archiv nur neun jahre hatte.
+            befunde.append({"jahre": n, "fehlt": True})
             continue
         f = vielfaches(jetzt[feld], alt[feld])
         befunde.append({
             "jahre": n,
+            "fehlt": False,
             "damals_tag": alt["d"],
             "damals": alt[feld],
             "versatz": versatz,
@@ -394,6 +409,10 @@ def lauf_rueckblick(ziel, feld):
         print("keine vergleichsdaten weit genug zurueck")
         return 1
     for b in befunde:
+        wort0 = "jahr" if b["jahre"] == 1 else "jahren"
+        if b.get("fehlt"):
+            print("  vor %d %s, KEINE DATEN so weit zurueck\n" % (b["jahre"], wort0))
+            continue
         hinweis = ""
         if b["versatz"]:
             hinweis = "  (naechster handelstag, %+d tage)" % b["versatz"]
@@ -509,6 +528,15 @@ def selbsttest():
            round(ab["btc"][3], 1), 1.0)
     pruefe("und liegt unter der mindestspanne", ab["btc"][3] < MINDESTJAHRE, True)
 
+    # eine fehlende spanne wird gemeldet und nicht verschwiegen
+    kurz2 = [{"d": "2017-08-28", "btc": 4300.0}, {"d": "2026-08-22", "btc": 77061.09}]
+    _, bef = rueckblick(kurz2, "2026-08-26", "btc", spannen=(5, 10))
+    pruefe("zehn jahre fehlen und werden gemeldet",
+           [(b["jahre"], b.get("fehlt")) for b in bef], [(5, True), (10, True)])
+    _, bef = rueckblick(kurz2, "2026-08-26", "btc", spannen=(9,))
+    pruefe("neun jahre gehen gerade noch", bef[0]["fehlt"], False)
+    pruefe("und nennen den versatz", bef[0]["versatz"], 2)
+
     lang_genug = [{"d": "2010-09-03", "gld": 121.86, "spy": 110.89},
                   {"d": "2026-08-21", "gld": 423.36, "spy": 765.72}]
     ab = abdeckung(lang_genug)
@@ -519,7 +547,7 @@ def selbsttest():
     if schlecht[0]:
         print("\n%d faelle falsch" % schlecht[0])
         return 1
-    print("\nselftest ok, 36 faelle")
+    print("\nselftest ok, 39 faelle")
     return 0
 
 
