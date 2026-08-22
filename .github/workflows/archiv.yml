@@ -1,0 +1,54 @@
+name: langzeitarchiv
+
+# KEIN ZEITPLAN, UND DAS IST ABSICHT
+# Die Historie aendert sich nicht mehr. Der Lauf holt sie einmal und
+# schreibt sie nach data/history.json, danach ist die Datei fertig. Der
+# heutige Rand kommt aus data/market-log.json, den schreibt der
+# Marktlogger ohnehin jeden Tag.
+#
+# Starten von Hand ueber Actions, links langzeitarchiv, rechts Run
+# workflow. Der Lauf dauert ein paar Minuten, weil CoinGecko zwischen den
+# Jahresabschnitten Pausen braucht.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seitenstempel     # nie gleichzeitig mit dem Stempel schreiben
+  cancel-in-progress: false
+
+jobs:
+  archivieren:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: selbsttest
+        run: python3 scripts/history.py --selftest
+
+      - name: historie holen
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: python3 scripts/history.py --backfill
+
+      - name: probe, was vor zehn jahren war
+        run: python3 scripts/history.py --rueckblick
+
+      - name: aendern und schieben
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "nichts geaendert, kein commit"
+            exit 0
+          fi
+          git config user.name "pulsehawk bot"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "langzeitarchiv $(date -u +%Y-%m-%d)"
+          git push
