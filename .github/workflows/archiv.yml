@@ -41,9 +41,21 @@ jobs:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
         run: python3 scripts/history.py --backfill
 
-      - name: probe, was vor zehn jahren war
+      # alle drei felder, nicht nur bitcoin. eine mehrjahresrendite ist
+      # zur haelfte eine aussage ueber das startdatum, und das sieht man
+      # erst, wenn mehrere spannen und mehrere anlagen nebeneinander
+      # stehen.
+      - name: probe gold
         if: always()
-        run: python3 scripts/history.py --rueckblick
+        run: python3 scripts/history.py --rueckblick --feld gld
+
+      - name: probe aktien
+        if: always()
+        run: python3 scripts/history.py --rueckblick --feld spy
+
+      - name: probe bitcoin
+        if: always()
+        run: python3 scripts/history.py --rueckblick --feld btc
 
       # auch wenn die historie zu kurz war, soll das was da ist im repo
       # landen. der lauf faerbt sich trotzdem rot, damit es auffaellt.
