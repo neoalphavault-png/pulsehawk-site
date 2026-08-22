@@ -115,51 +115,54 @@
 <h1>Gold vs stocks vs bitcoin</h1>
 
 <p class="lead">Over the last seven calendar days gold moved
-<b id="g7">+5.45%</b>, the S&amp;P 500 moved <b id="s7">-1.37%</b> and bitcoin
-moved <b id="b7">+24.38%</b>. Those are the same seven days for all three, ending
-<b id="dend">21 August 2026</b>, from a record we keep ourselves.</p>
+<b id="g7">not counted yet</b>, the S&amp;P 500 moved <b id="s7">not counted yet</b> and bitcoin
+moved <b id="b7">not counted yet</b>. Those are the same seven days for all three, ending
+<b id="dend">on the date below</b>, from a record we keep ourselves.</p>
 
-<div class="period" id="periodlabel">14 August 2026 to 21 August 2026</div>
+<div class="period" id="periodlabel">the same seven days</div>
 
 <div class="live">
   <div class="c g">
     <div class="k">Gold</div>
-    <div class="v" id="g7b">+5.45%</div>
+    <div class="v" id="g7b">not counted yet</div>
     <div class="s">the metal, priced in dollars</div>
   </div>
   <div class="c s">
     <div class="k">S&amp;P 500</div>
-    <div class="v" id="s7b">-1.37%</div>
+    <div class="v" id="s7b">not counted yet</div>
     <div class="s">the American stock market</div>
   </div>
   <div class="c b">
     <div class="k">Bitcoin</div>
-    <div class="v" id="b7b">+24.38%</div>
+    <div class="v" id="b7b">not counted yet</div>
     <div class="s">the largest crypto asset</div>
   </div>
 </div>
 
+<div class="period" id="chartperiod">since the record began</div>
+
 <div class="chart">
-  <svg id="ch" viewBox="0 0 720 250" role="img" aria-label="Gold, the S&amp;P 500 and bitcoin, each set to 100 at the start of the record">
-    <line x1="46" y1="14" x2="706" y2="14" stroke="#1A1D21" stroke-width="1"/>
-    <line id="chmidline" x1="46" y1="118" x2="706" y2="118" stroke="#1A1D21" stroke-width="1"/>
-    <line x1="46" y1="222" x2="706" y2="222" stroke="#1A1D21" stroke-width="1"/>
-    <text id="chhi" x="40" y="19" fill="#7A828C" font-size="12" text-anchor="end">.</text>
-    <text id="chmid" x="40" y="123" fill="#7A828C" font-size="12" text-anchor="end">100</text>
-    <text id="chlo" x="40" y="227" fill="#7A828C" font-size="12" text-anchor="end">.</text>
+  <svg id="ch" viewBox="0 0 720 250" role="img" aria-label="Gold, the S&amp;P 500 and bitcoin, each measured against where it stood on the first day of the record">
+    <line id="chzero" x1="52" y1="130" x2="636" y2="130" stroke="#2A2F35" stroke-width="1.5"/>
+    <line x1="52" y1="14" x2="636" y2="14" stroke="#1A1D21" stroke-width="1"/>
+    <line x1="52" y1="216" x2="636" y2="216" stroke="#1A1D21" stroke-width="1"/>
+    <text id="chhi" x="46" y="19" fill="#7A828C" font-size="13" text-anchor="end">.</text>
+    <text id="chzl" x="46" y="134" fill="#9BA3AB" font-size="13" text-anchor="end">0%</text>
+    <text id="chlo" x="46" y="221" fill="#7A828C" font-size="13" text-anchor="end">.</text>
     <polyline id="pg" fill="none" stroke="#C98500" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points=""/>
     <polyline id="ps" fill="none" stroke="#3987E5" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points=""/>
     <polyline id="pb" fill="none" stroke="#D95926" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points=""/>
-    <text id="chstart" x="46" y="244" fill="#7A828C" font-size="12">start of record</text>
-    <text id="chend" x="706" y="244" fill="#7A828C" font-size="12" text-anchor="end">today</text>
+    <text id="eg" x="644" y="0" fill="#C98500" font-size="14" font-weight="700"></text>
+    <text id="es" x="644" y="0" fill="#3987E5" font-size="14" font-weight="700"></text>
+    <text id="eb" x="644" y="0" fill="#D95926" font-size="14" font-weight="700"></text>
+    <text id="chstart" x="52" y="240" fill="#7A828C" font-size="13">start of record</text>
+    <text id="chend" x="636" y="240" fill="#7A828C" font-size="13" text-anchor="end">today</text>
   </svg>
   <div class="leg">
     <div><i style="background:#C98500"></i>gold</div>
     <div><i style="background:#3987E5"></i>S&amp;P 500</div>
     <div><i style="background:#D95926"></i>bitcoin</div>
   </div>
-  <div class="cap">All three start at 100 on the first day of the record, so the lines
-  show what one dollar in each would be worth now.</div>
 </div>
 
 <h2>Only one number on this page is money</h2>
@@ -177,12 +180,12 @@ fall just because the market falls.</p>
 <div class="money">
   <div class="c">
     <div class="k">New money into crypto</div>
-    <div class="v" id="stab7">plus $1.3B</div>
+    <div class="v" id="stab7">not counted yet</div>
     <div class="s">change in stablecoin supply, same seven days</div>
   </div>
   <div class="c">
     <div class="k">Cyclical against defensive</div>
-    <div class="v" id="rot7">-0.99%</div>
+    <div class="v" id="rot7">not counted yet</div>
     <div class="s">technology and discretionary against utilities and staples</div>
   </div>
 </div>
@@ -339,22 +342,28 @@ dressing it up as something broader.</p>
       }
     }
 
-    // das diagramm. alle drei auf 100 am ersten gemeinsamen tag
+    // das diagramm. jede reihe gegen ihren eigenen ersten tag, in prozent.
+    // absichtlich prozent und nicht eine zahl um hundert herum, weil eine
+    // nackte 100 neben dem wort bitcoin wie ein dollarkurs aussieht. genau
+    // das ist am 22.08.2026 passiert.
     var reihe = rows.filter(function(r){ return hat(r, DREI); });
     if (reihe.length < 3) { return; }
     var basis = reihe[0], n = reihe.length;
     var werte = reihe.map(function(r){
-      return [100 * r.gld / basis.gld, 100 * r.spy / basis.spy, 100 * r.btc / basis.btc];
+      return [(r.gld / basis.gld - 1) * 100,
+              (r.spy / basis.spy - 1) * 100,
+              (r.btc / basis.btc - 1) * 100];
     });
-    var hoch = 100, tief = 100;
+    var hoch = 0, tief = 0;
     werte.forEach(function(w){
       w.forEach(function(v){ if (v > hoch) { hoch = v; } if (v < tief) { tief = v; } });
     });
     var rand = Math.max(1, (hoch - tief) * 0.08);
     hoch += rand; tief -= rand;
-    var X0 = 46, X1 = 706, Y0 = 14, Y1 = 222;
+    var X0 = 52, X1 = 636, Y0 = 14, Y1 = 216;
     var px = function(i){ return X0 + (X1 - X0) * (n === 1 ? 0 : i / (n - 1)); };
     var py = function(v){ return Y1 - (Y1 - Y0) * (v - tief) / (hoch - tief); };
+    var schild = function(v){ return (v >= 0 ? "+" : "") + v.toFixed(0) + "%"; };
     ["pg", "ps", "pb"].forEach(function(id, k){
       var e = document.getElementById(id);
       if (!e) { return; }
@@ -362,25 +371,39 @@ dressing it up as something broader.</p>
         return px(i).toFixed(1) + "," + py(w[k]).toFixed(1);
       }).join(" "));
     });
-    setz("chhi", hoch.toFixed(0));
-    setz("chlo", tief.toFixed(0));
-    // die hundert-linie sitzt da, wo hundert wirklich liegt. kommt sie einer
-    // der beiden randmarken zu nahe, wird sie ausgeblendet statt ueberdruckt.
-    var y100 = py(100);
-    var mid = document.getElementById("chmid"), midl = document.getElementById("chmidline");
-    var eng = (y100 - Y0 < 16) || (Y1 - y100 < 16);
-    if (mid) {
-      mid.setAttribute("y", (y100 + 4).toFixed(1));
-      mid.textContent = "100";
-      mid.style.display = eng ? "none" : "";
+    setz("chhi", schild(hoch));
+    setz("chlo", schild(tief));
+    var nullY = py(0);
+    var zl = document.getElementById("chzero"), zt = document.getElementById("chzl");
+    if (zl) { zl.setAttribute("y1", nullY.toFixed(1)); zl.setAttribute("y2", nullY.toFixed(1)); }
+    if (zt) { zt.setAttribute("y", (nullY + 4).toFixed(1)); }
+    // die null ist die wichtigste marke. kommt ihr eine der beiden
+    // randmarken zu nahe, verschwindet die randmarke und nicht die null.
+    [["chhi", Y0], ["chlo", Y1]].forEach(function(paar){
+      var e = document.getElementById(paar[0]);
+      if (e) { e.style.display = Math.abs(paar[1] - nullY) < 18 ? "none" : ""; }
+    });
+
+    // die endwerte stehen an der linie, damit niemand die achse ablesen muss.
+    // liegen zwei zu dicht beieinander, werden sie auseinandergeschoben.
+    var letzteW = werte[n - 1];
+    var marken = [{id: "eg", v: letzteW[0]}, {id: "es", v: letzteW[1]},
+                  {id: "eb", v: letzteW[2]}];
+    marken.forEach(function(m){ m.y = py(m.v); });
+    marken.sort(function(a, b){ return a.y - b.y; });
+    for (var j = 1; j < marken.length; j++) {
+      if (marken[j].y - marken[j - 1].y < 17) { marken[j].y = marken[j - 1].y + 17; }
     }
-    if (midl) {
-      midl.setAttribute("y1", y100.toFixed(1));
-      midl.setAttribute("y2", y100.toFixed(1));
-      midl.style.display = eng ? "none" : "";
-    }
+    marken.forEach(function(m){
+      var e = document.getElementById(m.id);
+      if (!e) { return; }
+      e.setAttribute("y", (Math.min(m.y, 246) + 5).toFixed(1));
+      e.textContent = schild(m.v);
+    });
+
     setz("chstart", lang(basis.d));
     setz("chend", lang(reihe[n - 1].d));
+    setz("chartperiod", "since " + lang(basis.d));
   }).catch(function(){ /* die gestempelten werte im quelltext bleiben stehen */ });
 })();
 </script>
