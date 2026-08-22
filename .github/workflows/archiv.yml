@@ -7,8 +7,11 @@ name: langzeitarchiv
 # Marktlogger ohnehin jeden Tag.
 #
 # Starten von Hand ueber Actions, links langzeitarchiv, rechts Run
-# workflow. Der Lauf dauert ein paar Minuten, weil CoinGecko zwischen den
-# Jahresabschnitten Pausen braucht.
+# workflow.
+#
+# Der Lauf prueft am Ende selbst nach, wie viele Jahre je Feld wirklich
+# im Archiv stehen, und faellt durch, wenn eines unter acht Jahren
+# bleibt. Genau das ist am 23.08.2026 passiert, damals unbemerkt.
 
 on:
   workflow_dispatch:
@@ -39,9 +42,13 @@ jobs:
         run: python3 scripts/history.py --backfill
 
       - name: probe, was vor zehn jahren war
+        if: always()
         run: python3 scripts/history.py --rueckblick
 
+      # auch wenn die historie zu kurz war, soll das was da ist im repo
+      # landen. der lauf faerbt sich trotzdem rot, damit es auffaellt.
       - name: aendern und schieben
+        if: always()
         run: |
           if [ -z "$(git status --porcelain)" ]; then
             echo "nichts geaendert, kein commit"
