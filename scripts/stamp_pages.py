@@ -13,12 +13,15 @@ und fuehren kein JavaScript aus. Die wuerden bei uns fuer immer dieselbe
 Zahl sehen, ausgerechnet bei Seiten, deren ganzer Vorteil darin besteht,
 dass ihre Zahl aktuell ist.
 
-DREI TEILE, ZWEI QUELLEN
+VIER TEILE, ZWEI QUELLEN
   1. die zwei Zyklusseiten. Ihre Zahlen sind reine Arithmetik aus festen
      Daten, Halving und Zyklushoch. Keine Datenquelle noetig.
   2. die Dominanzseite. Ihre Zahl kommt aus data/market-log.json, das der
      Marktlogger taeglich schreibt.
-  3. die Marktseite, seit 22.08.2026. Gold, Aktien und Bitcoin ueber
+  3. die Menueleiste, seit 22.08.2026. Sie steht nur noch an einer Stelle,
+     in der Liste SEITEN weiter unten. Der Bot schreibt sie in jede Seite,
+     also kostet ein neuer Menuepunkt eine Zeile und keine vier Uploads.
+  4. die Marktseite, seit 22.08.2026. Gold, Aktien und Bitcoin ueber
      dieselben sieben Kalendertage, dazu die Stablecoins und die
      Sektorneigung. Ebenfalls aus data/market-log.json.
 
@@ -69,6 +72,19 @@ ZYKLUS = {
 
 DOM_SEITE = "bitcoin-dominance.html"
 MARKT_SEITE = "markets.html"
+
+# EINE LISTE, EINE WAHRHEIT
+# Wer hier eine Seite eintraegt, hat sie in der Leiste jeder anderen Seite.
+# Der Bot schreibt den Inhalt von <div class="pnav"> bei jedem Lauf neu und
+# markiert dabei die Seite, auf der man gerade steht. Damit muss niemand
+# mehr vier Dateien anfassen, um einen Menuepunkt zu ergaenzen.
+# Reihenfolge hier ist Reihenfolge auf der Seite.
+SEITEN = [
+    ("bitcoin-halving-to-top.html", "halving to top"),
+    ("bitcoin-top-to-bottom.html", "top to bottom"),
+    ("bitcoin-dominance.html", "dominance"),
+    ("markets.html", "markets"),
+]
 
 # die drei preisreihen muessen am selben tag alle drei dastehen, sonst
 # vergleicht man einen handelstag mit einem wochenende.
@@ -315,6 +331,54 @@ def lauf_markt():
     return schreiben(pfad, alt, neu, MARKT_SEITE, werte["periodlabel"])
 
 
+# --- teil 4, die leiste ----------------------------------------------
+
+PNAV = re.compile(r'(<div class="pnav">)(.*?)(</div>)', re.S)
+
+
+def leiste(aktuell):
+    """baut den inhalt der pillenreihe fuer eine bestimmte seite.
+    die eigene seite wird zur beschrifteten pille ohne verweis, alle
+    anderen werden verweise."""
+    teile = []
+    for datei, name in SEITEN:
+        if datei == aktuell:
+            teile.append("<span>%s</span>" % name)
+        else:
+            teile.append('<a href="/%s">%s</a>' % (datei, name))
+    return "\n  " + "\n  ".join(teile) + "\n"
+
+
+def setz_leiste(html, aktuell):
+    """ersetzt den inhalt des pnav-blocks. gibt text und trefferzahl."""
+    return PNAV.subn(lambda m: m.group(1) + leiste(aktuell) + m.group(3), html)
+
+
+def lauf_leiste():
+    fehler = 0
+    gebaut = 0
+    for datei, _ in SEITEN:
+        pfad = os.path.join(REPO, datei)
+        if not os.path.exists(pfad):
+            print("  ok   %-30s nicht vorhanden, uebersprungen" % datei)
+            continue
+        with open(pfad, "r", encoding="utf-8") as fh:
+            alt = fh.read()
+        neu, n = setz_leiste(alt, datei)
+        if n == 0:
+            # ohne den block kann die leiste nicht wachsen, und das faellt
+            # sonst erst auf, wenn jemand die seite besucht.
+            print("  FEHL %-30s kein pnav-block gefunden" % datei)
+            fehler += 1
+            continue
+        fehler += schreiben(pfad, alt, neu, datei, "leiste mit %d punkten" % len(SEITEN))
+        gebaut += 1
+    if gebaut == 0:
+        print("  FEHL leiste                        keine seite gefunden")
+        return fehler + 1
+    return fehler
+
+
 # --- selbsttest ------------------------------------------------------
 
 def selbsttest():
@@ -399,7 +463,30 @@ def selbsttest():
            None)
     pruefe("leeres log", markt_werte([]), None)
 
-    print("%d von 26 faellen falsch" % schlecht)
+    # --- die leiste ---
+    pruefe("eigene seite ohne verweis",
+           "<span>markets</span>" in leiste("markets.html"), True)
+    pruefe("eigene seite nicht doppelt",
+           leiste("markets.html").count("markets"), 1)
+    pruefe("fremde seiten als verweis",
+           leiste("markets.html").count("<a href="), len(SEITEN) - 1)
+    pruefe("alle punkte drin",
+           all(name in leiste("markets.html") for _, name in SEITEN), True)
+
+    roh = ('<div class="pnav">\n  <a href="/alt.html">alt</a>\n</div>'
+           '<div class="pnav">zweiter</div>')
+    fertig, n = setz_leiste(roh, "bitcoin-dominance.html")
+    pruefe("beide bloecke getroffen", n, 2)
+    pruefe("alte pille ist weg", "alt.html" in fertig, False)
+    pruefe("aktuelle seite markiert", "<span>dominance</span>" in fertig, True)
+    pruefe("zweiter lauf ist ruhig", setz_leiste(fertig, "bitcoin-dominance.html")[0], fertig)
+    pruefe("ohne block kein treffer", setz_leiste("<div>nix</div>", "markets.html")[1], 0)
+    # eine seite, die nicht in SEITEN steht, bekommt eine leiste ohne
+    # markierung. das ist gewollt, sie soll trotzdem navigierbar sein.
+    pruefe("unbekannte seite ohne markierung",
+           "<span>" in leiste("gibtsnicht.html"), False)
+
+    print("%d von 36 faellen falsch" % schlecht)
     return 1 if schlecht else 0
 
 
@@ -409,7 +496,7 @@ def main(argv):
     print("pulsehawk seitenstempel")
     print("laufzeitpunkt %s utc\n"
           % datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
-    fehler = lauf_zyklus() + lauf_dominanz() + lauf_markt()
+    fehler = lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
     if fehler:
         print("\n%d seite(n) nicht gestempelt" % fehler)
         return 1
