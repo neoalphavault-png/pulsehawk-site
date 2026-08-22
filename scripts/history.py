@@ -25,9 +25,25 @@ Die Zeilenform ist dieselbe wie im Marktlog, damit beide Dateien mit
 demselben Werkzeug gelesen werden koennen.
 
 WAS DRIN IST
-btc von CoinGecko, gld und spy von Twelve Data. Krypto sieben Tage die
-Woche, die beiden anderen nur an Handelstagen. Wochenenden bleiben bei
-gld und spy leer, das ist gewollt und ehrlich.
+Alle drei von Twelve Data, mit Blockchain.com als Ersatzquelle fuer
+Bitcoin. Krypto sieben Tage die Woche, die beiden anderen nur an
+Handelstagen. Wochenenden bleiben bei gld und spy leer, das ist gewollt.
+
+WARUM NICHT COINGECKO, GELERNT AM 23.08.2026
+Der erste Lauf holte sechzehn Jahre Gold und Aktien und nur ein einziges
+Jahr Bitcoin. Der freie Tarif von CoinGecko liefert hoechstens 365 Tage,
+egal was man anfragt, und der Bereichsaufruf ist dort ebenfalls gesperrt.
+
+Dazu kam ein zweiter, leiserer Fehler. CoinGecko stempelt seine
+Tagespunkte auf Mitternacht UTC. Der Punkt mit dem Datum vom 21. trug
+also den Kurs vom 20., waehrend der Marktlogger am 21. um 21:23 UTC den
+Kurs vom 21. schreibt. Archiv und Log haetten sich an der Nahtstelle um
+einen Tag widersprochen, und das faellt bei einem Zehnjahresvergleich
+niemandem auf, bis jemand nachrechnet.
+
+Beides zusammen heisst: fuer die Historie ist CoinGecko unbrauchbar. Der
+taegliche Logger benutzt sie weiter, dort ist sie richtig, weil er den
+Wert selbst datiert.
 
     python3 scripts/history.py --backfill              einmalig, holt die historie
     python3 scripts/history.py --rueckblick 2026-08-26 was war vor n jahren
@@ -46,8 +62,14 @@ sys.path.insert(0, HERE)
 
 # eine einzige stelle fuer die quellen und fuer die plausibilitaetsgrenzen.
 # doppelt gefuehrte grenzen laufen frueher oder spaeter auseinander.
-from market_log import (BAND, CG, TD, TD_KEY, get_json, load_log,
+from market_log import (BAND, TD, TD_KEY, get_json, load_log,
                         merge, _hide)  # noqa: E402
+
+BC = "https://api.blockchain.info"
+
+# unter so vielen jahren ist das archiv fuer THE MARKET FORGETS wertlos,
+# und dann soll der lauf rot werden statt still gutzugehen.
+MINDESTJAHRE = 8
 
 REPO = os.path.dirname(HERE)
 ARCHIV = os.path.join(REPO, "data", "history.json")
@@ -158,48 +180,31 @@ def verdopplungen(faktor):
 
 # --- quellen ---------------------------------------------------------
 
-def cg_verlauf(coin, tage):
+def bc_verlauf():
     """
-    tageskurse von coingecko. erst der einfache weg ueber days, und wenn
-    der zu wenig liefert, jahresweise ueber den bereichsaufruf. beide
-    endpunkte geben ab neunzig tagen von selbst tageswerte zurueck.
+    tageskurse von blockchain.com, ohne schluessel und ohne grenze. das
+    ist der taegliche durchschnittspreis ueber die boersen, nicht ein
+    einzelner schlusskurs. fuer die frage "was war bitcoin an diesem tag
+    wert" ist das eher besser als schlechter, und es ist zitierbar.
     """
-    punkte = {}
-    try:
-        data = get_json("%s/coins/%s/market_chart?vs_currency=usd&days=%d"
-                        % (CG, coin, tage))
-        for stempel, preis in (data.get("prices") or []):
-            punkte[tag_von(stempel / 1000.0)] = round(float(preis), 6)
-        print("  OK    %-7s %d tage ueber days" % (coin, len(punkte)))
-    except Exception as exc:  # noqa: BLE001
-        print("  leer  %-7s days ging nicht, %s" % (coin, str(exc)[:70]))
+    data = get_json("%s/charts/market-price?timespan=all&format=json&sampled=false" % BC)
+    return bc_parse(data)
 
-    if len(punkte) >= tage * 0.8:
-        return punkte
 
-    print("  ...   %-7s zweiter versuch, jahresweise" % coin)
-    ende = int(time.time())
-    for i in range(int(tage / 365) + 1):
-        bis = ende - i * 365 * TAG
-        von = bis - 365 * TAG
-        try:
-            data = get_json("%s/coins/%s/market_chart/range"
-                            "?vs_currency=usd&from=%d&to=%d" % (CG, coin, von, bis))
-        except Exception as exc:  # noqa: BLE001
-            print("  FEHL  %-7s %s bis %s, %s"
-                  % (coin, tag_von(von), tag_von(bis), str(exc)[:50]))
-            time.sleep(3)
+def bc_parse(data):
+    """eigene funktion, damit der selbsttest sie ohne netz pruefen kann."""
+    out = {}
+    for punkt in (data or {}).get("values") or []:
+        if not isinstance(punkt, dict):
             continue
-        neu = 0
-        for stempel, preis in (data.get("prices") or []):
-            t = tag_von(stempel / 1000.0)
-            if t not in punkte:
-                neu += 1
-            punkte[t] = round(float(preis), 6)
-        print("  OK    %-7s %s bis %s, %d neu"
-              % (coin, tag_von(von), tag_von(bis), neu))
-        time.sleep(3)
-    return punkte
+        x, y = punkt.get("x"), punkt.get("y")
+        if x is None or y is None:
+            continue
+        try:
+            out[tag_von(float(x))] = round(float(y), 6)
+        except (TypeError, ValueError):
+            continue
+    return out
 
 
 def td_verlauf(symbol, punkte):
@@ -240,19 +245,54 @@ def zu_zeilen(reihen):
     return [tage[t] for t in sorted(tage)], verworfen
 
 
+def abdeckung(rows):
+    """
+    was steckt am ende wirklich drin. der erste lauf am 23.08.2026 hat
+    sechzehn jahre gold und aktien geholt und ein einziges jahr bitcoin,
+    und trotzdem OK gemeldet. Seitdem zaehlt der lauf selbst nach.
+    """
+    out = {}
+    for feld in FELDER:
+        tage = sorted(r["d"] for r in rows if r.get(feld) is not None)
+        if not tage:
+            out[feld] = (None, None, 0, 0.0)
+            continue
+        spanne = (datum(tage[-1]) - datum(tage[0])).days / 365.25
+        out[feld] = (tage[0], tage[-1], len(tage), spanne)
+    return out
+
+
 def lauf_backfill():
     reihen = {}
     tage = JAHRE * 365
 
-    try:
-        reihen["btc"] = cg_verlauf("bitcoin", tage)
-    except Exception as exc:  # noqa: BLE001
-        print("  FEHL  btc     %s" % str(exc)[:90])
+    # bitcoin, zwei quellen, die erste die traegt gewinnt
+    for name, holen in (("twelve data", lambda: td_verlauf("BTC/USD", tage)),
+                        ("blockchain.com", bc_verlauf)):
+        try:
+            reihe = holen()
+        except Exception as exc:  # noqa: BLE001
+            print("  FEHL  btc     %-15s %s" % (name, _hide(str(exc))[:70]))
+            time.sleep(4)
+            continue
+        if not reihe:
+            print("  leer  btc     %-15s nichts zurueck" % name)
+            continue
+        spanne = (datum(max(reihe)) - datum(min(reihe))).days / 365.25
+        print("  OK    btc     %-15s %d tage, %s bis %s, %.1f jahre"
+              % (name, len(reihe), min(reihe), max(reihe), spanne))
+        reihen["btc"] = reihe
+        if spanne >= MINDESTJAHRE:
+            break
+        print("  ...   btc     zu kurz, naechste quelle")
+        time.sleep(4)
 
     for feld, symbol in (("gld", "GLD"), ("spy", "SPY")):
         try:
             reihen[feld] = td_verlauf(symbol, tage)
-            print("  OK    %-7s %d handelstage" % (feld, len(reihen[feld])))
+            print("  OK    %-7s %-15s %d handelstage, %s bis %s"
+                  % (feld, "twelve data", len(reihen[feld]),
+                     min(reihen[feld]), max(reihen[feld])))
         except Exception as exc:  # noqa: BLE001
             print("  FEHL  %-7s %s" % (feld, _hide(str(exc))[:90]))
         time.sleep(8)
@@ -276,9 +316,25 @@ def lauf_backfill():
 
     print("\narchiv hat jetzt %d tage, %s bis %s"
           % (len(rows), rows[0]["d"], rows[-1]["d"]))
-    for feld in FELDER:
-        n = len([r for r in rows if r.get(feld) is not None])
-        print("  %-4s %d tage" % (feld, n))
+
+    kurz = []
+    for feld, (erster, letzter, n, spanne) in abdeckung(rows).items():
+        if not n:
+            print("  %-4s KEINE DATEN" % feld)
+            kurz.append(feld)
+            continue
+        print("  %-4s %5d tage, %s bis %s, %.1f jahre"
+              % (feld, n, erster, letzter, spanne))
+        if spanne < MINDESTJAHRE:
+            kurz.append(feld)
+
+    if kurz:
+        print("\n" + "!" * 60)
+        print("ZU WENIG HISTORIE FUER %s" % ", ".join(kurz))
+        print("Weniger als %d Jahre. Die Datei ist geschrieben, aber ein" % MINDESTJAHRE)
+        print("Rueckblick ueber zehn Jahre ist damit nicht moeglich.")
+        print("!" * 60)
+        return 1
     return 0
 
 
@@ -432,10 +488,38 @@ def selbsttest():
     pruefe("ein tag, eine zeile", zeilen,
            [{"d": "2016-08-24", "gld": 128.5, "btc": 586.0}])
 
+    # --- blockchain.com, die ersatzquelle fuer bitcoin ---
+    pruefe("blockchain.com geparst",
+           bc_parse({"values": [{"x": 1472083200, "y": 578.83},
+                                {"x": 1472169600, "y": 583.1}]}),
+           {"2016-08-25": 578.83, "2016-08-26": 583.1})
+    pruefe("kaputte punkte fliegen raus",
+           bc_parse({"values": [{"x": None, "y": 1}, "kein dict",
+                                {"x": 1472083200}, {"y": 5},
+                                {"x": 1472083200, "y": 578.83}]}),
+           {"2016-08-25": 578.83})
+    pruefe("leere antwort faellt nicht um", bc_parse({}), {})
+    pruefe("gar keine antwort faellt nicht um", bc_parse(None), {})
+
+    # --- die abdeckung, genau der fehler vom 23.08.2026 ---
+    kurz = [{"d": "2025-08-23", "btc": 116897.0, "gld": 310.0, "spy": 645.0},
+            {"d": "2026-08-21", "btc": 73097.0, "gld": 423.36, "spy": 765.72}]
+    ab = abdeckung(kurz)
+    pruefe("ein jahr bitcoin wird als ein jahr gemeldet",
+           round(ab["btc"][3], 1), 1.0)
+    pruefe("und liegt unter der mindestspanne", ab["btc"][3] < MINDESTJAHRE, True)
+
+    lang_genug = [{"d": "2010-09-03", "gld": 121.86, "spy": 110.89},
+                  {"d": "2026-08-21", "gld": 423.36, "spy": 765.72}]
+    ab = abdeckung(lang_genug)
+    pruefe("sechzehn jahre gold", round(ab["gld"][3]), 16)
+    pruefe("gold besteht die mindestspanne", ab["gld"][3] >= MINDESTJAHRE, True)
+    pruefe("fehlendes feld meldet null", abdeckung(lang_genug)["btc"], (None, None, 0, 0.0))
+
     if schlecht[0]:
         print("\n%d faelle falsch" % schlecht[0])
         return 1
-    print("\nselftest ok, 27 faelle")
+    print("\nselftest ok, 36 faelle")
     return 0
 
 
