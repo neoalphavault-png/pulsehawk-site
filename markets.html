@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold vs Stocks vs Bitcoin, Counted the Same Days</title>
+<meta name="description" content="Gold, stocks and bitcoin over the same seven calendar days, from a record we keep ourselves every day. With the one thing that gets left out of every comparison like this.">
+<link rel="canonical" href="https://pulsehawk.io/markets.html">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="Gold vs Stocks vs Bitcoin, Counted the Same Days">
+<meta property="og:description" content="Three markets, one seven day window, one daily record. And why all three numbers are prices and only one number on this page is money.">
+<meta property="og:url" content="https://pulsehawk.io/markets.html">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"Is gold or the stock market up more right now?",
+     "acceptedAnswer":{"@type":"Answer","text":"The three figures at the top of this page are the last seven calendar days for gold, the S&P 500 and bitcoin, with the exact dates they run between. They come from our own daily record."}},
+    {"@type":"Question","name":"Why compare gold, stocks and bitcoin over calendar days?",
+     "acceptedAnswer":{"@type":"Answer","text":"Because crypto trades seven days a week and stock markets trade five. A seven day crypto window and a five session stock window are not the same period. We store one row per calendar day so the three are lined up on the same dates."}},
+    {"@type":"Question","name":"Does a rising market mean money is flowing in?",
+     "acceptedAnswer":{"@type":"Answer","text":"No. Every price on this page is price times nothing else. A market can gain hundreds of billions in value without a single new dollar arriving, because value is what the last trade says the whole stock is worth. The only figure here that measures money is the supply of stablecoins, because somebody handed over a real dollar for each one."}},
+    {"@type":"Question","name":"What is the cyclical versus defensive ratio?",
+     "acceptedAnswer":{"@type":"Answer","text":"Two baskets of the same market. Technology and consumer discretionary on the cyclical side, utilities and consumer staples on the defensive side. When the ratio rises, the risk taking part of the stock market is outrunning the safe part. It is a lean, not a flow."}},
+    {"@type":"Question","name":"Where do these numbers come from?",
+     "acceptedAnswer":{"@type":"Answer","text":"Gold and the stock market from Twelve Data, bitcoin and the crypto market from CoinGecko, stablecoin supply from DefiLlama, and the euro dollar rate from the European Central Bank through Frankfurter. Read once a day and written into our own file."}},
+    {"@type":"Question","name":"How often does this page update?",
+     "acceptedAnswer":{"@type":"Answer","text":"Every day. The page also reads the record directly in your browser, so the figures you see are the newest ones on file."}}
+  ]
+}
+</script>
+<style>
+  :root { --bg:#080B0F; --card:#0B0E12; --line:#1A1D21; --teal:#49EACB;
+          --gold:#C98500; --spy:#3987E5; --btc:#D95926; --alt:#199E70;
+          --txt:#FFFFFF; --dim:#9BA3AB; --dimmer:#7A828C; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Helvetica Neue',Arial,sans-serif;
+         background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(73,234,203,0.10), transparent 60%); }
+  .wrap { max-width:720px; margin:0 auto; padding:34px 20px 60px; }
+  .nav { display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav img { width:30px; }
+  .nav b { font-size:17px; letter-spacing:4px; color:var(--txt); font-weight:800; }
+  .nav b span { color:var(--teal); }
+  .pnav { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .pnav a, .pnav span { font-size:13px; padding:7px 13px; border-radius:999px;
+            text-decoration:none; border:1px solid var(--line); color:var(--dimmer); }
+  .pnav a:hover { border-color:rgba(73,234,203,0.45); color:var(--dim); }
+  .pnav span { background:rgba(73,234,203,0.10); border-color:rgba(73,234,203,0.45);
+               color:var(--teal); font-weight:700; }
+  .eyebrow { font-size:12px; letter-spacing:4px; color:var(--dimmer); text-transform:uppercase;
+             margin-top:42px; font-weight:700; }
+  h1 { font-size:34px; line-height:1.18; letter-spacing:-0.6px; margin-top:12px; }
+  .lead { font-size:17px; line-height:27px; color:var(--txt); margin-top:18px; }
+  .lead b { color:var(--teal); font-weight:700; }
+  h2 { font-size:21px; letter-spacing:-0.3px; margin:40px 0 0; }
+  p { font-size:15.5px; line-height:25px; color:var(--dim); margin-top:12px; }
+  p b { color:var(--txt); font-weight:600; }
+  a { color:var(--teal); }
+  p a { text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
+
+  .live { background:var(--card); border:1px solid var(--line); border-radius:16px;
+          padding:22px 24px; margin-top:22px; display:flex; flex-wrap:wrap; gap:22px; }
+  .live div.c { flex:1 1 165px; }
+  .live .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .live .v { font-size:38px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; }
+  .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
+  .live .c.g .v { color:var(--gold); }
+  .live .c.s .v { color:var(--spy); }
+  .live .c.b .v { color:var(--btc); }
+  .period { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase;
+            font-weight:700; margin-top:20px; }
+
+  .chart { margin-top:12px; background:var(--card); border:1px solid var(--line);
+           border-radius:16px; padding:18px 18px 14px; overflow-x:auto; }
+  .chart svg { display:block; width:100%; height:auto; min-width:280px; }
+  .chart .leg { display:flex; flex-wrap:wrap; gap:16px; margin-top:12px; font-size:13px; color:var(--dim); }
+  .chart .leg i { display:inline-block; width:14px; height:3px; border-radius:2px;
+                  vertical-align:middle; margin-right:6px; }
+  .chart .cap { font-size:12.5px; color:var(--dimmer); margin-top:10px; }
+
+  .money { margin-top:18px; background:var(--card); border:1px solid var(--line);
+           border-radius:16px; padding:20px 24px; display:flex; flex-wrap:wrap; gap:22px; }
+  .money div.c { flex:1 1 200px; }
+  .money .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .money .v { font-size:30px; font-weight:800; letter-spacing:-1px; margin-top:4px; }
+  .money .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
+
+  .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
+  .note p { color:var(--txt); }
+
+  .faq { margin-top:14px; }
+  .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
+  .faq p { margin-top:7px; }
+
+  footer { border-top:1px solid var(--line); margin-top:56px; padding-top:18px; display:flex;
+           justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
+  footer a { color:var(--dim); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
+
+<div class="pnav">
+  <a href="/bitcoin-halving-to-top.html">halving to top</a>
+  <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
+  <a href="/bitcoin-dominance.html">dominance</a>
+  <span>markets</span>
+</div>
+
+<div class="eyebrow">Markets</div>
+<h1>Gold vs stocks vs bitcoin</h1>
+
+<p class="lead">Over the last seven calendar days gold moved
+<b id="g7">not counted yet</b>, the S&amp;P 500 moved <b id="s7">not counted yet</b> and bitcoin
+moved <b id="b7">not counted yet</b>. Those are the same seven days for all three, ending
+<b id="dend">on the date below</b>, from a record we keep ourselves.</p>
+
+<div class="period" id="periodlabel">the same seven days</div>
+
+<div class="live">
+  <div class="c g">
+    <div class="k">Gold</div>
+    <div class="v" id="g7b">not counted yet</div>
+    <div class="s">the metal, priced in dollars</div>
+  </div>
+  <div class="c s">
+    <div class="k">S&amp;P 500</div>
+    <div class="v" id="s7b">not counted yet</div>
+    <div class="s">the American stock market</div>
+  </div>
+  <div class="c b">
+    <div class="k">Bitcoin</div>
+    <div class="v" id="b7b">not counted yet</div>
+    <div class="s">the largest crypto asset</div>
+  </div>
+</div>
+
+<div class="chart">
+  <svg id="ch" viewBox="0 0 720 250" role="img" aria-label="Gold, the S&amp;P 500 and bitcoin, each set to 100 at the start of the record">
+    <line x1="46" y1="14" x2="706" y2="14" stroke="#1A1D21" stroke-width="1"/>
+    <line id="chmidline" x1="46" y1="118" x2="706" y2="118" stroke="#1A1D21" stroke-width="1"/>
+    <line x1="46" y1="222" x2="706" y2="222" stroke="#1A1D21" stroke-width="1"/>
+    <text id="chhi" x="40" y="19" fill="#7A828C" font-size="12" text-anchor="end">.</text>
+    <text id="chmid" x="40" y="123" fill="#7A828C" font-size="12" text-anchor="end">100</text>
+    <text id="chlo" x="40" y="227" fill="#7A828C" font-size="12" text-anchor="end">.</text>
+    <polyline id="pg" fill="none" stroke="#C98500" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points=""/>
+    <polyline id="ps" fill="none" stroke="#3987E5" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points=""/>
+    <polyline id="pb" fill="none" stroke="#D95926" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points=""/>
+    <text id="chstart" x="46" y="244" fill="#7A828C" font-size="12">start of record</text>
+    <text id="chend" x="706" y="244" fill="#7A828C" font-size="12" text-anchor="end">today</text>
+  </svg>
+  <div class="leg">
+    <div><i style="background:#C98500"></i>gold</div>
+    <div><i style="background:#3987E5"></i>S&amp;P 500</div>
+    <div><i style="background:#D95926"></i>bitcoin</div>
+  </div>
+  <div class="cap">All three start at 100 on the first day of the record, so the lines
+  show what one dollar in each would be worth now.</div>
+</div>
+
+<h2>Only one number on this page is money</h2>
+
+<p><b>Every figure above is a price.</b> A market can gain hundreds of billions of dollars in
+value without a single new dollar arriving, because market value is the last traded price
+multiplied by everything in existence. One buyer paying more revalues the entire supply. That
+is not money coming in, that is arithmetic.</p>
+
+<p>So we put the one measurable number next to it. The supply of stablecoins only grows when
+somebody hands over a real dollar to have one minted, and it only shrinks when somebody
+redeems one and takes a real dollar back. It is a quantity, not a valuation, and it does not
+fall just because the market falls.</p>
+
+<div class="money">
+  <div class="c">
+    <div class="k">New money into crypto</div>
+    <div class="v" id="stab7">not counted yet</div>
+    <div class="s">change in stablecoin supply, same seven days</div>
+  </div>
+  <div class="c">
+    <div class="k">Cyclical against defensive</div>
+    <div class="v" id="rot7">not counted yet</div>
+    <div class="s">technology and discretionary against utilities and staples</div>
+  </div>
+</div>
+
+<div class="note">
+<p>The second figure is a lean and not a flow either. It says which half of the stock market
+is being bid up harder, nothing about how much money entered the market. We keep that
+distinction everywhere, because it is the distinction most market commentary quietly drops.</p>
+</div>
+
+<h2>Why we line these up by calendar day</h2>
+
+<p>Crypto trades seven days a week and stock markets trade five. Ask three data providers for
+the last thirty points and you get three different periods, because a point means a session
+in one place and a day in another. Comparisons built that way are off by a couple of days and
+nobody notices.</p>
+
+<p><b>So we store one row per calendar day.</b> Gold and the S&amp;P 500 from Twelve Data,
+bitcoin and the crypto market from CoinGecko, stablecoin supply from DefiLlama, and the euro
+dollar rate from the European Central Bank. Weekends stay empty for the markets that were
+shut, which is honest, and every comparison on this page runs between two real dates that we
+name.</p>
+
+<h2>The unit moves too</h2>
+
+<p>All three prices here are quoted in dollars, and the dollar is not a constant. A week
+where everything rose can be a week where the measuring stick shrank. We log the euro dollar
+rate every day for exactly this reason, and when a week only looks green because of the
+dollar, we say so rather than letting the percentage speak.</p>
+
+<p>The full dollar index is not available on a free tier. The euro dollar rate is the honest
+substitute, it is published by a central bank, and we label it as what it is rather than
+dressing it up as something broader.</p>
+
+<h2>Questions people ask</h2>
+
+<div class="faq">
+  <div class="q">Is gold or the stock market up more right now?</div>
+  <p>The three figures at the top, with the dates they run between.</p>
+
+  <div class="q">Why compare over calendar days instead of trading sessions?</div>
+  <p>Because crypto never closes and stock markets do. Calendar days are the only window
+  that means the same thing for all three.</p>
+
+  <div class="q">Does a rising market mean money is flowing in?</div>
+  <p>No. See the section above. Price times supply can grow with almost no money involved.</p>
+
+  <div class="q">What is the cyclical against defensive ratio?</div>
+  <p>Technology and consumer discretionary against utilities and consumer staples. Rising
+  means the risk taking half is outrunning the safe half.</p>
+
+  <div class="q">Where do the numbers come from?</div>
+  <p>Twelve Data, CoinGecko, DefiLlama and the European Central Bank, read once a day and
+  written into our own file, which this page reads back in your browser.</p>
+
+  <div class="q">How often does this page update?</div>
+  <p>Every day.</p>
+</div>
+
+<footer>
+  <div>PulseHawk. Market data with receipts. No hype, no price targets.</div>
+  <div><a href="/">home</a> &nbsp; <a href="/impressum.html">impressum</a> &nbsp; <a href="/datenschutz.html">datenschutz</a></div>
+</footer>
+
+</div>
+<script>
+(function(){
+  // Die Seite rechnet aus dem eigenen Datensatz im Browser. Der taegliche
+  // Stempel schreibt dieselben Werte zusaetzlich fest in den Quelltext, fuer
+  // alles was kein JavaScript ausfuehrt.
+  var MONATE = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+  var setz = function(id, wert){
+    var e = document.getElementById(id);
+    if (e) { e.textContent = wert; }
+  };
+  var lang = function(iso){
+    var t = iso.split("-");
+    return parseInt(t[2], 10) + " " + MONATE[parseInt(t[1], 10) - 1] + " " + t[0];
+  };
+  var proz = function(a, b){
+    var p = (a / b - 1) * 100;
+    return (p >= 0 ? "+" : "") + p.toFixed(2) + "%";
+  };
+  var geld = function(n){
+    var v = Math.abs(n), z;
+    if (v >= 1e9) { z = "$" + (v / 1e9).toFixed(1) + "B"; }
+    else if (v >= 1e6) { z = "$" + (v / 1e6).toFixed(1) + "M"; }
+    else { z = "$" + v.toFixed(0); }
+    return (n < 0 ? "minus " : "plus ") + z;
+  };
+  var tage = function(iso, n){
+    var t = iso.split("-");
+    var d = new Date(Date.UTC(+t[0], +t[1] - 1, +t[2]));
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  };
+  var hat = function(r, keys){
+    for (var i = 0; i < keys.length; i++) {
+      if (typeof r[keys[i]] !== "number") { return false; }
+    }
+    return true;
+  };
+  // juengste zeile, die alle verlangten felder hat
+  var letzte = function(rows, keys){
+    for (var i = rows.length - 1; i >= 0; i--) {
+      if (rows[i] && hat(rows[i], keys)) { return rows[i]; }
+    }
+    return null;
+  };
+  // juengste zeile am oder vor einem datum, die alle felder hat
+  var vor = function(rows, bis, keys){
+    for (var i = rows.length - 1; i >= 0; i--) {
+      if (rows[i] && rows[i].d <= bis && hat(rows[i], keys)) { return rows[i]; }
+    }
+    return null;
+  };
+
+  fetch("/data/market-log.json", {cache: "no-store"}).then(function(r){
+    return r.ok ? r.json() : null;
+  }).then(function(rows){
+    if (!rows || !rows.length) { return; }
+    rows.sort(function(a, b){ return a.d < b.d ? -1 : (a.d > b.d ? 1 : 0); });
+
+    var DREI = ["gld", "spy", "btc"];
+    var neu = letzte(rows, DREI);
+    if (!neu) { return; }
+    var alt = vor(rows, tage(neu.d, -7), DREI);
+
+    if (alt) {
+      var g = proz(neu.gld, alt.gld), s = proz(neu.spy, alt.spy), b = proz(neu.btc, alt.btc);
+      setz("g7", g); setz("g7b", g);
+      setz("s7", s); setz("s7b", s);
+      setz("b7", b); setz("b7b", b);
+      setz("dend", lang(neu.d));
+      setz("periodlabel", lang(alt.d) + " to " + lang(neu.d));
+    }
+
+    // ebene eins, die einzige messung. stablecoins ueber dieselbe spanne
+    var sn = letzte(rows, ["stables"]);
+    if (sn) {
+      var sa = vor(rows, tage(sn.d, -7), ["stables"]);
+      if (sa) { setz("stab7", geld(sn.stables - sa.stables)); }
+    }
+
+    // ebene drei, zyklisch gegen defensiv. beides zwei papiere je korb
+    var SEK = ["xlk", "xly", "xlu", "xlp"];
+    var rn = letzte(rows, SEK);
+    if (rn) {
+      var ra = vor(rows, tage(rn.d, -7), SEK);
+      if (ra) {
+        var q = function(r){ return (r.xlk + r.xly) / (r.xlu + r.xlp); };
+        setz("rot7", proz(q(rn), q(ra)));
+      }
+    }
+
+    // das diagramm. alle drei auf 100 am ersten gemeinsamen tag
+    var reihe = rows.filter(function(r){ return hat(r, DREI); });
+    if (reihe.length < 3) { return; }
+    var basis = reihe[0], n = reihe.length;
+    var werte = reihe.map(function(r){
+      return [100 * r.gld / basis.gld, 100 * r.spy / basis.spy, 100 * r.btc / basis.btc];
+    });
+    var hoch = 100, tief = 100;
+    werte.forEach(function(w){
+      w.forEach(function(v){ if (v > hoch) { hoch = v; } if (v < tief) { tief = v; } });
+    });
+    var rand = Math.max(1, (hoch - tief) * 0.08);
+    hoch += rand; tief -= rand;
+    var X0 = 46, X1 = 706, Y0 = 14, Y1 = 222;
+    var px = function(i){ return X0 + (X1 - X0) * (n === 1 ? 0 : i / (n - 1)); };
+    var py = function(v){ return Y1 - (Y1 - Y0) * (v - tief) / (hoch - tief); };
+    ["pg", "ps", "pb"].forEach(function(id, k){
+      var e = document.getElementById(id);
+      if (!e) { return; }
+      e.setAttribute("points", werte.map(function(w, i){
+        return px(i).toFixed(1) + "," + py(w[k]).toFixed(1);
+      }).join(" "));
+    });
+    setz("chhi", hoch.toFixed(0));
+    setz("chlo", tief.toFixed(0));
+    // die hundert-linie sitzt da, wo hundert wirklich liegt. kommt sie einer
+    // der beiden randmarken zu nahe, wird sie ausgeblendet statt ueberdruckt.
+    var y100 = py(100);
+    var mid = document.getElementById("chmid"), midl = document.getElementById("chmidline");
+    var eng = (y100 - Y0 < 16) || (Y1 - y100 < 16);
+    if (mid) {
+      mid.setAttribute("y", (y100 + 4).toFixed(1));
+      mid.textContent = "100";
+      mid.style.display = eng ? "none" : "";
+    }
+    if (midl) {
+      midl.setAttribute("y1", y100.toFixed(1));
+      midl.setAttribute("y2", y100.toFixed(1));
+      midl.style.display = eng ? "none" : "";
+    }
+    setz("chstart", lang(basis.d));
+    setz("chend", lang(reihe[n - 1].d));
+  }).catch(function(){ /* die gestempelten werte im quelltext bleiben stehen */ });
+})();
+</script>
+</body>
+</html>
