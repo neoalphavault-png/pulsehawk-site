@@ -528,6 +528,21 @@ def selbsttest():
            round(ab["btc"][3], 1), 1.0)
     pruefe("und liegt unter der mindestspanne", ab["btc"][3] < MINDESTJAHRE, True)
 
+    # --- die aufrufzeile, genau der absturz vom 23.08.2026 ---
+    pruefe("datum wird gelesen",
+           wert_nach(["--rueckblick", "2026-08-26"], "--rueckblick"), "2026-08-26")
+    pruefe("eine flagge ist kein datum",
+           wert_nach(["--rueckblick", "--feld", "gld"], "--rueckblick"), None)
+    pruefe("das feld wird trotzdem gelesen",
+           wert_nach(["--rueckblick", "--feld", "gld"], "--feld"), "gld")
+    pruefe("beides zusammen",
+           (wert_nach(["--rueckblick", "2026-08-26", "--feld", "spy"], "--rueckblick"),
+            wert_nach(["--rueckblick", "2026-08-26", "--feld", "spy"], "--feld")),
+           ("2026-08-26", "spy"))
+    pruefe("flagge am ende ohne wert",
+           wert_nach(["--rueckblick"], "--rueckblick"), None)
+    pruefe("flagge gar nicht da", wert_nach(["--backfill"], "--feld"), None)
+
     # eine fehlende spanne wird gemeldet und nicht verschwiegen
     kurz2 = [{"d": "2017-08-28", "btc": 4300.0}, {"d": "2026-08-22", "btc": 77061.09}]
     _, bef = rueckblick(kurz2, "2026-08-26", "btc", spannen=(5, 10))
@@ -547,8 +562,25 @@ def selbsttest():
     if schlecht[0]:
         print("\n%d faelle falsch" % schlecht[0])
         return 1
-    print("\nselftest ok, 39 faelle")
+    print("\nselftest ok, 45 faelle")
     return 0
+
+
+def wert_nach(argv, flagge):
+    """
+    der wert hinter einer flagge, aber nur wenn dort wirklich einer steht.
+
+    `--rueckblick --feld gld` hat kein datum, sondern die naechste
+    flagge. die alte fassung hat sich "--feld" als datum genommen und ist
+    beim umrechnen abgestuerzt, am 23.08.2026 gleich dreimal im selben
+    lauf. eine flagge faengt mit zwei strichen an, ein datum nie.
+    """
+    if flagge not in argv:
+        return None
+    i = argv.index(flagge)
+    if len(argv) > i + 1 and not argv[i + 1].startswith("--"):
+        return argv[i + 1]
+    return None
 
 
 def main(argv):
@@ -556,13 +588,10 @@ def main(argv):
         return selbsttest()
 
     if "--rueckblick" in argv:
-        i = argv.index("--rueckblick")
-        ziel = argv[i + 1] if len(argv) > i + 1 else None
+        ziel = wert_nach(argv, "--rueckblick")
         if not ziel:
             ziel = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
-        feld = "btc"
-        if "--feld" in argv:
-            feld = argv[argv.index("--feld") + 1]
+        feld = wert_nach(argv, "--feld") or "btc"
         return lauf_rueckblick(ziel, feld)
 
     if "--backfill" in argv:
