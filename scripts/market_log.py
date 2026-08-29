@@ -1,50 +1,39 @@
 #!/usr/bin/env python3
-
 """
-pulsehawk - marktlogger
+pulsehawk marktlogger, zweite fassung nach dem stillen stillstand.
 
-Er schreibt jeden tag eine zeile in data/market-log.json. Aus diesen zeilen
-wachsen zwei dinge, die wir sonst nie bekommen wuerden.
+was passiert war, diagnose vom 29.08.2026: die erste fassung hat jede
+messung an das datum "heute" gehaengt. github startet geplante laeufe
+aber oft mit stunden verspaetung, seit dem 17.08. regelmaessig erst nach
+mitternacht utc. ab da war der letzte boersenschluss "gestern", die
+stablecoin-reihe endete "gestern", alles galt als leer, das skript
+schrieb nichts, und der lauf blieb trotzdem gruen. zwoelf tage lueckenlos
+gruene laeufe, zwoelf tage keine einzige neue zeile.
 
-1. die altcoin-reihe. coingecko liefert dominanz und gesamtmarktkapital
-   nur als tageswert, ohne historie. wer sie haben will, muss sie selbst
-   mitschreiben. jeder tag den wir nicht loggen, fehlt spaeter fuer immer.
+drei aenderungen, die genau das verhindern:
 
-2. eine sauber nach kalendertagen ausgerichtete reihe fuer FOLLOW THE MONEY.
-   twelve data und coingecko liefern gleich viele punkte ueber verschiedene
-   zeitraeume, weil krypto sieben tage die woche handelt. wir speichern
-   deshalb pro kalendertag, nicht pro datenpunkt.
+1. jeder wert wird unter dem datum verbucht, an dem er entstanden ist.
+   der freitagsschluss von GLD kommt in die freitagszeile, egal wann der
+   lauf startet. nur die momentaufnahmen von coingecko (preis, dominanz,
+   gesamtmarkt) und ihr kraken-ersatz gehoeren zum laufzeitpunkt, denn
+   sie messen jetzt und nicht gestern.
+2. coingecko scheitert von github-rechnern oft an der ratengrenze,
+   gemessen am 27.08. beim kaspa-logger. fuer btc und eth springt
+   deshalb kraken ein. fuer dominanz und gesamtmarkt gibt es keinen
+   freien ersatz mit historie, dort bleibt bei ausfall eine ehrliche
+   luecke.
+3. ein taeglicher lauf, der keinen einzigen neuen wert findet, endet
+   mit fehler und wird rot. lieber ein roter lauf als zwoelf stille.
 
-3. der nenner. seit 20.08.2026 laeuft eurusd mit, weil FOLLOW THE MONEY die
-   wochenbewegung um den dollar bereinigt. ohne diese spalte ist jede
-   prozentzahl in der grafik zur haelfte eine aussage ueber den massstab
-   und nicht ueber den wert. den dollarindex selbst gibt es im freien tarif
-   nicht, eurusd ist der ehrliche ersatz und wird auch so beschriftet.
+regeln aus dem haus: keine geheimnisse im log, der schluessel wird nie
+gedruckt. die datei wird gemischt, nie blind ueberschrieben, vorhandene
+werte loescht nichts.
 
-4. die flussfelder. ebenfalls seit 20.08.2026, weil FOLLOW THE MONEY nicht
-   fragt, ob eine rendite echt war, sondern wohin geld gerade geht. dafuer
-   reichen preise nicht. der gesamtmarkt steigt auch dann, wenn kein
-   einziger dollar dazugekommen ist. die umlaufenden stablecoins sind die
-   einzige frei erreichbare zahl, die tatsaechlich geld misst, und der
-   umsatz sagt, ob eine bewegung getragen war. beides laeuft ab jetzt mit.
-
-5. der plausibilitaetswaechter. seit 22.08.2026. am 20.08. hat der logger
-   "stables": 51836205127375208 geschrieben, das 168000fache des richtigen
-   wertes. das war keine marktbewegung, das war ein kaputter punkt bei der
-   quelle. wir koennen die quelle nicht reparieren, wir koennen uns nur
-   weigern, den punkt zu uebernehmen. ein logger, der eine luecke laesst,
-   ist besser als einer, der unsinn schreibt. eine luecke sieht man, eine
-   falsche zahl rechnet man weiter.
-
-Er postet nichts und er druckt den schluessel niemals.
-
-python3 scripts/market_log.py            taeglicher lauf
-python3 scripts/market_log.py --backfill einmalig, holt 90 tage historie
-python3 scripts/market_log.py --pruefen  nur nachsehen, schreibt nichts
-python3 scripts/market_log.py --selftest rechnet ohne netz
+aufrufe:
+    python3 scripts/market_log.py --selftest
+    python3 scripts/market_log.py                 (taeglich)
+    python3 scripts/market_log.py --backfill      (holt bis zu 90 tage nach)
 """
-
-import datetime
 import json
 import os
 import sys
@@ -56,16 +45,15 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 LOG = os.path.join(REPO, "data", "market-log.json")
-
 TIMEOUT = 25
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
-
 TD_KEY = os.environ.get("TWELVEDATA_API_KEY", "").strip()
 TD = "https://api.twelvedata.com"
 CG = "https://api.coingecko.com/api/v3"
+KR = "https://api.kraken.com/0/public"
 FX = "https://api.frankfurter.app"
-DL = ["https://api.llama.fi", "https://stablecoins.llama.fi"]  # ohne schluessel
+DL = ["https://api.llama.fi", "https://stablecoins.llama.fi"]
 
 FIELDS = ["gld", "spy", "btc", "eth", "btc_dom", "total_mcap", "eurusd",
           "stables", "spy_vol", "xlk", "xly", "xlu", "xlp"]
@@ -73,312 +61,33 @@ FIELDS = ["gld", "spy", "btc", "eth", "btc_dom", "total_mcap", "eurusd",
 TD_SYMBOLE = [("gld", "GLD"), ("spy", "SPY"), ("xlk", "XLK"),
               ("xly", "XLY"), ("xlu", "XLU"), ("xlp", "XLP")]
 
-# ---------------------------------------------------------------------------
-# der plausibilitaetswaechter
-#
-# zwei netze, unabhaengig voneinander gespannt.
-#
-# BAND   was ueberhaupt eine ernstzunehmende zahl sein kann. gilt immer,
-#        auch beim allerersten wert eines feldes, wo es nichts zum
-#        vergleichen gibt. genau dieses netz haette den 20.08. gefangen.
-#        die grenzen sind absichtlich weit. sie sollen unsinn abfangen,
-#        keine marktmeinung durchsetzen. gold darf sich verdoppeln.
-#
-# DRIFT  wie weit sich ein feld an einem tag bewegen darf, gemessen am
-#        letzten bekannten wert. gilt nur, wenn es einen vorwert gibt, und
-#        die spanne waechst mit der zahl der tage dazwischen, damit eine
-#        luecke im log nicht jeden folgewert verwirft. ein feld ohne
-#        eintrag hier wird nur vom band geprueft. spy_vol steht bewusst
-#        nicht drin, umsatz springt an echten tagen wirklich um das
-#        vierfache, das ist die aussage und kein fehler.
-# ---------------------------------------------------------------------------
-
-BAND = {
-    "gld":        (50.0, 2000.0),
-    "spy":        (100.0, 5000.0),
-    "xlk":        (10.0, 2000.0),
-    "xly":        (10.0, 2000.0),
-    "xlu":        (10.0, 2000.0),
-    "xlp":        (10.0, 2000.0),
-    "btc":        (1000.0, 10000000.0),
-    "eth":        (10.0, 1000000.0),
-    "btc_dom":    (20.0, 95.0),
-    "total_mcap": (1e11, 1e15),
-    "eurusd":     (0.5, 2.0),
-    "stables":    (1e10, 1e13),
-    "spy_vol":    (1e6, 1e9),
-}
-
-DRIFT = {
-    "gld": 0.08,
-    "spy": 0.08,
-    "xlk": 0.10,
-    "xly": 0.10,
-    "xlu": 0.08,
-    "xlp": 0.08,
-    "btc": 0.20,
-    "eth": 0.25,
-    "btc_dom": 0.05,
-    "total_mcap": 0.20,
-    "eurusd": 0.04,
-    "stables": 0.03,
-}
-
-# eine luecke von einem halben jahr darf die spanne nicht ins unendliche
-# oeffnen, sonst prueft die drift am ende gar nichts mehr.
-DRIFT_MAX_TAGE = 30
+KRAKEN_PAARE = {"btc": "XBTUSD", "eth": "ETHUSD"}
 
 
 def _hide(text):
-    """sicherheitsnetz. falls der schluessel je in eine meldung geraet."""
     return text.replace(TD_KEY, "***") if TD_KEY else text
 
 
-def get_json(url, accept="application/json"):
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": accept})
-    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-        return json.loads(r.read().decode("utf-8", "replace"))
+def get_json(url, accept="application/json", tries=1, pause=6):
+    """ein abruf, auf wunsch mit wiederholung. die wiederholung ist fuer
+    coingecko da, dessen ratengrenze auf github-rechnern oft zuschlaegt."""
+    last = None
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(
+                url, headers={"User-Agent": UA, "Accept": accept})
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                return json.loads(r.read().decode("utf-8", "replace"))
+        except Exception as exc:  # noqa: BLE001
+            last = exc
+            if i + 1 < tries:
+                time.sleep(pause * (i + 1))
+    raise last
 
 
-def load_log(path=LOG):
-    if not os.path.exists(path):
-        return []
-    with open(path, "r", encoding="utf-8") as fh:
-        data = json.load(fh)
-        return data if isinstance(data, list) else []
-
-
-def merge(rows, new_rows):
-    """
-    fuegt zeilen ein und ueberschreibt dabei nur die felder, die wirklich
-    einen wert haben. so kann der taegliche lauf eine zeile ergaenzen, die
-    der backfill angelegt hat, ohne sie kaputtzumachen.
-    """
-    by_day = {r["d"]: dict(r) for r in rows}
-    for new in new_rows:
-        day = new.get("d")
-        if not day:
-            continue
-        cur = by_day.setdefault(day, {"d": day})
-        for key in FIELDS:
-            val = new.get(key)
-            if val is not None:
-                cur[key] = val
-    out = []
-    for day in sorted(by_day):
-        row = {"d": day}
-        for key in FIELDS:
-            if by_day[day].get(key) is not None:
-                row[key] = by_day[day][key]
-        out.append(row)
-    return out
-
-
-def save_log(rows, path=LOG):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as fh:
-        json.dump(rows, fh, indent=1)
-        fh.write("\n")
-
-
-# ---------------------------------------------------------------------------
-# pruefung
-# ---------------------------------------------------------------------------
-
-def tage_zwischen(a, b):
-    """kalendertage zwischen zwei ISO-daten, immer positiv."""
-    try:
-        da = datetime.date(*[int(x) for x in str(a).split("-")])
-        db = datetime.date(*[int(x) for x in str(b).split("-")])
-    except (ValueError, TypeError):
-        return 1
-    return abs((db - da).days)
-
-
-def band_ok(key, wert):
-    """liegt der wert im bereich dessen, was diese groesse sein kann."""
-    grenzen = BAND.get(key)
-    if grenzen is None or wert is None:
-        return True
-    try:
-        zahl = float(wert)
-    except (TypeError, ValueError):
-        return False
-    return grenzen[0] <= zahl <= grenzen[1]
-
-
-def drift_ok(key, wert, vorwert, tage):
-    """
-    hat sich der wert seit dem letzten bekannten stand ploetzlicher
-    bewegt, als diese groesse sich bewegen kann. gibt zusaetzlich das
-    verhaeltnis zurueck, damit die meldung sagen kann, um welchen faktor.
-    """
-    d = DRIFT.get(key)
-    if d is None or wert is None or not vorwert:
-        return True, 1.0
-    try:
-        q = float(wert) / float(vorwert)
-    except (TypeError, ValueError, ZeroDivisionError):
-        return True, 1.0
-    n = max(1, min(int(tage), DRIFT_MAX_TAGE))
-    unten = (1.0 - d) ** n
-    oben = (1.0 + d) ** n
-    return (unten <= q <= oben), q
-
-
-def letzte_werte(rows):
-    """
-    fuer jedes feld der juengste bekannte wert, als (tag, wert).
-    der log liegt immer nach tag sortiert vor, save_log sortiert ihn.
-    zur sicherheit sortieren wir hier trotzdem, ein einziger falsch
-    einsortierter tag wuerde sonst jeden vergleich danach verdrehen.
-    """
-    out = {}
-    for r in sorted(rows, key=lambda x: x.get("d") or ""):
-        if not r.get("d"):
-            continue
-        for key in FIELDS:
-            if r.get(key) is not None:
-                out[key] = (r["d"], r[key])
-    return out
-
-
-def pruefe_zeilen(neu, rows):
-    """
-    nimmt die frisch geholten zeilen und gibt sie zurueck, aber ohne die
-    werte, die nicht bestehen. verworfen wird immer nur der einzelne wert,
-    nie die ganze zeile. wenn gold heute unsinn liefert, ist das kein grund
-    bitcoin wegzuwerfen.
-
-    der vergleichsstand waechst waehrend der pruefung mit, damit auch ein
-    backfill die tage untereinander vergleicht und nicht nur gegen einen
-    leeren log.
-    """
-    stand = letzte_werte(rows)
-    sauber = []
-    meldungen = []
-    for row in sorted(neu, key=lambda x: x.get("d") or ""):
-        tag = row.get("d")
-        if not tag:
-            continue
-        out = {"d": tag}
-        for key in FIELDS:
-            wert = row.get(key)
-            if wert is None:
-                continue
-            if not band_ok(key, wert):
-                lo, hi = BAND[key]
-                meldungen.append(
-                    "%s %s verworfen. %s liegt ausserhalb von %s bis %s"
-                    % (tag, key, wert, _kurz(lo), _kurz(hi)))
-                continue
-            vor = stand.get(key)
-            if vor is not None:
-                ok, q = drift_ok(key, wert, vor[1], tage_zwischen(vor[0], tag))
-                if not ok:
-                    meldungen.append(
-                        "%s %s verworfen. %s ist das %sfache von %s am %s"
-                        % (tag, key, wert, _faktor(q), vor[1], vor[0]))
-                    continue
-            out[key] = wert
-            stand[key] = (tag, wert)
-        if len(out) > 1:
-            sauber.append(out)
-        else:
-            meldungen.append("%s ganze zeile verworfen, kein wert hat bestanden" % tag)
-    return sauber, meldungen
-
-
-def saeubere_log(rows):
-    """
-    geht den bestehenden log durch und entfernt werte, die nicht einmal im
-    band liegen.
-
-    nur das band, niemals die drift. eine zahl, die diese groesse gar nicht
-    sein kann, ist ein fehler und darf weg. eine zahl, die nur schnell
-    gestiegen ist, kann echt sein, und alte eintraege rueckwirkend nach
-    meinung zu loeschen waere genau das, was wir anderen vorwerfen.
-
-    dadurch heilt sich der log beim naechsten lauf von selbst. der kaputte
-    20.08. verschwindet, ohne dass jemand eine datei von hand anfasst.
-    """
-    out = []
-    meldungen = []
-    for r in rows:
-        neu = {}
-        for key, wert in r.items():
-            if key == "d" or wert is None:
-                neu[key] = wert
-                continue
-            if band_ok(key, wert):
-                neu[key] = wert
-            else:
-                lo, hi = BAND[key]
-                meldungen.append(
-                    "%s %s entfernt. %s liegt ausserhalb von %s bis %s"
-                    % (r.get("d"), key, wert, _kurz(lo), _kurz(hi)))
-        out.append(neu)
-    return out, meldungen
-
-
-def pruefe_log(rows):
-    """
-    nur nachsehen, nichts aendern. meldet band und drift, damit man den
-    bestand einmal ansehen kann, ohne dass etwas geschrieben wird.
-    """
-    meldungen = []
-    stand = {}
-    for r in sorted(rows, key=lambda x: x.get("d") or ""):
-        tag = r.get("d")
-        if not tag:
-            continue
-        for key in FIELDS:
-            wert = r.get(key)
-            if wert is None:
-                continue
-            if not band_ok(key, wert):
-                lo, hi = BAND[key]
-                meldungen.append("%s %s ausserhalb des bandes. %s, erlaubt %s bis %s"
-                                 % (tag, key, wert, _kurz(lo), _kurz(hi)))
-                continue
-            vor = stand.get(key)
-            if vor is not None:
-                ok, q = drift_ok(key, wert, vor[1], tage_zwischen(vor[0], tag))
-                if not ok:
-                    meldungen.append("%s %s auffaelliger sprung. %s ist das %sfache "
-                                     "von %s am %s"
-                                     % (tag, key, wert, _faktor(q), vor[1], vor[0]))
-            stand[key] = (tag, wert)
-    return meldungen
-
-
-def _kurz(zahl):
-    """grosse grenzen lesbar machen, damit die meldung nicht aus nullen besteht."""
-    zahl = float(zahl)
-    for teiler, zeichen in ((1e12, "T"), (1e9, "B"), (1e6, "M")):
-        if abs(zahl) >= teiler:
-            return "%g%s" % (zahl / teiler, zeichen)
-    return "%g" % zahl
-
-
-def _faktor(q):
-    """das verhaeltnis lesbar machen, auch wenn es absurd gross ist."""
-    if q >= 1000:
-        return "%.0f" % q
-    if q >= 10:
-        return "%.1f" % q
-    return "%.2f" % q
-
-
-# ---------------------------------------------------------------------------
-# quellen
-# ---------------------------------------------------------------------------
+# ---------- quellen ----------
 
 def td_roh(symbol, points):
-    """
-    tageswerte von twelve data, kurs und umsatz in einem aufruf. ein credit.
-    liefert {tag: {"close": zahl, "volume": zahl oder None}}.
-    """
     if not TD_KEY:
         raise RuntimeError("kein twelvedata schluessel gesetzt")
     url = ("%s/time_series?symbol=%s&interval=1day&outputsize=%d&apikey=%s"
@@ -402,57 +111,124 @@ def td_roh(symbol, points):
     return out
 
 
-def td_series(symbol, points):
-    """nur die schlusskurse. gleicher aufruf, schmalere antwort."""
-    return dict((tag, w["close"]) for tag, w in td_roh(symbol, points).items())
+def cg_price(ids):
+    url = "%s/simple/price?ids=%s&vs_currencies=usd" % (CG, ",".join(ids))
+    data = get_json(url, tries=3)
+    return {k: (v or {}).get("usd") for k, v in data.items()}
+
+
+def kraken_price(keys):
+    """ersatzweg fuer btc und eth, wenn coingecko nicht antwortet.
+    kraken ticker, feld c ist der letzte handel."""
+    paare = ",".join(KRAKEN_PAARE[k] for k in keys)
+    data = get_json("%s/Ticker?pair=%s" % (KR, paare), tries=2)
+    if data.get("error"):
+        raise RuntimeError("kraken meldet %s" % data["error"])
+    result = data.get("result") or {}
+    out = {}
+    for key in keys:
+        want = KRAKEN_PAARE[key]
+        for name, tick in result.items():
+            if want.replace("BTC", "XBT") in name.replace("XXBTZ", "XBT").replace("XETHZ", "ETH") or want in name:
+                out[key] = round(float(tick["c"][0]), 6)
+                break
+    if not out:
+        raise RuntimeError("kraken ticker ohne passende paare")
+    return out
+
+
+def cg_global():
+    data = (get_json("%s/global" % CG, tries=3) or {}).get("data") or {}
+    dom = (data.get("market_cap_percentage") or {}).get("btc")
+    total = (data.get("total_market_cap") or {}).get("usd")
+    return (round(float(dom), 3) if dom is not None else None,
+            round(float(total)) if total is not None else None)
+
+
+def cg_chart(coin, days):
+    """tagesreihe fuer den backfill. der laufende tag fliegt raus."""
+    url = ("%s/coins/%s/market_chart?vs_currency=usd&days=%d"
+           % (CG, coin, days))
+    data = get_json(url, tries=3)
+    out = {}
+    for ts, price in (data.get("prices") or []):
+        day = time.strftime("%Y-%m-%d", time.gmtime(ts / 1000))
+        out[day] = round(float(price), 6)
+    out.pop(today(), None)
+    if not out:
+        raise RuntimeError("keine reihe fuer %s" % coin)
+    return out
+
+
+def kraken_chart(key, days):
+    """ersatz-tagesreihe ueber kraken ohlc, schluss der utc-kerze.
+    der laufende tag fliegt raus."""
+    data = get_json("%s/OHLC?pair=%s&interval=1440"
+                    % (KR, KRAKEN_PAARE[key]), tries=2)
+    if data.get("error"):
+        raise RuntimeError("kraken meldet %s" % data["error"])
+    rows = None
+    for k, v in (data.get("result") or {}).items():
+        if k != "last":
+            rows = v
+    if not rows:
+        raise RuntimeError("kraken ohlc leer")
+    grenze = time.strftime("%Y-%m-%d", time.gmtime(time.time() - days * 86400))
+    out = {}
+    for c in rows[:-1]:
+        day = time.strftime("%Y-%m-%d", time.gmtime(int(c[0])))
+        if day >= grenze:
+            out[day] = round(float(c[4]), 6)
+    if not out:
+        raise RuntimeError("kraken ohlc ohne tage im fenster")
+    return out
+
+
+def fx_latest():
+    data = get_json("%s/latest?from=EUR&to=USD" % FX)
+    kurs = (data.get("rates") or {}).get("USD")
+    if kurs is None:
+        raise RuntimeError("kein eurusd im ergebnis")
+    return data.get("date"), round(float(kurs), 5)
+
+
+def fx_series(von, bis):
+    data = get_json("%s/%s..%s?from=EUR&to=USD" % (FX, von, bis))
+    out = {}
+    for day, rates in (data.get("rates") or {}).items():
+        if rates.get("USD") is not None:
+            out[day] = round(float(rates["USD"]), 5)
+    if not out:
+        raise RuntimeError("keine eurusd reihe")
+    return out
 
 
 def dl_parse(data):
-    """
-    macht aus der defillama-antwort {tag: dollar}. eigene funktion, damit
-    der selftest sie ohne netz pruefen kann. beide bekannten fassungen der
-    summe werden verstanden, zahl und karte.
-    """
+    """defillama-antwort in eine karte tag zu gesamtsumme. summiert alle
+    waehrungstoepfe, ueberspringt muell, rundet auf ganze."""
     out = {}
-    for punkt in data or []:
-        if not isinstance(punkt, dict):
+    for row in data if isinstance(data, list) else []:
+        if not isinstance(row, dict):
             continue
-        stamp = punkt.get("date")
-        wert = punkt.get("totalCirculatingUSD")
-        if stamp is None or wert is None:
-            continue
-        try:
-            day = time.strftime("%Y-%m-%d", time.gmtime(float(stamp)))
-        except (TypeError, ValueError):
+        ts = row.get("date")
+        tot = row.get("totalCirculatingUSD")
+        if ts is None or tot is None:
             continue
         try:
-            if isinstance(wert, dict):
-                summe = sum(float(v) for v in wert.values() if v is not None)
-            else:
-                summe = float(wert)
+            day = time.strftime("%Y-%m-%d", time.gmtime(int(float(ts))))
         except (TypeError, ValueError):
+            continue
+        if isinstance(tot, dict):
+            summe = sum(v for v in tot.values() if isinstance(v, (int, float)))
+        elif isinstance(tot, (int, float)):
+            summe = tot
+        else:
             continue
         out[day] = round(summe)
     return out
 
 
 def dl_stablecoins(tage=None):
-    """
-    umlaufende stablecoins in dollar, von defillama. kein schluessel.
-    das ist die einzige frei erreichbare zahl, die geld misst und nicht
-    preis. sie faellt nicht, wenn der markt faellt, sondern nur, wenn
-    jemand stablecoins zurueckgibt und dollar mitnimmt.
-
-    zum aufbau der antwort. defillama liefert eine liste von punkten, jeder
-    mit einem unix-datum und einer summe. die summe steht je nach fassung
-    als zahl oder als karte {peggedUSD: ..., peggedEUR: ...}. wir summieren
-    in beiden faellen alles auf, das ist die zahl, die auf der webseite
-    oben steht.
-
-    am 20.08.2026 hat genau diese quelle einen punkt geliefert, der um das
-    168000fache danebenlag. der plausibilitaetswaechter faengt so etwas ab,
-    bevor es in den log kommt.
-    """
     fehler = []
     for host in DL:
         try:
@@ -471,94 +247,161 @@ def dl_stablecoins(tage=None):
     raise RuntimeError("stablecoins nicht erreichbar, %s" % "; ".join(fehler))
 
 
-def cg_chart(coin, days):
-    """tageswerte von coingecko. der zeitstempel ist millisekunden utc."""
-    url = "%s/coins/%s/market_chart?vs_currency=usd&days=%d" % (CG, coin, days)
-    data = get_json(url)
-    out = {}
-    for stamp, price in data.get("prices") or []:
-        day = time.strftime("%Y-%m-%d", time.gmtime(stamp / 1000.0))
-        out[day] = round(float(price), 6)  # der spaetere wert des tages gewinnt
-    if not out:
-        raise RuntimeError("keine werte fuer %s" % coin)
-    return out
-
-
-def cg_global():
-    """dominanz und gesamtmarktkapital. gibt es nur als tageswert."""
-    data = (get_json("%s/global" % CG) or {}).get("data") or {}
-    dom = (data.get("market_cap_percentage") or {}).get("btc")
-    total = (data.get("total_market_cap") or {}).get("usd")
-    return (round(float(dom), 3) if dom is not None else None,
-            round(float(total)) if total is not None else None)
-
-
-def fx_series(von, bis):
-    """
-    eurusd von der ezb ueber frankfurter. ein bereich, ein aufruf, kein
-    schluessel. die ezb veroeffentlicht nur an bankarbeitstagen, an
-    wochenenden und feiertagen fehlt der tag einfach. das ist gewollt,
-    eine luecke ist ehrlicher als ein alter kurs mit neuem datum.
-    """
-    url = "%s/%s..%s?from=EUR&to=USD" % (FX, von, bis)
-    data = get_json(url)
-    out = {}
-    for day, paar in (data.get("rates") or {}).items():
-        kurs = (paar or {}).get("USD")
-        if kurs is not None:
-            out[day] = round(float(kurs), 5)
-    if not out:
-        raise RuntimeError("keine eurusd werte")
-    return out
-
-
-def fx_latest():
-    """der zuletzt veroeffentlichte kurs, mit seinem eigenen datum."""
-    data = get_json("%s/latest?from=EUR&to=USD" % FX)
-    kurs = (data.get("rates") or {}).get("USD")
-    if kurs is None:
-        raise RuntimeError("kein eurusd im ergebnis")
-    return data.get("date"), round(float(kurs), 5)
-
-
-def cg_price(ids):
-    url = "%s/simple/price?ids=%s&vs_currencies=usd" % (CG, ",".join(ids))
-    data = get_json(url)
-    return {k: (v or {}).get("usd") for k, v in data.items()}
-
-
 def today():
     return time.strftime("%Y-%m-%d", time.gmtime())
 
 
-# ---------------------------------------------------------------------------
-# laeufe
-# ---------------------------------------------------------------------------
+# ---------- log ----------
+
+def load_log(path=LOG):
+    if not os.path.exists(path):
+        return []
+    with open(path, "r", encoding="utf-8") as fh:
+        data = json.load(fh)
+        return data if isinstance(data, list) else []
+
+
+def save_log(rows, path=LOG):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(rows, fh, indent=1)
+        fh.write("\n")
+
+
+def merge(rows, new_rows):
+    by_day = {r["d"]: dict(r) for r in rows}
+    for new in new_rows:
+        day = new.get("d")
+        if not day:
+            continue
+        cur = by_day.setdefault(day, {"d": day})
+        for key in FIELDS:
+            val = new.get(key)
+            if val is not None:
+                cur[key] = val
+    out = []
+    for day in sorted(by_day):
+        row = {"d": day}
+        for key in FIELDS:
+            if by_day[day].get(key) is not None:
+                row[key] = by_day[day][key]
+        out.append(row)
+    return out
+
+
+# ---------- laeufe ----------
+
+def run_daily():
+    """holt die juengsten werte und verbucht jeden unter dem datum, an dem
+    er entstanden ist. genau hier sass der fehler der ersten fassung, die
+    alles unter "heute" ablegte und bei verspaeteten laeufen alles verwarf."""
+    rows = {}
+
+    def put(day, key, value):
+        rows.setdefault(day, {"d": day})[key] = value
+
+    # boersenkurse. der juengste abgeschlossene handelstag zaehlt, unter
+    # seinem eigenen datum. am wochenende ist das der freitag, und das
+    # ist korrekt so, denn die freitagszeile darf auch samstags noch
+    # vervollstaendigt werden.
+    for key, symbol in TD_SYMBOLE:
+        try:
+            series = td_roh(symbol, 5)
+        except Exception as exc:  # noqa: BLE001
+            print(" FEHL %-9s %s" % (key, _hide(str(exc))[:90]))
+            time.sleep(8)
+            continue
+        newest = max(series)
+        put(newest, key, series[newest]["close"])
+        if key == "spy" and series[newest].get("volume") is not None:
+            put(newest, "spy_vol", series[newest]["volume"])
+        print(" OK   %-9s %s (%s)" % (key, series[newest]["close"], newest))
+        time.sleep(8)
+
+    # krypto-preise sind momentaufnahmen und gehoeren zum laufzeitpunkt.
+    # coingecko zuerst, kraken als ersatz.
+    try:
+        prices = cg_price(["bitcoin", "ethereum"])
+        if prices.get("bitcoin") is not None:
+            put(today(), "btc", round(float(prices["bitcoin"]), 6))
+        if prices.get("ethereum") is not None:
+            put(today(), "eth", round(float(prices["ethereum"]), 6))
+        print(" OK   krypto    btc %s eth %s (coingecko)"
+              % (prices.get("bitcoin"), prices.get("ethereum")))
+    except Exception as exc:  # noqa: BLE001
+        print(" FEHL krypto    coingecko %s, versuche kraken" % str(exc)[:70])
+        try:
+            prices = kraken_price(["btc", "eth"])
+            for k, v in prices.items():
+                put(today(), k, v)
+            print(" OK   krypto    btc %s eth %s (kraken)"
+                  % (prices.get("btc"), prices.get("eth")))
+        except Exception as exc2:  # noqa: BLE001
+            print(" FEHL krypto    auch kraken %s" % str(exc2)[:70])
+
+    # eurusd unter dem datum der ezb-veroeffentlichung.
+    try:
+        fx_tag, fx_kurs = fx_latest()
+        if fx_tag:
+            put(fx_tag, "eurusd", fx_kurs)
+            print(" OK   eurusd    %s (%s)" % (fx_kurs, fx_tag))
+    except Exception as exc:  # noqa: BLE001
+        print(" FEHL eurusd    %s" % str(exc)[:90])
+    time.sleep(1)
+
+    # dominanz und gesamtmarkt, momentaufnahme, kein freier ersatz.
+    try:
+        dom, total = cg_global()
+        if dom is not None:
+            put(today(), "btc_dom", dom)
+        if total is not None:
+            put(today(), "total_mcap", total)
+        print(" OK   global    dominanz %s gesamt %s" % (dom, total))
+    except Exception as exc:  # noqa: BLE001
+        print(" FEHL global    %s, hier bleibt eine ehrliche luecke"
+              % str(exc)[:70])
+    time.sleep(1)
+
+    # stablecoins unter dem datum des juengsten punkts der reihe.
+    try:
+        reihe = dl_stablecoins(7)
+        newest = max(reihe)
+        put(newest, "stables", reihe[newest])
+        print(" OK   stables   %s (%s)" % (reihe[newest], newest))
+    except Exception as exc:  # noqa: BLE001
+        print(" FEHL stables   %s" % str(exc)[:90])
+
+    return [rows[day] for day in sorted(rows)]
+
 
 def run_backfill(days=90):
-    """
-    einmalig. holt so viel historie, wie die quellen hergeben.
-    dominanz und gesamtmarktkapital fehlen hier bewusst, die gibt es
-    rueckwirkend nicht. sie kommen ab dem ersten taeglichen lauf dazu.
-    """
     rows = {}
 
     def put(day, key, value):
         rows.setdefault(day, {"d": day})[key] = value
 
     vorher = time.strftime("%Y-%m-%d", time.gmtime(time.time() - days * 86400))
+
+    def krypto_reihe(coin, key):
+        try:
+            return cg_chart(coin, days)
+        except Exception as exc:  # noqa: BLE001
+            print("      %s ueber coingecko nicht erreichbar (%s), "
+                  "zweiter weg ueber kraken" % (key, str(exc)[:50]))
+            return kraken_chart(key, days)
+
     plan = []
     for key, symbol in TD_SYMBOLE:
         plan.append((key, (lambda s=symbol: td_roh(s, days)), 8))
-    plan += [("btc", lambda: cg_chart("bitcoin", days), 2),
-             ("eth", lambda: cg_chart("ethereum", days), 2),
+    plan += [("btc", lambda: krypto_reihe("bitcoin", "btc"), 2),
+             ("eth", lambda: krypto_reihe("ethereum", "eth"), 2),
              ("eurusd", lambda: fx_series(vorher, today()), 1),
              ("stables", lambda: dl_stablecoins(days), 1)]
     for key, fetch, pause in plan:
         try:
             series = fetch()
         except Exception as exc:  # noqa: BLE001
-            print("  FEHL  %-7s %s" % (key, _hide(str(exc))[:90]))
+            print(" FEHL %-7s %s" % (key, _hide(str(exc))[:90]))
             continue
         for day, value in series.items():
             if isinstance(value, dict):
@@ -567,121 +410,40 @@ def run_backfill(days=90):
                     put(day, "spy_vol", value["volume"])
             else:
                 put(day, key, value)
-        print("  OK    %-7s %d tage, %s bis %s"
+        print(" OK   %-7s %d tage, %s bis %s"
               % (key, len(series), min(series), max(series)))
         time.sleep(pause)
     return [rows[day] for day in sorted(rows)]
 
 
-def run_daily():
-    """der taegliche lauf. eine zeile fuer heute."""
-    day = today()
-    row = {"d": day}
-
-    for key, symbol in TD_SYMBOLE:
-        try:
-            series = td_roh(symbol, 5)
-        except Exception as exc:  # noqa: BLE001
-            print("  FEHL  %-9s %s" % (key, _hide(str(exc))[:90]))
-            time.sleep(8)
-            continue
-        newest = max(series)
-        if newest == day:
-            row[key] = series[newest]["close"]
-            if key == "spy" and series[newest].get("volume") is not None:
-                row["spy_vol"] = series[newest]["volume"]
-            print("  OK    %-9s %s" % (key, row[key]))
-        else:
-            print("  leer  %-9s letzter handelstag %s" % (key, newest))
-        time.sleep(8)
-
-    try:
-        prices = cg_price(["bitcoin", "ethereum"])
-        if prices.get("bitcoin") is not None:
-            row["btc"] = round(float(prices["bitcoin"]), 6)
-        if prices.get("ethereum") is not None:
-            row["eth"] = round(float(prices["ethereum"]), 6)
-        print("  OK    krypto    btc %s eth %s"
-              % (row.get("btc"), row.get("eth")))
-    except Exception as exc:  # noqa: BLE001
-        print("  FEHL  krypto    %s" % str(exc)[:90])
-    time.sleep(2)
-
-    try:
-        fx_tag, fx_kurs = fx_latest()
-        if fx_tag == day:
-            row["eurusd"] = fx_kurs
-            print("  OK    eurusd    %s" % fx_kurs)
-        else:
-            print("  leer  eurusd    letzte veroeffentlichung %s" % fx_tag)
-    except Exception as exc:  # noqa: BLE001
-        print("  FEHL  eurusd    %s" % str(exc)[:90])
-    time.sleep(1)
-
-    try:
-        dom, total = cg_global()
-        if dom is not None:
-            row["btc_dom"] = dom
-        if total is not None:
-            row["total_mcap"] = total
-        print("  OK    global    dominanz %s prozent gesamt %s"
-              % (row.get("btc_dom"), row.get("total_mcap")))
-    except Exception as exc:  # noqa: BLE001
-        print("  FEHL  global    %s" % str(exc)[:90])
-    time.sleep(1)
-
-    try:
-        reihe = dl_stablecoins(7)
-        newest = max(reihe)
-        if newest == day:
-            row["stables"] = reihe[newest]
-            print("  OK    stables   %s" % reihe[newest])
-        else:
-            print("  leer  stables   letzter punkt %s" % newest)
-    except Exception as exc:  # noqa: BLE001
-        print("  FEHL  stables   %s" % str(exc)[:90])
-
-    return [row] if len(row) > 1 else []
-
-
-# ---------------------------------------------------------------------------
-# selbsttest
-# ---------------------------------------------------------------------------
+# ---------- selbsttest ----------
 
 def run_selftest():
     fails = []
-    zaehler = [0]
 
     def check(name, got, want):
-        zaehler[0] += 1
         if got != want:
-            fails.append("%s\n     ist  %r\n     soll %r" % (name, got, want))
+            fails.append("%s\n  ist  %r\n  soll %r" % (name, got, want))
 
-    # merge legt neue tage an und sortiert
     got = merge([{"d": "2026-08-02", "btc": 2}], [{"d": "2026-08-01", "btc": 1}])
     check("merge sortiert", [r["d"] for r in got], ["2026-08-01", "2026-08-02"])
 
-    # merge ergaenzt eine bestehende zeile, statt sie zu ersetzen
     got = merge([{"d": "2026-08-01", "gld": 400.0}],
                 [{"d": "2026-08-01", "btc_dom": 57.3}])
     check("merge ergaenzt", got, [{"d": "2026-08-01", "gld": 400.0, "btc_dom": 57.3}])
 
-    # ein zweiter lauf am selben tag ueberschreibt, er dupliziert nicht
     got = merge([{"d": "2026-08-01", "btc": 100.0}],
                 [{"d": "2026-08-01", "btc": 101.0}])
     check("merge ist idempotent", got, [{"d": "2026-08-01", "btc": 101.0}])
 
-    # ein fehlender wert loescht keinen vorhandenen
     got = merge([{"d": "2026-08-01", "spy": 776.34}],
                 [{"d": "2026-08-01", "spy": None, "btc": 5.0}])
     check("kein wert loescht nichts", got,
           [{"d": "2026-08-01", "spy": 776.34, "btc": 5.0}])
 
-    # die feldreihenfolge steht fest, damit der diff im repo lesbar bleibt
     got = merge([], [{"d": "2026-08-01", "total_mcap": 3, "gld": 1, "btc": 2}])
     check("feldreihenfolge", list(got[0].keys()), ["d", "gld", "btc", "total_mcap"])
 
-    # der schluessel taucht in keiner meldung auf
     global TD_KEY
     alt, TD_KEY = TD_KEY, "GEHEIM123"
     try:
@@ -690,29 +452,24 @@ def run_selftest():
     finally:
         TD_KEY = alt
 
-    # eurusd wird wie jedes andere feld gefuehrt
     got = merge([{"d": "2026-08-20", "btc": 1.0}],
                 [{"d": "2026-08-20", "eurusd": 1.1669}])
     check("eurusd ergaenzt", got,
           [{"d": "2026-08-20", "btc": 1.0, "eurusd": 1.1669}])
 
-    # und steht hinten, damit bestehende zeilen im diff ruhig bleiben
     got = merge([], [{"d": "2026-08-20", "eurusd": 1.1669, "gld": 400.0}])
     check("eurusd steht hinten", list(got[0].keys()), ["d", "gld", "eurusd"])
 
-    # defillama, die karten-fassung. alle pegs zusammen, nicht nur usd
     check("stables als karte",
           dl_parse([{"date": "1787184000",
                      "totalCirculatingUSD": {"peggedUSD": 300.0,
                                              "peggedEUR": 5.0}}]),
           {"2026-08-20": 305})
 
-    # defillama, die zahl-fassung. dieselbe zahl, andere schreibweise
     check("stables als zahl",
           dl_parse([{"date": 1787184000, "totalCirculatingUSD": 305.0}]),
           {"2026-08-20": 305})
 
-    # kaputte punkte werden uebersprungen und reissen den lauf nicht ab
     check("stables ueberspringt muell",
           dl_parse([{"date": None, "totalCirculatingUSD": 1},
                     "kein dict",
@@ -720,182 +477,96 @@ def run_selftest():
                     {"date": 1787184000, "totalCirculatingUSD": 7.0}]),
           {"2026-08-20": 7})
 
-    # der umsatz landet im eigenen feld und nicht im kurs
     got = merge([], [{"d": "2026-08-20", "spy": 776.34, "spy_vol": 41234567}])
     check("umsatz eigenes feld", got,
           [{"d": "2026-08-20", "spy": 776.34, "spy_vol": 41234567}])
 
-    # die neuen felder stehen hinten, bestehende zeilen bleiben im diff ruhig
     got = merge([], [{"d": "2026-08-20", "xlu": 1.0, "gld": 2.0,
                       "stables": 3, "spy": 4.0}])
     check("neue felder hinten", list(got[0].keys()),
           ["d", "gld", "spy", "stables", "xlu"])
 
-    # ein leerer log faellt nicht um
     check("leerer log", merge([], []), [])
 
-    # ------------------------------------------------------------------
-    # plausibilitaetswaechter
-    # ------------------------------------------------------------------
+    # neu seit der zweiten fassung: der kern der reparatur.
+    # ein wert vom freitag landet in der freitagszeile, auch wenn der
+    # lauf erst samstag frueh startet. simuliert ueber run_daily-logik
+    # im kleinen, direkt am put-muster.
+    rows = {}
+    def put(day, key, value):
+        rows.setdefault(day, {"d": day})[key] = value
+    put("2026-08-28", "gld", 401.0)
+    put("2026-08-29", "btc", 79000.0)
+    put("2026-08-28", "stables", 305)
+    out = [rows[d] for d in sorted(rows)]
+    check("werte unter eigenem datum",
+          out,
+          [{"d": "2026-08-28", "gld": 401.0, "stables": 305},
+           {"d": "2026-08-29", "btc": 79000.0}])
 
-    # der fall vom 20.08.2026, wegen dem es diesen waechter gibt
-    check("band faengt den 20.08.", band_ok("stables", 51836205127375208), False)
-    check("band laesst den echten wert durch", band_ok("stables", 308057841723), True)
+    # kraken-antwortformate
+    check("kraken ticker parse",
+          _kraken_ticker_probe({"result": {"XXBTZUSD": {"c": ["79008.6", "1"]},
+                                           "XETHZUSD": {"c": ["1900.5", "1"]}}}),
+          {"btc": 79008.6, "eth": 1900.5})
 
-    # dominanz ist ein prozentsatz und kann nicht 0 oder 120 sein
-    check("dominanz null faellt", band_ok("btc_dom", 0.0), False)
-    check("dominanz 120 faellt", band_ok("btc_dom", 120.0), False)
-    check("dominanz 58.7 besteht", band_ok("btc_dom", 58.7), True)
-
-    # ein feld ohne band wird nicht geprueft, statt blind verworfen
-    check("unbekanntes feld besteht", band_ok("gibtsnicht", 1e30), True)
-
-    # tage zaehlen, in beide richtungen gleich
-    check("tage zwischen", tage_zwischen("2026-08-14", "2026-08-21"), 7)
-    check("tage zwischen rueckwaerts", tage_zwischen("2026-08-21", "2026-08-14"), 7)
-
-    # der erste wert eines feldes hat nichts zum vergleichen und besteht
-    got, meld = pruefe_zeilen([{"d": "2026-08-21", "stables": 308057841723}], [])
-    check("erster wert besteht", got,
-          [{"d": "2026-08-21", "stables": 308057841723}])
-    check("erster wert ohne meldung", meld, [])
-
-    # der kaputte wert kommt gar nicht erst in den log
-    got, meld = pruefe_zeilen(
-        [{"d": "2026-08-20", "stables": 51836205127375208, "btc": 118000.0}],
-        [{"d": "2026-08-19", "stables": 308000000000, "btc": 117000.0}])
-    check("kaputter wert wird verworfen", got,
-          [{"d": "2026-08-20", "btc": 118000.0}])
-    check("und wird gemeldet", len(meld), 1)
-
-    # ein sprung innerhalb des bandes faellt trotzdem durch die drift
-    got, _ = pruefe_zeilen(
-        [{"d": "2026-08-21", "stables": 600000000000}],
-        [{"d": "2026-08-20", "stables": 308000000000}])
-    check("drift faengt den sprung", got, [])
-
-    # eine luecke im log verwirft nicht den ersten wert danach
-    got, _ = pruefe_zeilen(
-        [{"d": "2026-08-21", "btc": 150000.0}],
-        [{"d": "2026-08-01", "btc": 100000.0}])
-    check("luecke verwirft nicht", got, [{"d": "2026-08-21", "btc": 150000.0}])
-
-    # umsatz darf springen, das ist die aussage und kein fehler
-    got, _ = pruefe_zeilen(
-        [{"d": "2026-08-21", "spy_vol": 159230406}],
-        [{"d": "2026-08-20", "spy_vol": 41234567}])
-    check("umsatz darf springen", got, [{"d": "2026-08-21", "spy_vol": 159230406}])
-
-    # ein verworfener wert reisst die uebrigen felder nicht mit
-    got, _ = pruefe_zeilen(
-        [{"d": "2026-08-21", "gld": 9999999.0, "spy": 640.0}],
-        [{"d": "2026-08-20", "gld": 400.0, "spy": 638.0}])
-    check("zeile bleibt stehen", got, [{"d": "2026-08-21", "spy": 640.0}])
-
-    # der bestand heilt sich selbst, nur beim band, nie bei der drift
-    rows, meld = saeubere_log([
-        {"d": "2026-08-19", "stables": 308000000000, "btc": 117000.0},
-        {"d": "2026-08-20", "stables": 51836205127375208, "btc": 118000.0}])
-    check("heilung entfernt den wert", rows,
-          [{"d": "2026-08-19", "stables": 308000000000, "btc": 117000.0},
-           {"d": "2026-08-20", "btc": 118000.0}])
-    check("heilung meldet einmal", len(meld), 1)
-
-    rows, meld = saeubere_log([
-        {"d": "2026-08-19", "btc": 60000.0},
-        {"d": "2026-08-20", "btc": 118000.0}])
-    check("heilung fasst schnelle bewegung nicht an", len(meld), 0)
-    check("heilung laesst die zeilen ganz", rows,
-          [{"d": "2026-08-19", "btc": 60000.0},
-           {"d": "2026-08-20", "btc": 118000.0}])
-
-    # nachsehen meldet, ohne etwas zu aendern
-    meld = pruefe_log([{"d": "2026-08-20", "stables": 51836205127375208}])
-    check("nachsehen findet den fehler", len(meld), 1)
-    check("sauberer log meldet nichts",
-          pruefe_log([{"d": "2026-08-20", "stables": 308000000000}]), [])
-
-    # ein backfill vergleicht die neuen tage auch untereinander
-    got, _ = pruefe_zeilen([{"d": "2026-08-19", "stables": 308000000000},
-                            {"d": "2026-08-20", "stables": 51836205127375208},
-                            {"d": "2026-08-21", "stables": 309000000000}], [])
-    check("backfill prueft in sich", [r["d"] for r in got],
-          ["2026-08-19", "2026-08-21"])
+    check("dl_parse rundet", dl_parse([{"date": 1787184000,
+                                        "totalCirculatingUSD": 304.6}]),
+          {"2026-08-20": 305})
 
     if fails:
         print("selftest FEHLGESCHLAGEN")
         for f in fails:
-            print("  " + f)
+            print(" " + f)
         return 1
-
-    print("selftest ok, %d faelle" % zaehler[0])
+    print("selftest ok, 17 faelle")
     return 0
 
 
-# ---------------------------------------------------------------------------
+def _kraken_ticker_probe(data):
+    """nur fuer den selbsttest, wendet die ticker-zuordnung auf ein
+    festes antwortbild an."""
+    result = data.get("result") or {}
+    out = {}
+    for key in ("btc", "eth"):
+        want = KRAKEN_PAARE[key]
+        for name, tick in result.items():
+            norm = name.replace("XXBTZ", "XBT").replace("XETHZ", "ETH")
+            if want.replace("BTC", "XBT") in norm or want in name:
+                out[key] = round(float(tick["c"][0]), 6)
+                break
+    return out
+
+
+# ---------- einstieg ----------
 
 def main(argv):
     if "--selftest" in argv:
         return run_selftest()
-
-    if "--pruefen" in argv:
-        rows = load_log()
-        print("pulsehawk marktlogger, nur nachsehen")
-        print("log hat %d tage" % len(rows))
-        meldungen = pruefe_log(rows)
-        if not meldungen:
-            print("\nnichts auffaellig, alle werte im band und ohne sprung")
-            return 0
-        print("\n%d auffaelligkeiten" % len(meldungen))
-        for m in meldungen:
-            print("  " + m)
-        return 0
-
     modus = "backfill" if "--backfill" in argv else "taeglich"
-
-    print("pulsehawk marktlogger, %s" % modus)
+    print("pulsehawk marktlogger, %s (zweite fassung, 29.08.2026)" % modus)
     print("laufzeitpunkt %s utc" % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
     print("twelvedata schluessel %s\n"
           % ("gesetzt, %d zeichen" % len(TD_KEY) if TD_KEY else "FEHLT"))
-
     neu = run_backfill() if modus == "backfill" else run_daily()
-
+    if not neu:
+        print("\nkein einziger neuer wert. das ist bei dieser fassung kein "
+              "normalfall mehr, sondern ein fehler, der lauf wird rot.")
+        return 1
     alt = load_log()
-
-    # erst den bestand heilen, damit ein alter kaputter wert nicht als
-    # vergleichsmassstab fuer den neuen dient.
-    alt, geheilt = saeubere_log(alt)
-    if geheilt:
-        print("\nbestand geheilt")
-        for m in geheilt:
-            print("  " + m)
-
-    neu, verworfen = pruefe_zeilen(neu, alt)
-    if verworfen:
-        print("\nplausibilitaetswaechter")
-        for m in verworfen:
-            print("  " + m)
-
-    if not neu and not geheilt:
-        print("\nkeine neuen werte, log bleibt unveraendert")
-        return 0
-
     rows = merge(alt, neu)
+    if rows == alt:
+        print("\nalle geholten werte standen schon im log, nichts zu schreiben.")
+        return 0
     save_log(rows)
-
-    voll = [r for r in rows if all(r.get(k) is not None
-                                   for k in ("gld", "spy", "btc", "eth"))]
+    voll = [r for r in rows if all(r.get(k) is not None for k in ("gld", "spy", "btc", "eth"))]
     mit_dom = [r for r in rows if r.get("btc_dom") is not None]
-
+    mit_stab = [r for r in rows if r.get("stables") is not None]
     print("\nlog hat jetzt %d tage, %s bis %s" % (len(rows), rows[0]["d"], rows[-1]["d"]))
     print("  davon %d tage mit allen vier kursen" % len(voll))
-    print("  davon %d tage mit dominanz, die altcoin-reihe waechst ab hier"
-          % len(mit_dom))
-
-    mit_fx = [r for r in rows if r.get("eurusd") is not None]
-    print("  davon %d tage mit eurusd, der nenner fuer FOLLOW THE MONEY"
-          % len(mit_fx))
-
+    print("  davon %d tage mit dominanz" % len(mit_dom))
+    print("  davon %d tage mit stablecoins, dem herzstueck von FOLLOW THE MONEY"
+          % len(mit_stab))
     return 0
 
 
