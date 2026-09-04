@@ -64,24 +64,24 @@
  "rejected": [
   {
    "ticker": "SNDK",
-   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer SNDK"
+   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer SNDK; yahoo: HTTP Error 429: Too Many Requests"
   },
   {
    "ticker": "MU",
-   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer MU"
+   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer MU; yahoo: HTTP Error 429: Too Many Requests"
   },
   {
    "ticker": "LITE",
-   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer LITE"
+   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer LITE; yahoo: HTTP Error 429: Too Many Requests"
   },
   {
    "ticker": "MRNA",
-   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer MRNA"
+   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer MRNA; yahoo: HTTP Error 429: Too Many Requests"
   },
   {
    "ticker": "WDC",
-   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer WDC"
+   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer WDC; yahoo: HTTP Error 429: Too Many Requests"
   }
  ],
- "source": "daily closes twelve data, counted by us; cross-checked against stooq"
+ "source": "daily closes twelve data, counted by us; cross-checked against a second source (stooq or yahoo)"
 }
