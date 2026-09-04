@@ -1,0 +1,75 @@
+name: 365 days later scanner
+
+# Rechnet taeglich fuer einen Teil des Aktien-Universums (S&P 500/400/600 +
+# Nasdaq-100) das 1-Jahres-Vielfache aus Twelve-Data-Tagesschluessen und legt
+# den besten, gegen Stooq gegengeprueften Kandidaten in
+# data/multibagger-pick.json. Postet nichts. Der Short wird dienstags daraus
+# gebaut. Der Schluessel wird nie gedruckt.
+#
+# 05:10 utc: nach dem us-schluss vom vortag, vor dem europaeischen morgen.
+# Free-Plan-Tempo (8 abrufe/min) heisst ~90 minuten fuer 700 titel, deshalb
+# das grosse zeitlimit. Mit hoeherem plan TD_PER_MIN / TD_PER_DAY hochsetzen.
+
+on:
+  schedule:
+    - cron: "10 5 * * *"
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "scan (kurse holen) oder pick (nur auswaehlen)"
+        required: true
+        default: "scan"
+        type: choice
+        options:
+          - scan
+          - pick
+      budget:
+        description: "titel pro lauf (free plan max ~700)"
+        required: false
+        default: "700"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: multibagger
+  cancel-in-progress: false
+
+jobs:
+  scannen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: selbsttest
+        run: python3 scripts/multibagger.py --selftest
+
+      - name: scannen und auswaehlen
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+          TD_PER_MIN: ${{ vars.TD_PER_MIN || '8' }}
+          TD_PER_DAY: ${{ vars.TD_PER_DAY || '700' }}
+        run: |
+          if [ "${{ github.event.inputs.modus }}" = "pick" ]; then
+            python3 scripts/multibagger.py --pick-only
+          else
+            python3 scripts/multibagger.py --budget "${{ github.event.inputs.budget || '700' }}"
+          fi
+
+      - name: ergebnis sichern
+        run: |
+          git config user.name "pulsehawk bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/multibagger-*.json
+          if git diff --cached --quiet; then
+            echo "nichts neues"
+            exit 0
+          fi
+          git commit -m "365 days later scan [bot]"
+          git pull --rebase origin main
+          git push
