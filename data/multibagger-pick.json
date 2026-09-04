@@ -1,0 +1,87 @@
+{
+ "date": "2026-09-04",
+ "pick": null,
+ "base_rate": {
+  "sp500_scanned": 498,
+  "sp500_doubled": 27,
+  "sp500_tripled": 10
+ },
+ "benchmarks": {
+  "s&p 500": {
+   "pct": 20.1,
+   "d": "2026-09-03",
+   "d_1y": "2025-09-03"
+  },
+  "gold": {
+   "pct": 25.0,
+   "d": "2026-09-03",
+   "d_1y": "2025-09-03"
+  }
+ },
+ "candidates_total": 38,
+ "top10": [
+  {
+   "ticker": "SNDK",
+   "mult": 29.3339
+  },
+  {
+   "ticker": "MU",
+   "mult": 8.0708
+  },
+  {
+   "ticker": "LITE",
+   "mult": 6.318
+  },
+  {
+   "ticker": "MRNA",
+   "mult": 6.19
+  },
+  {
+   "ticker": "WDC",
+   "mult": 5.1345
+  },
+  {
+   "ticker": "STX",
+   "mult": 4.5293
+  },
+  {
+   "ticker": "DELL",
+   "mult": 4.1638
+  },
+  {
+   "ticker": "INTC",
+   "mult": 3.8196
+  },
+  {
+   "ticker": "DOCN",
+   "mult": 3.4145
+  },
+  {
+   "ticker": "MRVL",
+   "mult": 3.3515
+  }
+ ],
+ "rejected": [
+  {
+   "ticker": "SNDK",
+   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer SNDK"
+  },
+  {
+   "ticker": "MU",
+   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer MU"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer LITE"
+  },
+  {
+   "ticker": "MRNA",
+   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer MRNA"
+  },
+  {
+   "ticker": "WDC",
+   "reason": "gegenpruefung nicht moeglich: stooq liefert zu wenig fuer WDC"
+  }
+ ],
+ "source": "daily closes twelve data, counted by us; cross-checked against stooq"
+}
