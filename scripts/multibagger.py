@@ -270,6 +270,34 @@ def stooq_series(symbol):
     return ser
 
 
+def yahoo_series(symbol):
+    """dritte quelle, json ohne schluessel. tagesschluesse der letzten zwei jahre.
+    gebaut am 04.09.2026, nachdem stooq von github-rechnern nur noch die
+    tageslimit-seite lieferte und damit jeder kandidat unpruefbar blieb."""
+    url = ("https://query1.finance.yahoo.com/v8/finance/chart/%s"
+           "?range=2y&interval=1d&events=none" % urllib.parse.quote(symbol.replace(".", "-")))
+    js = json.loads(fetch(url))
+    try:
+        res = js["chart"]["result"][0]
+        ts = res["timestamp"]
+        cl = res["indicators"]["quote"][0]["close"]
+    except (KeyError, IndexError, TypeError):
+        raise RuntimeError("yahoo liefert nichts fuer %s" % symbol)
+    ser = []
+    for t, c in zip(ts, cl):
+        if c is None:
+            continue
+        d = dt.datetime.utcfromtimestamp(t).date().isoformat()
+        ser.append((d, float(c)))
+    ser.sort()
+    if len(ser) < 200:
+        raise RuntimeError("yahoo liefert zu wenig fuer %s" % symbol)
+    return ser
+
+
+SOURCES = (("stooq", stooq_series), ("yahoo", yahoo_series))
+
+
 def wiki_sentence(title):
     """erste aussage der wikipedia-einleitung: was die firma ist/macht."""
     if not title:
@@ -357,11 +385,25 @@ def recently_used(log, ticker, today):
 
 
 def verify(ticker, rec):
-    """unabhaengig nachrechnen. beide quellen muessen dasselbe vielfache sehen."""
-    ser = stooq_series(ticker)
-    alt = one_year(ser)
-    diff = abs(alt["mult"] / rec["mult"] - 1.0)
-    return diff <= VERIFY_TOL, alt, diff
+    """unabhaengig nachrechnen. die erste erreichbare zweitquelle entscheidet,
+    beide muessen dasselbe vielfache sehen. gibt (ok, alt, diff, quelle)."""
+    errors, best = [], None
+    for name, fn in SOURCES:
+        try:
+            ser = fn(ticker)
+            alt = one_year(ser)
+        except Exception as exc:  # noqa: BLE001
+            errors.append("%s: %s" % (name, str(exc)[:40]))
+            continue
+        diff = abs(alt["mult"] / rec["mult"] - 1.0)
+        if diff <= VERIFY_TOL:
+            return True, alt, diff, name
+        # weicht ab (z. b. split nicht bereinigt): naechste quelle fragen
+        if best is None or diff < best[1]:
+            best = (alt, diff, name)
+    if best is None:
+        raise RuntimeError("; ".join(errors))
+    return False, best[0], best[1], best[2]
 
 
 def make_pick(universe, scan, log, today, do_verify=True):
@@ -385,13 +427,13 @@ def make_pick(universe, scan, log, today, do_verify=True):
     tried = []
     for mult, t in cands[:5]:
         rec = scan[t]
-        ok, alt, diff = (True, None, 0.0)
+        ok, alt, diff, src = (True, None, 0.0, None)
         if do_verify:
             try:
-                ok, alt, diff = verify(t, rec)
+                ok, alt, diff, src = verify(t, rec)
             except Exception as exc:  # noqa: BLE001
                 ok, alt, diff = False, None, None
-                tried.append({"ticker": t, "reason": "gegenpruefung nicht moeglich: %s" % str(exc)[:60]})
+                tried.append({"ticker": t, "reason": "gegenpruefung nicht moeglich: %s" % str(exc)[:120]})
                 continue
         if not ok:
             tried.append({"ticker": t, "reason": "quellen weichen ab (%.2f%%)" % ((diff or 0) * 100)})
@@ -405,7 +447,7 @@ def make_pick(universe, scan, log, today, do_verify=True):
             "d": rec["d"], "close": rec["close"], "d_1y": rec["d_1y"], "close_1y": rec["close_1y"],
             "low": rec["low"], "high": rec["high"],
             "drawdown_pct": round((rec["low"] / rec["close_1y"] - 1) * 100, 1),
-            "verified": {"source": "stooq", "mult": alt["mult"] if alt else None,
+            "verified": {"source": src, "mult": alt["mult"] if alt else None,
                          "diff_pct": round((diff or 0) * 100, 2)} if do_verify else None,
             "company_sentence": wiki_sentence(meta.get("wiki")) if do_verify else None,
             "wiki": meta.get("wiki"),
@@ -416,7 +458,7 @@ def make_pick(universe, scan, log, today, do_verify=True):
         "benchmarks": benchmarks(), "candidates_total": len(cands),
         "top10": [{"ticker": t, "mult": m} for m, t in cands[:10]],
         "rejected": tried,
-        "source": "daily closes twelve data, counted by us; cross-checked against stooq",
+        "source": "daily closes twelve data, counted by us; cross-checked against a second source (stooq or yahoo)",
     }
 
 
@@ -429,7 +471,7 @@ def print_pick(p):
               % (k["ticker"], k["name"], k["mult"], format(k["from_1000"], ","), k["d_1y"], k["d"],
                  k.get("sector"), k.get("industry")))
         if k.get("verified"):
-            print("      gegengeprueft: stooq %.2fx (abw. %.2f%%)" % (k["verified"]["mult"] or 0, k["verified"]["diff_pct"]))
+            print("      gegengeprueft: %s %.2fx (abw. %.2f%%)" % (k["verified"]["source"], k["verified"]["mult"] or 0, k["verified"]["diff_pct"]))
         if k.get("company_sentence"):
             print("      " + k["company_sentence"])
     else:
