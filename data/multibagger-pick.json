@@ -1,6 +1,31 @@
 {
  "date": "2026-09-04",
- "pick": null,
+ "pick": {
+  "ticker": "SNDK",
+  "name": "Sandisk",
+  "sector": "Information Technology",
+  "industry": "Technology Hardware, Storage & Peripherals",
+  "indices": [
+   "sp500"
+  ],
+  "mult": 29.3339,
+  "pct": 2833.4,
+  "from_1000": 29334,
+  "d": "2026-09-03",
+  "close": 1554.99,
+  "d_1y": "2025-09-03",
+  "close_1y": 53.01,
+  "low": 53.01,
+  "high": 2335.0,
+  "drawdown_pct": 0.0,
+  "verified": {
+   "source": "tiingo",
+   "mult": 29.3339,
+   "diff_pct": 0
+  },
+  "company_sentence": null,
+  "wiki": null
+ },
  "base_rate": {
   "sp500_scanned": 498,
   "sp500_doubled": 27,
@@ -61,27 +86,6 @@
    "mult": 3.3515
   }
  ],
- "rejected": [
-  {
-   "ticker": "SNDK",
-   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer SNDK; yahoo: HTTP Error 429: Too Many Requests"
-  },
-  {
-   "ticker": "MU",
-   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer MU; yahoo: HTTP Error 429: Too Many Requests"
-  },
-  {
-   "ticker": "LITE",
-   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer LITE; yahoo: HTTP Error 429: Too Many Requests"
-  },
-  {
-   "ticker": "MRNA",
-   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer MRNA; yahoo: HTTP Error 429: Too Many Requests"
-  },
-  {
-   "ticker": "WDC",
-   "reason": "gegenpruefung nicht moeglich: stooq: stooq liefert zu wenig fuer WDC; yahoo: HTTP Error 429: Too Many Requests"
-  }
- ],
- "source": "daily closes twelve data, counted by us; cross-checked against a second source (stooq or yahoo)"
+ "rejected": [],
+ "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
