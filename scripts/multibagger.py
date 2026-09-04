@@ -58,6 +58,10 @@ TIMEOUT = 25
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
 TD_KEY = os.environ.get("TWELVEDATA_API_KEY", "").strip()
+# zweitquellen mit schluessel: werden nicht per ip gesperrt wie stooq/yahoo
+# von github-rechnern (beobachtet 04.09.2026: stooq tageslimit, yahoo 429).
+TIINGO_KEY = os.environ.get("TIINGO_API_KEY", "").strip()
+AV_KEY = os.environ.get("ALPHAVANTAGE_API_KEY", "").strip()
 TD = "https://api.twelvedata.com"
 TD_PER_MIN = int(os.environ.get("TD_PER_MIN", "8"))     # free plan: 8/min
 TD_PER_DAY = int(os.environ.get("TD_PER_DAY", "700"))   # free plan: 800/tag
@@ -276,7 +280,7 @@ def yahoo_series(symbol):
     tageslimit-seite lieferte und damit jeder kandidat unpruefbar blieb."""
     url = ("https://query1.finance.yahoo.com/v8/finance/chart/%s"
            "?range=2y&interval=1d&events=none" % urllib.parse.quote(symbol.replace(".", "-")))
-    js = json.loads(fetch(url))
+    js = json.loads(fetch(url, tries=3, pause=8))
     try:
         res = js["chart"]["result"][0]
         ts = res["timestamp"]
@@ -295,7 +299,58 @@ def yahoo_series(symbol):
     return ser
 
 
-SOURCES = (("stooq", stooq_series), ("yahoo", yahoo_series))
+def tiingo_series(symbol):
+    """tiingo, kostenloser schluessel (50 symbole/stunde). close nur um splits
+    bereinigt, damit es mit twelve data vergleichbar bleibt (adjClose dort
+    enthaelt auch dividenden)."""
+    if not TIINGO_KEY:
+        raise RuntimeError("kein TIINGO_API_KEY")
+    start = (dt.date.today() - dt.timedelta(days=760)).isoformat()
+    url = ("https://api.tiingo.com/tiingo/daily/%s/prices?startDate=%s&token=%s"
+           % (urllib.parse.quote(symbol.replace(".", "-")), start, TIINGO_KEY))
+    rows = json.loads(fetch(url))
+    if not isinstance(rows, list):
+        raise RuntimeError("tiingo antwortet ohne reihe fuer %s" % symbol)
+    rows.sort(key=lambda r: r.get("date", ""))
+    # splits rueckwaerts aufmultiplizieren: kurs vor einem split durch faktor teilen
+    ser, factor = [], 1.0
+    for r in reversed(rows):
+        c = r.get("close")
+        if c is None:
+            continue
+        ser.append((r["date"][:10], float(c) / factor))
+        sf = r.get("splitFactor") or 1.0
+        if sf and sf != 1.0:
+            factor *= float(sf)
+    ser.sort()
+    if len(ser) < 200:
+        raise RuntimeError("tiingo liefert zu wenig fuer %s" % symbol)
+    return ser
+
+
+def alphavantage_series(symbol):
+    """alpha vantage, kostenloser schluessel (25 abrufe/tag, reicht fuer die
+    hoechstens fuenf gegenpruefungen). rohe schluesse, nicht split-bereinigt:
+    ein split im jahr laesst den kandidaten dann durchfallen, nicht durchrutschen."""
+    if not AV_KEY:
+        raise RuntimeError("kein ALPHAVANTAGE_API_KEY")
+    url = ("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=%s"
+           "&outputsize=full&apikey=%s" % (urllib.parse.quote(symbol.replace(".", "-")), AV_KEY))
+    js = json.loads(fetch(url))
+    ts = js.get("Time Series (Daily)")
+    if not ts:
+        raise RuntimeError("alpha vantage: %s" % str(js.get("Note") or js.get("Information") or js)[:50])
+    ser = sorted((d, float(v["4. close"])) for d, v in ts.items())
+    if len(ser) < 200:
+        raise RuntimeError("alpha vantage liefert zu wenig fuer %s" % symbol)
+    return ser
+
+
+# reihenfolge: schluessel-quellen zuerst (zuverlaessig), die freien danach,
+# alpha vantage wegen des tagesbudgets zuletzt. fehlt der schluessel, wird die
+# quelle uebersprungen.
+SOURCES = (("tiingo", tiingo_series), ("stooq", stooq_series),
+           ("yahoo", yahoo_series), ("alphavantage", alphavantage_series))
 
 
 def wiki_sentence(title):
@@ -429,6 +484,8 @@ def make_pick(universe, scan, log, today, do_verify=True):
         rec = scan[t]
         ok, alt, diff, src = (True, None, 0.0, None)
         if do_verify:
+            if tried:
+                time.sleep(3)
             try:
                 ok, alt, diff, src = verify(t, rec)
             except Exception as exc:  # noqa: BLE001
@@ -458,7 +515,7 @@ def make_pick(universe, scan, log, today, do_verify=True):
         "benchmarks": benchmarks(), "candidates_total": len(cands),
         "top10": [{"ticker": t, "mult": m} for m, t in cands[:10]],
         "rejected": tried,
-        "source": "daily closes twelve data, counted by us; cross-checked against a second source (stooq or yahoo)",
+        "source": "daily closes twelve data, counted by us; cross-checked against a second source",
     }
 
 
