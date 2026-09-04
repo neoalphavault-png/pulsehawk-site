@@ -52,6 +52,8 @@ jobs:
       - name: scannen und auswaehlen
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+          TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
+          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
           TD_PER_MIN: ${{ vars.TD_PER_MIN || '8' }}
           TD_PER_DAY: ${{ vars.TD_PER_DAY || '700' }}
         run: |
