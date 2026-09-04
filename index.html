@@ -67,6 +67,11 @@
   footer { border-top:1px solid var(--line); margin-top:60px; padding-top:18px; display:flex; justify-content:space-between;
            flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
   footer a { color:var(--dim); text-decoration:none; }
+  .pnav { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:26px; }
+  .pnav a { font-size:13px; padding:8px 14px; border-radius:999px; text-decoration:none;
+            border:1px solid var(--line); color:var(--dim); }
+  .pnav a:hover { border-color:rgba(73,234,203,0.45); color:var(--teal); }
+  .pnav a.new { border-color:rgba(73,234,203,0.45); color:var(--teal); font-weight:700; }
 </style>
 </head>
 <body>
@@ -78,6 +83,13 @@
     <div class="claim">market data. no hype.</div>
     <div><span class="soon">the feed has started</span></div>
   </div>
+  <nav class="pnav" aria-label="data pages">
+    <a href="/what-if.html" class="new">what if</a>
+    <a href="/markets.html">markets</a>
+    <a href="/bitcoin-halving-to-top.html">halving to top</a>
+    <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
+    <a href="/bitcoin-dominance.html">dominance</a>
+  </nav>
   <h2>What PulseHawk <span>is</span></h2>
   <p>PulseHawk is a market data feed built on one uncomfortable observation: most of what circulates as market information cannot be checked by the person reading it. Price targets nobody revisits, "whale alerts" without a wallet address, narratives that dissolve the moment you ask for the underlying number.</p>
   <p>We publish the opposite. A feed where <b>every number comes with a receipt</b>, a source you can open, an address you can look up, a dataset you can download. On-chain flows, large wallet movements, supply data and the market context around them, published the moment they happen and archived so anyone can verify what we said and when we said it.</p>
