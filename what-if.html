@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What If You Had Bought Bitcoin, Gold or the S&amp;P 500? Counted From Our Own Record</title>
+<meta name="description" content="What $1,000 in bitcoin, gold or the S&P 500 is worth today. A one-time buy, a monthly savings plan, or an everyday amount like a coffee a day, counted from daily closes we keep ourselves since 2010.">
+<link rel="canonical" href="https://pulsehawk.io/what-if.html">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="What if you had bought bitcoin, gold or the S&amp;P 500?">
+<meta property="og:description" content="A one-time buy, a monthly plan, or a coffee a day. Counted from daily closes since 2010, not estimated.">
+<meta property="og:url" content="https://pulsehawk.io/what-if.html">
+<meta property="og:type" content="website">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"What would $1,000 in bitcoin be worth today?",
+     "acceptedAnswer":{"@type":"Answer","text":"Pick bitcoin and a starting point above. The page divides today's close by the close on that day, from a daily record we keep since 2010, and shows the dates and prices it used."}},
+    {"@type":"Question","name":"How is the savings plan counted?",
+     "acceptedAnswer":{"@type":"Answer","text":"One buy at every month end at that day's close, for the number of years you choose. Everything bought is then valued at the latest close. The number of buys and the total paid in are shown next to the result."}},
+    {"@type":"Question","name":"Why S&P 500 and gold prices from SPY and GLD?",
+     "acceptedAnswer":{"@type":"Answer","text":"They are the two most traded funds tracking the index and the metal, with a daily close going back to 2010. Prices only, dividends not included, so the stock number is slightly lower than a total-return figure."}},
+    {"@type":"Question","name":"Where do the numbers come from?",
+     "acceptedAnswer":{"@type":"Answer","text":"Bitcoin from CoinGecko and our own daily log, SPY and GLD from Twelve Data. The page reads the record in your browser, so it always shows the latest close on file."}}
+  ]
+}
+</script>
+<style>
+  :root { --bg:#080B0F; --card:#0B0E12; --line:#1A1D21; --teal:#49EACB;
+          --gold:#C98500; --spy:#3987E5; --btc:#D95926; --red:#E36A6A;
+          --txt:#FFFFFF; --dim:#9BA3AB; --dimmer:#7A828C; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Helvetica Neue',Arial,sans-serif;
+         background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(73,234,203,0.10), transparent 60%); }
+  .wrap { max-width:720px; margin:0 auto; padding:34px 20px 60px; }
+  .nav { display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav img { width:30px; }
+  .nav b { font-size:17px; letter-spacing:4px; color:var(--txt); font-weight:800; }
+  .nav b span { color:var(--teal); }
+  .pnav { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .pnav a, .pnav span { font-size:13px; padding:7px 13px; border-radius:999px;
+            text-decoration:none; border:1px solid var(--line); color:var(--dimmer); }
+  .pnav a:hover { border-color:rgba(73,234,203,0.45); color:var(--dim); }
+  .pnav span { background:rgba(73,234,203,0.10); border-color:rgba(73,234,203,0.45);
+               color:var(--teal); font-weight:700; }
+  .eyebrow { font-size:12px; letter-spacing:4px; color:var(--dimmer); text-transform:uppercase;
+             margin-top:42px; font-weight:700; }
+  h1 { font-size:34px; line-height:1.18; letter-spacing:-0.6px; margin-top:12px; }
+  .lead { font-size:17px; line-height:27px; color:var(--txt); margin-top:18px; }
+  .lead b { color:var(--teal); font-weight:700; }
+  h2 { font-size:21px; letter-spacing:-0.3px; margin:40px 0 0; }
+  p { font-size:15.5px; line-height:25px; color:var(--dim); margin-top:12px; }
+  p b { color:var(--txt); font-weight:600; }
+  a { color:var(--teal); }
+  p a { text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
+
+  /* die drei rechner-modi als reiter */
+  .tabs { display:flex; gap:8px; margin-top:26px; flex-wrap:wrap; }
+  .tabs button { font:inherit; font-size:14px; font-weight:700; padding:10px 16px; border-radius:999px;
+                 border:1px solid var(--line); background:transparent; color:var(--dimmer); cursor:pointer; }
+  .tabs button[aria-selected="true"] { background:rgba(73,234,203,0.10); border-color:rgba(73,234,203,0.45); color:var(--teal); }
+  .tabs button:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+
+  .calc { background:var(--card); border:1px solid var(--line); border-radius:16px;
+          padding:22px 24px; margin-top:14px; }
+  .calc[hidden] { display:none; }
+  .row { display:flex; flex-wrap:wrap; gap:14px; }
+  .f { flex:1 1 150px; }
+  label { display:block; font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; margin-bottom:6px; }
+  input, select { font:inherit; font-size:17px; width:100%; padding:11px 12px; border-radius:10px;
+                  border:1px solid var(--line); background:#0F1319; color:var(--txt); }
+  input:focus, select:focus { outline:2px solid rgba(73,234,203,0.6); outline-offset:1px; border-color:transparent; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .chips button { font:inherit; font-size:13.5px; padding:8px 13px; border-radius:999px; border:1px solid var(--line);
+                  background:transparent; color:var(--dim); cursor:pointer; }
+  .chips button[aria-pressed="true"] { border-color:rgba(73,234,203,0.45); color:var(--teal); background:rgba(73,234,203,0.08); }
+
+  .out { margin-top:22px; padding-top:20px; border-top:1px solid var(--line); }
+  .out .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .out .big { font-size:46px; font-weight:800; letter-spacing:-2px; margin-top:6px; color:var(--teal); line-height:1.05; }
+  .out .sub { font-size:14px; color:var(--dim); margin-top:8px; line-height:22px; }
+  .out .sub b { color:var(--txt); }
+  .grid3 { display:flex; flex-wrap:wrap; gap:14px; margin-top:16px; }
+  .grid3 .c { flex:1 1 42%; background:#0F1319; border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .grid3 .c .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .grid3 .c .v { font-size:28px; font-weight:800; letter-spacing:-1px; margin-top:4px; }
+  .grid3 .c .s { font-size:12.5px; color:var(--dimmer); margin-top:2px; }
+  .grid3 .c.g .v { color:var(--gold); }
+  .grid3 .c.s .v { color:var(--spy); }
+  .grid3 .c.b .v { color:var(--btc); }
+  .grid3 .c.x .v { color:var(--red); text-decoration:line-through; text-decoration-thickness:3px; }
+  .used { font-size:12.5px; color:var(--dimmer); margin-top:14px; line-height:20px; }
+  .share { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .share button { font:inherit; font-size:14px; font-weight:700; padding:10px 16px; border-radius:10px; border:1px solid rgba(73,234,203,0.45);
+                  background:rgba(73,234,203,0.10); color:var(--teal); cursor:pointer; }
+  .share small { font-size:12.5px; color:var(--dimmer); }
+
+  /* partner-slot: leer bis zur traffic-schwelle. gerendert nur, wenn PARTNERS eintraege hat. */
+  .partner { margin-top:18px; border:1px dashed rgba(73,234,203,0.35); border-radius:14px; padding:16px 20px; }
+  .partner[hidden] { display:none; }
+  .partner .k { font-size:11px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .partner .items { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+  .partner a { font-size:14px; font-weight:700; text-decoration:none; padding:9px 14px; border-radius:10px;
+               border:1px solid var(--line); color:var(--txt); background:#0F1319; }
+  .partner .disc { font-size:12px; color:var(--dimmer); margin-top:10px; line-height:18px; }
+
+  .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
+  .note p { color:var(--txt); }
+  .faq { margin-top:14px; }
+  .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
+  .faq p { margin-top:7px; }
+  footer { border-top:1px solid var(--line); margin-top:56px; padding-top:18px; display:flex;
+           justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
+  footer a { color:var(--dim); text-decoration:none; }
+  @media (prefers-reduced-motion: no-preference) { .out .big { transition:opacity .25s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
+
+<div class="pnav">
+  <a href="/bitcoin-halving-to-top.html">halving to top</a>
+  <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
+  <a href="/bitcoin-dominance.html">dominance</a>
+  <a href="/markets.html">markets</a>
+  <span>what if</span>
+</div>
+
+<div class="eyebrow">What if</div>
+<h1>What if you had bought bitcoin, gold or the S&amp;P&nbsp;500?</h1>
+
+<p class="lead">One buy years ago, a monthly plan, or the price of a coffee a day. Every result on
+this page is counted from <b>daily closes we keep ourselves since 2010</b>, and the exact dates and
+prices it used are printed under the number. Latest close on file: <b id="asof">loading</b>.</p>
+
+<div class="tabs" role="tablist">
+  <button role="tab" id="tab-lump" aria-selected="true" aria-controls="calc-lump">One-time buy</button>
+  <button role="tab" id="tab-dca" aria-selected="false" aria-controls="calc-dca">Monthly plan</button>
+  <button role="tab" id="tab-day" aria-selected="false" aria-controls="calc-day">A day's spend</button>
+</div>
+
+<!-- ============ 1. einmalkauf ============ -->
+<section class="calc" id="calc-lump" role="tabpanel">
+  <div class="row">
+    <div class="f"><label for="l-amt">Amount</label><input id="l-amt" type="number" inputmode="decimal" min="1" step="100" value="1000"></div>
+    <div class="f"><label for="l-asset">Into</label>
+      <select id="l-asset"><option value="btc">bitcoin</option><option value="spy">the S&amp;P 500</option><option value="gld">gold</option></select></div>
+    <div class="f"><label for="l-yrs">Years ago</label>
+      <select id="l-yrs"><option>1</option><option>3</option><option selected>5</option><option>8</option><option>10</option><option>15</option></select></div>
+  </div>
+  <div class="out">
+    <div class="k">Worth today</div>
+    <div class="big" id="l-big">…</div>
+    <div class="sub" id="l-sub"></div>
+    <div class="used" id="l-used"></div>
+    <div class="share"><button type="button" id="l-share">Copy this result</button><small id="l-copied"></small></div>
+  </div>
+</section>
+
+<!-- ============ 2. sparplan ============ -->
+<section class="calc" id="calc-dca" role="tabpanel" hidden>
+  <div class="row">
+    <div class="f"><label for="d-amt">Per month</label><input id="d-amt" type="number" inputmode="decimal" min="1" step="50" value="200"></div>
+    <div class="f"><label for="d-asset">Into</label>
+      <select id="d-asset"><option value="spy">the S&amp;P 500</option><option value="btc">bitcoin</option><option value="gld">gold</option></select></div>
+    <div class="f"><label for="d-yrs">For</label>
+      <select id="d-yrs"><option value="3">3 years</option><option value="5" selected>5 years</option><option value="10">10 years</option><option value="15">15 years</option></select></div>
+  </div>
+  <div class="out">
+    <div class="k">Worth today</div>
+    <div class="big" id="d-big">…</div>
+    <div class="sub" id="d-sub"></div>
+    <div class="used" id="d-used"></div>
+    <div class="share"><button type="button" id="d-share">Copy this result</button><small id="d-copied"></small></div>
+  </div>
+</section>
+
+<!-- ============ 3. alltagsbetrag ============ -->
+<section class="calc" id="calc-day" role="tabpanel" hidden>
+  <div class="chips" id="chips">
+    <button type="button" data-v="5" data-n="one latte" aria-pressed="false">a latte · $5/day</button>
+    <button type="button" data-v="8" data-n="a pack of cigarettes" aria-pressed="true">a pack of cigarettes · $8/day</button>
+    <button type="button" data-v="12" data-n="a takeout lunch" aria-pressed="false">takeout lunch · $12/day</button>
+    <button type="button" data-v="6" data-n="a beer after work" aria-pressed="false">a beer · $6/day</button>
+    <button type="button" data-v="3" data-n="an energy drink" aria-pressed="false">energy drink · $3/day</button>
+  </div>
+  <div class="row" style="margin-top:14px">
+    <div class="f"><label for="a-amt">Per day</label><input id="a-amt" type="number" inputmode="decimal" min="0.5" step="1" value="8"></div>
+    <div class="f"><label for="a-yrs">For</label>
+      <select id="a-yrs"><option value="5">5 years</option><option value="10" selected>10 years</option><option value="15">15 years</option></select></div>
+  </div>
+  <div class="out">
+    <div class="k" id="a-k">$8 a day, bought at every month end, 10 years</div>
+    <div class="grid3">
+      <div class="c x"><div class="k">Spent</div><div class="v" id="a-spent">…</div><div class="s">gone</div></div>
+      <div class="c s"><div class="k">S&amp;P 500</div><div class="v" id="a-spy">…</div><div class="s">same money, same months</div></div>
+      <div class="c g"><div class="k">Gold</div><div class="v" id="a-gld">…</div><div class="s">same money, same months</div></div>
+      <div class="c b"><div class="k">Bitcoin</div><div class="v" id="a-btc">…</div><div class="s">same money, same months</div></div>
+    </div>
+    <div class="used" id="a-used"></div>
+    <div class="share"><button type="button" id="a-share">Copy this result</button><small id="a-copied"></small></div>
+  </div>
+</section>
+
+<!-- partner-slot. bleibt leer (hidden), bis PARTNERS unten eintraege hat. -->
+<aside class="partner" id="partner" hidden>
+  <div class="k">Where people do this</div>
+  <div class="items" id="partner-items"></div>
+  <div class="disc">Partner links. If you open an account through one of them, PulseHawk may earn a commission at no cost to you. The numbers on this page are counted the same way whether or not any partner is listed.</div>
+</aside>
+
+<h2>How every number here is counted</h2>
+
+<p><b>One-time buy:</b> today's close divided by the close on the first trading day on or after the
+date that many years ago, times your amount. <b>Monthly plan:</b> one buy at every month end at that
+day's close, for as many months as you chose, everything valued at the latest close. <b>A day's
+spend:</b> the daily amount times 365, divided by 12, put into the monthly plan for all three
+assets at once, next to the same total simply spent.</p>
+
+<p>The S&amp;P 500 and gold are counted through SPY and GLD, the two most traded funds tracking the
+index and the metal, with a daily close back to 2010. <b>Prices only, no dividends</b>, so the stock
+figure is a little lower than a total-return number would be. Bitcoin is the daily close in
+dollars. There are no fees, taxes or spreads in any of these numbers, and every one of them is
+a look back, not a look forward.</p>
+
+<div class="note">
+<p>Same money, same months, three doors. The point is not which door, it is the size of the gap
+between spending a small amount and putting the same small amount somewhere, counted rather
+than guessed.</p>
+</div>
+
+<h2>Questions people ask</h2>
+<div class="faq">
+  <div class="q">What would $1,000 in bitcoin be worth today?</div>
+  <p>Pick bitcoin and a starting point in the first calculator. The page divides today's close by
+  the close on that day and prints both dates and both prices under the result.</p>
+  <div class="q">Why month-end buys for the savings plan?</div>
+  <p>Because it is the one rule that needs no judgement. The last close of every month, whatever
+  the price was, for every asset alike.</p>
+  <div class="q">Can I use a date instead of “years ago”?</div>
+  <p>Add <code>?date=2017-12-17</code> to the address and the one-time buy starts from that day
+  instead. Shared links keep whatever you set.</p>
+  <div class="q">Where do the numbers come from?</div>
+  <p>Bitcoin from CoinGecko and our own daily log, SPY and GLD from Twelve Data, kept in a record
+  we update every day. The page reads that record in your browser, so it always shows the latest
+  close on file. Not financial advice.</p>
+</div>
+
+<footer>
+  <div>pulsehawk.io · counted, not guessed</div>
+  <div><a href="/impressum.html">imprint</a> · <a href="/datenschutz.html">privacy</a></div>
+</footer>
+
+</div>
+<script>
+(function(){
+  "use strict";
+  // ---- partner-slot: leer lassen, bis die traffic-schwelle steht (siehe monetarisierung).
+  // eintrag: {name:"…", url:"…", fits:["btc","spy","gld"]}. bleibt die liste leer, bleibt der slot unsichtbar.
+  var PARTNERS = [];
+
+  var LABEL = {btc:"bitcoin", spy:"the S&P 500", gld:"gold"};
+  var SHORT = {btc:"bitcoin", spy:"S&P 500", gld:"gold"};
+  var rows = [];          // [{d, btc, spy, gld}] sortiert
+  var byField = {};       // feld -> [[d, v], ...]
+
+  function $(id){ return document.getElementById(id); }
+  function usd(x){
+    if (x >= 1e9) return "$" + (x/1e9).toFixed(2) + "B";
+    if (x >= 1e6) return "$" + (x/1e6).toFixed(2) + "M";
+    return "$" + Math.round(x).toLocaleString("en-US");
+  }
+  function px(x){ return "$" + (x >= 100 ? Math.round(x).toLocaleString("en-US") : x.toFixed(2)); }
+  function lang(iso){
+    var p = iso.split("-"); var M = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    return parseInt(p[2],10) + " " + M[parseInt(p[1],10)-1] + " " + p[0];
+  }
+  function iso(d){ return d.toISOString().slice(0,10); }
+  function onOrAfter(ser, isoDate){ // erster punkt am/nach dem tag
+    for (var i = 0; i < ser.length; i++) { if (ser[i][0] >= isoDate) return ser[i]; }
+    return null;
+  }
+  function onOrBefore(ser, isoDate){ // letzter punkt am/vor dem tag
+    var best = null;
+    for (var i = 0; i < ser.length; i++) { if (ser[i][0] <= isoDate) best = ser[i]; else break; }
+    return best;
+  }
+  function last(ser){ return ser[ser.length-1]; }
+
+  // ---- einmalkauf
+  function lump(field, amount, yrs, dateOverride){
+    var ser = byField[field], now = last(ser);
+    var start;
+    if (dateOverride) { start = dateOverride; }
+    else { var d = new Date(now[0] + "T00:00:00Z"); d.setUTCFullYear(d.getUTCFullYear() - yrs); start = iso(d); }
+    var then = onOrAfter(ser, start);
+    if (!then || then[1] <= 0) return null;
+    var mult = now[1] / then[1];
+    return {then: then, now: now, mult: mult, val: amount * mult};
+  }
+  // ---- sparplan: monatsend-kaeufe
+  function dca(field, monthly, yrs){
+    var ser = byField[field], now = last(ser);
+    var end = new Date(now[0] + "T00:00:00Z");
+    var y = end.getUTCFullYear() - yrs, m = end.getUTCMonth(); // 0-basiert
+    var shares = 0, paid = 0, buys = 0, first = null;
+    while (y < end.getUTCFullYear() || (y === end.getUTCFullYear() && m <= end.getUTCMonth())) {
+      var me = new Date(Date.UTC(y, m + 1, 0)); // letzter tag des monats
+      if (me > end) break;
+      var p = onOrBefore(ser, iso(me));
+      if (p && p[1] > 0) { shares += monthly / p[1]; paid += monthly; buys++; if (!first) first = p[0]; }
+      m++; if (m > 11) { m = 0; y++; }
+    }
+    if (buys < 6) return null;
+    return {val: shares * now[1], paid: paid, buys: buys, first: first, now: now};
+  }
+
+  // ---- rendern
+  var copyText = {};
+  function renderLump(){
+    var amt = Math.max(1, parseFloat($("l-amt").value) || 0), f = $("l-asset").value, yrs = parseInt($("l-yrs").value, 10);
+    var q = new URLSearchParams(location.search); var dateOv = q.get("date");
+    var r = lump(f, amt, yrs, dateOv && /^\d{4}-\d\d-\d\d$/.test(dateOv) ? dateOv : null);
+    if (!r) { $("l-big").textContent = "not enough record"; $("l-sub").textContent = ""; $("l-used").textContent = ""; return; }
+    $("l-big").textContent = usd(r.val);
+    $("l-sub").innerHTML = "<b>" + usd(amt) + "</b> in " + LABEL[f] + " " + (dateOv ? "on " + lang(r.then[0]) : yrs + " years ago") +
+      " is <b>" + usd(r.val) + "</b> today, <b>" + (r.mult >= 10 ? r.mult.toFixed(0) : r.mult.toFixed(2)) + "×</b> the money.";
+    $("l-used").textContent = "Counted with: close on " + lang(r.then[0]) + " " + px(r.then[1]) + " → close on " + lang(r.now[0]) + " " + px(r.now[1]) + ".";
+    copyText.l = usd(amt) + " in " + SHORT[f] + " " + (dateOv ? "on " + lang(r.then[0]) : yrs + " years ago") + " = " + usd(r.val) + " today (" + r.mult.toFixed(1) + "x). Counted from daily closes: pulsehawk.io/what-if.html?mode=lump&asset=" + f + "&amt=" + amt + "&yrs=" + yrs;
+    pushUrl({mode:"lump", asset:f, amt:amt, yrs:yrs});
+  }
+  function renderDca(){
+    var amt = Math.max(1, parseFloat($("d-amt").value) || 0), f = $("d-asset").value, yrs = parseInt($("d-yrs").value, 10);
+    var r = dca(f, amt, yrs);
+    if (!r) { $("d-big").textContent = "not enough record"; $("d-sub").textContent = ""; $("d-used").textContent = ""; return; }
+    $("d-big").textContent = usd(r.val);
+    $("d-sub").innerHTML = "<b>" + usd(amt) + " a month</b> into " + LABEL[f] + " for " + yrs + " years: <b>" + usd(r.paid) + "</b> paid in, worth <b>" + usd(r.val) + "</b> today (" + (r.val/r.paid).toFixed(2) + "× what you paid).";
+    $("d-used").textContent = "Counted with: " + r.buys + " month-end buys from " + lang(r.first) + " to " + lang(r.now[0]) + ", valued at " + px(r.now[1]) + ".";
+    copyText.d = usd(amt) + "/month into " + SHORT[f] + " for " + yrs + " years = " + usd(r.paid) + " paid in, " + usd(r.val) + " today. Counted from month-end closes: pulsehawk.io/what-if.html?mode=dca&asset=" + f + "&amt=" + amt + "&yrs=" + yrs;
+    pushUrl({mode:"dca", asset:f, amt:amt, yrs:yrs});
+  }
+  var dayName = "a pack of cigarettes";
+  function renderDay(){
+    var perDay = Math.max(0.5, parseFloat($("a-amt").value) || 0), yrs = parseInt($("a-yrs").value, 10);
+    var monthly = perDay * 365 / 12;
+    var rs = {spy: dca("spy", monthly, yrs), gld: dca("gld", monthly, yrs), btc: dca("btc", monthly, yrs)};
+    if (!rs.spy || !rs.gld || !rs.btc) { $("a-spent").textContent = "not enough record"; return; }
+    $("a-k").textContent = "$" + perDay + " a day (" + dayName + "), bought at every month end, " + yrs + " years";
+    $("a-spent").textContent = usd(rs.spy.paid);
+    $("a-spy").textContent = usd(rs.spy.val);
+    $("a-gld").textContent = usd(rs.gld.val);
+    $("a-btc").textContent = usd(rs.btc.val);
+    $("a-used").textContent = "Counted with: $" + perDay + " × 365 ÷ 12 = " + usd(monthly) + " a month, " + rs.spy.buys + " month-end buys from " + lang(rs.spy.first) + " to " + lang(rs.spy.now[0]) + ", each asset at its own closes.";
+    copyText.a = "$" + perDay + " a day (" + dayName + ") for " + yrs + " years: spent " + usd(rs.spy.paid) + ". Same money into the S&P 500: " + usd(rs.spy.val) + ", gold: " + usd(rs.gld.val) + ", bitcoin: " + usd(rs.btc.val) + ". Counted from month-end closes: pulsehawk.io/what-if.html?mode=day&amt=" + perDay + "&yrs=" + yrs;
+    pushUrl({mode:"day", amt:perDay, yrs:yrs});
+  }
+  function pushUrl(o){
+    var q = new URLSearchParams(location.search);
+    ["mode","asset","amt","yrs"].forEach(function(k){ if (o[k] !== undefined) q.set(k, o[k]); else q.delete(k); });
+    try { history.replaceState(null, "", location.pathname + "?" + q.toString()); } catch (e) {}
+  }
+  function copy(key, id){
+    var t = copyText[key]; if (!t) return;
+    var done = function(){ $(id).textContent = "copied"; setTimeout(function(){ $(id).textContent = ""; }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(done, done); }
+    else { var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch(e){} document.body.removeChild(ta); done(); }
+  }
+
+  // ---- reiter
+  var tabs = ["lump","dca","day"];
+  function showTab(t){
+    tabs.forEach(function(x){
+      $("tab-"+x).setAttribute("aria-selected", x === t ? "true" : "false");
+      $("calc-"+x).hidden = x !== t;
+    });
+    if (rows.length) { ({lump:renderLump, dca:renderDca, day:renderDay})[t](); }
+  }
+  tabs.forEach(function(t){ $("tab-"+t).addEventListener("click", function(){ showTab(t); }); });
+
+  // ---- partner-slot
+  function renderPartners(){
+    if (!PARTNERS.length) return;
+    var host = $("partner-items"); host.innerHTML = "";
+    PARTNERS.forEach(function(p){ var a = document.createElement("a"); a.href = p.url; a.rel = "sponsored noopener"; a.target = "_blank"; a.textContent = p.name; host.appendChild(a); });
+    $("partner").hidden = false;
+  }
+
+  // ---- eingaben
+  ["l-amt","l-asset","l-yrs"].forEach(function(id){ $(id).addEventListener("input", renderLump); $(id).addEventListener("change", renderLump); });
+  ["d-amt","d-asset","d-yrs"].forEach(function(id){ $(id).addEventListener("input", renderDca); $(id).addEventListener("change", renderDca); });
+  ["a-amt","a-yrs"].forEach(function(id){ $(id).addEventListener("input", function(){ dayName = "your daily spend"; syncChips(); renderDay(); }); $(id).addEventListener("change", renderDay); });
+  var chipBtns = Array.prototype.slice.call($("chips").querySelectorAll("button"));
+  function syncChips(){ chipBtns.forEach(function(b){ b.setAttribute("aria-pressed", String(parseFloat(b.dataset.v) === parseFloat($("a-amt").value) && b.dataset.n === dayName)); }); }
+  chipBtns.forEach(function(b){ b.addEventListener("click", function(){ $("a-amt").value = b.dataset.v; dayName = b.dataset.n; syncChips(); renderDay(); }); });
+  $("l-share").addEventListener("click", function(){ copy("l","l-copied"); });
+  $("d-share").addEventListener("click", function(){ copy("d","d-copied"); });
+  $("a-share").addEventListener("click", function(){ copy("a","a-copied"); });
+
+  // ---- daten: archiv seit 2010 + tageslog, gemischt, letzter wert je tag gewinnt
+  Promise.all([
+    fetch("/data/history.json", {cache:"no-store"}).then(function(r){ return r.ok ? r.json() : []; }),
+    fetch("/data/market-log.json", {cache:"no-store"}).then(function(r){ return r.ok ? r.json() : []; })
+  ]).then(function(res){
+    var map = {};
+    (res[0] || []).concat(res[1] || []).forEach(function(r){
+      if (!r || !r.d) return; var o = map[r.d] || (map[r.d] = {d:r.d});
+      ["btc","spy","gld"].forEach(function(k){ if (typeof r[k] === "number" && r[k] > 0) o[k] = r[k]; });
+    });
+    rows = Object.keys(map).sort().map(function(d){ return map[d]; });
+    ["btc","spy","gld"].forEach(function(k){ byField[k] = rows.filter(function(r){ return r[k]; }).map(function(r){ return [r.d, r[k]]; }); });
+    var asof = Math.min.apply(null, ["btc","spy","gld"].map(function(k){ return new Date(last(byField[k])[0]).getTime(); }));
+    $("asof").textContent = lang(iso(new Date(asof))) + " (bitcoin " + lang(last(byField.btc)[0]) + ")";
+
+    // adresse -> eingaben
+    var q = new URLSearchParams(location.search);
+    var mode = tabs.indexOf(q.get("mode")) >= 0 ? q.get("mode") : "lump";
+    if (q.get("asset") && LABEL[q.get("asset")]) { $("l-asset").value = q.get("asset"); $("d-asset").value = q.get("asset"); }
+    if (q.get("amt")) { var v = parseFloat(q.get("amt")); if (v > 0) { $(mode === "lump" ? "l-amt" : mode === "dca" ? "d-amt" : "a-amt").value = v; } }
+    if (q.get("yrs")) { var el = $(mode === "lump" ? "l-yrs" : mode === "dca" ? "d-yrs" : "a-yrs"); var opt = Array.prototype.some.call(el.options, function(o){ return o.value === q.get("yrs"); }); if (opt) el.value = q.get("yrs"); }
+    if (mode === "day") { dayName = "your daily spend"; syncChips(); }
+    renderLump(); renderDca(); renderDay();
+    showTab(mode);
+    renderPartners();
+  }).catch(function(){ $("asof").textContent = "record not reachable right now"; });
+})();
+</script>
+</body>
+</html>
