@@ -1,27 +1,27 @@
 {
- "date": "2026-09-04",
+ "date": "2026-09-05",
  "pick": {
-  "ticker": "SNDK",
-  "name": "Sandisk",
+  "ticker": "MU",
+  "name": "Micron Technology",
   "sector": "Information Technology",
-  "industry": "Technology Hardware, Storage & Peripherals",
+  "industry": "Semiconductors",
   "indices": [
    "sp500"
   ],
-  "mult": 29.3339,
-  "pct": 2833.4,
-  "from_1000": 29334,
+  "mult": 8.0708,
+  "pct": 707.1,
+  "from_1000": 8071,
   "d": "2026-09-03",
-  "close": 1554.99,
+  "close": 958.16,
   "d_1y": "2025-09-03",
-  "close_1y": 53.01,
-  "low": 53.01,
-  "high": 2335.0,
+  "close_1y": 118.72,
+  "low": 118.72,
+  "high": 1213.5601,
   "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 29.3339,
-   "diff_pct": 0
+   "mult": 8.1844,
+   "diff_pct": 1.41
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 20.1,
-   "d": "2026-09-03",
-   "d_1y": "2025-09-03"
+   "pct": 18.7,
+   "d": "2026-09-04",
+   "d_1y": "2025-09-04"
   },
   "gold": {
-   "pct": 25.0,
-   "d": "2026-09-03",
-   "d_1y": "2025-09-03"
+   "pct": 24.5,
+   "d": "2026-09-04",
+   "d_1y": "2025-09-04"
   }
  },
- "candidates_total": 38,
+ "candidates_total": 79,
  "top10": [
   {
    "ticker": "SNDK",
@@ -74,18 +74,23 @@
    "mult": 4.1638
   },
   {
+   "ticker": "MXL",
+   "mult": 4.0347
+  },
+  {
    "ticker": "INTC",
    "mult": 3.8196
   },
   {
-   "ticker": "DOCN",
-   "mult": 3.4145
-  },
-  {
-   "ticker": "MRVL",
-   "mult": 3.3515
+   "ticker": "VICR",
+   "mult": 3.6329
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "SNDK",
+   "reason": "quellen weichen ab (5.09%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
