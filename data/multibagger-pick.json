@@ -1,34 +1,34 @@
 {
- "date": "2026-09-05",
+ "date": "2026-09-06",
  "pick": {
-  "ticker": "MU",
-  "name": "Micron Technology",
+  "ticker": "SNDK",
+  "name": "Sandisk",
   "sector": "Information Technology",
-  "industry": "Semiconductors",
+  "industry": "Technology Hardware, Storage & Peripherals",
   "indices": [
    "sp500"
   ],
-  "mult": 8.0708,
-  "pct": 707.1,
-  "from_1000": 8071,
-  "d": "2026-09-03",
-  "close": 958.16,
-  "d_1y": "2025-09-03",
-  "close_1y": 118.72,
-  "low": 118.72,
-  "high": 1213.5601,
+  "mult": 27.84,
+  "pct": 2684.0,
+  "from_1000": 27840,
+  "d": "2026-09-04",
+  "close": 1740.0,
+  "d_1y": "2025-09-04",
+  "close_1y": 62.5,
+  "low": 62.5,
+  "high": 2335.0,
   "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 8.1844,
-   "diff_pct": 1.41
+   "mult": 27.84,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
-  "sp500_scanned": 498,
-  "sp500_doubled": 27,
+  "sp500_scanned": 499,
+  "sp500_doubled": 26,
   "sp500_tripled": 10
  },
  "benchmarks": {
@@ -43,35 +43,35 @@
    "d_1y": "2025-09-04"
   }
  },
- "candidates_total": 79,
+ "candidates_total": 84,
  "top10": [
   {
    "ticker": "SNDK",
-   "mult": 29.3339
+   "mult": 27.84
   },
   {
    "ticker": "MU",
-   "mult": 8.0708
+   "mult": 8.1844
   },
   {
    "ticker": "LITE",
-   "mult": 6.318
+   "mult": 6.21
   },
   {
    "ticker": "MRNA",
-   "mult": 6.19
+   "mult": 5.9946
   },
   {
    "ticker": "WDC",
-   "mult": 5.1345
+   "mult": 5.1659
   },
   {
    "ticker": "STX",
-   "mult": 4.5293
+   "mult": 4.6162
   },
   {
    "ticker": "DELL",
-   "mult": 4.1638
+   "mult": 4.1378
   },
   {
    "ticker": "MXL",
@@ -79,18 +79,13 @@
   },
   {
    "ticker": "INTC",
-   "mult": 3.8196
+   "mult": 3.8927
   },
   {
    "ticker": "VICR",
    "mult": 3.6329
   }
  ],
- "rejected": [
-  {
-   "ticker": "SNDK",
-   "reason": "quellen weichen ab (5.09%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
