@@ -1,27 +1,27 @@
 {
- "date": "2026-09-08",
+ "date": "2026-09-09",
  "pick": {
-  "ticker": "SNDK",
-  "name": "Sandisk",
+  "ticker": "WDC",
+  "name": "Western Digital",
   "sector": "Information Technology",
   "industry": "Technology Hardware, Storage & Peripherals",
   "indices": [
    "sp500"
   ],
-  "mult": 27.84,
-  "pct": 2684.0,
-  "from_1000": 27840,
+  "mult": 5.1659,
+  "pct": 416.6,
+  "from_1000": 5166,
   "d": "2026-09-04",
-  "close": 1740.0,
+  "close": 467.46,
   "d_1y": "2025-09-04",
-  "close_1y": 62.5,
-  "low": 62.5,
-  "high": 2335.0,
+  "close_1y": 90.49,
+  "low": 90.49,
+  "high": 746.23,
   "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 27.84,
-   "diff_pct": 0
+   "mult": 5.1163,
+   "diff_pct": 0.96
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 18.7,
-   "d": "2026-09-04",
-   "d_1y": "2025-09-04"
+   "pct": 18.1,
+   "d": "2026-09-08",
+   "d_1y": "2025-09-08"
   },
   "gold": {
-   "pct": 24.5,
-   "d": "2026-09-04",
-   "d_1y": "2025-09-04"
+   "pct": 19.4,
+   "d": "2026-09-08",
+   "d_1y": "2025-09-08"
   }
  },
- "candidates_total": 84,
+ "candidates_total": 88,
  "top10": [
   {
    "ticker": "SNDK",
@@ -83,9 +83,26 @@
   },
   {
    "ticker": "VICR",
-   "mult": 3.6329
+   "mult": 3.8236
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "SNDK",
+   "reason": "quellen weichen ab (11.44%)"
+  },
+  {
+   "ticker": "MU",
+   "reason": "quellen weichen ab (7.03%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (5.47%)"
+  },
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (5.72%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
