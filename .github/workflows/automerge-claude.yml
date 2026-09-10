@@ -1,0 +1,77 @@
+# automerge-claude.yml - jeder Push auf einen claude/*-Branch landet auf main.
+#
+# Bens Entscheidung 10.09.2026: Routinen (geplante Claude-Sitzungen) duerfen
+# direkt auf main. Die Sitzungen pushen auf claude/<name>, diese Action holt
+# den Branch per Fast-Forward oder Merge nach main und loescht ihn danach.
+#
+# Grenzen, absichtlich:
+# - Konflikt: Branch bleibt stehen, Lauf rot, Ben merged von Hand.
+# - Aendert der Branch .github/workflows/, bleibt er ebenfalls stehen:
+#   GITHUB_TOKEN darf keine Workflow-Dateien pushen (kein workflows-Recht).
+# - Pushes, die eine Action mit GITHUB_TOKEN macht (z. B. multibagger.yml), loesen
+#   diese Action nicht aus; das ist GitHubs Schleifenschutz und hier egal,
+#   weil die Bots auf main committen.
+name: automerge claude
+
+on:
+  push:
+    branches:
+      - "claude/**"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch claude/..., der nach main soll"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: automerge-main
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: nach main bringen
+        env:
+          BRANCH: ${{ inputs.branch || github.ref_name }}
+        run: |
+          set -e
+          case "$BRANCH" in
+            claude/*) ;;
+            *) echo "::error::kein claude/-Branch: $BRANCH"; exit 1 ;;
+          esac
+          git config user.name "automerge bot"
+          git config user.email "bot@users.noreply.github.com"
+          git fetch origin "refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
+          if git merge-base --is-ancestor "origin/$BRANCH" main; then
+            echo "$BRANCH ist schon in main enthalten"
+          else
+            BASE=$(git merge-base main "origin/$BRANCH")
+            if [ -n "$(git diff --name-only "$BASE" "origin/$BRANCH" -- .github/workflows)" ]; then
+              echo "::error::$BRANCH aendert .github/workflows/. GITHUB_TOKEN darf das nicht pushen; Ben merged den Branch von Hand."
+              exit 1
+            fi
+            if git merge --ff-only "origin/$BRANCH"; then
+              echo "fast-forward: $BRANCH -> main"
+            else
+              git merge --no-ff -m "merge $BRANCH [automerge]" "origin/$BRANCH" || {
+                echo "::error::Konflikt beim Merge von $BRANCH, Branch bleibt stehen."
+                git merge --abort || true
+                exit 1
+              }
+              echo "merge-commit: $BRANCH -> main"
+            fi
+            git push origin main
+          fi
+          git push origin --delete "$BRANCH"
+          echo "$BRANCH geloescht"
