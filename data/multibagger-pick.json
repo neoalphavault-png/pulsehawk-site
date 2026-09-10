@@ -1,65 +1,65 @@
 {
- "date": "2026-09-09",
+ "date": "2026-09-10",
  "pick": {
-  "ticker": "WDC",
-  "name": "Western Digital",
+  "ticker": "SNDK",
+  "name": "Sandisk",
   "sector": "Information Technology",
   "industry": "Technology Hardware, Storage & Peripherals",
   "indices": [
    "sp500"
   ],
-  "mult": 5.1659,
-  "pct": 416.6,
-  "from_1000": 5166,
-  "d": "2026-09-04",
-  "close": 467.46,
-  "d_1y": "2025-09-04",
-  "close_1y": 90.49,
-  "low": 90.49,
-  "high": 746.23,
+  "mult": 25.0201,
+  "pct": 2402.0,
+  "from_1000": 25020,
+  "d": "2026-09-09",
+  "close": 1764.17,
+  "d_1y": "2025-09-09",
+  "close_1y": 70.51,
+  "low": 70.51,
+  "high": 2335.0,
   "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 5.1163,
-   "diff_pct": 0.96
+   "mult": 25.0201,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 26,
-  "sp500_tripled": 10
+  "sp500_doubled": 25,
+  "sp500_tripled": 11
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 18.1,
-   "d": "2026-09-08",
-   "d_1y": "2025-09-08"
+   "pct": 17.2,
+   "d": "2026-09-09",
+   "d_1y": "2025-09-09"
   },
   "gold": {
-   "pct": 19.4,
-   "d": "2026-09-08",
-   "d_1y": "2025-09-08"
+   "pct": 20.7,
+   "d": "2026-09-09",
+   "d_1y": "2025-09-09"
   }
  },
- "candidates_total": 88,
+ "candidates_total": 86,
  "top10": [
   {
    "ticker": "SNDK",
-   "mult": 27.84
+   "mult": 25.0201
   },
   {
    "ticker": "MU",
-   "mult": 8.1844
+   "mult": 7.5996
   },
   {
    "ticker": "LITE",
-   "mult": 6.21
+   "mult": 6.518
   },
   {
    "ticker": "MRNA",
-   "mult": 5.9946
+   "mult": 5.5419
   },
   {
    "ticker": "WDC",
@@ -67,42 +67,25 @@
   },
   {
    "ticker": "STX",
-   "mult": 4.6162
-  },
-  {
-   "ticker": "DELL",
-   "mult": 4.1378
+   "mult": 4.624
   },
   {
    "ticker": "MXL",
-   "mult": 4.0347
+   "mult": 4.4471
+  },
+  {
+   "ticker": "DELL",
+   "mult": 4.413
   },
   {
    "ticker": "INTC",
-   "mult": 3.8927
+   "mult": 4.347
   },
   {
    "ticker": "VICR",
    "mult": 3.8236
   }
  ],
- "rejected": [
-  {
-   "ticker": "SNDK",
-   "reason": "quellen weichen ab (11.44%)"
-  },
-  {
-   "ticker": "MU",
-   "reason": "quellen weichen ab (7.03%)"
-  },
-  {
-   "ticker": "LITE",
-   "reason": "quellen weichen ab (5.47%)"
-  },
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (5.72%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
