@@ -1,0 +1,54 @@
+name: ticker series
+
+# Scanner im Ticker-Modus: Tagesschluesse eines Titels seit Startdatum
+# (Tiingo, split-bereinigt, Gegenpruefung Stooq/Yahoo) nach
+# data/ticker/<TICKER>.json. Fuer die Tagesserie "POV: stock instead of
+# product" (Domino's 2010 = DPZ). Nur von Hand / aus der Sitzung gestartet.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ticker:
+        description: "Ticker, z.B. DPZ"
+        required: true
+        type: string
+      start:
+        description: "Startdatum YYYY-MM-DD"
+        required: false
+        default: "2010-01-01"
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ticker
+  cancel-in-progress: false
+
+jobs:
+  holen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: selbsttest
+        run: python3 scripts/ticker_series.py --selftest
+      - name: reihe holen
+        env:
+          TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
+        run: python3 scripts/ticker_series.py "${{ inputs.ticker }}" --start "${{ inputs.start }}"
+      - name: ergebnis sichern
+        run: |
+          git config user.name "pulsehawk bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/ticker/
+          if git diff --cached --quiet; then
+            echo "nichts neues"
+            exit 0
+          fi
+          git commit -m "ticker ${{ inputs.ticker }} [bot]"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
