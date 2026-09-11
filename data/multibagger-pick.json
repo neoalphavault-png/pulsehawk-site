@@ -1,49 +1,49 @@
 {
- "date": "2026-09-10",
+ "date": "2026-09-11",
  "pick": {
-  "ticker": "SNDK",
-  "name": "Sandisk",
-  "sector": "Information Technology",
-  "industry": "Technology Hardware, Storage & Peripherals",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
    "sp500"
   ],
-  "mult": 25.0201,
-  "pct": 2402.0,
-  "from_1000": 25020,
+  "mult": 5.5419,
+  "pct": 454.2,
+  "from_1000": 5542,
   "d": "2026-09-09",
-  "close": 1764.17,
+  "close": 135.61,
   "d_1y": "2025-09-09",
-  "close_1y": 70.51,
-  "low": 70.51,
-  "high": 2335.0,
-  "drawdown_pct": 0.0,
+  "close_1y": 24.47,
+  "low": 22.36,
+  "high": 174.38,
+  "drawdown_pct": -8.6,
   "verified": {
    "source": "tiingo",
-   "mult": 25.0201,
-   "diff_pct": 0
+   "mult": 5.6199,
+   "diff_pct": 1.41
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 25,
-  "sp500_tripled": 11
+  "sp500_doubled": 24,
+  "sp500_tripled": 12
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 17.2,
-   "d": "2026-09-09",
-   "d_1y": "2025-09-09"
+   "pct": 16.2,
+   "d": "2026-09-10",
+   "d_1y": "2025-09-10"
   },
   "gold": {
-   "pct": 20.7,
-   "d": "2026-09-09",
-   "d_1y": "2025-09-09"
+   "pct": 18.2,
+   "d": "2026-09-10",
+   "d_1y": "2025-09-10"
   }
  },
- "candidates_total": 86,
+ "candidates_total": 79,
  "top10": [
   {
    "ticker": "SNDK",
@@ -63,7 +63,7 @@
   },
   {
    "ticker": "WDC",
-   "mult": 5.1659
+   "mult": 4.8509
   },
   {
    "ticker": "STX",
@@ -82,10 +82,23 @@
    "mult": 4.347
   },
   {
-   "ticker": "VICR",
-   "mult": 3.8236
+   "ticker": "DOCN",
+   "mult": 3.833
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "SNDK",
+   "reason": "quellen weichen ab (8.48%)"
+  },
+  {
+   "ticker": "MU",
+   "reason": "quellen weichen ab (8.13%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (12.93%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
