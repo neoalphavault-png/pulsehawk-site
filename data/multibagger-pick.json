@@ -1,49 +1,49 @@
 {
- "date": "2026-09-11",
+ "date": "2026-09-12",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "MU",
+  "name": "Micron Technology",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
    "sp500"
   ],
-  "mult": 5.5419,
-  "pct": 454.2,
-  "from_1000": 5542,
-  "d": "2026-09-09",
-  "close": 135.61,
-  "d_1y": "2025-09-09",
-  "close_1y": 24.47,
-  "low": 22.36,
-  "high": 174.38,
-  "drawdown_pct": -8.6,
+  "mult": 6.4771,
+  "pct": 547.7,
+  "from_1000": 6477,
+  "d": "2026-09-11",
+  "close": 975.26,
+  "d_1y": "2025-09-11",
+  "close_1y": 150.57,
+  "low": 150.57,
+  "high": 1213.5601,
+  "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 5.6199,
-   "diff_pct": 1.41
+   "mult": 6.4771,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 24,
-  "sp500_tripled": 12
+  "sp500_doubled": 22,
+  "sp500_tripled": 11
  },
  "benchmarks": {
   "s&p 500": {
    "pct": 16.2,
-   "d": "2026-09-10",
-   "d_1y": "2025-09-10"
+   "d": "2026-09-11",
+   "d_1y": "2025-09-11"
   },
   "gold": {
-   "pct": 18.2,
-   "d": "2026-09-10",
-   "d_1y": "2025-09-10"
+   "pct": 19.1,
+   "d": "2026-09-11",
+   "d_1y": "2025-09-11"
   }
  },
- "candidates_total": 79,
+ "candidates_total": 75,
  "top10": [
   {
    "ticker": "SNDK",
@@ -51,35 +51,35 @@
   },
   {
    "ticker": "MU",
-   "mult": 7.5996
-  },
-  {
-   "ticker": "LITE",
-   "mult": 6.518
+   "mult": 6.4771
   },
   {
    "ticker": "MRNA",
-   "mult": 5.5419
+   "mult": 5.6703
+  },
+  {
+   "ticker": "LITE",
+   "mult": 5.6225
   },
   {
    "ticker": "WDC",
    "mult": 4.8509
   },
   {
+   "ticker": "MXL",
+   "mult": 4.649
+  },
+  {
    "ticker": "STX",
    "mult": 4.624
   },
   {
-   "ticker": "MXL",
-   "mult": 4.4471
-  },
-  {
    "ticker": "DELL",
-   "mult": 4.413
+   "mult": 4.5249
   },
   {
    "ticker": "INTC",
-   "mult": 4.347
+   "mult": 4.1829
   },
   {
    "ticker": "DOCN",
@@ -89,15 +89,7 @@
  "rejected": [
   {
    "ticker": "SNDK",
-   "reason": "quellen weichen ab (8.48%)"
-  },
-  {
-   "ticker": "MU",
-   "reason": "quellen weichen ab (8.13%)"
-  },
-  {
-   "ticker": "LITE",
-   "reason": "quellen weichen ab (12.93%)"
+   "reason": "quellen weichen ab (22.56%)"
   }
  ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
