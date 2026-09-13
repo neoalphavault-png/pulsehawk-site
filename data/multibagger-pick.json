@@ -1,26 +1,26 @@
 {
- "date": "2026-09-12",
+ "date": "2026-09-13",
  "pick": {
-  "ticker": "MU",
-  "name": "Micron Technology",
+  "ticker": "SNDK",
+  "name": "Sandisk",
   "sector": "Information Technology",
-  "industry": "Semiconductors",
+  "industry": "Technology Hardware, Storage & Peripherals",
   "indices": [
    "sp500"
   ],
-  "mult": 6.4771,
-  "pct": 547.7,
-  "from_1000": 6477,
+  "mult": 19.3754,
+  "pct": 1837.5,
+  "from_1000": 19375,
   "d": "2026-09-11",
-  "close": 975.26,
+  "close": 1633.35,
   "d_1y": "2025-09-11",
-  "close_1y": 150.57,
-  "low": 150.57,
-  "high": 1213.5601,
+  "close_1y": 84.3,
+  "low": 84.3,
+  "high": 2335.0,
   "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 6.4771,
+   "mult": 19.3754,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,7 +28,7 @@
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 22,
+  "sp500_doubled": 21,
   "sp500_tripled": 11
  },
  "benchmarks": {
@@ -47,7 +47,7 @@
  "top10": [
   {
    "ticker": "SNDK",
-   "mult": 25.0201
+   "mult": 19.3754
   },
   {
    "ticker": "MU",
@@ -63,34 +63,29 @@
   },
   {
    "ticker": "WDC",
-   "mult": 4.8509
+   "mult": 4.6509
   },
   {
    "ticker": "MXL",
    "mult": 4.649
   },
   {
-   "ticker": "STX",
-   "mult": 4.624
-  },
-  {
    "ticker": "DELL",
    "mult": 4.5249
+  },
+  {
+   "ticker": "STX",
+   "mult": 4.2181
   },
   {
    "ticker": "INTC",
    "mult": 4.1829
   },
   {
-   "ticker": "DOCN",
-   "mult": 3.833
+   "ticker": "VICR",
+   "mult": 3.8836
   }
  ],
- "rejected": [
-  {
-   "ticker": "SNDK",
-   "reason": "quellen weichen ab (22.56%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
