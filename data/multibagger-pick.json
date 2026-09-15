@@ -1,26 +1,26 @@
 {
- "date": "2026-09-14",
+ "date": "2026-09-15",
  "pick": {
-  "ticker": "SNDK",
-  "name": "Sandisk",
-  "sector": "Information Technology",
-  "industry": "Technology Hardware, Storage & Peripherals",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
    "sp500"
   ],
-  "mult": 19.3754,
-  "pct": 1837.5,
-  "from_1000": 19375,
-  "d": "2026-09-11",
-  "close": 1633.35,
-  "d_1y": "2025-09-11",
-  "close_1y": 84.3,
-  "low": 84.3,
-  "high": 2335.0,
-  "drawdown_pct": 0.0,
+  "mult": 6.1428,
+  "pct": 514.3,
+  "from_1000": 6143,
+  "d": "2026-09-14",
+  "close": 146.69,
+  "d_1y": "2025-09-15",
+  "close_1y": 23.88,
+  "low": 22.36,
+  "high": 174.38,
+  "drawdown_pct": -6.4,
   "verified": {
    "source": "tiingo",
-   "mult": 19.3754,
+   "mult": 6.1428,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,42 +28,30 @@
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 21,
-  "sp500_tripled": 11
+  "sp500_doubled": 22,
+  "sp500_tripled": 10
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 16.2,
-   "d": "2026-09-11",
-   "d_1y": "2025-09-11"
+   "pct": 15.1,
+   "d": "2026-09-14",
+   "d_1y": "2025-09-15"
   },
   "gold": {
-   "pct": 19.1,
-   "d": "2026-09-11",
-   "d_1y": "2025-09-11"
+   "pct": 15.9,
+   "d": "2026-09-14",
+   "d_1y": "2025-09-15"
   }
  },
- "candidates_total": 74,
+ "candidates_total": 73,
  "top10": [
   {
-   "ticker": "SNDK",
-   "mult": 19.3754
-  },
-  {
-   "ticker": "MU",
-   "mult": 6.4771
-  },
-  {
    "ticker": "MRNA",
-   "mult": 5.6703
+   "mult": 6.1428
   },
   {
    "ticker": "LITE",
-   "mult": 5.6225
-  },
-  {
-   "ticker": "WDC",
-   "mult": 4.6509
+   "mult": 4.9477
   },
   {
    "ticker": "MXL",
@@ -74,16 +62,28 @@
    "mult": 4.5249
   },
   {
-   "ticker": "STX",
-   "mult": 4.2181
+   "ticker": "WDC",
+   "mult": 4.1697
   },
   {
    "ticker": "INTC",
-   "mult": 4.1829
+   "mult": 3.9237
+  },
+  {
+   "ticker": "STX",
+   "mult": 3.8156
+  },
+  {
+   "ticker": "FORM",
+   "mult": 3.7602
   },
   {
    "ticker": "VICR",
-   "mult": 3.8836
+   "mult": 3.56
+  },
+  {
+   "ticker": "ICHR",
+   "mult": 3.344
   }
  ],
  "rejected": [],
