@@ -13,7 +13,7 @@ und fuehren kein JavaScript aus. Die wuerden bei uns fuer immer dieselbe
 Zahl sehen, ausgerechnet bei Seiten, deren ganzer Vorteil darin besteht,
 dass ihre Zahl aktuell ist.
 
-VIER TEILE, ZWEI QUELLEN
+FUENF TEILE, ZWEI QUELLEN
   1. die zwei Zyklusseiten. Ihre Zahlen sind reine Arithmetik aus festen
      Daten, Halving und Zyklushoch. Keine Datenquelle noetig.
   2. die Dominanzseite. Ihre Zahl kommt aus data/market-log.json, das der
@@ -24,6 +24,18 @@ VIER TEILE, ZWEI QUELLEN
   4. die Marktseite, seit 22.08.2026. Gold, Aktien und Bitcoin ueber
      dieselben sieben Kalendertage, dazu die Stablecoins und die
      Sektorneigung. Ebenfalls aus data/market-log.json.
+  5. der letzte Bitcoin-Schluss auf der Zyklusseite, seit 16.09.2026.
+     Die beiden Zeilen
+
+         var LAST_CLOSE = 75608, LAST_DATE = "2026-09-15";
+
+     in bitcoin-top-to-bottom.html sind die Grundlage fuer jede
+     Rueckgangszahl auf der Seite. Sie standen bis jetzt von Hand da, und
+     einmal von Hand heisst irgendwann veraltet. Sie kommen aus derselben
+     Datei wie alles andere, data/market-log.json, aus der juengsten Zeile
+     mit einem btc-Wert. Hier wird bewusst nicht in ein Element gestempelt,
+     sondern in den Code: das Skript auf der Seite rechnet mit diesen
+     Werten weiter, ein gestempeltes Element waere nur die Anzeige.
 
 ⚠️ FOLGE, DIE MAN KENNEN MUSS
 Fuer alle vier Seiten gilt ab jetzt dasselbe wie fuer index.html im Repo
@@ -53,25 +65,46 @@ MONATE = ["January", "February", "March", "April", "May", "June", "July",
           "August", "September", "October", "November", "December"]
 
 HALVING = "2024-04-20"
-HOCH = "2025-10-06"
+
+# ZWEI HOCHS, UND DAS IST KEIN FEHLER
+# Die Halving-Seite zaehlt zum INTRADAY-Hoch 126.198 am 6. Oktober 2025, das
+# ist der Punkt, den die Zyklusrechnung ueber alle Zyklen benutzt.
+# Die Top-to-Bottom-Seite zaehlt zum TAGESSCHLUSS 124.776,68 am 7. Oktober,
+# und sie sagt in ihrer eigenen FAQ ausdruecklich, dass jede hoehere Zahl vom
+# 6. Oktober ein Intraday-Hoch einer einzelnen Boerse ist.
+# Bis zum 16.09.2026 stand hier EIN Datum fuer beide Seiten. Damit stempelte
+# der Bot auf der Top-to-Bottom-Seite einen Tag mehr, als das Skript auf
+# derselben Seite (TOP_DATE = "2025-10-07") im Browser ausrechnet: wer
+# JavaScript ausfuehrt, las 344, wer den Quelltext las, 345. Genau die
+# Abweichung, gegen die dieses Skript gebaut ist.
+HOCH_HIGH = "2025-10-06"     # intraday, bitcoin-halving-to-top.html
+HOCH_CLOSE = "2025-10-07"    # tagesschluss, bitcoin-top-to-bottom.html
+HOCH = HOCH_HIGH             # alter Name, damit nichts still bricht
 
 # seite, dann je element-id das startdatum und ein anhaengsel.
 # die ids stehen im html, sie sind der anker. wer im html eine id
 # umbenennt, muss sie hier mitaendern, sonst faellt es beim lauf auf.
 ZYKLUS = {
     "bitcoin-halving-to-top.html": [
-        ("d1", HALVING, ""),          # tage seit dem halving
-        ("d2", HOCH, ""),             # tage seit dem hoch
+        ("d1", HALVING, ""),              # tage seit dem halving
+        ("d2", HOCH_HIGH, ""),            # tage seit dem intraday-hoch
     ],
     "bitcoin-top-to-bottom.html": [
-        ("d1", HOCH, ""),             # tage seit dem hoch, kasten
-        ("d2", HOCH, ""),             # dieselbe zahl in der tabelle
-        ("d3", HOCH, " and counting"),  # beschriftung am offenen balken
+        ("d1", HOCH_CLOSE, ""),           # tage seit dem schlusshoch, kasten
+        ("d2", HOCH_CLOSE, ""),           # dieselbe zahl in der tabelle
+        ("d3", HOCH_CLOSE, " and counting"),  # beschriftung am offenen balken
     ],
 }
 
 DOM_SEITE = "bitcoin-dominance.html"
 MARKT_SEITE = "markets.html"
+SCHLUSS_SEITE = "bitcoin-top-to-bottom.html"
+
+# die zwei Zuweisungen werden einzeln ersetzt, nicht die ganze Zeile. wer
+# die Zeile umbricht oder eine dritte Variable dazuschreibt, verliert sonst
+# beim naechsten Lauf, was er geschrieben hat.
+RE_CLOSE = re.compile(r"(var LAST_CLOSE\s*=\s*)([0-9][0-9_.]*)")
+RE_DATE = re.compile(r"(LAST_DATE\s*=\s*\")(\d{4}-\d{2}-\d{2})(\")")
 
 # EINE LISTE, EINE WAHRHEIT
 # Wer hier eine Seite eintraegt, hat sie in der Leiste jeder anderen Seite.
@@ -84,6 +117,7 @@ SEITEN = [
     ("bitcoin-top-to-bottom.html", "top to bottom"),
     ("bitcoin-dominance.html", "dominance"),
     ("markets.html", "markets"),
+    ("what-if.html", "what if"),
 ]
 
 # die drei preisreihen muessen am selben tag alle drei dastehen, sonst
@@ -331,6 +365,57 @@ def lauf_markt():
     return schreiben(pfad, alt, neu, MARKT_SEITE, werte["periodlabel"])
 
 
+# --- teil 5, der letzte schluss --------------------------------------
+
+def letzter_schluss(rows):
+    """juengste zeile mit einem btc-schluss. der marktlogger schreibt btc
+    auch am wochenende (coingecko/kraken laufen durch), gold und aktien
+    nicht. deshalb wird hier nur btc verlangt und nicht die dreiergruppe."""
+    return letzte(rows if isinstance(rows, list) else [], ("btc",))
+
+
+def zahl(v):
+    """ganze dollar bleiben ganz, sonst zwei stellen. javascript liest
+    beides, aber ein 75608.0 im quelltext sieht nach zufall aus."""
+    f = float(v)
+    return str(int(round(f))) if abs(f - round(f)) < 0.005 else ("%.2f" % f)
+
+
+def setz_schluss(html, close, datum):
+    """ersetzt die beiden zuweisungen. liefert text und trefferzahl."""
+    html, n1 = RE_CLOSE.subn(lambda m: m.group(1) + zahl(close), html)
+    html, n2 = RE_DATE.subn(lambda m: m.group(1) + datum + m.group(3), html)
+    return html, n1, n2
+
+
+def lauf_schluss():
+    pfad = os.path.join(REPO, SCHLUSS_SEITE)
+    if not os.path.exists(pfad):
+        print("  ok   %-30s nicht vorhanden, uebersprungen" % SCHLUSS_SEITE)
+        return 0
+    if not os.path.exists(LOG):
+        print("  FEHL %-30s data/market-log.json fehlt" % SCHLUSS_SEITE)
+        return 1
+    with open(LOG, "r", encoding="utf-8") as fh:
+        rows = json.load(fh)
+    zeile = letzter_schluss(rows)
+    if not zeile:
+        print("  FEHL %-30s kein btc-schluss im log" % SCHLUSS_SEITE)
+        return 1
+
+    with open(pfad, "r", encoding="utf-8") as fh:
+        alt = fh.read()
+    neu, n1, n2 = setz_schluss(alt, zeile["btc"], zeile["d"])
+    if not (n1 and n2):
+        # ohne die beiden zuweisungen friert der rueckgang auf der seite
+        # ein, und das sieht niemand, weil die tageszahl daneben weiterlaeuft
+        print("  FEHL %-30s LAST_CLOSE/LAST_DATE nicht gefunden (%d/%d)"
+              % (SCHLUSS_SEITE, n1, n2))
+        return 1
+    return schreiben(pfad, alt, neu, SCHLUSS_SEITE,
+                     "letzter schluss %s vom %s" % (zahl(zeile["btc"]), zeile["d"]))
+
+
 # --- teil 4, die leiste ----------------------------------------------
 
 PNAV = re.compile(r'(<div class="pnav">)(.*?)(</div>)', re.S)
@@ -394,7 +479,14 @@ def selbsttest():
 
     bis = datetime.date(2026, 8, 21)
     pruefe("tage seit dem halving", tage(HALVING, bis), 853)
-    pruefe("tage seit dem hoch", tage(HOCH, bis), 319)
+    pruefe("tage seit dem intraday-hoch", tage(HOCH_HIGH, bis), 319)
+    # die Top-to-Bottom-Seite zaehlt zum Tagesschluss, also einen Tag weniger.
+    # Das ist die Zahl, die das Skript auf derselben Seite ausrechnet.
+    pruefe("tage seit dem schlusshoch", tage(HOCH_CLOSE, bis), 318)
+    pruefe("die beiden hochs sind einen tag auseinander",
+           tage(HOCH_HIGH, bis) - tage(HOCH_CLOSE, bis), 1)
+    pruefe("top-to-bottom zaehlt zum schlusshoch",
+           set(d for _, d, _ in ZYKLUS["bitcoin-top-to-bottom.html"]), {HOCH_CLOSE})
     pruefe("datum ausgeschrieben", lang("2026-08-21"), "21 August 2026")
     pruefe("billionen", geld(4023456789012), "$4.02T")
     pruefe("milliarden", geld(4023456789), "$4B")
@@ -463,6 +555,30 @@ def selbsttest():
            None)
     pruefe("leeres log", markt_werte([]), None)
 
+    # --- der letzte schluss ---
+    log5 = [{"d": "2026-09-13", "btc": 76706.0},
+            {"d": "2026-09-14", "gld": 392.84, "spy": 760.88, "btc": 78150.0},
+            {"d": "2026-09-15", "btc": 75608.0}]
+    pruefe("juengster btc-schluss", letzter_schluss(log5)["d"], "2026-09-15")
+    # btc laeuft am wochenende weiter, gold und aktien nicht. wer hier die
+    # dreiergruppe verlangt, stempelt am sonntag den freitagsschluss.
+    pruefe("btc allein reicht", letzter_schluss(log5)["btc"], 75608.0)
+    pruefe("log ohne btc", letzter_schluss([{"d": "2026-09-15", "gld": 1.0}]), None)
+    pruefe("ganze dollar bleiben ganz", zahl(75608.0), "75608")
+    pruefe("cents bleiben cents", zahl(75608.25), "75608.25")
+
+    js = 'var LAST_CLOSE = 1, LAST_DATE = "2000-01-01";'
+    fertig, n1, n2 = setz_schluss(js, 75608.0, "2026-09-15")
+    pruefe("schluss gestempelt", fertig, 'var LAST_CLOSE = 75608, LAST_DATE = "2026-09-15";')
+    pruefe("beide zuweisungen getroffen", (n1, n2), (1, 1))
+    pruefe("zweiter lauf ist ruhig", setz_schluss(fertig, 75608.0, "2026-09-15")[0], fertig)
+    # eine umbenannte variable muss auffallen, sonst friert die zahl ein
+    pruefe("fehlende zuweisung faellt auf",
+           setz_schluss('var SOMETHING = 1;', 1.0, "2026-09-15")[1:], (0, 0))
+    pruefe("mehr abstand stoert nicht",
+           setz_schluss('var LAST_CLOSE  =  1 , LAST_DATE  =  "2000-01-01" ;', 9.0, "2026-09-15")[1:],
+           (1, 1))
+
     # --- die leiste ---
     pruefe("eigene seite ohne verweis",
            "<span>markets</span>" in leiste("markets.html"), True)
@@ -486,7 +602,7 @@ def selbsttest():
     pruefe("unbekannte seite ohne markierung",
            "<span>" in leiste("gibtsnicht.html"), False)
 
-    print("%d von 36 faellen falsch" % schlecht)
+    print("%d von 49 faellen falsch" % schlecht)
     return 1 if schlecht else 0
 
 
@@ -496,7 +612,8 @@ def main(argv):
     print("pulsehawk seitenstempel")
     print("laufzeitpunkt %s utc\n"
           % datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
-    fehler = lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
+    fehler = (lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
+              + lauf_schluss())
     if fehler:
         print("\n%d seite(n) nicht gestempelt" % fehler)
         return 1

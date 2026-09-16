@@ -1,0 +1,118 @@
+name: day n
+
+# Der taegliche Tagesbeitrag von PulseHawk, seit dem 16.09.2026.
+#
+# Bis dahin war das der Short des Tages (Routine 1 in pulse-studio
+# docs/routinen.md). Der faellt weg. An seine Stelle tritt das, was ohnehin
+# jeden Tag neu ist: der Tageszaehler seit dem Zyklushoch und der Abstand
+# dazu. Zwei Schritte, beide ohne Hand.
+#
+#   1. Seitenstempel. Schreibt unter anderem LAST_CLOSE und LAST_DATE in
+#      bitcoin-top-to-bottom.html aus data/market-log.json und committet.
+#   2. Der Post auf @pulsehawkio mit der DAY-N-Zahl. scripts/day_n_post.py
+#      liest dieselbe Datei und bricht ab, wenn Seite und Log sich
+#      widersprechen.
+#
+# ZEITPUNKT. Der Marktlogger schreibt um 21:23 UTC. Der Seitenstempel laeuft
+# schon um 21:40. Dieser Lauf kommt um 21:52, also nach beiden, und bewusst
+# nicht zur vollen Stunde (GitHub verschiebt geplante Laeufe unter Last).
+# Er stempelt trotzdem selbst noch einmal: findet er nichts, committet er
+# nichts, und wenn der 21:40-Lauf ausgefallen ist, postet der Tag trotzdem
+# die richtige Zahl.
+#
+# Dieselbe concurrency group wie der Seitenstempel. Zwei Commits innerhalb
+# weniger Sekunden bringen die Auslieferung von GitHub Pages durcheinander,
+# das ist am 21.08.2026 einmal passiert.
+#
+# KOSTEN: ein Post ohne Link, 0,015 $ am Tag, rund 0,46 $ im Monat.
+# Die Doppelpostsperre liegt in data/x-post-log.json (key dayn-<datum>);
+# ein zweiter Lauf am selben Tag postet nicht noch einmal.
+
+on:
+  schedule:
+    - cron: "52 21 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "nur rechnen und zeigen, nichts posten"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seitenstempel
+  cancel-in-progress: false
+
+jobs:
+  dayn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: selbsttests
+        run: |
+          python3 scripts/stamp_pages.py --selftest
+          python3 scripts/day_n_post.py --selftest
+          python3 scripts/x_post.py --selftest
+
+      - name: seiten stempeln
+        run: python3 scripts/stamp_pages.py
+
+      - name: stempel sichern
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "nichts geaendert, kein commit"
+            exit 0
+          fi
+          git config user.name "pulsehawk bot"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "seitenstempel $(date -u +%Y-%m-%d) [day n]"
+          for i in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((i * 3))
+          done
+          echo "push fehlgeschlagen" >&2
+          exit 1
+
+      # Faellt X aus, wird der Lauf rot, aber der Stempel oben ist schon
+      # gesichert. Das Sperrlog wird darunter in jedem Fall committet,
+      # sonst verliert die Sperre ihr Gedaechtnis.
+      - name: day n posten
+        if: ${{ inputs.dry_run != true }}
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+        run: python3 scripts/day_n_post.py --post
+
+      - name: nur zeigen
+        if: ${{ inputs.dry_run == true }}
+        run: python3 scripts/day_n_post.py --dry-run
+
+      - name: sperrlog sichern
+        if: always()
+        run: |
+          git add data/x-post-log.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "sperrlog unveraendert"
+            exit 0
+          fi
+          git config user.name "pulsehawk bot"
+          git config user.email "actions@github.com"
+          git commit -m "x post log $(date -u +%Y-%m-%d)"
+          for i in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((i * 3))
+          done
+          echo "push fehlgeschlagen" >&2
+          exit 1
