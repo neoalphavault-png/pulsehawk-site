@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bitcoin Cycle Bottom, How Long After the Top</title>
-<meta name="description" content="In the Bitcoin 4 year cycle the bottom came 410, 364 and 376 days after the top. Chart, every date with its source, a live count, and no prediction.">
+<title>How Many Days From Bitcoin's Top to the Bottom? 406, 364 and 378</title>
+<meta name="description" content="Counted from 5,849 daily closes since 2010: the Bitcoin cycle bottom came 406, 364 and 378 days after the top, at -85%, -83% and -77%. Live day count, where past cycles stood on the same day, no prediction.">
 <link rel="canonical" href="https://pulsehawk.io/bitcoin-top-to-bottom.html">
 <link rel="icon" type="image/png" href="favicon.png">
-<meta property="og:title" content="Bitcoin Cycle Bottom, How Long After the Top">
-<meta property="og:description" content="410, 364 and 376 days in the three completed cycles. Every date with its source, plus a live count of days since the last top.">
+<meta property="og:title" content="How Many Days From Bitcoin's Top to the Bottom? 406, 364 and 378">
+<meta property="og:description" content="Three completed cycles, counted from daily closes: 406, 364 and 378 days from top to bottom. Plus where each past cycle stood on the day we are on now.">
 <meta property="og:url" content="https://pulsehawk.io/bitcoin-top-to-bottom.html">
 <meta property="og:type" content="article">
 <script type="application/ld+json">
@@ -16,18 +16,18 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"How long does it take Bitcoin to go from the cycle top to the bottom?",
-     "acceptedAnswer":{"@type":"Answer","text":"In the three completed cycles it took 410 days, 364 days and 376 days. All three land between 364 and 410 days, which is a spread of about six weeks."}},
+    {"@type":"Question","name":"How many days from Bitcoin's top to the bottom?",
+     "acceptedAnswer":{"@type":"Answer","text":"In the three completed cycles the bottom came 406, 364 and 378 days after the top, counted between daily closes. All three sit between 364 and 406 days."}},
+    {"@type":"Question","name":"How far did Bitcoin fall from top to bottom in each cycle?",
+     "acceptedAnswer":{"@type":"Answer","text":"84.9 percent in 2013 to 2015, 83.2 percent in 2017 to 2018 and 76.7 percent in 2021 to 2022, measured between the highest and lowest daily close."}},
     {"@type":"Question","name":"When was the last Bitcoin cycle top?",
-     "acceptedAnswer":{"@type":"Answer","text":"6 October 2025, at 126,198 US dollars."}},
+     "acceptedAnswer":{"@type":"Answer","text":"7 October 2025, at a daily close of 124,777 US dollars. Sites quoting a higher number on 6 October are using an intraday high from a single exchange, not the daily close."}},
     {"@type":"Question","name":"When did Bitcoin bottom in previous cycles?",
-     "acceptedAnswer":{"@type":"Answer","text":"14 January 2015 at about 175 dollars, 15 December 2018 at about 3,185 dollars, and 21 November 2022 at about 15,476 dollars."}},
+     "acceptedAnswer":{"@type":"Answer","text":"15 January 2015 at 172 dollars, 16 December 2018 at 3,232 dollars, and 22 November 2022 at 15,760 dollars, each the lowest daily close of that cycle."}},
     {"@type":"Question","name":"Will the next bottom follow the same pattern?",
-     "acceptedAnswer":{"@type":"Answer","text":"Nobody knows, and this page does not guess. Three cycles are three data points, and they differ by 46 days. This page counts what happened and names no date and no price."}},
-    {"@type":"Question","name":"Why do sources disagree on the 2022 low?",
-     "acceptedAnswer":{"@type":"Answer","text":"Some put it on 10 November 2022 and some on 21 November 2022, depending on the exchange and on whether intraday lows or daily closes are used. With the earlier date that cycle took 365 days instead of 376. Both readings still fall inside the same range."}},
-    {"@type":"Question","name":"How many days has it been since the last top?",
-     "acceptedAnswer":{"@type":"Answer","text":"The counter at the top of this page shows the current number. It is calculated from 6 October 2025 and updates by itself."}}
+     "acceptedAnswer":{"@type":"Answer","text":"Nobody knows, and this page does not guess. Three cycles are three data points. This page counts what happened, shows where past cycles stood on the same day, and names no date and no price."}},
+    {"@type":"Question","name":"Where do the numbers come from?",
+     "acceptedAnswer":{"@type":"Answer","text":"From PulseHawk's own archive of 5,849 daily Bitcoin closes since August 2010, sourced from Twelve Data. Every date and price on this page is a daily close in UTC. Nothing is copied from another site."}}
   ]
 }
 </script>
@@ -63,6 +63,7 @@
   .live div { flex:1 1 190px; }
   .live .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
   .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
+  .live .v.t { color:var(--teal); }
   .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
   .chart { margin-top:18px; background:var(--card); border:1px solid var(--line);
            border-radius:16px; padding:20px 18px 12px; }
@@ -73,13 +74,15 @@
   .chart .gl { stroke:var(--line); stroke-width:1; }
   .chart .cap { font-size:12.5px; color:var(--dimmer); margin-top:10px; }
   .scroll { overflow-x:auto; margin-top:16px; }
-  table { border-collapse:collapse; width:100%; min-width:560px; }
+  table { border-collapse:collapse; width:100%; min-width:600px; }
   th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); font-size:14.5px; }
   th { font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dimmer); font-weight:700; }
-  td.n { text-align:right; font-weight:700; color:var(--txt); }
+  td.n { text-align:right; font-weight:700; color:var(--txt); font-variant-numeric:tabular-nums; }
   tr.now td { color:var(--btc); }
+  tr.now td.n { color:var(--btc); }
   .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
   .note p { color:var(--txt); }
+  .method { font-size:12.5px; color:var(--dimmer); margin-top:10px; letter-spacing:0.2px; }
   .faq { margin-top:14px; }
   .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
   .faq p { margin-top:7px; }
@@ -96,30 +99,51 @@
   <span>top to bottom</span>
   <a href="/bitcoin-dominance.html">dominance</a>
   <a href="/markets.html">markets</a>
+  <a href="/what-if.html">what if</a>
 </div>
-<div class="eyebrow">Bitcoin 4 year cycle</div>
-<h1>The Bitcoin cycle bottom, how long after the top</h1>
-<p class="lead">In the three completed four year cycles the bottom came <b>410, 364 and 376
-days</b> after the top. That is a spread of about six weeks. This page counts the days and
-makes no forecast, which is the one thing that separates it from most of what you will find
-on this question.</p>
+<div class="eyebrow">Bitcoin cycle analysis</div>
+<h1>How many days from Bitcoin's top to the bottom?</h1>
+<p class="lead">In the three completed cycles the bottom came <b>406, 364 and 378 days</b>
+after the top, and it sat <b>85, 83 and 77 percent</b> below it. Every number on this page is
+counted from our own archive of daily closes since 2010, not copied from another site, and the
+page makes no forecast.</p>
 <div class="live">
   <div>
     <div class="k">Days since the last top</div>
-    <div class="v" id="d1">344</div>
-    <div class="s">top was 6 October 2025</div>
+    <div class="v" id="d1">343</div>
+    <div class="s">top was 7 October 2025, close 124,777 USD</div>
   </div>
   <div>
-    <div class="k">Shortest completed cycle</div>
-    <div class="v">364</div>
-    <div class="s">top to bottom, 2017 to 2018</div>
+    <div class="k">Below the top today</div>
+    <div class="v t" id="dd">-39.4%</div>
+    <div class="s" id="ddts">close of 15 September 2026, 75,608 USD</div>
   </div>
 </div>
-<p style="font-size:13px;margin-top:8px">The left counter updates by itself. It is plain
-arithmetic from one fixed date, not a live price feed.</p>
+<p class="method">Day count updates by itself from one fixed date. The price is the latest
+daily close in our archive and is stamped with its date.</p>
+
+<h2>Where the past cycles stood on this same day</h2>
+<p>This is the comparison most pages skip. Take the number of days we are into this cycle and
+look up where the three previous cycles were on that exact day.</p>
+<div class="scroll">
+<table>
+  <thead>
+    <tr><th>Cycle</th><th>On day <span class="dn">343</span></th><th style="text-align:right">Below its top</th><th style="text-align:right">Bottom came on day</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>2013 to 2015</td><td id="c13d"></td><td class="n" id="c13"></td><td class="n">406</td></tr>
+    <tr><td>2017 to 2018</td><td id="c17d"></td><td class="n" id="c17"></td><td class="n">364</td></tr>
+    <tr><td>2021 to 2022</td><td id="c21d"></td><td class="n" id="c21"></td><td class="n">378</td></tr>
+    <tr class="now"><td>2025 to now</td><td id="c25d">15 Sep 2026</td><td class="n" id="c25">-39.4%</td><td class="n">not known</td></tr>
+  </tbody>
+</table>
+</div>
+<p>The three completed rows recompute every day from the archived closes of those cycles. The
+last row is today. Read the gap between them however you like; we do not read it for you.</p>
+
 <h2>The completed cycles, charted</h2>
 <div class="chart">
-<svg viewBox="0 0 720 178" role="img" aria-label="Days from each Bitcoin cycle top to the following bottom, 410, 364 and 376 days, with the current cycle at 319 days and counting">
+<svg viewBox="0 0 720 178" role="img" aria-label="Days from each Bitcoin cycle top to the following bottom, 406, 364 and 378 days, with the current cycle open">
   <line class="gl" x1="108.0" x2="108.0" y1="4" y2="150"/>
   <text class="tick" x="108.0" y="168" text-anchor="middle">the top</text>
   <line class="gl" x1="302.0" x2="302.0" y1="4" y2="150"/>
@@ -129,101 +153,136 @@ arithmetic from one fixed date, not a live price feed.</p>
   <line class="gl" x1="690.0" x2="690.0" y1="4" y2="150"/>
   <text class="tick" x="690.0" y="168" text-anchor="middle">day 450</text>
   <text class="lbl" x="0" y="24">2013 to 2015</text>
-  <rect x="108" y="10" width="530.3" height="18" rx="5" fill="#39424C"/>
-  <text class="val" x="647.3" y="24">410</text>
+  <rect x="108" y="10" width="525.1" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="642.1" y="24">406</text>
   <text class="lbl" x="0" y="62">2017 to 2018</text>
   <rect x="108" y="48" width="470.8" height="18" rx="5" fill="#39424C"/>
   <text class="val" x="587.8" y="62">364</text>
   <text class="lbl" x="0" y="100">2021 to 2022</text>
-  <rect x="108" y="86" width="486.3" height="18" rx="5" fill="#39424C"/>
-  <text class="val" x="603.3" y="100">376</text>
+  <rect x="108" y="86" width="488.9" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="605.9" y="100">378</text>
   <text class="lbl" x="0" y="138">2025 to now</text>
-  <rect id="bar" x="108" y="124" width="412.6" height="18" rx="5" fill="var(--btc)"/>
-  <text id="d3" class="val" x="529.6" y="138" fill="var(--btc)">344 and counting</text>
+  <rect id="bar" x="108" y="124" width="443.6" height="18" rx="5" fill="var(--btc)"/>
+  <text id="d3" class="val" x="560.6" y="138" fill="var(--btc)">343 and counting</text>
 </svg>
-  <div class="cap">Days from each cycle top to the following low. The current cycle has no bottom yet, so its bar is open.</div>
+  <div class="cap">Days from each cycle top to the following low, counted between daily closes. The current cycle has no bottom yet, so its bar is open.</div>
 </div>
 <div class="scroll">
 <table>
   <thead>
-    <tr><th>Cycle</th><th>Top</th><th>Bottom</th><th>Bottom price</th><th style="text-align:right">Days</th></tr>
+    <tr><th>Cycle</th><th>Top (close)</th><th>Bottom (close)</th><th style="text-align:right">Days</th><th style="text-align:right">Drawdown</th></tr>
   </thead>
   <tbody>
-    <tr><td>2013 to 2015</td><td>30 Nov 2013</td><td>14 Jan 2015</td><td>about 175 USD</td><td class="n">410</td></tr>
-    <tr><td>2017 to 2018</td><td>16 Dec 2017</td><td>15 Dec 2018</td><td>about 3,185 USD</td><td class="n">364</td></tr>
-    <tr><td>2021 to 2022</td><td>10 Nov 2021</td><td>21 Nov 2022</td><td>about 15,476 USD</td><td class="n">376</td></tr>
-    <tr class="now"><td>2025 to now</td><td>6 Oct 2025</td><td>not known</td><td>not known</td><td class="n" id="d2">344</td></tr>
+    <tr><td>2013 to 2015</td><td>5 Dec 2013, 1,137</td><td>15 Jan 2015, 172</td><td class="n">406</td><td class="n">-84.9%</td></tr>
+    <tr><td>2017 to 2018</td><td>17 Dec 2017, 19,280</td><td>16 Dec 2018, 3,232</td><td class="n">364</td><td class="n">-83.2%</td></tr>
+    <tr><td>2021 to 2022</td><td>9 Nov 2021, 67,562</td><td>22 Nov 2022, 15,760</td><td class="n">378</td><td class="n">-76.7%</td></tr>
+    <tr class="now"><td>2025 to now</td><td>7 Oct 2025, 124,777</td><td>not known</td><td class="n" id="d2">343</td><td class="n" id="dd2">-39.4%</td></tr>
   </tbody>
 </table>
 </div>
-<p>A cycle low can only be named in hindsight. The bottom row has no bottom date for the
-simple reason that nobody can know one yet, and any page that fills that cell is guessing.</p>
-<h2>Why you will see other numbers</h2>
-<p>The bottom dates for 2015 and 2018 are agreed on almost everywhere. The 2022 low is not.
-<b>Some sources put it on 10 November 2022 and others on 21 November 2022</b>, depending on
-the exchange and on whether intraday lows or daily closes are used.</p>
-<p>Take the earlier date and that cycle ran 365 days instead of 376. The useful part is that
-it barely matters. <b>Either way all three completed cycles land between 364 and 410 days.</b>
-A range that survives a change of source is worth more than a single number that does not.</p>
+<p>A cycle low can only be named in hindsight. The bottom row has no bottom for the simple
+reason that nobody can know one yet, and any page that fills that cell is guessing.</p>
+
+<h2>Why other sites show different dates and prices</h2>
+<p>You will find the last top quoted as <b>126,198 on 6 October 2025</b>. You will find the 2021
+top on 10 November and the 2022 low on 21 November. None of those are wrong, and neither are
+ours. They are <b>intraday extremes from a single exchange</b>. Ours are <b>daily closes</b>.</p>
+<p>We use closes for one reason: they can be checked. An intraday print exists on one venue for
+one second. A daily close is the same number for everyone who looks at the same day. It moves
+the counts by a day or two either side and moves the top by about 1,400 dollars, and it changes
+nothing about the shape: <b>all three completed cycles still land between 364 and 406 days.</b></p>
 <div class="note">
-<p>Bottom prices are marked "about" on purpose. Different venues printed lows within a few
-percent of each other on the same day, and pretending otherwise would be false precision.</p>
+<p>The 2013 top is the one that moves most between methods. Intraday sources put it on
+30 November 2013. The highest daily close came five days later, on 5 December. We use the
+close, and we say so.</p>
 </div>
+
 <h2>What this does not tell you</h2>
-<p>It does not tell you when this cycle bottoms. Three cycles are three data points, they
-differ by 46 days, and the market they trade in is not the market of 2015. Search this
-question and most results will name you a month. We will not, and that is deliberate.</p>
+<p>It does not tell you when this cycle bottoms. Three cycles are three data points, they differ
+by 42 days, and the market they traded in is not the market of 2015. Search this question and
+most results will name you a month. We will not, and that is deliberate.</p>
 <p>It also does not tell you a price. We publish no price targets, in any format, ever. The
 bottom prices in the table are history, not a template.</p>
+
 <h2>How we count</h2>
-<p>Calendar days between the top date and the bottom date, in UTC, with the top day counted
-as day zero. Top dates match the ones used on our
-<a href="/bitcoin-halving-to-top.html">halving to top page</a>, so the two pages can be read
-together. Bottom dates and prices come from published cycle low data, cross checked against
-CoinGecko research and Bitcoin Magazine's bear market record.</p>
+<p>Every price on this page is a <b>daily close in UTC from Twelve Data</b>, held in PulseHawk's
+own archive of <b>5,849 daily closes from 18 August 2010</b> to today. A cycle top is the highest
+close before the next cycle's top; a cycle bottom is the lowest close between two tops. Days are
+calendar days between those two closes, with the top day as day zero. The comparison table looks
+up each past cycle on the same day number and divides that day's close by that cycle's top.</p>
+<p class="method">Archive built once and appended daily. Nothing on this page is sourced from
+CoinGecko, CoinMarketCap, Bitcoin Magazine or any other site's tables.</p>
+
 <h2>Questions people ask</h2>
 <div class="faq">
-  <div class="q">How long does it take Bitcoin to go from top to bottom?</div>
-  <p>410, 364 and 376 days in the three completed cycles. All three sit between 364 and 410
-  days.</p>
+  <div class="q">How many days from Bitcoin's top to the bottom?</div>
+  <p>406, 364 and 378 days in the three completed cycles, counted between daily closes.</p>
+  <div class="q">How far did it fall each time?</div>
+  <p>84.9, 83.2 and 76.7 percent, top close to bottom close. The drop got smaller each cycle.
+  Whether that continues is not something three points can tell you.</p>
   <div class="q">When was the last cycle top?</div>
-  <p>6 October 2025, at 126,198 US dollars.</p>
+  <p>7 October 2025, at a daily close of 124,777 dollars.</p>
   <div class="q">When did Bitcoin bottom in previous cycles?</div>
-  <p>14 January 2015, 15 December 2018 and 21 November 2022.</p>
+  <p>15 January 2015, 16 December 2018 and 22 November 2022, lowest daily close each time.</p>
   <div class="q">Will the next bottom follow the same pattern?</div>
-  <p>Nobody knows, and this page does not guess. What it means is your call.</p>
-  <div class="q">Why do sources disagree on the 2022 low?</div>
-  <p>Different exchanges and different use of closes against intraday lows. See the section
-  above. It moves that one count from 376 to 365.</p>
+  <p>Nobody knows, and this page does not guess. What the comparison table means is your call.</p>
   <div class="q">Where do the numbers come from?</div>
-  <p>Every date is in the table. You can check each one against any price chart in a couple
-  of minutes, and that is the point.</p>
+  <p>Our own archive, 5,849 daily closes since 2010. Every date is in the tables above and can
+  be checked against any daily chart in a couple of minutes. That is the point.</p>
 </div>
 <footer>
-  <div>PulseHawk. Market data with receipts. No hype, no price targets.</div>
+  <div>PulseHawk. Market data with the arithmetic shown. No hype, no price targets.</div>
   <div><a href="/">home</a> &nbsp; <a href="/impressum.html">impressum</a> &nbsp; <a href="/datenschutz.html">datenschutz</a></div>
 </footer>
 </div>
 <script>
+var CYC={"2013":[1.0,0.91,0.704,0.621,0.692,0.786,0.861,0.771,0.769,0.778,0.748,0.759,0.607,0.593,0.459,0.603,0.54,0.528,0.54,0.581,0.574,0.597,0.657,0.637,0.629,0.641,0.648,0.644,0.659,0.687,0.71,0.729,0.796,0.805,0.695,0.724,0.727,0.751,0.787,0.742,0.724,0.718,0.74,0.719,0.697,0.714,0.74,0.728,0.725,0.721,0.714,0.686,0.708,0.716,0.658,0.691,0.698,0.704,0.706,0.719,0.716,0.711,0.706,0.687,0.672,0.625,0.599,0.605,0.606,0.594,0.574,0.537,0.59,0.577,0.549,0.554,0.554,0.55,0.495,0.51,0.539,0.537,0.477,0.492,0.515,0.513,0.486,0.499,0.493,0.6,0.592,0.59,0.588,0.556,0.547,0.563,0.554,0.556,0.558,0.564,0.555,0.561,0.559,0.549,0.541,0.538,0.515,0.504,0.495,0.492,0.515,0.515,0.509,0.417,0.439,0.431,0.403,0.402,0.421,0.386,0.395,0.398,0.407,0.403,0.396,0.398,0.389,0.325,0.372,0.372,0.367,0.404,0.46,0.463,0.438,0.424,0.443,0.441,0.438,0.43,0.433,0.442,0.407,0.406,0.386,0.389,0.394,0.398,0.405,0.4,0.387,0.384,0.381,0.376,0.388,0.385,0.395,0.402,0.385,0.389,0.386,0.391,0.393,0.395,0.395,0.393,0.394,0.429,0.434,0.465,0.458,0.464,0.501,0.514,0.504,0.511,0.5,0.546,0.551,0.555,0.582,0.589,0.565,0.582,0.571,0.578,0.578,0.571,0.57,0.55,0.506,0.52,0.503,0.521,0.515,0.535,0.535,0.523,0.522,0.52,0.527,0.517,0.506,0.493,0.508,0.527,0.519,0.528,0.562,0.562,0.572,0.568,0.551,0.555,0.557,0.549,0.55,0.547,0.543,0.558,0.56,0.555,0.546,0.549,0.543,0.55,0.556,0.554,0.551,0.547,0.545,0.546,0.531,0.53,0.524,0.522,0.519,0.515,0.496,0.512,0.524,0.519,0.514,0.518,0.512,0.513,0.515,0.518,0.519,0.52,0.505,0.5,0.484,0.444,0.44,0.461,0.438,0.418,0.431,0.456,0.458,0.454,0.436,0.447,0.441,0.452,0.45,0.446,0.448,0.441,0.421,0.419,0.417,0.417,0.43,0.427,0.422,0.419,0.412,0.416,0.42,0.42,0.417,0.419,0.417,0.414,0.408,0.399,0.374,0.348,0.362,0.353,0.352,0.387,0.373,0.361,0.356,0.352,0.33,0.329,0.343,0.338,0.331,0.316,0.289,0.285,0.288,0.294,0.314,0.32,0.317,0.318,0.335,0.345,0.354,0.347,0.338,0.337,0.344,0.343,0.336,0.339,0.338,0.314,0.315,0.305,0.313,0.309,0.313,0.295,0.304,0.297,0.285,0.285,0.287,0.29,0.298,0.308,0.301,0.305,0.322,0.322,0.325,0.37,0.369,0.351,0.332,0.343,0.342,0.33,0.333,0.314,0.308,0.311,0.323,0.329,0.331,0.323,0.325,0.332,0.33,0.331,0.332,0.334,0.331,0.324,0.331,0.33,0.331,0.319,0.309,0.307,0.307,0.31,0.309,0.315,0.306,0.29,0.283,0.275,0.28,0.292,0.281,0.292,0.296,0.285,0.281,0.29,0.278,0.279,0.276,0.274,0.282,0.277,0.278,0.251,0.231,0.241,0.253,0.262,0.25,0.256,0.243,0.237,0.235,0.195,0.151,0.185,0.183,0.176,0.186,0.19,0.185,0.198,0.205,0.206,0.219,0.224,0.241,0.232,0.208,0.208,0.2,0.193,0.2,0.209,0.2,0.199,0.191,0.196,0.202,0.197,0.193,0.194,0.193,0.196,0.208,0.226,0.206,0.206,0.216,0.209,0.212,0.216,0.216,0.208,0.21,0.211,0.209,0.208,0.222],"2017":[1.0,0.981,0.981,0.902,0.848,0.805,0.715,0.732,0.703,0.713,0.813,0.8,0.737,0.748,0.654,0.716,0.694,0.767,0.78,0.787,0.877,0.89,0.84,0.776,0.749,0.772,0.689,0.715,0.739,0.705,0.703,0.586,0.575,0.58,0.597,0.661,0.597,0.559,0.562,0.591,0.578,0.575,0.593,0.609,0.58,0.523,0.529,0.472,0.459,0.478,0.425,0.359,0.4,0.393,0.428,0.451,0.444,0.418,0.461,0.442,0.491,0.52,0.528,0.575,0.539,0.579,0.583,0.544,0.511,0.528,0.503,0.497,0.535,0.551,0.536,0.567,0.573,0.594,0.597,0.593,0.556,0.515,0.484,0.48,0.455,0.495,0.474,0.475,0.426,0.429,0.43,0.409,0.426,0.446,0.462,0.462,0.453,0.463,0.443,0.439,0.423,0.404,0.412,0.368,0.356,0.36,0.354,0.366,0.385,0.353,0.352,0.344,0.358,0.365,0.352,0.355,0.361,0.412,0.41,0.416,0.434,0.419,0.41,0.424,0.43,0.46,0.463,0.457,0.464,0.501,0.46,0.482,0.463,0.485,0.487,0.479,0.471,0.478,0.506,0.503,0.51,0.5,0.486,0.476,0.483,0.468,0.436,0.439,0.451,0.45,0.439,0.433,0.418,0.427,0.427,0.442,0.436,0.414,0.39,0.393,0.387,0.38,0.381,0.369,0.387,0.383,0.388,0.39,0.396,0.4,0.389,0.395,0.397,0.399,0.395,0.389,0.351,0.357,0.34,0.327,0.344,0.331,0.337,0.334,0.348,0.35,0.351,0.349,0.314,0.32,0.319,0.324,0.316,0.319,0.305,0.323,0.332,0.33,0.344,0.338,0.342,0.34,0.344,0.352,0.349,0.347,0.328,0.332,0.324,0.323,0.324,0.329,0.349,0.38,0.382,0.388,0.38,0.384,0.384,0.4,0.437,0.424,0.412,0.424,0.426,0.426,0.424,0.401,0.395,0.391,0.385,0.364,0.365,0.36,0.348,0.326,0.339,0.318,0.323,0.327,0.324,0.321,0.325,0.327,0.341,0.332,0.336,0.325,0.336,0.33,0.338,0.347,0.349,0.348,0.358,0.367,0.365,0.362,0.364,0.373,0.378,0.377,0.382,0.347,0.337,0.332,0.321,0.324,0.327,0.326,0.328,0.336,0.336,0.338,0.337,0.324,0.329,0.331,0.337,0.35,0.348,0.348,0.341,0.334,0.335,0.347,0.344,0.342,0.343,0.342,0.338,0.336,0.341,0.343,0.341,0.342,0.344,0.344,0.341,0.322,0.324,0.325,0.325,0.342,0.343,0.342,0.338,0.335,0.337,0.337,0.337,0.336,0.337,0.335,0.336,0.335,0.335,0.327,0.327,0.329,0.331,0.331,0.33,0.335,0.334,0.336,0.339,0.334,0.331,0.331,0.332,0.331,0.33,0.299,0.294,0.29,0.289,0.291,0.251,0.233,0.239,0.224,0.226,0.2,0.208,0.197,0.199,0.221,0.222,0.208,0.217,0.215,0.202,0.205,0.194,0.181,0.178,0.179,0.186,0.18,0.177,0.181,0.172,0.168,0.168,0.168,0.184,0.193,0.194,0.214,0.202,0.209,0.207,0.211,0.198,0.2,0.189,0.203,0.196,0.2,0.194,0.2,0.204,0.198,0.2,0.199,0.211,0.209,0.209,0.208,0.189,0.19,0.189,0.183,0.191,0.187,0.188,0.19,0.188,0.192,0.184,0.184,0.186,0.185,0.186,0.186,0.185,0.184,0.179,0.177,0.18,0.179,0.18,0.182,0.179,0.179,0.18,0.177,0.176,0.19,0.19,0.191,0.188,0.188,0.187,0.187,0.187,0.188,0.19,0.203,0.204,0.207,0.205,0.207,0.215,0.195,0.2,0.199,0.199,0.2,0.199,0.199,0.198,0.194,0.201,0.201,0.202,0.201,0.205,0.204,0.201],"2021":[1.0,0.991,0.962,0.96,0.951,0.954,0.969,0.941,0.891,0.894,0.843,0.86,0.885,0.87,0.833,0.852,0.846,0.872,0.793,0.811,0.848,0.856,0.844,0.847,0.836,0.795,0.729,0.731,0.748,0.75,0.748,0.705,0.698,0.731,0.742,0.692,0.716,0.724,0.705,0.683,0.694,0.691,0.694,0.724,0.72,0.752,0.752,0.747,0.752,0.75,0.705,0.687,0.698,0.685,0.707,0.701,0.687,0.679,0.643,0.638,0.615,0.617,0.62,0.619,0.632,0.65,0.63,0.638,0.639,0.638,0.625,0.627,0.617,0.602,0.54,0.519,0.537,0.543,0.547,0.545,0.55,0.559,0.565,0.561,0.57,0.573,0.546,0.549,0.615,0.613,0.628,0.649,0.653,0.657,0.644,0.628,0.625,0.623,0.63,0.659,0.65,0.6,0.592,0.594,0.568,0.548,0.566,0.552,0.568,0.581,0.579,0.558,0.64,0.657,0.65,0.629,0.579,0.583,0.568,0.563,0.574,0.621,0.584,0.573,0.574,0.56,0.587,0.582,0.609,0.606,0.619,0.625,0.611,0.608,0.627,0.635,0.651,0.656,0.659,0.694,0.697,0.702,0.697,0.674,0.685,0.678,0.687,0.69,0.674,0.639,0.643,0.626,0.633,0.624,0.584,0.594,0.609,0.591,0.6,0.598,0.588,0.604,0.614,0.612,0.6,0.588,0.584,0.584,0.599,0.564,0.581,0.589,0.571,0.557,0.569,0.57,0.558,0.587,0.541,0.533,0.525,0.504,0.447,0.459,0.428,0.428,0.433,0.445,0.463,0.442,0.45,0.425,0.448,0.432,0.435,0.448,0.43,0.439,0.437,0.432,0.423,0.429,0.436,0.469,0.47,0.441,0.45,0.439,0.442,0.443,0.464,0.461,0.447,0.445,0.43,0.42,0.394,0.332,0.328,0.334,0.301,0.302,0.281,0.304,0.305,0.306,0.295,0.312,0.314,0.318,0.311,0.306,0.3,0.297,0.294,0.285,0.285,0.285,0.299,0.299,0.304,0.32,0.32,0.319,0.308,0.295,0.286,0.299,0.304,0.308,0.314,0.307,0.334,0.346,0.344,0.343,0.336,0.332,0.334,0.315,0.315,0.34,0.353,0.352,0.35,0.345,0.345,0.34,0.338,0.335,0.345,0.34,0.343,0.353,0.343,0.355,0.355,0.361,0.362,0.36,0.357,0.353,0.345,0.343,0.309,0.313,0.319,0.317,0.318,0.316,0.32,0.299,0.297,0.289,0.3,0.293,0.297,0.298,0.295,0.294,0.296,0.293,0.278,0.285,0.286,0.317,0.321,0.323,0.331,0.299,0.299,0.292,0.293,0.298,0.287,0.289,0.279,0.274,0.287,0.285,0.28,0.278,0.285,0.283,0.289,0.29,0.288,0.286,0.282,0.291,0.301,0.299,0.295,0.289,0.287,0.288,0.283,0.282,0.284,0.287,0.284,0.282,0.285,0.289,0.286,0.283,0.282,0.284,0.284,0.29,0.286,0.298,0.307,0.3,0.305,0.308,0.305,0.303,0.303,0.298,0.299,0.313,0.315,0.31,0.305,0.274,0.235,0.26,0.251,0.248,0.241,0.246,0.25,0.247,0.247,0.247,0.247,0.241,0.233,0.24,0.246,0.246,0.244,0.244,0.243,0.24,0.243,0.254,0.251,0.253,0.25,0.253,0.251,0.253,0.249,0.255,0.254,0.253,0.253,0.255,0.263,0.263,0.257,0.246,0.248,0.248,0.243,0.25,0.249,0.249,0.248,0.249,0.249,0.25,0.247,0.245,0.246,0.246,0.245,0.246,0.247,0.247,0.249,0.249,0.251,0.251,0.253,0.254,0.258,0.265,0.279,0.295,0.31,0.309,0.314,0.313,0.306,0.312,0.336,0.337,0.336,0.339,0.335,0.342,0.341,0.342,0.341,0.352,0.338,0.342,0.351]};
+/* Latest daily close in the archive. The daily routine rewrites these two lines. */
+var LAST_CLOSE = 75608, LAST_DATE = "2026-09-15";
 (function(){
+  var TOP = 124776.68, TOP_DATE = "2025-10-07";
   var tage = function(iso){
-    var a = new Date(iso + "T00:00:00Z");
-    var b = new Date();
+    var a = new Date(iso + "T00:00:00Z"), b = new Date();
     var heute = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate());
     return Math.floor((heute - a.getTime()) / 86400000);
   };
-  var n = tage("2025-10-06");
-  if (isFinite(n) && n > 0) {
-    var s = n.toLocaleString("en-US");
-    var a = document.getElementById("d1"); if (a) { a.textContent = s; }
-    var b = document.getElementById("d2"); if (b) { b.textContent = s; }
-    // der balken im diagramm, gleiche skala wie die achse, 0 bis 450 tage
-    var bar = document.getElementById("bar");
-    var lab = document.getElementById("d3");
-    var w = 582 * Math.min(n, 450) / 450;
-    if (bar) { bar.setAttribute("width", w.toFixed(1)); }
-    if (lab) { lab.setAttribute("x", (108 + w + 9).toFixed(1)); lab.textContent = s + " and counting"; }
+  var fmtDate = function(iso){
+    var d = new Date(iso + "T00:00:00Z");
+    return d.getUTCDate() + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()] + " " + d.getUTCFullYear();
+  };
+  var addDays = function(iso, n){
+    var d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10);
+  };
+  var set = function(id, txt){ var e = document.getElementById(id); if (e) e.textContent = txt; };
+  var pct = function(r){ return ((r - 1) * 100).toFixed(1) + "%"; };
+
+  var n = tage(TOP_DATE);
+  if (!(isFinite(n) && n > 0)) return;
+  var s = n.toLocaleString("en-US");
+  set("d1", s); set("d2", s);
+  var dn = document.getElementsByClassName("dn"); for (var i = 0; i < dn.length; i++) dn[i].textContent = s;
+
+  /* current drawdown from the last archived close */
+  var dd = pct(LAST_CLOSE / TOP);
+  set("dd", dd); set("dd2", dd); set("c25", dd);
+  set("ddts", "close of " + fmtDate(LAST_DATE) + ", " + LAST_CLOSE.toLocaleString("en-US") + " USD");
+  set("c25d", fmtDate(LAST_DATE));
+
+  /* where each completed cycle stood on the same day number */
+  var tops = {"2013":"2013-12-05","2017":"2017-12-17","2021":"2021-11-09"};
+  var ids  = {"2013":"c13","2017":"c17","2021":"c21"};
+  for (var k in tops) {
+    var arr = CYC[k], j = Math.min(n, arr.length - 1), r = arr[j];
+    while (r == null && j > 0) { j--; r = arr[j]; }
+    set(ids[k], r != null ? pct(r) : "n/a");
+    set(ids[k] + "d", fmtDate(addDays(tops[k], j)));
   }
+
+  /* the open bar in the chart, same scale as the axis, 0 to 450 days */
+  var bar = document.getElementById("bar"), lab = document.getElementById("d3");
+  var w = 582 * Math.min(n, 450) / 450;
+  if (bar) bar.setAttribute("width", w.toFixed(1));
+  if (lab) { lab.setAttribute("x", (108 + w + 9).toFixed(1)); lab.textContent = s + " and counting"; }
 })();
 </script>
 </body>
