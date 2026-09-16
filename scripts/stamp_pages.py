@@ -66,20 +66,21 @@ MONATE = ["January", "February", "March", "April", "May", "June", "July",
 
 HALVING = "2024-04-20"
 
-# ZWEI HOCHS, UND DAS IST KEIN FEHLER
-# Die Halving-Seite zaehlt zum INTRADAY-Hoch 126.198 am 6. Oktober 2025, das
-# ist der Punkt, den die Zyklusrechnung ueber alle Zyklen benutzt.
-# Die Top-to-Bottom-Seite zaehlt zum TAGESSCHLUSS 124.776,68 am 7. Oktober,
-# und sie sagt in ihrer eigenen FAQ ausdruecklich, dass jede hoehere Zahl vom
-# 6. Oktober ein Intraday-Hoch einer einzelnen Boerse ist.
-# Bis zum 16.09.2026 stand hier EIN Datum fuer beide Seiten. Damit stempelte
-# der Bot auf der Top-to-Bottom-Seite einen Tag mehr, als das Skript auf
-# derselben Seite (TOP_DATE = "2025-10-07") im Browser ausrechnet: wer
-# JavaScript ausfuehrt, las 344, wer den Quelltext las, 345. Genau die
-# Abweichung, gegen die dieses Skript gebaut ist.
-HOCH_HIGH = "2025-10-06"     # intraday, bitcoin-halving-to-top.html
-HOCH_CLOSE = "2025-10-07"    # tagesschluss, bitcoin-top-to-bottom.html
-HOCH = HOCH_HIGH             # alter Name, damit nichts still bricht
+# EIN HOCH FUER DIE GANZE SEITE: DER TAGESSCHLUSS
+# Bis zum 16.09.2026 gab es hier zwei Lesarten. Die Halving-Seite zaehlte zum
+# INTRADAY-Hoch 126.198 am 6. Oktober 2025, die Top-to-Bottom-Seite zum
+# TAGESSCHLUSS 124.776,68 am 7. Oktober. Zwei Seiten desselben Hauses, zwei
+# Antworten auf dieselbe Frage, und eine davon widersprach der eigenen FAQ
+# der anderen ("jede hoehere Zahl vom 6. Oktober ist ein Intraday-Hoch einer
+# einzelnen Boerse").
+#
+# Bens Entscheidung vom 16.09.2026: eine Definition, und zwar der hoechste
+# TAGESSCHLUSS in UTC. Der gilt jetzt auf beiden Seiten. Die Halving-Seite
+# zaehlt damit 535 Tage vom Halving zum Hoch statt 534, und ihre Tabelle ist
+# in sich stimmig, weil die drei abgeschlossenen Zyklen ohnehin schon
+# Tagesschluesse waren.
+HOCH_CLOSE = "2025-10-07"    # hoechster Tagesschluss, UTC, beide Zyklusseiten
+HOCH = HOCH_CLOSE            # alter Name, damit nichts still bricht
 
 # seite, dann je element-id das startdatum und ein anhaengsel.
 # die ids stehen im html, sie sind der anker. wer im html eine id
@@ -87,7 +88,7 @@ HOCH = HOCH_HIGH             # alter Name, damit nichts still bricht
 ZYKLUS = {
     "bitcoin-halving-to-top.html": [
         ("d1", HALVING, ""),              # tage seit dem halving
-        ("d2", HOCH_HIGH, ""),            # tage seit dem intraday-hoch
+        ("d2", HOCH_CLOSE, ""),           # tage seit dem schlusshoch
     ],
     "bitcoin-top-to-bottom.html": [
         ("d1", HOCH_CLOSE, ""),           # tage seit dem schlusshoch, kasten
@@ -479,14 +480,15 @@ def selbsttest():
 
     bis = datetime.date(2026, 8, 21)
     pruefe("tage seit dem halving", tage(HALVING, bis), 853)
-    pruefe("tage seit dem intraday-hoch", tage(HOCH_HIGH, bis), 319)
-    # die Top-to-Bottom-Seite zaehlt zum Tagesschluss, also einen Tag weniger.
-    # Das ist die Zahl, die das Skript auf derselben Seite ausrechnet.
     pruefe("tage seit dem schlusshoch", tage(HOCH_CLOSE, bis), 318)
-    pruefe("die beiden hochs sind einen tag auseinander",
-           tage(HOCH_HIGH, bis) - tage(HOCH_CLOSE, bis), 1)
+    # EINE Definition fuer beide Zyklusseiten: der hoechste Tagesschluss.
     pruefe("top-to-bottom zaehlt zum schlusshoch",
            set(d for _, d, _ in ZYKLUS["bitcoin-top-to-bottom.html"]), {HOCH_CLOSE})
+    pruefe("halving-seite zaehlt zum selben hoch",
+           set(d for _, d, _ in ZYKLUS["bitcoin-halving-to-top.html"]),
+           {HALVING, HOCH_CLOSE})
+    pruefe("vom halving zum hoch sind es 535 tage",
+           tage(HALVING, datetime.date(2025, 10, 7)), 535)
     pruefe("datum ausgeschrieben", lang("2026-08-21"), "21 August 2026")
     pruefe("billionen", geld(4023456789012), "$4.02T")
     pruefe("milliarden", geld(4023456789), "$4B")
