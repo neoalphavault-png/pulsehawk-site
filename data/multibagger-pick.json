@@ -1,49 +1,49 @@
 {
- "date": "2026-09-15",
+ "date": "2026-09-16",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "LITE",
+  "name": "Lumentum",
+  "sector": "Information Technology",
+  "industry": "Communications Equipment",
   "indices": [
    "sp500"
   ],
-  "mult": 6.1428,
-  "pct": 514.3,
-  "from_1000": 6143,
+  "mult": 4.9477,
+  "pct": 394.8,
+  "from_1000": 4948,
   "d": "2026-09-14",
-  "close": 146.69,
+  "close": 835.03,
   "d_1y": "2025-09-15",
-  "close_1y": 23.88,
-  "low": 22.36,
-  "high": 174.38,
-  "drawdown_pct": -6.4,
+  "close_1y": 168.77,
+  "low": 149.61,
+  "high": 1053.09,
+  "drawdown_pct": -11.4,
   "verified": {
    "source": "tiingo",
-   "mult": 6.1428,
-   "diff_pct": 0
+   "mult": 4.971,
+   "diff_pct": 0.47
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 22,
+  "sp500_doubled": 24,
   "sp500_tripled": 10
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 15.1,
-   "d": "2026-09-14",
+   "pct": 14.6,
+   "d": "2026-09-15",
    "d_1y": "2025-09-15"
   },
   "gold": {
-   "pct": 15.9,
-   "d": "2026-09-14",
+   "pct": 16.3,
+   "d": "2026-09-15",
    "d_1y": "2025-09-15"
   }
  },
- "candidates_total": 73,
+ "candidates_total": 74,
  "top10": [
   {
    "ticker": "MRNA",
@@ -54,16 +54,16 @@
    "mult": 4.9477
   },
   {
-   "ticker": "MXL",
-   "mult": 4.649
-  },
-  {
    "ticker": "DELL",
-   "mult": 4.5249
+   "mult": 4.2864
   },
   {
    "ticker": "WDC",
    "mult": 4.1697
+  },
+  {
+   "ticker": "MXL",
+   "mult": 4.0434
   },
   {
    "ticker": "INTC",
@@ -74,18 +74,23 @@
    "mult": 3.8156
   },
   {
-   "ticker": "FORM",
-   "mult": 3.7602
-  },
-  {
    "ticker": "VICR",
    "mult": 3.56
   },
   {
-   "ticker": "ICHR",
-   "mult": 3.344
+   "ticker": "FORM",
+   "mult": 3.3102
+  },
+  {
+   "ticker": "DOCN",
+   "mult": 3.2507
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (1.99%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
