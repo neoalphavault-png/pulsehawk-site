@@ -4,33 +4,54 @@ name: day n
 #
 # Bis dahin war das der Short des Tages (Routine 1 in pulse-studio
 # docs/routinen.md). Der faellt weg. An seine Stelle tritt das, was ohnehin
-# jeden Tag neu ist: der Tageszaehler seit dem Zyklushoch und der Abstand
-# dazu. Zwei Schritte, beide ohne Hand.
+# jeden Tag neu ist: der Tageszaehler seit dem Zyklushoch. Drei Schritte,
+# alle drei ohne Hand.
 #
 #   1. Seitenstempel. Schreibt unter anderem LAST_CLOSE und LAST_DATE in
 #      bitcoin-top-to-bottom.html aus data/market-log.json und committet.
-#   2. Der Post auf @pulsehawkio mit der DAY-N-Zahl. scripts/day_n_post.py
+#   2. Das Pflichtbild, 4:5, aus scripts/day_n_cover.py. Kein Text ohne Bild;
+#      schlaegt das Bild fehl, wird nicht gepostet.
+#   3. Der Post auf @pulsehawkio mit der DAY-N-Zahl. scripts/day_n_post.py
 #      liest dieselbe Datei und bricht ab, wenn Seite und Log sich
-#      widersprechen.
+#      widersprechen. Der Link geht als Selbstantwort darunter, nie im
+#      Hauptpost.
 #
-# ZEITPUNKT. Der Marktlogger schreibt um 21:23 UTC. Der Seitenstempel laeuft
-# schon um 21:40. Dieser Lauf kommt um 21:52, also nach beiden, und bewusst
-# nicht zur vollen Stunde (GitHub verschiebt geplante Laeufe unter Last).
-# Er stempelt trotzdem selbst noch einmal: findet er nichts, committet er
-# nichts, und wenn der 21:40-Lauf ausgefallen ist, postet der Tag trotzdem
-# die richtige Zahl.
+# ZEITPUNKT, NEU SEIT 17.09.2026
+# Ein Post hat auf X rund SECHS STUNDEN Halbwertszeit (Belege in
+# docs/projekt/befund-shares.md). Der alte Termin lag am spaeten Abend UTC;
+# der Post war morgens tot, und die bezahlte Verifizierung (2-4x Reichweite)
+# verpuffte mit. Neu ist die Mittagszeit: der Post lebt durch den
+# amerikanischen Vormittag und den europaeischen Feierabend.
+#
+# Cron steht in UTC. Nachgerechnet:
+#   12:30 UTC = 14:30 Berlin (CEST, Sommerzeit) = 08:30 New York (EDT)
+#   12:30 UTC = 13:30 Berlin (CET, Winterzeit)  = 07:30 New York (EST)
+# GitHub kennt keine Zeitzonen im Cron, die Stunde wandert im Winter also
+# um eine Stunde nach vorn. Das ist gewollt: die amerikanische Vormittags-
+# stunde ist der teurere Termin und bleibt fest.
+#
+# Woher die Zahl um 12:30 kommt: der Marktlogger schreibt um 21:23 UTC,
+# der Seitenstempel um 21:40 und noch einmal um 04:17. Um 12:30 ist der
+# juengste Schluss also der von gestern Abend, einen Tag alt, und
+# day_n_post.py zaehlt bis zu dessen Datum. Die Frischesperre (--max-age 3)
+# greift davon unberuehrt. Dieser Lauf stempelt trotzdem selbst noch einmal:
+# findet er nichts, committet er nichts.
 #
 # Dieselbe concurrency group wie der Seitenstempel. Zwei Commits innerhalb
 # weniger Sekunden bringen die Auslieferung von GitHub Pages durcheinander,
 # das ist am 21.08.2026 einmal passiert.
 #
-# KOSTEN: ein Post ohne Link, 0,015 $ am Tag, rund 0,46 $ im Monat.
+# KOSTEN: Hauptpost ohne Link 0,015 $, Selbstantwort mit Link 0,20 $,
+# zusammen 0,215 $ am Tag, rund 6,45 $ im Monat. Vorher waren es 0,46 $.
+# Der Aufschlag ist der Preis dafuer, dass der Link den Hauptpost nicht mehr
+# um 50-90 % Reichweite bringt. Spend Cap im Blick behalten.
 # Die Doppelpostsperre liegt in data/x-post-log.json (key dayn-<datum>);
 # ein zweiter Lauf am selben Tag postet nicht noch einmal.
 
 on:
   schedule:
-    - cron: "52 21 * * *"
+    # 12:30 UTC = 14:30 Berlin (Sommerzeit) / 13:30 Berlin (Winterzeit)
+    - cron: "30 12 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -57,10 +78,16 @@ jobs:
         with:
           python-version: "3.11"
 
+      # Einzige Fremdbibliothek im Repo, und nur fuer das Bild. Fest
+      # angeheftet, damit ein neues Pillow den Lauf nicht ueberrascht.
+      - name: pillow
+        run: python3 -m pip install --quiet "pillow==12.3.0"
+
       - name: selbsttests
         run: |
           python3 scripts/stamp_pages.py --selftest
           python3 scripts/day_n_post.py --selftest
+          python3 scripts/day_n_cover.py --selftest
           python3 scripts/x_post.py --selftest
 
       - name: seiten stempeln
@@ -83,11 +110,15 @@ jobs:
           echo "push fehlgeschlagen" >&2
           exit 1
 
-      # Faellt X aus, wird der Lauf rot, aber der Stempel oben ist schon
-      # gesichert. Das Sperrlog wird darunter in jedem Fall committet,
-      # sonst verliert die Sperre ihr Gedaechtnis.
+      # REPARATUR 1 (Bericht 17.09.2026): ein fehlgeschlagener X-Post faerbt
+      # den Lauf nicht mehr rot. Der Stempel oben ist da schon gesichert, und
+      # ein roter Lauf wegen X hat zweimal dazu gefuehrt, dass niemand mehr
+      # hingesehen hat. Sichtbar bleibt der Fehlschlag trotzdem, siehe den
+      # Schritt darunter.
       - name: day n posten
+        id: post
         if: ${{ inputs.dry_run != true }}
+        continue-on-error: true
         env:
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
@@ -95,12 +126,26 @@ jobs:
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
         run: python3 scripts/day_n_post.py --post
 
+      - name: fehlschlag melden
+        if: ${{ inputs.dry_run != true && steps.post.outcome == 'failure' }}
+        run: |
+          echo "::warning title=day n::Der Post ist nicht rausgegangen. Der Lauf bleibt gruen (Reparatur 1), das Protokoll des Schritts 'day n posten' sagt warum."
+          echo "### day n: kein Post" >> "$GITHUB_STEP_SUMMARY"
+          echo "Der Schritt 'day n posten' ist fehlgeschlagen. Das Sperrlog wurde nicht geschrieben, der naechste Lauf versucht es erneut." >> "$GITHUB_STEP_SUMMARY"
+
       - name: nur zeigen
         if: ${{ inputs.dry_run == true }}
         run: python3 scripts/day_n_post.py --dry-run
 
+      # REPARATUR 2 (Bericht 17.09.2026): das Sperrlog wird nur noch
+      # committet, wenn wirklich etwas rausgegangen ist. day_n_post.py setzt
+      # posted=true genau dann, wenn nach dem Lauf eine Post-ID unter dem
+      # Tagesschluessel im Log steht. Ein Fehlschlag darf die Sperre nicht
+      # setzen, sonst haelt sie den naechsten Lauf von einem Post ab, der nie
+      # stattgefunden hat. Geht der Hauptpost raus und faellt nur die Antwort
+      # aus, ist posted trotzdem true, und die Sperre behaelt ihr Gedaechtnis.
       - name: sperrlog sichern
-        if: always()
+        if: ${{ always() && steps.post.outputs.posted == 'true' }}
         run: |
           git add data/x-post-log.json 2>/dev/null || true
           if git diff --staged --quiet; then

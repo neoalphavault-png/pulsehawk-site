@@ -1,0 +1,6 @@
+# Laufzeitwerk, gehoert nicht ins Repo und nicht auf die Seite.
+# build/ ist der Ablageort fuer das Pflichtbild des DAY-N-Posts
+# (scripts/day_n_cover.py). Es wird bei jedem Lauf neu gebaut.
+build/
+__pycache__/
+*.pyc
