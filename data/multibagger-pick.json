@@ -1,57 +1,57 @@
 {
- "date": "2026-09-16",
+ "date": "2026-09-17",
  "pick": {
-  "ticker": "LITE",
-  "name": "Lumentum",
-  "sector": "Information Technology",
-  "industry": "Communications Equipment",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
    "sp500"
   ],
-  "mult": 4.9477,
-  "pct": 394.8,
-  "from_1000": 4948,
-  "d": "2026-09-14",
-  "close": 835.03,
-  "d_1y": "2025-09-15",
-  "close_1y": 168.77,
-  "low": 149.61,
-  "high": 1053.09,
-  "drawdown_pct": -11.4,
+  "mult": 5.8623,
+  "pct": 486.2,
+  "from_1000": 5862,
+  "d": "2026-09-16",
+  "close": 145.62,
+  "d_1y": "2025-09-16",
+  "close_1y": 24.84,
+  "low": 22.36,
+  "high": 174.38,
+  "drawdown_pct": -10.0,
   "verified": {
    "source": "tiingo",
-   "mult": 4.971,
-   "diff_pct": 0.47
+   "mult": 5.8623,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 24,
+  "sp500_doubled": 23,
   "sp500_tripled": 10
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 14.6,
-   "d": "2026-09-15",
-   "d_1y": "2025-09-15"
+   "pct": 14.3,
+   "d": "2026-09-16",
+   "d_1y": "2025-09-16"
   },
   "gold": {
-   "pct": 16.3,
-   "d": "2026-09-15",
-   "d_1y": "2025-09-15"
+   "pct": 15.4,
+   "d": "2026-09-16",
+   "d_1y": "2025-09-16"
   }
  },
- "candidates_total": 74,
+ "candidates_total": 70,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 6.1428
+   "mult": 5.8623
   },
   {
    "ticker": "LITE",
-   "mult": 4.9477
+   "mult": 5.3798
   },
   {
    "ticker": "DELL",
@@ -59,7 +59,7 @@
   },
   {
    "ticker": "WDC",
-   "mult": 4.1697
+   "mult": 4.0447
   },
   {
    "ticker": "MXL",
@@ -67,30 +67,25 @@
   },
   {
    "ticker": "INTC",
-   "mult": 3.9237
+   "mult": 3.9988
   },
   {
    "ticker": "STX",
-   "mult": 3.8156
+   "mult": 3.7095
   },
   {
    "ticker": "VICR",
    "mult": 3.56
   },
   {
-   "ticker": "FORM",
-   "mult": 3.3102
+   "ticker": "DOCN",
+   "mult": 3.4066
   },
   {
-   "ticker": "DOCN",
-   "mult": 3.2507
+   "ticker": "MRVL",
+   "mult": 3.3359
   }
  ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (1.99%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
