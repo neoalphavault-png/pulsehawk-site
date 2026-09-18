@@ -1,26 +1,26 @@
 {
- "date": "2026-09-17",
+ "date": "2026-09-18",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 5.8623,
-  "pct": 486.2,
-  "from_1000": 5862,
-  "d": "2026-09-16",
-  "close": 145.62,
-  "d_1y": "2025-09-16",
-  "close_1y": 24.84,
-  "low": 22.36,
-  "high": 174.38,
-  "drawdown_pct": -10.0,
+  "mult": 4.6405,
+  "pct": 364.1,
+  "from_1000": 4640,
+  "d": "2026-09-17",
+  "close": 74.99,
+  "d_1y": "2025-09-17",
+  "close_1y": 16.16,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": -19.2,
   "verified": {
    "source": "tiingo",
-   "mult": 5.8623,
+   "mult": 4.6405,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,19 +28,19 @@
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 23,
+  "sp500_doubled": 22,
   "sp500_tripled": 10
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 14.3,
-   "d": "2026-09-16",
-   "d_1y": "2025-09-16"
+   "pct": 15.7,
+   "d": "2026-09-17",
+   "d_1y": "2025-09-17"
   },
   "gold": {
-   "pct": 15.4,
-   "d": "2026-09-16",
-   "d_1y": "2025-09-16"
+   "pct": 18.2,
+   "d": "2026-09-17",
+   "d_1y": "2025-09-17"
   }
  },
  "candidates_total": 70,
@@ -54,16 +54,20 @@
    "mult": 5.3798
   },
   {
+   "ticker": "MXL",
+   "mult": 4.6405
+  },
+  {
    "ticker": "DELL",
    "mult": 4.2864
   },
   {
-   "ticker": "WDC",
-   "mult": 4.0447
+   "ticker": "VICR",
+   "mult": 4.1446
   },
   {
-   "ticker": "MXL",
-   "mult": 4.0434
+   "ticker": "WDC",
+   "mult": 4.0447
   },
   {
    "ticker": "INTC",
@@ -74,18 +78,23 @@
    "mult": 3.7095
   },
   {
-   "ticker": "VICR",
-   "mult": 3.56
+   "ticker": "FORM",
+   "mult": 3.5105
   },
   {
-   "ticker": "DOCN",
-   "mult": 3.4066
-  },
-  {
-   "ticker": "MRVL",
-   "mult": 3.3359
+   "ticker": "AMD",
+   "mult": 3.4248
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (7.86%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (1.69%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
