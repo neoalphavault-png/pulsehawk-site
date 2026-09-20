@@ -1,5 +1,5 @@
 {
- "date": "2026-09-19",
+ "date": "2026-09-20",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -43,7 +43,7 @@
    "d_1y": "2025-09-18"
   }
  },
- "candidates_total": 71,
+ "candidates_total": 67,
  "top10": [
   {
    "ticker": "MRNA",
@@ -55,7 +55,7 @@
   },
   {
    "ticker": "MXL",
-   "mult": 4.6405
+   "mult": 4.8575
   },
   {
    "ticker": "DELL",
@@ -67,7 +67,7 @@
   },
   {
    "ticker": "VICR",
-   "mult": 4.1446
+   "mult": 4.1367
   },
   {
    "ticker": "STX",
@@ -78,12 +78,12 @@
    "mult": 3.5525
   },
   {
-   "ticker": "FORM",
-   "mult": 3.5105
-  },
-  {
    "ticker": "DOCN",
    "mult": 3.4974
+  },
+  {
+   "ticker": "AMD",
+   "mult": 3.4248
   }
  ],
  "rejected": [],
