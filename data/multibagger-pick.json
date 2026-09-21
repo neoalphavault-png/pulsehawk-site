@@ -1,5 +1,5 @@
 {
- "date": "2026-09-20",
+ "date": "2026-09-21",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -78,12 +78,12 @@
    "mult": 3.5525
   },
   {
-   "ticker": "DOCN",
-   "mult": 3.4974
+   "ticker": "AMD",
+   "mult": 3.545
   },
   {
-   "ticker": "AMD",
-   "mult": 3.4248
+   "ticker": "DOCN",
+   "mult": 3.4974
   }
  ],
  "rejected": [],
