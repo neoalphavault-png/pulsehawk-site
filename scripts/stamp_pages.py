@@ -87,7 +87,23 @@ HALVING = "2024-04-20"
 # zaehlt damit 535 Tage vom Halving zum Hoch statt 534, und ihre Tabelle ist
 # in sich stimmig, weil die drei abgeschlossenen Zyklen ohnehin schon
 # Tagesschluesse waren.
-HOCH_CLOSE = "2025-10-07"    # hoechster Tagesschluss, UTC, beide Zyklusseiten
+# UMDATIERT AM 22.09.2026
+# Die Bitcoinreihe im Archiv kam von blockchain.com und war um einen Tag
+# zu spaet gestempelt, siehe bc_tag() in scripts/history.py. Gemessen an
+# der Naht zum taeglichen Log: gld und spy stimmten auf den Tag genau,
+# btc nicht. Bens Entscheidung vom 22.09.2026: die Reihe einen Tag
+# zurueck. Aus dem 07.10.2025 wird damit der 06.10.2025, aus dem Tief vom
+# 01.07.2026 der 30.06.2026.
+#
+# Was sich dadurch NICHT aendert: kein Preis, kein Prozentwert und keine
+# Tagesspanne. Hoch und Tief wandern gemeinsam, also bleiben 406, 364 und
+# 378 Tage stehen und ebenso die Drawdowns. Nur die gedruckten Daten
+# ruecken um einen Tag.
+#
+# Vom Halving zum Hoch sind es damit wieder 534 Tage statt 535. Das ist
+# dieselbe Zahl, die die Halving-Seite vor dem 16.09.2026 hatte, und
+# diesmal steht das richtige Datum dahinter statt des Intraday-Hochs.
+HOCH_CLOSE = "2025-10-06"    # hoechster Tagespreis, UTC, beide Zyklusseiten
 HOCH = HOCH_CLOSE            # alter Name, damit nichts still bricht
 
 # Der Preis zu diesem Tag. Er steht hier nicht, damit man ihn glauben muss,
@@ -146,7 +162,7 @@ SEITEN = [
 # Die drei abgeschlossenen Zyklen, Hoch und Element-id auf der
 # Top-to-Bottom-Seite. CYC_LEN ist die Laenge der Reihen im Seitenskript;
 # der Stempel muss genauso abschneiden, sonst weicht er ab Tag 451 ab.
-VORZYKLEN = (("c13", "2013-12-05"), ("c17", "2017-12-17"), ("c21", "2021-11-09"))
+VORZYKLEN = (("c13", "2013-12-04"), ("c17", "2017-12-16"), ("c21", "2021-11-08"))
 CYC_LEN = 451
 
 DREI = ("gld", "spy", "btc")
@@ -182,7 +198,7 @@ def als_datum(iso):
 
 
 def kurz(iso):
-    """5 Dec 2013, die kurzform in den tabellenzellen."""
+    """4 Dec 2013, die kurzform in den tabellenzellen."""
     t = iso.split("-")
     return "%d %s %s" % (int(t[2]), MONATE[int(t[1]) - 1][:3], t[0])
 
@@ -726,15 +742,18 @@ def selbsttest():
 
     bis = datetime.date(2026, 8, 21)
     pruefe("tage seit dem halving", tage(HALVING, bis), 853)
-    pruefe("tage seit dem schlusshoch", tage(HOCH_CLOSE, bis), 318)
+    pruefe("tage seit dem schlusshoch", tage(HOCH_CLOSE, bis), 319)
     # EINE Definition fuer beide Zyklusseiten: der hoechste Tagesschluss.
     pruefe("top-to-bottom zaehlt zum schlusshoch",
            set(d for _, d, _ in ZYKLUS["bitcoin-top-to-bottom.html"]), {HOCH_CLOSE})
     pruefe("halving-seite zaehlt zum selben hoch",
            set(d for _, d, _ in ZYKLUS["bitcoin-halving-to-top.html"]),
            {HALVING, HOCH_CLOSE})
-    pruefe("vom halving zum hoch sind es 535 tage",
-           tage(HALVING, datetime.date(2025, 10, 7)), 535)
+    pruefe("vom halving zum hoch sind es 534 tage",
+           tage(HALVING, datetime.date(2025, 10, 6)), 534)
+    # das hoch muss das umdatierte sein. stuende hier wieder der 7., waere
+    # die ganze seite um einen tag daneben und niemand saehe es an der zahl.
+    pruefe("das hoch ist umdatiert", HOCH_CLOSE, "2025-10-06")
     pruefe("datum ausgeschrieben", lang("2026-08-21"), "21 August 2026")
     pruefe("billionen", geld(4023456789012), "$4.02T")
     pruefe("milliarden", geld(4023456789), "$4B")
@@ -851,8 +870,8 @@ def selbsttest():
            "<span>" in leiste("gibtsnicht.html"), False)
 
     # --- die rueckgangszahlen ---
-    pruefe("kurzdatum", kurz("2013-12-05"), "5 Dec 2013")
-    pruefe("langdatum", lang("2026-07-01"), "1 July 2026")
+    pruefe("kurzdatum", kurz("2013-12-04"), "4 Dec 2013")
+    pruefe("langdatum", lang("2026-06-30"), "30 June 2026")
     pruefe("eine stelle nach unten", proz1(58534.28, 124776.68), "-53.1%")
     pruefe("eine stelle nach oben", proz1(110.0, 100.0), "10.0%")
     pruefe("dollar gerundet", dollar(58534.28), "58,534")
@@ -884,10 +903,10 @@ def selbsttest():
 
     # ein vollstaendiger durchlauf auf gesetzten zahlen. der stichtag steht
     # fest, damit der fall nicht morgen ein anderes ergebnis hat.
-    tarchiv = [{"d": "2013-12-05", "btc": 1000.0}, {"d": "2014-11-20", "btc": 250.0},
-               {"d": "2017-12-17", "btc": 20000.0}, {"d": "2018-12-02", "btc": 4000.0},
-               {"d": "2021-11-09", "btc": 50000.0}, {"d": "2022-10-25", "btc": 20000.0},
-               {"d": HOCH_CLOSE, "btc": HOCH_WERT}, {"d": "2026-07-01", "btc": 62388.34}]
+    tarchiv = [{"d": "2013-12-04", "btc": 1000.0}, {"d": "2014-11-20", "btc": 250.0},
+               {"d": "2017-12-16", "btc": 20000.0}, {"d": "2018-12-02", "btc": 4000.0},
+               {"d": "2021-11-08", "btc": 50000.0}, {"d": "2022-10-25", "btc": 20000.0},
+               {"d": HOCH_CLOSE, "btc": HOCH_WERT}, {"d": "2026-06-30", "btc": 62388.34}]
     tlog = [{"d": "2026-09-22", "btc": 99821.344}]
     w, grund = rueckgang_werte(tarchiv, tlog, datetime.date(2026, 9, 22))
     pruefe("kein grund zum abbruch", grund, None)
@@ -895,11 +914,12 @@ def selbsttest():
     pruefe("rueckgang heute", dd["ddnow"], "-20.0%")
     pruefe("quelle mit datum und preis", dd["ddnowsrc"],
            "price of 22 September 2026, 99,821 USD")
-    pruefe("tage seit dem hoch", dd["ddday"], "350")
+    pruefe("tage seit dem hoch", dd["ddday"], "351")
     pruefe("tiefster punkt", dd["ddlowpct"], "-50.0%")
-    pruefe("tiefpunkt mit datum", dd["ddlowsrc"], "1 July 2026, 62,388 USD")
+    pruefe("tiefpunkt mit datum", dd["ddlowsrc"], "30 June 2026, 62,388 USD")
+    # hoch und tief sind beide um einen tag gerueckt, der abstand nicht
     pruefe("tag des tiefpunkts", dd["ddlowday"], "267")
-    pruefe("tabellenzelle kurz", dd["r25low"], "1 Jul 2026, 62,388")
+    pruefe("tabellenzelle kurz", dd["r25low"], "30 Jun 2026, 62,388")
     pruefe("balkenbeschriftung offen", dd["ddbarlbl"], "-50.0% so far")
     pruefe("dieselbe zahl auf beiden seiten", ttb["dd"], dd["ddnow"])
     pruefe("schlusszeile der zyklusseite", ttb["ddts"],
@@ -912,7 +932,7 @@ def selbsttest():
     # ein archiv, das ein anderes hoch kennt als die seiten, darf nichts
     # stempeln. sonst stuende eine falsche zahl da, und zwar genau die.
     falsch = [{"d": HOCH_CLOSE, "btc": HOCH_WERT}, {"d": "2025-11-01", "btc": 999999.0},
-              {"d": "2026-07-01", "btc": 1.0}]
+              {"d": "2026-06-30", "btc": 1.0}]
     pruefe("fremdes hoch faellt auf", rueckgang_werte(falsch, tlog,
            datetime.date(2026, 9, 22))[0], None)
     pruefe("archiv ohne bitcoin faellt auf",
@@ -922,19 +942,19 @@ def selbsttest():
                            datetime.date(2026, 9, 22))[0], None)
 
     js2 = 'var LOW_CLOSE = 1, LOW_DATE = "2000-01-01";'
-    fertig2, k1, k2 = setz_tief(js2, 58534.28, "2026-07-01")
+    fertig2, k1, k2 = setz_tief(js2, 58534.28, "2026-06-30")
     pruefe("tief gestempelt", fertig2,
-           'var LOW_CLOSE = 58534.28, LOW_DATE = "2026-07-01";')
+           'var LOW_CLOSE = 58534.28, LOW_DATE = "2026-06-30";')
     pruefe("beide tief-zuweisungen", (k1, k2), (1, 1))
     pruefe("zweiter lauf ist ruhig",
-           setz_tief(fertig2, 58534.28, "2026-07-01")[0], fertig2)
+           setz_tief(fertig2, 58534.28, "2026-06-30")[0], fertig2)
 
     # die neue seite muss in der leiste stehen und in beiden stempelwegen
     pruefe("drawdownseite in der leiste",
            "bitcoin-drawdown.html" in [d for d, _ in SEITEN], True)
     pruefe("drawdownseite bekommt LAST_CLOSE", DD_SEITE in SCHLUSS_SEITEN, True)
 
-    print("%d von 89 faellen falsch" % schlecht)
+    print("%d von 90 faellen falsch" % schlecht)
     return 1 if schlecht else 0
 
 

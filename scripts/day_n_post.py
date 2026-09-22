@@ -10,9 +10,17 @@ Abstand zum Hoch. Eine Zahl, jeden Tag, ohne Hand.
 
 Kein manueller Schritt heisst: das Skript rechnet selbst, aus derselben Datei,
 aus der die Seite rechnet (data/market-log.json), mit demselben Stichtag wie
-das Skript auf der Seite (TOP_DATE = 2025-10-07, der TAGESSCHLUSS, nicht das
-Intraday-Hoch vom 6. Oktober). Steht die Zahl nicht in beiden gleich, ist eine
-von beiden falsch, und dann postet hier nichts.
+das Skript auf der Seite (TOP_DATE = 2025-10-06). Steht die Zahl nicht in
+beiden gleich, ist eine von beiden falsch, und dann postet hier nichts.
+
+STICHTAG UMDATIERT AM 22.09.2026
+Hier stand bis dahin der 07.10.2025 mit dem Zusatz "der TAGESSCHLUSS, nicht
+das Intraday-Hoch vom 6. Oktober". Der Zusatz war der richtige Gedanke an
+der falschen Reihe: die Bitcoinreihe im Archiv kam von blockchain.com und
+war um einen Tag zu spaet gestempelt, siehe bc_tag() in history.py. Nach der
+Korrektur faellt der hoechste Tagespreis auf den 06.10.2025. Das ist
+derselbe Kalendertag wie das Intraday-Hoch, aber weiter ein anderer Preis:
+124.776,68 statt 126.198. Die Tageszahl im Post steigt dadurch um eins.
 
 DREI SPERREN, DAMIT NIE UNSINN RAUSGEHT
   1. Der Schluss muss frisch sein. Ist die juengste btc-Zeile aelter als
@@ -49,7 +57,7 @@ XLOG = os.path.join(REPO, "data", "x-post-log.json")
 # dieselben Konstanten wie im Skript auf der Seite. Wer eine davon aendert,
 # muss die andere mitaendern; der Selbsttest liest beide gegeneinander.
 TOP = 124776.68
-TOP_DATE = "2025-10-07"
+TOP_DATE = "2025-10-06"
 
 MONATE = ["January", "February", "March", "April", "May", "June", "July",
           "August", "September", "October", "November", "December"]
@@ -182,9 +190,12 @@ def selbsttest():
         else:
             print("  ok   %s" % name)
 
-    pruefe("tage seit dem schlusshoch", tage(TOP_DATE, "2026-09-15"), 343)
-    pruefe("ein tag weiter", tage(TOP_DATE, "2026-09-16"), 344)
-    pruefe("datum ausgeschrieben", lang("2025-10-07"), "7 October 2025")
+    pruefe("tage seit dem schlusshoch", tage(TOP_DATE, "2026-09-15"), 344)
+    pruefe("ein tag weiter", tage(TOP_DATE, "2026-09-16"), 345)
+    pruefe("datum ausgeschrieben", lang("2025-10-06"), "6 October 2025")
+    # der stichtag muss der umdatierte sein, sonst zaehlt der post einen
+    # tag anders als die seite und sperre 2 schlaegt jeden tag zu
+    pruefe("stichtag ist umdatiert", TOP_DATE, "2025-10-06")
     pruefe("rueckgang", round(prozent(75608.0), 1), -39.4)
     pruefe("juengste btc-zeile",
            letzter_btc([{"d": "2026-09-14", "btc": 78150.0},
@@ -200,7 +211,7 @@ def selbsttest():
     t, key, problem = bauen(log, js, "2026-09-16", 3)
     pruefe("kein problem", problem, None)
     pruefe("sperrschluessel traegt das datum des schlusses", key, "dayn-2026-09-15")
-    pruefe("die zahl steht zuerst", t.split("\n")[0], "day 343.")
+    pruefe("die zahl steht zuerst", t.split("\n")[0], "day 344.")
     pruefe("post passt in einen tweet", len(t) <= 280, True)
     pruefe("kein link im hauptpost", "http" in t or ".com" in t or ".io" in t, False)
     pruefe("rueckgang im text", "39.4 percent below" in t, True)
