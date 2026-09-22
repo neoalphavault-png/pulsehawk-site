@@ -45,6 +45,14 @@ Beides zusammen heisst: fuer die Historie ist CoinGecko unbrauchbar. Der
 taegliche Logger benutzt sie weiter, dort ist sie richtig, weil er den
 Wert selbst datiert.
 
+DERSELBE FEHLER, NUR LEISER, GEFUNDEN AM 22.09.2026
+Die Bitcoinreihe kommt nicht von Twelve Data, sondern von blockchain.com:
+der Lauf nimmt die laengste Reihe, und das ist die mit sechzehn Jahren.
+blockchain.com stempelt genau wie CoinGecko auf Mitternacht UTC, und weil
+oben nur ueber CoinGecko nachgedacht wurde, ist das durchgerutscht. Das
+Archiv lag damit fuer btc einen Tag daneben, fuer gld und spy nicht.
+Siehe bc_tag() weiter unten; dort steht auch, woran man es gemessen hat.
+
     python3 scripts/history.py --backfill              einmalig, holt die historie
     python3 scripts/history.py --rueckblick 2026-08-26 was war vor n jahren
     python3 scripts/history.py --selftest              rechnet ohne netz
@@ -112,6 +120,33 @@ def im_band(feld, wert):
 
 def tag_von(stempel):
     return time.strftime("%Y-%m-%d", time.gmtime(stempel))
+
+
+def bc_tag(stempel):
+    """der tag, zu dem ein blockchain.com-punkt wirklich gehoert.
+
+    GEMESSEN UND KORRIGIERT AM 22.09.2026
+    blockchain.com stempelt seine tagespunkte auf Mitternacht UTC. Der Punkt
+    mit dem Stempel vom 22. traegt damit den Preis des 21., genau wie oben im
+    Kopf fuer CoinGecko beschrieben. Beim Backfill ist das unbemerkt
+    durchgelaufen, weil die Bitcoinreihe von niemandem gegen den taeglichen
+    Logger gehalten wurde.
+
+    Gemessen wurde es an der Naht. Ueber die 98 Tage, an denen sich Archiv
+    und data/market-log.json ueberschneiden, stimmen gld und spy auf den
+    Tag genau ueberein (Median 0,0000 Prozent), btc nicht: auf denselben Tag
+    gelegt 0,978 Prozent, um einen Tag zurueckgeschoben 0,144 Prozent. Die
+    Reihe lag also um einen Tag daneben, und nur sie.
+
+    Bens Entscheidung vom 22.09.2026: der Stempel wird hier einmal
+    zurueckgesetzt, damit der naechste Backfill die Verschiebung nicht
+    wieder einbaut. Der Tagesschluss des Zyklus liegt damit auf dem
+    06.10.2025 und das Tief auf dem 30.06.2026.
+
+    Nur blockchain.com braucht das. Twelve Data datiert seine Tageskerzen
+    selbst richtig, deshalb fasst td_verlauf den Stempel nicht an.
+    """
+    return (datum(tag_von(stempel)) - datetime.timedelta(days=1)).isoformat()
 
 
 def lang(iso):
@@ -202,7 +237,7 @@ def bc_parse(data):
         if x is None or y is None:
             continue
         try:
-            out[tag_von(float(x))] = round(float(y), 6)
+            out[bc_tag(float(x))] = round(float(y), 6)
         except (TypeError, ValueError):
             continue
     return out
@@ -508,15 +543,27 @@ def selbsttest():
            [{"d": "2016-08-24", "gld": 128.5, "btc": 586.0}])
 
     # --- blockchain.com, die ersatzquelle fuer bitcoin ---
+    # der stempel 1472083200 ist Mitternacht UTC am 25.08.2016. der punkt
+    # traegt den preis des vortages, also landet er auf dem 24.
+    pruefe("blockchain.com stempelt auf mitternacht", tag_von(1472083200), "2016-08-25")
+    pruefe("und der punkt gehoert zum vortag", bc_tag(1472083200), "2016-08-24")
+    pruefe("auch ueber den monatswechsel", bc_tag(1472688000), "2016-08-31")
+    pruefe("auch ueber den jahreswechsel", bc_tag(1483228800), "2016-12-31")
     pruefe("blockchain.com geparst",
            bc_parse({"values": [{"x": 1472083200, "y": 578.83},
                                 {"x": 1472169600, "y": 583.1}]}),
-           {"2016-08-25": 578.83, "2016-08-26": 583.1})
+           {"2016-08-24": 578.83, "2016-08-25": 583.1})
+    # twelve data datiert selbst richtig und wird nicht angefasst. ginge das
+    # verloren, laegen die beiden quellen wieder einen tag auseinander.
+    pruefe("zwei punkte bleiben zwei tage",
+           sorted(bc_parse({"values": [{"x": 1472083200, "y": 1.0},
+                                       {"x": 1472169600, "y": 2.0}]})),
+           ["2016-08-24", "2016-08-25"])
     pruefe("kaputte punkte fliegen raus",
            bc_parse({"values": [{"x": None, "y": 1}, "kein dict",
                                 {"x": 1472083200}, {"y": 5},
                                 {"x": 1472083200, "y": 578.83}]}),
-           {"2016-08-25": 578.83})
+           {"2016-08-24": 578.83})
     pruefe("leere antwort faellt nicht um", bc_parse({}), {})
     pruefe("gar keine antwort faellt nicht um", bc_parse(None), {})
 

@@ -21,13 +21,13 @@
     {"@type":"Question","name":"How far did Bitcoin fall from top to bottom in each cycle?",
      "acceptedAnswer":{"@type":"Answer","text":"84.9 percent in 2013 to 2015, 83.2 percent in 2017 to 2018 and 76.7 percent in 2021 to 2022, measured between the highest and lowest daily close."}},
     {"@type":"Question","name":"When was the last Bitcoin cycle top?",
-     "acceptedAnswer":{"@type":"Answer","text":"7 October 2025, at a daily close of 124,777 US dollars. Sites quoting a higher number on 6 October are using an intraday high from a single exchange, not the daily close."}},
+     "acceptedAnswer":{"@type":"Answer","text":"6 October 2025, at a full-day price of 124,777 US dollars. Sites quoting 126,198 for the same day are using an intraday high from a single exchange, not the full-day price."}},
     {"@type":"Question","name":"When did Bitcoin bottom in previous cycles?",
-     "acceptedAnswer":{"@type":"Answer","text":"15 January 2015 at 172 dollars, 16 December 2018 at 3,232 dollars, and 22 November 2022 at 15,760 dollars, each the lowest daily close of that cycle."}},
+     "acceptedAnswer":{"@type":"Answer","text":"14 January 2015 at 172 dollars, 15 December 2018 at 3,232 dollars, and 21 November 2022 at 15,760 dollars, each the lowest full-day price of that cycle."}},
     {"@type":"Question","name":"Will the next bottom follow the same pattern?",
      "acceptedAnswer":{"@type":"Answer","text":"Nobody knows, and this page does not guess. Three cycles are three data points. This page counts what happened, shows where past cycles stood on the same day, and names no date and no price."}},
     {"@type":"Question","name":"Where do the numbers come from?",
-     "acceptedAnswer":{"@type":"Answer","text":"From PulseHawk's own archive of 5,849 daily Bitcoin closes since August 2010, sourced from Twelve Data. Every date and price on this page is a daily close in UTC. Nothing is copied from another site."}}
+     "acceptedAnswer":{"@type":"Answer","text":"From PulseHawk's own archive of 5,849 daily Bitcoin prices since August 2010, sourced from the blockchain.com market price series, one cross-exchange price per UTC day. Nothing is copied from another site."}}
   ]
 }
 </script>
@@ -97,6 +97,7 @@
 <div class="pnav">
   <a href="/bitcoin-halving-to-top.html">halving to top</a>
   <span>top to bottom</span>
+  <a href="/bitcoin-drawdown.html">drawdown</a>
   <a href="/bitcoin-dominance.html">dominance</a>
   <a href="/markets.html">markets</a>
   <a href="/what-if.html">what if</a>
@@ -110,13 +111,13 @@ page makes no forecast.</p>
 <div class="live">
   <div>
     <div class="k">Days since the last top</div>
-    <div class="v" id="d1">350</div>
-    <div class="s">top was 7 October 2025, close 124,777 USD</div>
+    <div class="v" id="d1">351</div>
+    <div class="s">top was 6 October 2025, close 124,777 USD</div>
   </div>
   <div>
     <div class="k">Below the top today</div>
-    <div class="v t" id="dd">-39.4%</div>
-    <div class="s" id="ddts">close of 15 September 2026, 75,608 USD</div>
+    <div class="v t" id="dd">-30.8%</div>
+    <div class="s" id="ddts">close of 22 September 2026, 86,325 USD</div>
   </div>
 </div>
 <p class="method">Day count updates by itself from one fixed date. The price is the latest
@@ -131,10 +132,10 @@ look up where the three previous cycles were on that exact day.</p>
     <tr><th>Cycle</th><th>On day <span class="dn">343</span></th><th style="text-align:right">Below its top</th><th style="text-align:right">Bottom came on day</th></tr>
   </thead>
   <tbody>
-    <tr><td>2013 to 2015</td><td id="c13d"></td><td class="n" id="c13"></td><td class="n">406</td></tr>
-    <tr><td>2017 to 2018</td><td id="c17d"></td><td class="n" id="c17"></td><td class="n">364</td></tr>
-    <tr><td>2021 to 2022</td><td id="c21d"></td><td class="n" id="c21"></td><td class="n">378</td></tr>
-    <tr class="now"><td>2025 to now</td><td id="c25d">15 Sep 2026</td><td class="n" id="c25">-39.4%</td><td class="n">not known</td></tr>
+    <tr><td>2013 to 2015</td><td id="c13d">20 Nov 2014</td><td class="n" id="c13">-68.6%</td><td class="n">406</td></tr>
+    <tr><td>2017 to 2018</td><td id="c17d">2 Dec 2018</td><td class="n" id="c17">-78.5%</td><td class="n">364</td></tr>
+    <tr><td>2021 to 2022</td><td id="c21d">25 Oct 2022</td><td class="n" id="c21">-70.2%</td><td class="n">378</td></tr>
+    <tr class="now"><td>2025 to now</td><td id="c25d">22 Sep 2026</td><td class="n" id="c25">-30.8%</td><td class="n">not known</td></tr>
   </tbody>
 </table>
 </div>
@@ -163,7 +164,7 @@ last row is today. Read the gap between them however you like; we do not read it
   <text class="val" x="605.9" y="100">378</text>
   <text class="lbl" x="0" y="138">2025 to now</text>
   <rect id="bar" x="108" y="124" width="443.6" height="18" rx="5" fill="var(--btc)"/>
-  <text id="d3" class="val" x="560.6" y="138" fill="var(--btc)">350 and counting</text>
+  <text id="d3" class="val" x="560.6" y="138" fill="var(--btc)">351 and counting</text>
 </svg>
   <div class="cap">Days from each cycle top to the following low, counted between daily closes. The current cycle has no bottom yet, so its bar is open.</div>
 </div>
@@ -173,10 +174,10 @@ last row is today. Read the gap between them however you like; we do not read it
     <tr><th>Cycle</th><th>Top (close)</th><th>Bottom (close)</th><th style="text-align:right">Days</th><th style="text-align:right">Drawdown</th></tr>
   </thead>
   <tbody>
-    <tr><td>2013 to 2015</td><td>5 Dec 2013, 1,137</td><td>15 Jan 2015, 172</td><td class="n">406</td><td class="n">-84.9%</td></tr>
-    <tr><td>2017 to 2018</td><td>17 Dec 2017, 19,280</td><td>16 Dec 2018, 3,232</td><td class="n">364</td><td class="n">-83.2%</td></tr>
-    <tr><td>2021 to 2022</td><td>9 Nov 2021, 67,562</td><td>22 Nov 2022, 15,760</td><td class="n">378</td><td class="n">-76.7%</td></tr>
-    <tr class="now"><td>2025 to now</td><td>7 Oct 2025, 124,777</td><td>not known</td><td class="n" id="d2">350</td><td class="n" id="dd2">-39.4%</td></tr>
+    <tr><td>2013 to 2015</td><td>4 Dec 2013, 1,137</td><td>14 Jan 2015, 172</td><td class="n">406</td><td class="n">-84.9%</td></tr>
+    <tr><td>2017 to 2018</td><td>16 Dec 2017, 19,280</td><td>15 Dec 2018, 3,232</td><td class="n">364</td><td class="n">-83.2%</td></tr>
+    <tr><td>2021 to 2022</td><td>8 Nov 2021, 67,562</td><td>21 Nov 2022, 15,760</td><td class="n">378</td><td class="n">-76.7%</td></tr>
+    <tr class="now"><td>2025 to now</td><td>6 Oct 2025, 124,777</td><td>not known</td><td class="n" id="d2">351</td><td class="n" id="dd2">-30.8%</td></tr>
   </tbody>
 </table>
 </div>
@@ -184,17 +185,19 @@ last row is today. Read the gap between them however you like; we do not read it
 reason that nobody can know one yet, and any page that fills that cell is guessing.</p>
 
 <h2>Why other sites show different dates and prices</h2>
-<p>You will find the last top quoted as <b>126,198 on 6 October 2025</b>. You will find the 2021
-top on 10 November and the 2022 low on 21 November. None of those are wrong, and neither are
-ours. They are <b>intraday extremes from a single exchange</b>. Ours are <b>daily closes</b>.</p>
-<p>We use closes for one reason: they can be checked. An intraday print exists on one venue for
-one second. A daily close is the same number for everyone who looks at the same day. It moves
-the counts by a day or two either side and moves the top by about 1,400 dollars, and it changes
-nothing about the shape: <b>all three completed cycles still land between 364 and 406 days.</b></p>
+<p>You will find the last top quoted as <b>126,198 on 6 October 2025</b>. We put the top on the
+same day and carry a different price, <b>124,777</b>. You will find the 2021 top on 10 November,
+where we have 8 November. None of those are wrong, and neither are ours. They are
+<b>intraday extremes from a single exchange</b>. Ours are <b>full-day prices</b>.</p>
+<p>We use full-day prices for one reason: they can be checked. An intraday print exists on one
+venue for one second. A full-day price is the same number for everyone who looks at the same
+day. It moves some dates by a day or two either side and moves the top by about 1,400 dollars,
+and it changes nothing about the shape: <b>all three completed cycles still land between 364 and
+406 days.</b></p>
 <div class="note">
 <p>The 2013 top is the one that moves most between methods. Intraday sources put it on
-30 November 2013. The highest daily close came five days later, on 5 December. We use the
-close, and we say so.</p>
+30 November 2013. The highest full-day price came four days later, on 4 December. We use the
+full day, and we say so.</p>
 </div>
 
 <h2>What this does not tell you</h2>
@@ -205,8 +208,10 @@ most results will name you a month. We will not, and that is deliberate.</p>
 bottom prices in the table are history, not a template.</p>
 
 <h2>How we count</h2>
-<p>Every price on this page is a <b>daily close in UTC from Twelve Data</b>, held in PulseHawk's
-own archive of <b>5,849 daily closes from 18 August 2010</b> to today. A cycle top is the highest
+<p>Every price on this page is <b>one price per UTC day</b> from PulseHawk's own archive of
+<b>5,849 daily Bitcoin prices from 17 August 2010</b> to today, built from the
+<b>blockchain.com market price series</b>, which is a cross-exchange price for the whole day
+rather than one venue's closing trade. A cycle top is the highest
 close before the next cycle's top; a cycle bottom is the lowest close between two tops. Days are
 calendar days between those two closes, with the top day as day zero. The comparison table looks
 up each past cycle on the same day number and divides that day's close by that cycle's top.</p>
@@ -221,14 +226,15 @@ CoinGecko, CoinMarketCap, Bitcoin Magazine or any other site's tables.</p>
   <p>84.9, 83.2 and 76.7 percent, top close to bottom close. The drop got smaller each cycle.
   Whether that continues is not something three points can tell you.</p>
   <div class="q">When was the last cycle top?</div>
-  <p>7 October 2025, at a daily close of 124,777 dollars.</p>
+  <p>6 October 2025, at a full-day price of 124,777 dollars.</p>
   <div class="q">When did Bitcoin bottom in previous cycles?</div>
-  <p>15 January 2015, 16 December 2018 and 22 November 2022, lowest daily close each time.</p>
+  <p>14 January 2015, 15 December 2018 and 21 November 2022, lowest full-day price each time.</p>
   <div class="q">Will the next bottom follow the same pattern?</div>
   <p>Nobody knows, and this page does not guess. What the comparison table means is your call.</p>
   <div class="q">Where do the numbers come from?</div>
-  <p>Our own archive, 5,849 daily closes since 2010. Every date is in the tables above and can
-  be checked against any daily chart in a couple of minutes. That is the point.</p>
+  <p>Our own archive, 5,849 daily prices since 2010, from the blockchain.com market price
+  series. Every date is in the tables above and can be checked against any daily chart in a
+  couple of minutes. That is the point.</p>
 </div>
 <footer>
   <div>PulseHawk. Market data with the arithmetic shown. No hype, no price targets.</div>
@@ -240,7 +246,7 @@ var CYC={"2013":[1.0,0.91,0.704,0.621,0.692,0.786,0.861,0.771,0.769,0.778,0.748,
 /* Latest daily close in the archive. The daily routine rewrites these two lines. */
 var LAST_CLOSE = 86325, LAST_DATE = "2026-09-22";
 (function(){
-  var TOP = 124776.68, TOP_DATE = "2025-10-07";
+  var TOP = 124776.68, TOP_DATE = "2025-10-06";
   var tage = function(iso){
     var a = new Date(iso + "T00:00:00Z"), b = new Date();
     var heute = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate());
@@ -250,6 +256,11 @@ var LAST_CLOSE = 86325, LAST_DATE = "2026-09-22";
     var d = new Date(iso + "T00:00:00Z");
     return d.getUTCDate() + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()] + " " + d.getUTCFullYear();
   };
+  var fmtLong = function(iso){
+    var d = new Date(iso + "T00:00:00Z");
+    return d.getUTCDate() + " " + ["January","February","March","April","May","June","July","August","September","October","November","December"][d.getUTCMonth()] + " " + d.getUTCFullYear();
+  };
+  var geld = function(v){ return Math.round(v).toLocaleString("en-US"); };
   var addDays = function(iso, n){
     var d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10);
   };
@@ -265,11 +276,11 @@ var LAST_CLOSE = 86325, LAST_DATE = "2026-09-22";
   /* current drawdown from the last archived close */
   var dd = pct(LAST_CLOSE / TOP);
   set("dd", dd); set("dd2", dd); set("c25", dd);
-  set("ddts", "close of " + fmtDate(LAST_DATE) + ", " + LAST_CLOSE.toLocaleString("en-US") + " USD");
+  set("ddts", "close of " + fmtLong(LAST_DATE) + ", " + geld(LAST_CLOSE) + " USD");
   set("c25d", fmtDate(LAST_DATE));
 
   /* where each completed cycle stood on the same day number */
-  var tops = {"2013":"2013-12-05","2017":"2017-12-17","2021":"2021-11-09"};
+  var tops = {"2013":"2013-12-04","2017":"2017-12-16","2021":"2021-11-08"};
   var ids  = {"2013":"c13","2017":"c17","2021":"c21"};
   for (var k in tops) {
     var arr = CYC[k], j = Math.min(n, arr.length - 1), r = arr[j];
