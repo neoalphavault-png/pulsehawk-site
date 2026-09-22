@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Far Is Bitcoin Below Its All-Time High? The Drawdown, Counted Daily</title>
+<meta name="description" content="How far Bitcoin is below its all-time high, recounted every day from our own archive of daily prices since 2010. The deepest point of this cycle was -53.1% on 1 July 2026, day 267. The three cycles before it bottomed at -84.9%, -83.2% and -76.7%. No forecast.">
+<link rel="canonical" href="https://pulsehawk.io/bitcoin-drawdown.html">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="How Far Is Bitcoin Below Its All-Time High? The Drawdown, Counted Daily">
+<meta property="og:description" content="The live distance from the 7 October 2025 top, the deepest point of this cycle, and the maximum drawdown of the three cycles before it. Counted from daily prices, not copied from another site.">
+<meta property="og:url" content="https://pulsehawk.io/bitcoin-drawdown.html">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How far is Bitcoin below its all-time high?",
+     "acceptedAnswer":{"@type":"Answer","text":"The page carries the current figure, recounted every day against the highest daily price in our archive, 124,777 US dollars on 7 October 2025. The number is printed next to the date of the price it was calculated from."}},
+    {"@type":"Question","name":"What is Bitcoin's all-time high?",
+     "acceptedAnswer":{"@type":"Answer","text":"124,777 US dollars on 7 October 2025, the highest daily price in our archive. Higher numbers quoted for 6 October 2025 are intraday prints from a single exchange, not a full-day price."}},
+    {"@type":"Question","name":"How far did Bitcoin fall below its high in this cycle?",
+     "acceptedAnswer":{"@type":"Answer","text":"The deepest point so far was 58,534 US dollars on 1 July 2026, which is 53.1 percent below the top and 267 days after it. That is the lowest daily price in the archive since the top, not a forecast that it is the bottom."}},
+    {"@type":"Question","name":"How deep were Bitcoin's previous drawdowns?",
+     "acceptedAnswer":{"@type":"Answer","text":"84.9 percent from December 2013 to January 2015, 83.2 percent from December 2017 to December 2018, and 76.7 percent from November 2021 to November 2022, each measured between the highest and lowest daily price of that cycle."}},
+    {"@type":"Question","name":"Is this the bottom?",
+     "acceptedAnswer":{"@type":"Answer","text":"This page does not say, and no page can. A low is only a bottom in hindsight. We count the drop that has already happened and name no date and no price."}},
+    {"@type":"Question","name":"Where do the numbers come from?",
+     "acceptedAnswer":{"@type":"Answer","text":"From PulseHawk's own archive of 5,849 daily Bitcoin prices since August 2010, sourced from the blockchain.com market price series, one price per UTC day. Today's figure comes from our own daily market log. Every number on the page is printed with the date it belongs to."}}
+  ]
+}
+</script>
+<style>
+  :root { --bg:#080B0F; --card:#0B0E12; --line:#1A1D21; --teal:#49EACB;
+          --btc:#D95926; --txt:#FFFFFF; --dim:#9BA3AB; --dimmer:#7A828C; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Helvetica Neue',Arial,sans-serif;
+         background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(73,234,203,0.10), transparent 60%); }
+  .wrap { max-width:720px; margin:0 auto; padding:34px 20px 60px; }
+  .nav { display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav img { width:30px; }
+  .nav b { font-size:17px; letter-spacing:4px; color:var(--txt); font-weight:800; }
+  .nav b span { color:var(--teal); }
+  .pnav { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .pnav a, .pnav span { font-size:13px; padding:7px 13px; border-radius:999px;
+            text-decoration:none; border:1px solid var(--line); color:var(--dimmer); }
+  .pnav a:hover { border-color:rgba(73,234,203,0.45); color:var(--dim); }
+  .pnav span { background:rgba(73,234,203,0.10); border-color:rgba(73,234,203,0.45);
+               color:var(--teal); font-weight:700; }
+  .eyebrow { font-size:12px; letter-spacing:4px; color:var(--dimmer); text-transform:uppercase;
+             margin-top:42px; font-weight:700; }
+  h1 { font-size:34px; line-height:1.18; letter-spacing:-0.6px; margin-top:12px; }
+  .lead { font-size:17px; line-height:27px; color:var(--txt); margin-top:18px; }
+  .lead b { color:var(--teal); font-weight:700; }
+  h2 { font-size:21px; letter-spacing:-0.3px; margin:40px 0 0; }
+  p { font-size:15.5px; line-height:25px; color:var(--dim); margin-top:12px; }
+  p b { color:var(--txt); font-weight:600; }
+  a { color:var(--teal); }
+  p a { text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
+  .live { background:var(--card); border:1px solid var(--line); border-radius:16px;
+          padding:22px 24px; margin-top:22px; display:flex; flex-wrap:wrap; gap:26px; }
+  .live div { flex:1 1 190px; }
+  .live .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
+  .live .v.t { color:var(--teal); }
+  .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
+  .chart { margin-top:18px; background:var(--card); border:1px solid var(--line);
+           border-radius:16px; padding:20px 18px 12px; }
+  .chart svg { width:100%; height:auto; display:block; }
+  .chart .lbl { font-size:13px; fill:var(--dim); font-weight:600; }
+  .chart .val { font-size:13px; fill:var(--txt); font-weight:700; }
+  .chart .tick { font-size:11px; fill:var(--dimmer); }
+  .chart .gl { stroke:var(--line); stroke-width:1; }
+  .chart .cap { font-size:12.5px; color:var(--dimmer); margin-top:10px; }
+  .scroll { overflow-x:auto; margin-top:16px; }
+  table { border-collapse:collapse; width:100%; min-width:600px; }
+  th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); font-size:14.5px; }
+  th { font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dimmer); font-weight:700; }
+  td.n { text-align:right; font-weight:700; color:var(--txt); font-variant-numeric:tabular-nums; }
+  tr.now td { color:var(--btc); }
+  tr.now td.n { color:var(--btc); }
+  .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
+  .note p { color:var(--txt); }
+  .method { font-size:12.5px; color:var(--dimmer); margin-top:10px; letter-spacing:0.2px; }
+  .faq { margin-top:14px; }
+  .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
+  .faq p { margin-top:7px; }
+  footer { border-top:1px solid var(--line); margin-top:56px; padding-top:18px; display:flex;
+           justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
+  footer a { color:var(--dim); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
+<div class="pnav">
+  <a href="/bitcoin-halving-to-top.html">halving to top</a>
+  <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
+  <span>drawdown</span>
+  <a href="/bitcoin-dominance.html">dominance</a>
+  <a href="/markets.html">markets</a>
+  <a href="/what-if.html">what if</a>
+</div>
+<div class="eyebrow">Bitcoin cycle analysis</div>
+<h1>How far is Bitcoin below its all-time high?</h1>
+<p class="lead">Right now Bitcoin is <b id="ddlead">-30.8%</b> below its all-time high of
+<b>124,777 dollars</b>, set on 7 October 2025. The deepest point of this cycle so far came
+<b id="ddleadlow">267 days</b> after that top. Every number here is counted from our own archive
+of daily prices since 2010, and the page makes no forecast.</p>
+<div class="live">
+  <div>
+    <div class="k">Below the all-time high</div>
+    <div class="v" id="ddnow">-30.8%</div>
+    <div class="s" id="ddnowsrc">price of 22 September 2026, 86,325 USD</div>
+  </div>
+  <div>
+    <div class="k">Days since the top</div>
+    <div class="v t" id="ddday">350</div>
+    <div class="s">top was 7 October 2025, 124,777 USD</div>
+  </div>
+</div>
+<p class="method">The percentage is recounted every day against one fixed top. Both the top and
+the price it is measured against are printed with their dates, so the arithmetic can be redone
+by hand in under a minute.</p>
+
+<h2>The deepest point of this cycle so far</h2>
+<div class="live">
+  <div>
+    <div class="k">Deepest below the top</div>
+    <div class="v" id="ddlowpct">-53.1%</div>
+    <div class="s" id="ddlowsrc">1 July 2026, 58,534 USD</div>
+  </div>
+  <div>
+    <div class="k">That was day</div>
+    <div class="v t" id="ddlowday">267</div>
+    <div class="s">counted from the top, top day is day zero</div>
+  </div>
+</div>
+<p>That is the lowest daily price in the archive since the top. It is <b>not</b> a claim that it
+was the bottom. A low only becomes a bottom in hindsight, and this page will keep moving that
+figure down for as long as the archive gives it a reason to.</p>
+<div class="note">
+<p>we count the drop, not the bottom.</p>
+</div>
+
+<h2>The four cycles, top to deepest point</h2>
+<div class="scroll">
+<table>
+  <thead>
+    <tr><th>Cycle</th><th>Top</th><th>Deepest point</th><th style="text-align:right">Days to it</th><th style="text-align:right">Max drawdown</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>2013 to 2015</td><td>5 Dec 2013, 1,137</td><td>15 Jan 2015, 172</td><td class="n">406</td><td class="n">-84.9%</td></tr>
+    <tr><td>2017 to 2018</td><td>17 Dec 2017, 19,280</td><td>16 Dec 2018, 3,232</td><td class="n">364</td><td class="n">-83.2%</td></tr>
+    <tr><td>2021 to 2022</td><td>9 Nov 2021, 67,562</td><td>22 Nov 2022, 15,760</td><td class="n">378</td><td class="n">-76.7%</td></tr>
+    <tr class="now"><td>2025 to now</td><td>7 Oct 2025, 124,777</td><td id="r25low">1 Jul 2026, 58,534</td><td class="n" id="r25days">267</td><td class="n" id="r25dd">-53.1%</td></tr>
+  </tbody>
+</table>
+</div>
+<p>The first three rows are finished and will not change. The last row is open: its deepest
+point is the lowest price so far, and its day count is the distance to that low, not a length
+anyone can know yet.</p>
+
+<h2>The same four, charted</h2>
+<div class="chart">
+<svg viewBox="0 0 720 178" role="img" aria-label="Maximum drawdown from the top in each Bitcoin cycle: 84.9, 83.2 and 76.7 percent in the three completed cycles, and 53.1 percent so far in the current one">
+  <line class="gl" x1="108.0" x2="108.0" y1="4" y2="150"/>
+  <text class="tick" x="108.0" y="168" text-anchor="middle">the top</text>
+  <line class="gl" x1="248.0" x2="248.0" y1="4" y2="150"/>
+  <text class="tick" x="248.0" y="168" text-anchor="middle">-25%</text>
+  <line class="gl" x1="388.0" x2="388.0" y1="4" y2="150"/>
+  <text class="tick" x="388.0" y="168" text-anchor="middle">-50%</text>
+  <line class="gl" x1="528.0" x2="528.0" y1="4" y2="150"/>
+  <text class="tick" x="528.0" y="168" text-anchor="middle">-75%</text>
+  <line class="gl" x1="668.0" x2="668.0" y1="4" y2="150"/>
+  <text class="tick" x="668.0" y="168" text-anchor="middle">-100%</text>
+  <text class="lbl" x="0" y="24">2013 to 2015</text>
+  <rect x="108" y="10" width="475.3" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="592.3" y="24">-84.9%</text>
+  <text class="lbl" x="0" y="62">2017 to 2018</text>
+  <rect x="108" y="48" width="466.1" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="583.1" y="62">-83.2%</text>
+  <text class="lbl" x="0" y="100">2021 to 2022</text>
+  <rect x="108" y="86" width="429.3" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="546.3" y="100">-76.7%</text>
+  <text class="lbl" x="0" y="138">2025 to now</text>
+  <rect id="ddbar" x="108" y="124" width="297.3" height="18" rx="5" fill="var(--btc)"/>
+  <text id="ddbarlbl" class="val" x="414.3" y="138" fill="var(--btc)">-53.1% so far</text>
+</svg>
+  <div class="cap">Deepest fall below the cycle top, measured between daily prices. The bar for
+  the current cycle is the deepest point reached so far, not a finished number.</div>
+</div>
+<p class="method">Today's reading sits at <b id="ddtoday2">-30.8%</b>, which is above the deepest
+point of this cycle rather than at it. Both figures are on this page on purpose: the low is the
+worst it has been, the reading at the top of the page is where it is now.</p>
+
+<h2>What this page will not do</h2>
+<p>It will not tell you whether the low above is the bottom. It will not name a month, a price or
+a target, here or anywhere else on this site. Three finished cycles are three data points, they
+differ by 42 days and by eight percentage points of depth, and the market that traded them is not
+this one.</p>
+<p>A drawdown figure is arithmetic about the past. Search this question and most results will
+hand you a prediction wrapped around the number. That is the part we leave out.</p>
+
+<h2>Why other sites show a different number</h2>
+<p>You will find the all-time high quoted as <b>126,198 on 6 October 2025</b>. That is an
+<b>intraday print from a single exchange</b>, and measuring against it makes every drawdown on
+this page look about one percentage point deeper. Ours is a <b>full-day price</b>: one number per
+UTC day, the same number for everyone who looks at the same day.</p>
+<p>The same choice moves the dates. An intraday source puts the 2013 top on 30 November 2013;
+the highest daily price came five days later, on 5 December. We use the daily series, and we say
+so rather than leaving you to work out which one you are reading.</p>
+
+<h2>How we count</h2>
+<p>Every historical price on this page comes from PulseHawk's own archive of
+<b>5,849 daily Bitcoin prices from 18 August 2010</b> onward, built from the
+<b>blockchain.com market price series</b>, which is one cross-exchange price per UTC day rather
+than one venue's closing trade. The drawdown at the top of the page is measured against the most
+recent price in our <b>daily market log</b>, which is written every day at 21:23 UTC and is
+stamped on the page with its own date. A cycle top is the highest daily price before the next
+cycle's top. The maximum drawdown is the lowest daily price after that top divided by the top,
+and the day count is calendar days between the two, with the top as day zero.</p>
+<p class="method">Nothing on this page is copied from CoinGecko's tables, CoinMarketCap,
+Bitcoin Magazine or any other site's drawdown page. The two dates under the two big numbers are
+there so you can check both against any daily chart.</p>
+
+<h2>Questions people ask</h2>
+<div class="faq">
+  <div class="q">How far is Bitcoin below its all-time high?</div>
+  <p><b id="ddfaq">-30.8%</b> as of the price printed at the top of this page, measured against
+  124,777 dollars on 7 October 2025.</p>
+  <div class="q">What is Bitcoin's all-time high?</div>
+  <p>124,777 dollars on 7 October 2025, the highest daily price in our archive.</p>
+  <div class="q">How far did it fall in this cycle?</div>
+  <p>As far as <b id="ddfaq2">-53.1%</b>, reached on <b id="ddfaq3">1 July 2026</b>, day
+  <b id="ddfaq4">267</b> after the top.</p>
+  <div class="q">How deep were the previous drawdowns?</div>
+  <p>-84.9%, -83.2% and -76.7% in the three completed cycles. The falls got shallower each time.
+  Whether that continues is not something three points can tell you.</p>
+  <div class="q">Is this the bottom?</div>
+  <p>Unknown, and this page does not guess. We count the drop, not the bottom.</p>
+  <div class="q">Where do the numbers come from?</div>
+  <p>Our own archive, 5,849 daily prices since 2010, plus our own daily market log for today's
+  figure. Every date is printed next to the number it belongs to.</p>
+</div>
+<footer>
+  <div>PulseHawk. Market data with the arithmetic shown. No hype, no price targets.</div>
+  <div><a href="/">home</a> &nbsp; <a href="/impressum.html">impressum</a> &nbsp; <a href="/datenschutz.html">datenschutz</a></div>
+</footer>
+</div>
+<script>
+/* Latest price in the daily market log, and the lowest price in the archive
+   since the top. The daily routine rewrites these four lines. */
+var LAST_CLOSE = 86325, LAST_DATE = "2026-09-22";
+var LOW_CLOSE = 58534.28, LOW_DATE = "2026-07-01";
+(function(){
+  var TOP = 124776.68, TOP_DATE = "2025-10-07";
+  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var LONG = ["January","February","March","April","May","June","July","August",
+              "September","October","November","December"];
+  var d0 = function(iso){ return new Date(iso + "T00:00:00Z"); };
+  var tage = function(a, b){ return Math.floor((d0(b).getTime() - d0(a).getTime()) / 86400000); };
+  var heuteIso = function(){ var b = new Date();
+    return new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate())).toISOString().slice(0,10); };
+  var kurz = function(iso){ var d = d0(iso);
+    return d.getUTCDate() + " " + MON[d.getUTCMonth()] + " " + d.getUTCFullYear(); };
+  var lang = function(iso){ var d = d0(iso);
+    return d.getUTCDate() + " " + LONG[d.getUTCMonth()] + " " + d.getUTCFullYear(); };
+  var set = function(id, txt){ var e = document.getElementById(id); if (e) e.textContent = txt; };
+  var pct = function(v){ return ((v / TOP - 1) * 100).toFixed(1) + "%"; };
+  var geld = function(v){ return Math.round(v).toLocaleString("en-US"); };
+
+  var n = tage(TOP_DATE, heuteIso());
+  if (!(isFinite(n) && n > 0)) return;
+  set("ddday", n.toLocaleString("en-US"));
+
+  /* where it stands today */
+  var jetzt = pct(LAST_CLOSE);
+  set("ddnow", jetzt); set("ddlead", jetzt); set("ddtoday2", jetzt); set("ddfaq", jetzt);
+  set("ddnowsrc", "price of " + lang(LAST_DATE) + ", " + geld(LAST_CLOSE) + " USD");
+
+  /* the deepest point so far */
+  var tief = pct(LOW_CLOSE), tiefTag = tage(TOP_DATE, LOW_DATE);
+  set("ddlowpct", tief); set("ddfaq2", tief); set("r25dd", tief);
+  set("ddlowsrc", lang(LOW_DATE) + ", " + geld(LOW_CLOSE) + " USD");
+  set("ddlowday", tiefTag.toLocaleString("en-US"));
+  set("r25days", tiefTag.toLocaleString("en-US"));
+  set("ddfaq3", lang(LOW_DATE)); set("ddfaq4", tiefTag.toLocaleString("en-US"));
+  set("ddleadlow", tiefTag.toLocaleString("en-US") + " days");
+  set("r25low", kurz(LOW_DATE) + ", " + geld(LOW_CLOSE));
+  set("ddbarlbl", tief + " so far");
+
+  /* the open bar, geometry only, same scale as the three finished ones */
+  var bar = document.getElementById("ddbar");
+  if (bar) {
+    var w = Math.abs(LOW_CLOSE / TOP - 1) * 560;
+    bar.setAttribute("width", w.toFixed(1));
+    var lbl = document.getElementById("ddbarlbl");
+    if (lbl) lbl.setAttribute("x", (108 + w + 9).toFixed(1));
+  }
+})();
+</script>
+</body>
+</html>

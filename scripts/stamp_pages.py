@@ -13,8 +13,8 @@ und fuehren kein JavaScript aus. Die wuerden bei uns fuer immer dieselbe
 Zahl sehen, ausgerechnet bei Seiten, deren ganzer Vorteil darin besteht,
 dass ihre Zahl aktuell ist.
 
-FUENF TEILE, ZWEI QUELLEN
-  1. die zwei Zyklusseiten. Ihre Zahlen sind reine Arithmetik aus festen
+SECHS TEILE, DREI QUELLEN
+  1. die Zyklusseiten. Ihre Tageszaehler sind reine Arithmetik aus festen
      Daten, Halving und Zyklushoch. Keine Datenquelle noetig.
   2. die Dominanzseite. Ihre Zahl kommt aus data/market-log.json, das der
      Marktlogger taeglich schreibt.
@@ -24,7 +24,7 @@ FUENF TEILE, ZWEI QUELLEN
   4. die Marktseite, seit 22.08.2026. Gold, Aktien und Bitcoin ueber
      dieselben sieben Kalendertage, dazu die Stablecoins und die
      Sektorneigung. Ebenfalls aus data/market-log.json.
-  5. der letzte Bitcoin-Schluss auf der Zyklusseite, seit 16.09.2026.
+  5. der letzte Bitcoin-Schluss auf den Zyklusseiten, seit 16.09.2026.
      Die beiden Zeilen
 
          var LAST_CLOSE = 75608, LAST_DATE = "2026-09-15";
@@ -36,9 +36,16 @@ FUENF TEILE, ZWEI QUELLEN
      mit einem btc-Wert. Hier wird bewusst nicht in ein Element gestempelt,
      sondern in den Code: das Skript auf der Seite rechnet mit diesen
      Werten weiter, ein gestempeltes Element waere nur die Anzeige.
+     Seit 22.09.2026 gilt dasselbe fuer bitcoin-drawdown.html, die
+     zusaetzlich LOW_CLOSE und LOW_DATE traegt.
+  6. die Rueckgangszahlen auf beiden Zyklusseiten, seit 22.09.2026. Das
+     ist der eine Teil, der data/history.json liest, denn das tiefste
+     Niveau eines Zyklus steht nicht im Log, das nur ein halbes Jahr
+     zurueckreicht. Der Lauf prueft dabei, ob das Archiv dasselbe
+     Zyklushoch kennt wie die Seiten, und bleibt stehen, wenn nicht.
 
 ⚠️ FOLGE, DIE MAN KENNEN MUSS
-Fuer alle vier Seiten gilt ab jetzt dasselbe wie fuer index.html im Repo
+Fuer alle fuenf Seiten gilt ab jetzt dasselbe wie fuer index.html im Repo
 kaspa-pulse. **Niemals eine alte lokale Kopie hochladen.** Der Bot hat die
 Datei seit dem letzten Bearbeiten veraendert.
 
@@ -60,6 +67,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 LOG = os.path.join(REPO, "data", "market-log.json")
+ARCHIV = os.path.join(REPO, "data", "history.json")
 
 MONATE = ["January", "February", "March", "April", "May", "June", "July",
           "August", "September", "October", "November", "December"]
@@ -82,6 +90,11 @@ HALVING = "2024-04-20"
 HOCH_CLOSE = "2025-10-07"    # hoechster Tagesschluss, UTC, beide Zyklusseiten
 HOCH = HOCH_CLOSE            # alter Name, damit nichts still bricht
 
+# Der Preis zu diesem Tag. Er steht hier nicht, damit man ihn glauben muss,
+# sondern damit der Lauf ihn gegen data/history.json pruefen kann. Weicht das
+# Archiv ab, faellt der Lauf durch, statt eine falsche Zahl zu stempeln.
+HOCH_WERT = 124776.68
+
 # seite, dann je element-id das startdatum und ein anhaengsel.
 # die ids stehen im html, sie sind der anker. wer im html eine id
 # umbenennt, muss sie hier mitaendern, sonst faellt es beim lauf auf.
@@ -99,13 +112,19 @@ ZYKLUS = {
 
 DOM_SEITE = "bitcoin-dominance.html"
 MARKT_SEITE = "markets.html"
-SCHLUSS_SEITE = "bitcoin-top-to-bottom.html"
+DD_SEITE = "bitcoin-drawdown.html"
+# Beide Seiten rechnen im Browser mit LAST_CLOSE weiter, also wird in beide
+# gestempelt. Die Drawdownseite hat zusaetzlich LOW_CLOSE und LOW_DATE.
+SCHLUSS_SEITEN = ("bitcoin-top-to-bottom.html", DD_SEITE)
+SCHLUSS_SEITE = SCHLUSS_SEITEN[0]   # alter Name, damit nichts still bricht
 
 # die zwei Zuweisungen werden einzeln ersetzt, nicht die ganze Zeile. wer
 # die Zeile umbricht oder eine dritte Variable dazuschreibt, verliert sonst
 # beim naechsten Lauf, was er geschrieben hat.
 RE_CLOSE = re.compile(r"(var LAST_CLOSE\s*=\s*)([0-9][0-9_.]*)")
 RE_DATE = re.compile(r"(LAST_DATE\s*=\s*\")(\d{4}-\d{2}-\d{2})(\")")
+RE_LOW = re.compile(r"(var LOW_CLOSE\s*=\s*)([0-9][0-9_.]*)")
+RE_LOWDATE = re.compile(r"(LOW_DATE\s*=\s*\")(\d{4}-\d{2}-\d{2})(\")")
 
 # EINE LISTE, EINE WAHRHEIT
 # Wer hier eine Seite eintraegt, hat sie in der Leiste jeder anderen Seite.
@@ -116,6 +135,7 @@ RE_DATE = re.compile(r"(LAST_DATE\s*=\s*\")(\d{4}-\d{2}-\d{2})(\")")
 SEITEN = [
     ("bitcoin-halving-to-top.html", "halving to top"),
     ("bitcoin-top-to-bottom.html", "top to bottom"),
+    ("bitcoin-drawdown.html", "drawdown"),
     ("bitcoin-dominance.html", "dominance"),
     ("markets.html", "markets"),
     ("what-if.html", "what if"),
@@ -123,6 +143,12 @@ SEITEN = [
 
 # die drei preisreihen muessen am selben tag alle drei dastehen, sonst
 # vergleicht man einen handelstag mit einem wochenende.
+# Die drei abgeschlossenen Zyklen, Hoch und Element-id auf der
+# Top-to-Bottom-Seite. CYC_LEN ist die Laenge der Reihen im Seitenskript;
+# der Stempel muss genauso abschneiden, sonst weicht er ab Tag 451 ab.
+VORZYKLEN = (("c13", "2013-12-05"), ("c17", "2017-12-17"), ("c21", "2021-11-09"))
+CYC_LEN = 451
+
 DREI = ("gld", "spy", "btc")
 SEKTOREN = ("xlk", "xly", "xlu", "xlp")
 
@@ -149,6 +175,29 @@ def geld(n):
     if n >= 1e9:
         return "$%.0fB" % (n / 1e9)
     return "$%.0f" % n
+
+
+def als_datum(iso):
+    return datetime.date(*[int(x) for x in iso.split("-")])
+
+
+def kurz(iso):
+    """5 Dec 2013, die kurzform in den tabellenzellen."""
+    t = iso.split("-")
+    return "%d %s %s" % (int(t[2]), MONATE[int(t[1]) - 1][:3], t[0])
+
+
+def proz1(wert, bezug):
+    """eine nachkommastelle, vorzeichen nur wenn negativ. genau das, was
+    toFixed(1) im seitenskript liefert."""
+    return "%.1f%%" % ((float(wert) / float(bezug) - 1.0) * 100.0)
+
+
+def dollar(v):
+    """ganze dollar mit tausendertrenner, wie Math.round(v).toLocaleString
+    im seitenskript. gerundet wird wie in javascript, also die halbe stelle
+    nach oben und nicht zur geraden zahl."""
+    return "{:,}".format(int(float(v) + 0.5))
 
 
 def geld_delta(n):
@@ -389,11 +438,14 @@ def setz_schluss(html, close, datum):
     return html, n1, n2
 
 
+def setz_tief(html, close, datum):
+    """dasselbe fuer LOW_CLOSE/LOW_DATE auf der drawdownseite."""
+    html, n1 = RE_LOW.subn(lambda m: m.group(1) + zahl(close), html)
+    html, n2 = RE_LOWDATE.subn(lambda m: m.group(1) + datum + m.group(3), html)
+    return html, n1, n2
+
+
 def lauf_schluss():
-    pfad = os.path.join(REPO, SCHLUSS_SEITE)
-    if not os.path.exists(pfad):
-        print("  ok   %-30s nicht vorhanden, uebersprungen" % SCHLUSS_SEITE)
-        return 0
     if not os.path.exists(LOG):
         print("  FEHL %-30s data/market-log.json fehlt" % SCHLUSS_SEITE)
         return 1
@@ -404,17 +456,211 @@ def lauf_schluss():
         print("  FEHL %-30s kein btc-schluss im log" % SCHLUSS_SEITE)
         return 1
 
-    with open(pfad, "r", encoding="utf-8") as fh:
-        alt = fh.read()
-    neu, n1, n2 = setz_schluss(alt, zeile["btc"], zeile["d"])
-    if not (n1 and n2):
-        # ohne die beiden zuweisungen friert der rueckgang auf der seite
-        # ein, und das sieht niemand, weil die tageszahl daneben weiterlaeuft
-        print("  FEHL %-30s LAST_CLOSE/LAST_DATE nicht gefunden (%d/%d)"
-              % (SCHLUSS_SEITE, n1, n2))
+    # das tief kommt aus dem archiv, nicht aus dem log. der rand des logs
+    # kommt nur dazu, falls das archiv aelter ist als das tief.
+    tief = None
+    if os.path.exists(ARCHIV):
+        with open(ARCHIV, "r", encoding="utf-8") as fh:
+            tief = tief_nach(mit_rand(archiv_reihe(json.load(fh)), rows), HOCH_CLOSE)
+
+    fehler = 0
+    for datei in SCHLUSS_SEITEN:
+        pfad = os.path.join(REPO, datei)
+        if not os.path.exists(pfad):
+            print("  ok   %-30s nicht vorhanden, uebersprungen" % datei)
+            continue
+        with open(pfad, "r", encoding="utf-8") as fh:
+            alt = fh.read()
+        neu, n1, n2 = setz_schluss(alt, zeile["btc"], zeile["d"])
+        if not (n1 and n2):
+            # ohne die beiden zuweisungen friert der rueckgang auf der seite
+            # ein, und das sieht niemand, weil die tageszahl daneben weiterlaeuft
+            print("  FEHL %-30s LAST_CLOSE/LAST_DATE nicht gefunden (%d/%d)"
+                  % (datei, n1, n2))
+            fehler += 1
+            continue
+        meldung = "letzter schluss %s vom %s" % (zahl(zeile["btc"]), zeile["d"])
+        if datei == DD_SEITE:
+            if not tief:
+                print("  FEHL %-30s kein tief aus dem archiv" % datei)
+                fehler += 1
+                continue
+            neu, m1, m2 = setz_tief(neu, tief[1], tief[0])
+            if not (m1 and m2):
+                print("  FEHL %-30s LOW_CLOSE/LOW_DATE nicht gefunden (%d/%d)"
+                      % (datei, m1, m2))
+                fehler += 1
+                continue
+            meldung += ", tief %s vom %s" % (zahl(tief[1]), tief[0])
+        fehler += schreiben(pfad, alt, neu, datei, meldung)
+    return fehler
+
+
+# --- teil 6, die rueckgangszahlen ------------------------------------
+#
+# WARUM ES DAS SEIT 22.09.2026 GIBT
+# Die Top-to-Bottom-Seite stempelte bis dahin ihre Tageszaehler und die
+# beiden Variablen LAST_CLOSE/LAST_DATE, aber nicht den Rueckgang daneben.
+# Der rechnete nur im Browser. Im Quelltext stand deshalb "-39.4%, close of
+# 15 September 2026", waehrend zwei Zeilen tiefer das gestempelte
+# LAST_CLOSE schon den 22. September trug. Die Vergleichszellen c13, c17
+# und c21 standen sogar voellig leer da. Fuer eine Antwortmaschine, die
+# kein JavaScript ausfuehrt, war die Seite damit falsch, und zwar genau an
+# der Zahl, um die es geht.
+#
+# Ab jetzt gilt: was das Seitenskript setzt, wird auch gestempelt. Die
+# Dopplung zwischen hier und dem Skript ist unvermeidlich und der Grund,
+# warum unten fuer jede Zahl ein Testfall steht.
+
+def archiv_reihe(rows):
+    """archiv als sortierte liste (tag, preis), nur zeilen mit btc."""
+    return sorted((r["d"], float(r["btc"])) for r in (rows or [])
+                  if isinstance(r, dict) and isinstance(r.get("d"), str)
+                  and isinstance(r.get("btc"), (int, float)))
+
+
+def mit_rand(reihe, logrows):
+    """das archiv, dazu die tage nach seinem rand, die nur im log stehen.
+
+    das archiv endet dort, wo der letzte backfill lief, der taegliche
+    logger laeuft weiter. fuer ein tief ueber den ganzen zyklus muss
+    beides dastehen, sonst uebersieht die seite ein tief, das nach dem
+    letzten backfill entstanden ist. fuer denselben tag werden die reihen
+    nie gemischt, das archiv gewinnt ueberall, wo es etwas hat."""
+    if not reihe:
+        return []
+    rand = reihe[-1][0]
+    zu = sorted((r["d"], float(r["btc"])) for r in (logrows or [])
+                if isinstance(r, dict) and isinstance(r.get("d"), str)
+                and isinstance(r.get("btc"), (int, float)) and r["d"] > rand)
+    return list(reihe) + zu
+
+
+def hoch_seit(reihe, ab):
+    """hoechster preis am oder nach einem stichtag."""
+    kand = [p for p in reihe if p[0] >= ab]
+    return max(kand, key=lambda p: p[1]) if kand else None
+
+
+def tief_nach(reihe, tag):
+    """tiefster preis nach einem stichtag."""
+    kand = [p for p in reihe if p[0] > tag]
+    return min(kand, key=lambda p: p[1]) if kand else None
+
+
+def am_oder_vor(reihe, tag):
+    """der preis an einem tag, sonst der letzte davor."""
+    tref = None
+    for d, v in reihe:
+        if d > tag:
+            break
+        tref = (d, v)
+    return tref
+
+
+def rueckgang_werte(archivrows, logrows, bis=None):
+    """rechnet, was die beiden zyklusseiten im browser rechnen.
+    liefert (werte je seite, None) oder (None, grund)."""
+    reihe = archiv_reihe(archivrows)
+    if not reihe:
+        return None, "kein btc im archiv"
+    hoch = hoch_seit(reihe, HALVING)
+    if not hoch:
+        return None, "kein preis nach dem halving im archiv"
+    # Das Hoch ist eine getroffene Entscheidung, keine Laufzeitfrage. Sagt
+    # das Archiv etwas anderes, ist eine der beiden Seiten falsch, und dann
+    # soll der Lauf stehenbleiben statt zu raten.
+    if hoch[0] != HOCH_CLOSE or abs(hoch[1] - HOCH_WERT) > 0.005:
+        return None, ("archiv sagt hoch %s %.2f, die seiten sagen %s %.2f"
+                      % (hoch[0], hoch[1], HOCH_CLOSE, HOCH_WERT))
+    tief = tief_nach(mit_rand(reihe, logrows), HOCH_CLOSE)
+    if not tief:
+        return None, "kein preis nach dem hoch"
+    jetzt = letzter_schluss(logrows)
+    if not jetzt:
+        return None, "kein btc-schluss im log"
+
+    n = tage(HOCH_CLOSE, bis)
+    if n <= 0:
+        return None, "das hoch liegt nicht in der vergangenheit"
+    ntxt = "{:,}".format(n)
+    tieftag = tage(HOCH_CLOSE, als_datum(tief[0]))
+    tieftxt = "{:,}".format(tieftag)
+    jetztproz = proz1(jetzt["btc"], HOCH_WERT)
+    tiefproz = proz1(tief[1], HOCH_WERT)
+    jetztquelle = "%s, %s USD" % (lang(jetzt["d"]), dollar(jetzt["btc"]))
+
+    dd = {
+        "ddnow": jetztproz, "ddlead": jetztproz,
+        "ddtoday2": jetztproz, "ddfaq": jetztproz,
+        "ddnowsrc": "price of " + jetztquelle,
+        "ddday": ntxt,
+        "ddlowpct": tiefproz, "ddfaq2": tiefproz, "r25dd": tiefproz,
+        "ddlowsrc": "%s, %s USD" % (lang(tief[0]), dollar(tief[1])),
+        "ddlowday": tieftxt, "r25days": tieftxt, "ddfaq4": tieftxt,
+        "ddfaq3": lang(tief[0]),
+        "ddleadlow": tieftxt + " days",
+        "r25low": "%s, %s" % (kurz(tief[0]), dollar(tief[1])),
+        "ddbarlbl": tiefproz + " so far",
+    }
+
+    ttb = {
+        "dd": jetztproz, "dd2": jetztproz, "c25": jetztproz,
+        "ddts": "close of " + jetztquelle,
+        "c25d": kurz(jetzt["d"]),
+    }
+    # die drei vergleichszeilen: wo stand jeder alte zyklus am selben tag.
+    # das seitenskript liest dafuer die reihe CYC, die auf drei stellen
+    # gerundet ist. hier wird genauso gerundet, sonst weicht die gestempelte
+    # zahl in der letzten stelle von der angezeigten ab.
+    preis = dict(reihe)
+    for kennung, top in VORZYKLEN:
+        if top not in preis:
+            return None, "zyklushoch %s fehlt im archiv" % top
+        j = min(n, CYC_LEN - 1)
+        ziel = versatz(top, j)
+        tref = am_oder_vor(reihe, ziel)
+        if not tref:
+            return None, "kein preis am oder vor %s" % ziel
+        r = round(tref[1] / preis[top], 3)
+        ttb[kennung] = "%.1f%%" % ((r - 1.0) * 100.0)
+        ttb[kennung + "d"] = kurz(ziel)
+    return {DD_SEITE: dd, "bitcoin-top-to-bottom.html": ttb}, None
+
+
+def lauf_rueckgang():
+    if not os.path.exists(ARCHIV):
+        print("  FEHL %-30s data/history.json fehlt" % DD_SEITE)
         return 1
-    return schreiben(pfad, alt, neu, SCHLUSS_SEITE,
-                     "letzter schluss %s vom %s" % (zahl(zeile["btc"]), zeile["d"]))
+    if not os.path.exists(LOG):
+        print("  FEHL %-30s data/market-log.json fehlt" % DD_SEITE)
+        return 1
+    with open(ARCHIV, "r", encoding="utf-8") as fh:
+        archivrows = json.load(fh)
+    with open(LOG, "r", encoding="utf-8") as fh:
+        logrows = json.load(fh)
+    werte, grund = rueckgang_werte(archivrows, logrows)
+    if werte is None:
+        print("  FEHL %-30s %s" % (DD_SEITE, grund))
+        return 1
+
+    fehler = 0
+    for datei, felder in sorted(werte.items()):
+        pfad = os.path.join(REPO, datei)
+        if not os.path.exists(pfad):
+            print("  ok   %-30s nicht vorhanden, uebersprungen" % datei)
+            continue
+        with open(pfad, "r", encoding="utf-8") as fh:
+            alt = fh.read()
+        neu, treffer, fehlend = setz_text(alt, felder)
+        if fehlend:
+            print("  FEHL %-30s id nicht gefunden %s" % (datei, ", ".join(fehlend)))
+            fehler += 1
+            continue
+        fehler += schreiben(pfad, alt, neu, datei,
+                            "%d rueckgangszahlen, heute %s"
+                            % (treffer, felder.get("ddnow") or felder.get("dd")))
+    return fehler
 
 
 # --- teil 4, die leiste ----------------------------------------------
@@ -604,7 +850,91 @@ def selbsttest():
     pruefe("unbekannte seite ohne markierung",
            "<span>" in leiste("gibtsnicht.html"), False)
 
-    print("%d von 49 faellen falsch" % schlecht)
+    # --- die rueckgangszahlen ---
+    pruefe("kurzdatum", kurz("2013-12-05"), "5 Dec 2013")
+    pruefe("langdatum", lang("2026-07-01"), "1 July 2026")
+    pruefe("eine stelle nach unten", proz1(58534.28, 124776.68), "-53.1%")
+    pruefe("eine stelle nach oben", proz1(110.0, 100.0), "10.0%")
+    pruefe("dollar gerundet", dollar(58534.28), "58,534")
+    # javascript rundet die halbe stelle nach oben, python normalerweise zur
+    # geraden zahl. ginge das auseinander, waere die gestempelte zahl um
+    # einen dollar neben der angezeigten.
+    pruefe("halbe stelle wie javascript", dollar(2.5), "3")
+
+    reihe = archiv_reihe([{"d": "2026-01-02", "btc": 2.0},
+                          {"d": "2026-01-01", "btc": 1.0},
+                          {"d": "2026-01-03", "gld": 5.0}])
+    pruefe("archiv sortiert und gefiltert", reihe, [("2026-01-01", 1.0), ("2026-01-02", 2.0)])
+    pruefe("hoechster seit stichtag", hoch_seit(reihe, "2026-01-01"), ("2026-01-02", 2.0))
+    pruefe("nichts nach dem stichtag", hoch_seit(reihe, "2027-01-01"), None)
+    pruefe("tiefster danach", tief_nach(reihe, "2025-12-31"), ("2026-01-01", 1.0))
+    pruefe("am oder vor, genauer treffer", am_oder_vor(reihe, "2026-01-02"), ("2026-01-02", 2.0))
+    pruefe("am oder vor, tag davor", am_oder_vor(reihe, "2026-01-05"), ("2026-01-02", 2.0))
+    pruefe("am oder vor, nichts davor", am_oder_vor(reihe, "2025-01-01"), None)
+
+    # der rand des logs kommt nur fuer tage nach dem archivrand dazu. fuer
+    # denselben tag gewinnt immer das archiv, sonst stuenden zwei
+    # verschiedene preisdefinitionen in einer spalte.
+    randlog = [{"d": "2026-01-02", "btc": 99.0}, {"d": "2026-01-04", "btc": 3.0}]
+    pruefe("rand angehaengt", mit_rand(reihe, randlog),
+           [("2026-01-01", 1.0), ("2026-01-02", 2.0), ("2026-01-04", 3.0)])
+    pruefe("archiv gewinnt am selben tag",
+           dict(mit_rand(reihe, randlog))["2026-01-02"], 2.0)
+    pruefe("leeres archiv bleibt leer", mit_rand([], randlog), [])
+
+    # ein vollstaendiger durchlauf auf gesetzten zahlen. der stichtag steht
+    # fest, damit der fall nicht morgen ein anderes ergebnis hat.
+    tarchiv = [{"d": "2013-12-05", "btc": 1000.0}, {"d": "2014-11-20", "btc": 250.0},
+               {"d": "2017-12-17", "btc": 20000.0}, {"d": "2018-12-02", "btc": 4000.0},
+               {"d": "2021-11-09", "btc": 50000.0}, {"d": "2022-10-25", "btc": 20000.0},
+               {"d": HOCH_CLOSE, "btc": HOCH_WERT}, {"d": "2026-07-01", "btc": 62388.34}]
+    tlog = [{"d": "2026-09-22", "btc": 99821.344}]
+    w, grund = rueckgang_werte(tarchiv, tlog, datetime.date(2026, 9, 22))
+    pruefe("kein grund zum abbruch", grund, None)
+    dd, ttb = w[DD_SEITE], w["bitcoin-top-to-bottom.html"]
+    pruefe("rueckgang heute", dd["ddnow"], "-20.0%")
+    pruefe("quelle mit datum und preis", dd["ddnowsrc"],
+           "price of 22 September 2026, 99,821 USD")
+    pruefe("tage seit dem hoch", dd["ddday"], "350")
+    pruefe("tiefster punkt", dd["ddlowpct"], "-50.0%")
+    pruefe("tiefpunkt mit datum", dd["ddlowsrc"], "1 July 2026, 62,388 USD")
+    pruefe("tag des tiefpunkts", dd["ddlowday"], "267")
+    pruefe("tabellenzelle kurz", dd["r25low"], "1 Jul 2026, 62,388")
+    pruefe("balkenbeschriftung offen", dd["ddbarlbl"], "-50.0% so far")
+    pruefe("dieselbe zahl auf beiden seiten", ttb["dd"], dd["ddnow"])
+    pruefe("schlusszeile der zyklusseite", ttb["ddts"],
+           "close of 22 September 2026, 99,821 USD")
+    pruefe("datum in der vergleichszeile", ttb["c25d"], "22 Sep 2026")
+    pruefe("zyklus 2013 am selben tag", (ttb["c13"], ttb["c13d"]), ("-75.0%", "20 Nov 2014"))
+    pruefe("zyklus 2017 am selben tag", (ttb["c17"], ttb["c17d"]), ("-80.0%", "2 Dec 2018"))
+    pruefe("zyklus 2021 am selben tag", (ttb["c21"], ttb["c21d"]), ("-60.0%", "25 Oct 2022"))
+
+    # ein archiv, das ein anderes hoch kennt als die seiten, darf nichts
+    # stempeln. sonst stuende eine falsche zahl da, und zwar genau die.
+    falsch = [{"d": HOCH_CLOSE, "btc": HOCH_WERT}, {"d": "2025-11-01", "btc": 999999.0},
+              {"d": "2026-07-01", "btc": 1.0}]
+    pruefe("fremdes hoch faellt auf", rueckgang_werte(falsch, tlog,
+           datetime.date(2026, 9, 22))[0], None)
+    pruefe("archiv ohne bitcoin faellt auf",
+           rueckgang_werte([{"d": "2026-01-01", "gld": 1.0}], tlog)[0], None)
+    pruefe("log ohne schluss faellt auf",
+           rueckgang_werte(tarchiv, [{"d": "2026-09-22", "gld": 1.0}],
+                           datetime.date(2026, 9, 22))[0], None)
+
+    js2 = 'var LOW_CLOSE = 1, LOW_DATE = "2000-01-01";'
+    fertig2, k1, k2 = setz_tief(js2, 58534.28, "2026-07-01")
+    pruefe("tief gestempelt", fertig2,
+           'var LOW_CLOSE = 58534.28, LOW_DATE = "2026-07-01";')
+    pruefe("beide tief-zuweisungen", (k1, k2), (1, 1))
+    pruefe("zweiter lauf ist ruhig",
+           setz_tief(fertig2, 58534.28, "2026-07-01")[0], fertig2)
+
+    # die neue seite muss in der leiste stehen und in beiden stempelwegen
+    pruefe("drawdownseite in der leiste",
+           "bitcoin-drawdown.html" in [d for d, _ in SEITEN], True)
+    pruefe("drawdownseite bekommt LAST_CLOSE", DD_SEITE in SCHLUSS_SEITEN, True)
+
+    print("%d von 89 faellen falsch" % schlecht)
     return 1 if schlecht else 0
 
 
@@ -615,7 +945,7 @@ def main(argv):
     print("laufzeitpunkt %s utc\n"
           % datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
     fehler = (lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
-              + lauf_schluss())
+              + lauf_schluss() + lauf_rueckgang())
     if fehler:
         print("\n%d seite(n) nicht gestempelt" % fehler)
         return 1
