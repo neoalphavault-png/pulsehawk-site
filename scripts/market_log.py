@@ -63,6 +63,50 @@ TD_SYMBOLE = [("gld", "GLD"), ("spy", "SPY"), ("xlk", "XLK"),
 
 KRAKEN_PAARE = {"btc": "XBTUSD", "eth": "ETHUSD"}
 
+# ---------------------------------------------------------------------------
+# BAND   was ueberhaupt eine ernstzunehmende zahl sein kann. gilt immer,
+#        auch beim allerersten wert eines feldes, wo es nichts zum
+#        vergleichen gibt. genau dieses netz haette den 20.08. gefangen.
+#        die grenzen sind absichtlich weit. sie sollen unsinn abfangen,
+#        keine marktmeinung durchsetzen. gold darf sich verdoppeln.
+#
+# WIEDERHERGESTELLT AM 23.09.2026, WORTGLEICH AUS DER HISTORIE
+# Eingefuehrt am 21.08.2026 in f356ec0, am 29.08.2026 in b6deb57 mitsamt
+# der Pruefung entfernt. scripts/history.py importiert BAND aber weiter,
+# und damit war history.py seit dem 29.08. nicht mehr ausfuehrbar:
+#
+#     ImportError: cannot import name 'BAND' from 'market_log'
+#
+# Das hat niemand gemerkt, weil archiv.yml keinen Zeitplan hatte und nur
+# von Hand lief. Der erste Schritt dieses Workflows ist history.py
+# --selftest, der Lauf waere also sofort rot geworden.
+#
+# Die Werte sind nicht neu erfunden, sie stehen so in b6deb57^.
+#
+# ⚠️ ACHTUNG, HALBE SACHE
+# Der taegliche Logger selbst prueft seit b6deb57 NICHT mehr dagegen,
+# merge() nimmt jeden Wert. Hier steht also die Konstante wieder, das Netz
+# noch nicht. Wer das Netz zurueckwill, muss die Pruefung in merge()
+# wieder einziehen; das ist eine Entscheidung ueber das Verhalten des
+# Loggers und wurde hier bewusst nicht mitgetroffen.
+# ---------------------------------------------------------------------------
+
+BAND = {
+    "gld":        (50.0, 2000.0),
+    "spy":        (100.0, 5000.0),
+    "xlk":        (10.0, 2000.0),
+    "xly":        (10.0, 2000.0),
+    "xlu":        (10.0, 2000.0),
+    "xlp":        (10.0, 2000.0),
+    "btc":        (1000.0, 10000000.0),
+    "eth":        (10.0, 1000000.0),
+    "btc_dom":    (20.0, 95.0),
+    "total_mcap": (1e11, 1e15),
+    "eurusd":     (0.5, 2.0),
+    "stables":    (1e10, 1e13),
+    "spy_vol":    (1e6, 1e9),
+}
+
 
 def _hide(text):
     return text.replace(TD_KEY, "***") if TD_KEY else text
