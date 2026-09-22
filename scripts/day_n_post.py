@@ -61,6 +61,22 @@ TOP_DATE = "2025-10-06"
 
 MONATE = ["January", "February", "March", "April", "May", "June", "July",
           "August", "September", "October", "November", "December"]
+
+# EINE EINZIGE ZEILE, AN EINEM EINZIGEN TAG
+# Am 22.09.2026 ist die Bitcoinreihe im Archiv um einen Tag zurueckgesetzt
+# worden, siehe bc_tag() in history.py. Der Post vom 22.09. war da schon
+# raus und trug die alte Zaehlung, day 350. Mit dem neuen Stichtag waere es
+# die 351 gewesen, und der naechste Post springt auf 352. Im Feed fehlt
+# damit eine Zahl, ohne dass jemand erklaeren wuerde, warum.
+#
+# Diese Zeile erklaert den Sprung genau an dem Tag, an dem er sichtbar
+# wird, und danach nie wieder. Verglichen wird das Datum des SCHLUSSES,
+# nicht das des Laufs: der Post gehoert zu seinem Schluss, und wenn der
+# Marktlogger einen Tag spaeter kommt, soll die Zeile mit ihm mitgehen
+# statt ins Leere zu laufen.
+EINMAL_AM = "2026-09-23"
+EINMAL = ("we re-dated our archive by one day: the top close is 6 october "
+          "2025, so yesterday's day 350 was day 351.")
 VERBOTEN = ("—", "–", "→", "←", "->", "<-")
 
 
@@ -105,7 +121,12 @@ def text(n, close, datum):
     return "\n".join([
         "day %s." % "{:,}".format(n),
         "",
-        "bitcoin closed at %s on %s." % ("{:,.0f}".format(close), lang(datum)),
+        # "traded at", nicht "closed at": der Wert kommt aus dem
+        # Marktlogger, der um 21:23 UTC einen Momentanpreis abgreift.
+        # Ein Schlusskurs ist das nicht, und der Tagesdurchschnitt aus
+        # dem Archiv waere es auch nicht.
+        "bitcoin traded at %s on %s (21:23 utc)."
+        % ("{:,.0f}".format(close), lang(datum)),
         "",
         # abs(): "minus 39,4 Prozent unter" waere doppelt verneint. Liegt der
         # Schluss ueber dem Hoch, heisst die Zeile "above" und der Zyklus ist
@@ -114,8 +135,10 @@ def text(n, close, datum):
             abs(prozent(close)), "below" if prozent(close) < 0 else "above",
             lang(TOP_DATE), "{:,.0f}".format(TOP)),
         "",
-        "counted from daily closes, never intraday highs.",
-    ])
+        # "prices", nicht "closes": die Archivreihe ist ein
+        # boersenuebergreifender Tagesdurchschnitt von blockchain.com.
+        "counted from daily prices, never intraday highs.",
+    ] + ([""] + [EINMAL] if datum == EINMAL_AM else []))
 
 
 def bauen(rows, html, heute, max_age):
@@ -219,7 +242,37 @@ def selbsttest():
     ueber = bauen([{"d": "2026-09-15", "btc": 130000.0}],
                   'var LAST_CLOSE = 130000, LAST_DATE = "2026-09-15";', "2026-09-16", 3)[0]
     pruefe("ueber dem hoch heisst above", "percent above the" in ueber, True)
-    pruefe("methode steht dabei", t.strip().endswith("counted from daily closes, never intraday highs."), True)
+    pruefe("methode steht dabei",
+           t.strip().endswith("counted from daily prices, never intraday highs."), True)
+    pruefe("kein schlusskurs behauptet", "traded at" in t and "closed at" not in t, True)
+    pruefe("uhrzeit steht dabei", "(21:23 utc)" in t, True)
+
+    # --- die einmalige zeile zur umdatierung ---
+    def post_am(tag):
+        return bauen([{"d": tag, "btc": 75608.0}],
+                     'var LAST_CLOSE = 75608, LAST_DATE = "%s";' % tag, tag, 3)[0]
+
+    am = post_am(EINMAL_AM)
+    pruefe("am stichtag steht die zeile da", am.strip().endswith(EINMAL), True)
+    pruefe("und sie steht genau einmal", am.count(EINMAL), 1)
+    pruefe("auch mit der zeile passt der post in einen tweet", len(am) <= 280, True)
+    pruefe("die zeile verletzt keine schreibregel",
+           any(z in EINMAL for z in VERBOTEN), False)
+    # der tag davor ist der, dessen zaehlung uebersprungen wird, und der
+    # tag danach ist schon wieder normal. beide duerfen die zeile nicht haben.
+    pruefe("am tag davor nicht", EINMAL in post_am("2026-09-22"), False)
+    pruefe("am tag danach nicht", EINMAL in post_am("2026-09-24"), False)
+    # die zeile laesst nur noch einen buchstaben luft. bei einem kurs ueber
+    # rund 250.000 waere der post zu lang und ginge gar nicht raus. das ist
+    # die sichere richtung, aber es soll hier stehen und nicht ueberraschen.
+    pruefe("auch bei 130.000 passt der post",
+           len(bauen([{"d": EINMAL_AM, "btc": 130000.0}],
+                     'var LAST_CLOSE = 130000, LAST_DATE = "%s";' % EINMAL_AM,
+                     EINMAL_AM, 3)[0]) <= 280, True)
+    pruefe("an einem beliebigen tag nicht", EINMAL in t, False)
+    pruefe("ohne die zeile endet der post auf der methode",
+           post_am("2026-09-24").strip().endswith(
+               "counted from daily prices, never intraday highs."), True)
 
     # die drei Sperren
     pruefe("alter schluss postet nicht",
@@ -242,7 +295,7 @@ def selbsttest():
         pruefe("seite traegt dieselben konstanten",
                (float(m.group(1)), m.group(2)) if m else None, (TOP, TOP_DATE))
 
-    print("%d von 22 faellen falsch" % schlecht)
+    print("%d von 34 faellen falsch" % schlecht)
     return 1 if schlecht else 0
 
 
