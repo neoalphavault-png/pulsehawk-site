@@ -517,7 +517,7 @@ def lauf_schluss():
 # WARUM ES DAS SEIT 22.09.2026 GIBT
 # Die Top-to-Bottom-Seite stempelte bis dahin ihre Tageszaehler und die
 # beiden Variablen LAST_CLOSE/LAST_DATE, aber nicht den Rueckgang daneben.
-# Der rechnete nur im Browser. Im Quelltext stand deshalb "-39.4%, close of
+# Der rechnete nur im Browser. Im Quelltext stand deshalb "-39.4%, price of
 # 15 September 2026", waehrend zwei Zeilen tiefer das gestempelte
 # LAST_CLOSE schon den 22. September trug. Die Vergleichszellen c13, c17
 # und c21 standen sogar voellig leer da. Fuer eine Antwortmaschine, die
@@ -622,7 +622,7 @@ def rueckgang_werte(archivrows, logrows, bis=None):
 
     ttb = {
         "dd": jetztproz, "dd2": jetztproz, "c25": jetztproz,
-        "ddts": "close of " + jetztquelle,
+        "ddts": "price of " + jetztquelle,
         "c25d": kurz(jetzt["d"]),
     }
     # die drei vergleichszeilen: wo stand jeder alte zyklus am selben tag.
@@ -923,7 +923,7 @@ def selbsttest():
     pruefe("balkenbeschriftung offen", dd["ddbarlbl"], "-50.0% so far")
     pruefe("dieselbe zahl auf beiden seiten", ttb["dd"], dd["ddnow"])
     pruefe("schlusszeile der zyklusseite", ttb["ddts"],
-           "close of 22 September 2026, 99,821 USD")
+           "price of 22 September 2026, 99,821 USD")
     pruefe("datum in der vergleichszeile", ttb["c25d"], "22 Sep 2026")
     pruefe("zyklus 2013 am selben tag", (ttb["c13"], ttb["c13d"]), ("-75.0%", "20 Nov 2014"))
     pruefe("zyklus 2017 am selben tag", (ttb["c17"], ttb["c17d"]), ("-80.0%", "2 Dec 2018"))
