@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Long Do Bitcoin Bull Runs Last? 1,050 to 1,067 Days</title>
+<meta name="description" content="How long Bitcoin bull runs last, counted from our own archive of daily prices since 2010: 1,067, 1,059 and 1,050 days from the cycle low to the following top. The rise is the steadier half of the cycle, the fall varies far more. No forecast.">
+<link rel="canonical" href="https://pulsehawk.io/bitcoin-bull-run-length.html">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta property="og:title" content="How Long Do Bitcoin Bull Runs Last? 1,050 to 1,067 Days">
+<meta property="og:description" content="Three completed bull runs of 1,067, 1,059 and 1,050 days, low to top, counted from daily prices. Next to the falls, which spread more than twice as wide.">
+<meta property="og:url" content="https://pulsehawk.io/bitcoin-bull-run-length.html">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How long do Bitcoin bull runs last?",
+     "acceptedAnswer":{"@type":"Answer","text":"In the three completed cycles the rise from the cycle low to the following top lasted 1,067 days, 1,059 days and 1,050 days. All three sit within 17 days of each other, which is under two percent of their own length."}},
+    {"@type":"Question","name":"When did the last Bitcoin bull run start and end?",
+     "acceptedAnswer":{"@type":"Answer","text":"It ran from the low of 21 November 2022 at 15,760 US dollars to the top of 6 October 2025 at 124,777 US dollars. That is 1,050 days and a rise of 692 percent, measured between full-day prices."}},
+    {"@type":"Question","name":"How much did Bitcoin rise in each bull run?",
+     "acceptedAnswer":{"@type":"Answer","text":"11,109 percent from January 2015 to December 2017, 1,991 percent from December 2018 to November 2021, and 692 percent from November 2022 to October 2025. The rise got smaller every cycle while its length barely moved."}},
+    {"@type":"Question","name":"Is the rise or the fall more consistent?",
+     "acceptedAnswer":{"@type":"Answer","text":"The rise. The three bull runs span 17 days between shortest and longest, the three falls span 42 days. Measured against their own average length the rise varies about seven times less."}},
+    {"@type":"Question","name":"How long has the current bull run lasted?",
+     "acceptedAnswer":{"@type":"Answer","text":"The page carries a live day count from 30 June 2026, the lowest full-day price since the October 2025 top. That date is only a low in hindsight, so the count is shown conditionally and is not a claim that the bottom is in."}},
+    {"@type":"Question","name":"Does this predict when the next top comes?",
+     "acceptedAnswer":{"@type":"Answer","text":"No. Three completed cycles are three data points. This page counts what already happened and names no date and no price."}}
+  ]
+}
+</script>
+<style>
+  :root { --bg:#080B0F; --card:#0B0E12; --line:#1A1D21; --teal:#49EACB;
+          --btc:#D95926; --txt:#FFFFFF; --dim:#9BA3AB; --dimmer:#7A828C; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:'Helvetica Neue',Arial,sans-serif;
+         background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(73,234,203,0.10), transparent 60%); }
+  .wrap { max-width:720px; margin:0 auto; padding:34px 20px 60px; }
+  .nav { display:flex; align-items:center; gap:11px; text-decoration:none; }
+  .nav img { width:30px; }
+  .nav b { font-size:17px; letter-spacing:4px; color:var(--txt); font-weight:800; }
+  .nav b span { color:var(--teal); }
+  .pnav { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .pnav a, .pnav span { font-size:13px; padding:7px 13px; border-radius:999px;
+            text-decoration:none; border:1px solid var(--line); color:var(--dimmer); }
+  .pnav a:hover { border-color:rgba(73,234,203,0.45); color:var(--dim); }
+  .pnav span { background:rgba(73,234,203,0.10); border-color:rgba(73,234,203,0.45);
+               color:var(--teal); font-weight:700; }
+  .eyebrow { font-size:12px; letter-spacing:4px; color:var(--dimmer); text-transform:uppercase;
+             margin-top:42px; font-weight:700; }
+  h1 { font-size:34px; line-height:1.18; letter-spacing:-0.6px; margin-top:12px; }
+  .lead { font-size:17px; line-height:27px; color:var(--txt); margin-top:18px; }
+  .lead b { color:var(--teal); font-weight:700; }
+  h2 { font-size:21px; letter-spacing:-0.3px; margin:40px 0 0; }
+  p { font-size:15.5px; line-height:25px; color:var(--dim); margin-top:12px; }
+  p b { color:var(--txt); font-weight:600; }
+  a { color:var(--teal); }
+  p a { text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
+  .live { background:var(--card); border:1px solid var(--line); border-radius:16px;
+          padding:22px 24px; margin-top:22px; display:flex; flex-wrap:wrap; gap:26px; }
+  .live div { flex:1 1 190px; }
+  .live .k { font-size:12px; letter-spacing:2px; color:var(--dimmer); text-transform:uppercase; font-weight:700; }
+  .live .v { font-size:42px; font-weight:800; letter-spacing:-1.5px; margin-top:4px; color:var(--btc); }
+  .live .v.t { color:var(--teal); }
+  .live .s { font-size:13px; color:var(--dimmer); margin-top:2px; }
+  .chart { margin-top:18px; background:var(--card); border:1px solid var(--line);
+           border-radius:16px; padding:20px 18px 12px; }
+  .chart svg { width:100%; height:auto; display:block; }
+  .chart .lbl { font-size:13px; fill:var(--dim); font-weight:600; }
+  .chart .val { font-size:13px; fill:var(--txt); font-weight:700; }
+  .chart .tick { font-size:11px; fill:var(--dimmer); }
+  .chart .gl { stroke:var(--line); stroke-width:1; }
+  .chart .cap { font-size:12.5px; color:var(--dimmer); margin-top:10px; }
+  .scroll { overflow-x:auto; margin-top:16px; }
+  table { border-collapse:collapse; width:100%; min-width:600px; }
+  th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); font-size:14.5px; }
+  th { font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dimmer); font-weight:700; }
+  td.n { text-align:right; font-weight:700; color:var(--txt); font-variant-numeric:tabular-nums; }
+  tr.now td { color:var(--btc); }
+  tr.now td.n { color:var(--btc); }
+  .note { border-left:3px solid var(--teal); padding:2px 0 2px 16px; margin-top:20px; }
+  .note p { color:var(--txt); }
+  .method { font-size:12.5px; color:var(--dimmer); margin-top:10px; letter-spacing:0.2px; }
+  .faq { margin-top:14px; }
+  .faq .q { font-size:16px; font-weight:700; margin-top:22px; }
+  .faq p { margin-top:7px; }
+  footer { border-top:1px solid var(--line); margin-top:56px; padding-top:18px; display:flex;
+           justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
+  footer a { color:var(--dim); text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="nav" href="/"><img src="hawk.png" alt="PulseHawk"><b>PULSE<span>HAWK</span></b></a>
+<div class="pnav">
+  <a href="/bitcoin-halving-to-top.html">halving to top</a>
+  <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
+  <a href="/bitcoin-drawdown.html">drawdown</a>
+  <span>bull run length</span>
+  <a href="/bitcoin-dominance.html">dominance</a>
+  <a href="/markets.html">markets</a>
+  <a href="/what-if.html">what if</a>
+</div>
+<div class="eyebrow">Bitcoin cycle analysis</div>
+<h1>How long do Bitcoin bull runs last?</h1>
+<p class="lead">In the three completed cycles the rise from the low to the next top lasted
+<b id="blrange">1,050 to 1,067 days</b>. All three land within <b id="blspread">17 days</b> of
+each other. Every number here is counted from our own archive of daily prices since 2010, and
+the page makes no forecast.</p>
+<div class="live">
+  <div>
+    <div class="k">Every completed bull run</div>
+    <div class="v" id="blrange2">1,050 to 1,067</div>
+    <div class="s">days from the cycle low to the following top</div>
+  </div>
+  <div>
+    <div class="k">This cycle, if that low holds</div>
+    <div class="v t" id="blnow">85</div>
+    <div class="s" id="blnowsrc">days since 30 June 2026, 58,534 USD</div>
+  </div>
+</div>
+<p class="method">The left number is finished history and will not move. The right one is a
+plain day count from one date, and that date carries the caveat below.</p>
+
+<div class="note">
+<p>we count the climb, not the summit.</p>
+</div>
+
+<h2>The one thing to know about the right-hand number</h2>
+<p>30 June 2026 is <b>the lowest full-day price since the October 2025 top</b>. That is all it
+is. A low only becomes <b>the</b> low in hindsight, and if Bitcoin trades lower tomorrow, the
+count above restarts from that day. We print it as a conditional on purpose: <b>if that low
+holds</b>. It is not a claim that the bottom is in, and this page will never make one.</p>
+
+<h2>The four cycles, low to top</h2>
+<div class="scroll">
+<table>
+  <thead>
+    <tr><th>Cycle</th><th>Low</th><th>Top</th><th style="text-align:right">Days</th><th style="text-align:right">Rise</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>2015 to 2017</td><td>14 Jan 2015, 172</td><td>16 Dec 2017, 19,280</td><td class="n">1,067</td><td class="n">+11,109%</td></tr>
+    <tr><td>2018 to 2021</td><td>15 Dec 2018, 3,232</td><td>8 Nov 2021, 67,562</td><td class="n">1,059</td><td class="n">+1,991%</td></tr>
+    <tr><td>2022 to 2025</td><td>21 Nov 2022, 15,760</td><td>6 Oct 2025, 124,777</td><td class="n">1,050</td><td class="n">+692%</td></tr>
+    <tr class="now"><td>2026 to now</td><td id="r26low">30 Jun 2026, 58,534</td><td>not known</td><td class="n" id="r26days">85</td><td class="n" id="r26gain">+47%</td></tr>
+  </tbody>
+</table>
+</div>
+<p>The last row is open and conditional. Its low is the lowest price so far, its day count runs
+from that date, and its top has not happened. The three rows above it are finished.</p>
+
+<h2>The same four, charted</h2>
+<div class="chart">
+<svg viewBox="0 0 720 178" role="img" aria-label="Days from each Bitcoin cycle low to the following top: 1,067, 1,059 and 1,050 days in the three completed cycles, with the current one still open">
+  <line class="gl" x1="108.0" x2="108.0" y1="4" y2="150"/>
+  <text class="tick" x="108.0" y="168" text-anchor="middle">the low</text>
+  <line class="gl" x1="248.0" x2="248.0" y1="4" y2="150"/>
+  <text class="tick" x="248.0" y="168" text-anchor="middle">day 300</text>
+  <line class="gl" x1="388.0" x2="388.0" y1="4" y2="150"/>
+  <text class="tick" x="388.0" y="168" text-anchor="middle">day 600</text>
+  <line class="gl" x1="528.0" x2="528.0" y1="4" y2="150"/>
+  <text class="tick" x="528.0" y="168" text-anchor="middle">day 900</text>
+  <line class="gl" x1="668.0" x2="668.0" y1="4" y2="150"/>
+  <text class="tick" x="668.0" y="168" text-anchor="middle">day 1200</text>
+  <text class="lbl" x="0" y="24">2015 to 2017</text>
+  <rect x="108" y="10" width="497.9" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="614.9" y="24">1,067</text>
+  <text class="lbl" x="0" y="62">2018 to 2021</text>
+  <rect x="108" y="48" width="494.2" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="611.2" y="62">1,059</text>
+  <text class="lbl" x="0" y="100">2022 to 2025</text>
+  <rect x="108" y="86" width="490.0" height="18" rx="5" fill="#39424C"/>
+  <text class="val" x="607.0" y="100">1,050</text>
+  <text class="lbl" x="0" y="138">2026 to now</text>
+  <rect id="blbar" x="108" y="124" width="39.7" height="18" rx="5" fill="var(--btc)"/>
+  <text id="blbarlbl" class="val" x="156.7" y="138" fill="var(--btc)">85 and counting</text>
+</svg>
+  <div class="cap">Days from each cycle low to the following top, measured between full-day
+  prices. The current bar counts from the lowest price so far and has no end yet.</div>
+</div>
+
+<h2>The rise is the steadier half</h2>
+<p>This is the finding of the page, and it is the opposite of how the cycle is usually told.
+Put the two halves side by side and the climb is the part that repeats; the fall is the part
+that wanders.</p>
+<div class="scroll">
+<table>
+  <thead>
+    <tr><th>Half of the cycle</th><th style="text-align:right">Shortest</th><th style="text-align:right">Longest</th><th style="text-align:right">Spread</th><th style="text-align:right">Spread vs its own length</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Low to top, the rise</td><td class="n">1,050</td><td class="n">1,067</td><td class="n">17 days</td><td class="n">1.6%</td></tr>
+    <tr><td>Top to low, the fall</td><td class="n">364</td><td class="n">406</td><td class="n">42 days</td><td class="n">11.0%</td></tr>
+  </tbody>
+</table>
+</div>
+<p>The rise takes about <b>2.8 times as long</b> as the fall and varies about <b>seven times
+less</b> once you measure each spread against its own average. Three cycles are three data
+points and that is a small number, but within those three the pattern is not subtle: the fall
+of 2013 to 2015 ran 42 days longer than the fall of 2017 to 2018, while the longest and
+shortest rises differ by 17.</p>
+<p>The other column moves the other way. The rise was <b>+11,109%</b>, then <b>+1,991%</b>,
+then <b>+692%</b>. Each cycle took about as long and delivered a good deal less. What that
+means for the next one is not something three points can tell you, and we do not guess.</p>
+
+<h2>What this page will not do</h2>
+<p>It will not name a date for the next top. It will not turn a day count into a target, here
+or anywhere else on this site. The right-hand number at the top of the page is a count from a
+date that may yet be replaced by a lower one, and the three numbers next to it are history.</p>
+<p>Search this question and most results will add the same number of days to the same low and
+hand you a month. That is the part we leave out.</p>
+
+<h2>How we count</h2>
+<p>A cycle low is the <b>lowest full-day price between two tops</b>; a cycle top is the
+<b>highest full-day price between two lows</b>. The bull run is the calendar days between a low
+and the next top, with the low as day zero, and the rise is that top divided by that low. Every
+price comes from PulseHawk's own archive of <b>daily Bitcoin prices since 17 August 2010</b>,
+built from the <b>blockchain.com market price series</b>, one cross-exchange price per UTC day.
+The same four lows and four tops are used on the <a href="/bitcoin-top-to-bottom.html">top to
+bottom</a> page, the <a href="/bitcoin-drawdown.html">drawdown</a> page and the
+<a href="/bitcoin-halving-to-top.html">halving to top</a> page, so the four pages cannot
+disagree with each other.</p>
+<p class="method">Nothing here is copied from another site's cycle table. Every low and every
+top is printed with its date and its price so you can check both against any daily chart.</p>
+
+<h2>Questions people ask</h2>
+<div class="faq">
+  <div class="q">How long do Bitcoin bull runs last?</div>
+  <p><b id="blfaq">1,067, 1,059 and 1,050 days</b> in the three completed cycles, counted from
+  the cycle low to the following top.</p>
+  <div class="q">When did the last bull run start and end?</div>
+  <p>21 November 2022 at 15,760 dollars to 6 October 2025 at 124,777 dollars. That is 1,050
+  days and a rise of 692 percent.</p>
+  <div class="q">How much did Bitcoin rise each time?</div>
+  <p>+11,109%, then +1,991%, then +692%. Each rise took about as long as the last and
+  delivered a good deal less.</p>
+  <div class="q">Is the rise or the fall more consistent?</div>
+  <p>The rise, by a wide margin. 17 days of spread against 42, and the rise is 2.8 times
+  longer to begin with.</p>
+  <div class="q">How long has the current one lasted?</div>
+  <p><b id="blfaq2">85 days</b> since 30 June 2026, <b>if that low holds</b>. It is the lowest
+  price since the last top, which is not the same thing as the bottom.</p>
+  <div class="q">Does this predict the next top?</div>
+  <p>No, and this page names no date. Three cycles are three data points.</p>
+</div>
+<footer>
+  <div>PulseHawk. Market data with the arithmetic shown. No hype, no price targets.</div>
+  <div><a href="/">home</a> &nbsp; <a href="/impressum.html">impressum</a> &nbsp; <a href="/datenschutz.html">datenschutz</a></div>
+</footer>
+</div>
+<script>
+/* Tiefpunkt dieses Zyklus und letzte Lesung aus dem taeglichen Marktlog.
+   Der Stempel schreibt die vier Zuweisungen neu. */
+var LOW_CLOSE = 58534.28, LOW_DATE = "2026-06-30";
+var LAST_CLOSE = 86174, LAST_DATE = "2026-09-22";
+(function(){
+  var LONG = ["January","February","March","April","May","June","July","August",
+              "September","October","November","December"];
+  var d0 = function(iso){ return new Date(iso + "T00:00:00Z"); };
+  var tage = function(a, b){ return Math.floor((d0(b).getTime() - d0(a).getTime()) / 86400000); };
+  var heuteIso = function(){ var b = new Date();
+    return new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate())).toISOString().slice(0,10); };
+  var lang = function(iso){ var d = d0(iso);
+    return d.getUTCDate() + " " + LONG[d.getUTCMonth()] + " " + d.getUTCFullYear(); };
+  var set = function(id, txt){ var e = document.getElementById(id); if (e) e.textContent = txt; };
+  var zahl = function(v){ return Math.round(v).toLocaleString("en-US"); };
+
+  var n = tage(LOW_DATE, heuteIso());
+  if (!(isFinite(n) && n > 0)) return;
+  var s = n.toLocaleString("en-US");
+  set("blnow", s); set("r26days", s); set("blfaq2", s + " days");
+  set("blnowsrc", "days since " + lang(LOW_DATE) + ", " + zahl(LOW_CLOSE) + " USD");
+  set("blbarlbl", s + " and counting");
+
+  var g = (LAST_CLOSE / LOW_CLOSE - 1) * 100;
+  set("r26gain", (g >= 0 ? "+" : "") + Math.round(g).toLocaleString("en-US") + "%");
+
+  var bar = document.getElementById("blbar");
+  if (bar) {
+    var w = Math.min(n, 1200) * 560 / 1200;
+    bar.setAttribute("width", w.toFixed(1));
+    var lbl = document.getElementById("blbarlbl");
+    if (lbl) lbl.setAttribute("x", (108 + w + 9).toFixed(1));
+  }
+})();
+</script>
+</body>
+</html>
