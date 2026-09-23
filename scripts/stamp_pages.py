@@ -717,6 +717,79 @@ def proz0(wert, bezug):
     return ("+" if p >= 0 else "") + "{:,}".format(int(math.floor(p + 0.5)))
 
 
+# ZWEI WACHEN FUER DIE BULLENSEITE, SEIT 23.09.2026
+#
+# 1. DIE ABGESCHLOSSENEN ANSTIEGE
+# Sie stehen als Text auf der Seite, an vier Stellen: Tabelle, Fliesstext,
+# FAQ und FAQPage-JSON-LD. Gestempelt werden sie nicht, weil sie sich nie
+# mehr aendern. Genau deshalb ist ein Tippfehler dort unsichtbar, und genau
+# das ist am 23.09.2026 passiert: 67562,17 / 3231,91 sind 1990,47 Prozent,
+# auf eine Stelle 1990,5, und daraus wurde von Hand 1991 statt 1990. Zweimal
+# gerundet ist einmal zu oft. Der Lauf rechnet die drei jetzt selbst nach
+# und bleibt stehen, wenn eine davon nicht wortgleich auf der Seite steht.
+#
+# 2. KEIN ABGELEITETES DATUM
+# Die Seite darf aus 1050 Tagen kein Zieldatum machen, auch nicht als
+# Rechenbeispiel, auch nicht in der FAQ, auch nicht im JSON-LD. Wer
+# 30.06.2026 plus 1050 rechnen will, soll das selbst tun. Geprueft wird das
+# ganze Dokument ausser der Fusszeile; dort steht auf jeder Seite "no hype,
+# no price targets", also die Absage und nicht die Sache selbst.
+BULL_VERBOTEN = ("would put", "points to", "targets", "expect", "due in", "by 20")
+RE_JAHR_AB_2027 = re.compile(r"\b20(?:2[7-9]|[3-9]\d)\b")
+RE_FUSS = re.compile(r"<footer>.*?</footer>", re.S)
+
+
+def ohne_fuss(html):
+    return RE_FUSS.sub("", html)
+
+
+def prognose_funde(html):
+    """was nach vorhersage aussieht. leere liste heisst sauber."""
+    roh = ohne_fuss(html)
+    funde = [w for w in BULL_VERBOTEN if w in roh.lower()]
+    return funde + sorted(set(RE_JAHR_AB_2027.findall(roh)))
+
+
+def _zahl_steht(html, text):
+    """steht diese zahl als eigene zahl da, nicht als teil einer groesseren.
+    ohne die beiden lookarounds faende "692" auch die 692 in "1,692"."""
+    return re.search(r"(?<![\d,])%s(?![\d,])" % re.escape(text), html) is not None
+
+
+def anstieg_funde(html, anst):
+    """meldet jeden anstieg, der fehlt, und jeden, der um eine Stelle
+    daneben dasteht.
+
+    Die Nachbarpruefung ist der eigentliche Punkt. Am 23.09.2026 stand 1.991
+    an drei von vier Stellen und 1.990 an der vierten, im JSON-LD. Eine
+    Pruefung, die nur fragt "kommt die richtige Zahl irgendwo vor", haette
+    das durchgewunken. Eine Stelle daneben ist der Fingerabdruck des
+    doppelten Rundens, also wird genau darauf geprueft."""
+    fehler = []
+    for a in anst:
+        roh = a.lstrip("+")
+        if not _zahl_steht(html, roh):
+            fehler.append("%s fehlt" % roh)
+        zahl = int(roh.replace(",", ""))
+        for d in (-1, 1):
+            nachbar = "{:,}".format(zahl + d)
+            if _zahl_steht(html, nachbar):
+                fehler.append("%s steht da, richtig waere %s" % (nachbar, roh))
+    return fehler
+
+
+def bull_anstiege(reihe):
+    """die drei abgeschlossenen anstiege, gerechnet wie auf der seite.
+    liefert None, wenn ein eckpunkt fehlt."""
+    preis = dict(reihe)
+    out = []
+    for tief, hoch in ZYKLEN:
+        if tief not in preis or hoch not in preis:
+            return None
+        out.append(proz0(preis[hoch], preis[tief]))
+    return out
+
+
 def bullrun_werte(archivrows, logrows, bis=None):
     """rechnet, was bitcoin-bull-run-length.html im browser rechnet.
     liefert (werte, None) oder (None, grund)."""
@@ -783,12 +856,31 @@ def lauf_bullrun():
         return 1
     with open(pfad, "r", encoding="utf-8") as fh:
         alt = fh.read()
+
+    # wache 1: stehen die drei abgeschlossenen anstiege richtig da
+    anst = bull_anstiege(archiv_reihe(archivrows))
+    if anst is None:
+        print("  FEHL %-30s eckpunkt fuer die anstiege fehlt im archiv" % BL_SEITE)
+        return 1
+    fehlt = anstieg_funde(alt, anst)
+    if fehlt:
+        print("  FEHL %-30s anstieg falsch: %s" % (BL_SEITE, "; ".join(fehlt)))
+        return 1
+
+    # wache 2: kein abgeleitetes datum, keine vorhersage
+    funde = prognose_funde(alt)
+    if funde:
+        print("  FEHL %-30s sieht nach vorhersage aus: %s"
+              % (BL_SEITE, ", ".join(funde)))
+        return 1
+
     neu, treffer, fehlend = setz_text(alt, werte)
     if fehlend:
         print("  FEHL %-30s id nicht gefunden %s" % (BL_SEITE, ", ".join(fehlend)))
         return 1
     return schreiben(pfad, alt, neu, BL_SEITE,
-                     "%d zahlen, tag %s seit dem tief" % (treffer, werte["blnow"]))
+                     "%d zahlen, anstiege %s, tag %s seit dem tief"
+                     % (treffer, "/".join(anst), werte["blnow"]))
 
 
 # --- teil 4, die leiste ----------------------------------------------
@@ -1106,6 +1198,58 @@ def selbsttest():
     pruefe("log ohne schluss faellt auf",
            bullrun_werte(barchiv, [{"d": "2026-09-22", "gld": 1.0}],
                          datetime.date(2026, 9, 23))[0], None)
+
+    # --- wache 1, die abgeschlossenen anstiege ---
+    # der echte fall vom 23.09.2026: 1990,47 darf nicht ueber 1990,5 auf
+    # 1991 laufen. einmal runden, nicht zweimal.
+    pruefe("anstieg 2018 bis 2021 rundet einmal", proz0(67562.17, 3231.91), "+1,990")
+    pruefe("und nicht ueber die zwischenstelle",
+           round((67562.17 / 3231.91 - 1) * 100, 1), 1990.5)
+    pruefe("anstieg 2015 bis 2017", proz0(19279.90, 172.00), "+11,109")
+    pruefe("anstieg 2022 bis 2025", proz0(124776.68, 15759.61), "+692")
+    pruefe("alle drei auf einmal",
+           bull_anstiege([("2015-01-14", 172.00), ("2017-12-16", 19279.90),
+                          ("2018-12-15", 3231.91), ("2021-11-08", 67562.17),
+                          ("2022-11-21", 15759.61), (HOCH_CLOSE, HOCH_WERT)]),
+           ["+11,109", "+1,990", "+692"])
+    pruefe("fehlender eckpunkt meldet nichts statt irgendwas",
+           bull_anstiege([("2015-01-14", 172.00)]), None)
+
+    drei = ["+11,109", "+1,990", "+692"]
+    pruefe("richtige seite faellt nicht auf",
+           anstieg_funde("11,109 percent and +1,990% and +692%", drei), [])
+    # der echte fehler: drei stellen falsch, eine richtig. die alte pruefung
+    # "kommt die zahl irgendwo vor" hat das durchgewunken.
+    pruefe("eine stelle daneben faellt auf",
+           anstieg_funde("11,109 and +1,991% here, 1,990 percent there, +692%", drei),
+           ["1,991 steht da, richtig waere 1,990"])
+    pruefe("fehlende zahl faellt auf",
+           [f for f in anstieg_funde("+1,990% and +692%", drei) if "fehlt" in f],
+           ["11,109 fehlt"])
+    # eine zahl, die nur zufaellig enthalten ist, darf nicht anschlagen
+    pruefe("teil einer groesseren zahl zaehlt nicht",
+           _zahl_steht("das sind 1,692 dollar", "692"), False)
+    pruefe("und mit vorzeichen davor schon", _zahl_steht("+692%", "692"), True)
+
+    # --- wache 2, kein abgeleitetes datum ---
+    pruefe("sauberer text faellt nicht auf",
+           prognose_funde("<h1>x</h1><p>1,050 days from the low of 30 June 2026.</p>"), [])
+    pruefe("jahr ab 2027 faellt auf",
+           prognose_funde("<p>that lands in 2027.</p>"), ["2027"])
+    pruefe("auch ein spaeteres jahr", prognose_funde("<p>2031</p>"), ["2031"])
+    pruefe("vergangene jahre sind in ordnung",
+           prognose_funde("<p>2015, 2021, 2025 and 2026</p>"), [])
+    pruefe("rechenbeispiel faellt auf",
+           prognose_funde("<p>that would put the next top around then.</p>"), ["would put"])
+    pruefe("weitere wendungen faellen auf",
+           sorted(prognose_funde("<p>points to, targets, expect, due in, by 20</p>")),
+           ["by 20", "due in", "expect", "points to", "targets"])
+    # die fusszeile steht auf jeder seite und sagt das gegenteil
+    pruefe("fusszeile ausgenommen",
+           prognose_funde("<h1>x</h1><footer>No hype, no price targets. 2031</footer>"), [])
+    pruefe("die echte seite ist sauber",
+           prognose_funde(open(os.path.join(REPO, BL_SEITE), encoding="utf-8").read())
+           if os.path.exists(os.path.join(REPO, BL_SEITE)) else [], [])
 
     # die acht eckpunkte muessen dieselben sein wie auf den anderen seiten
     pruefe("bullenhochs sind die zyklushochs",
