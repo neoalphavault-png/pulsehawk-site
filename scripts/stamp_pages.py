@@ -60,6 +60,7 @@ Text daneben und nicht die Kurve.
 
 import datetime
 import json
+import math
 import os
 import re
 import sys
@@ -129,9 +130,13 @@ ZYKLUS = {
 DOM_SEITE = "bitcoin-dominance.html"
 MARKT_SEITE = "markets.html"
 DD_SEITE = "bitcoin-drawdown.html"
+BL_SEITE = "bitcoin-bull-run-length.html"
 # Beide Seiten rechnen im Browser mit LAST_CLOSE weiter, also wird in beide
 # gestempelt. Die Drawdownseite hat zusaetzlich LOW_CLOSE und LOW_DATE.
-SCHLUSS_SEITEN = ("bitcoin-top-to-bottom.html", DD_SEITE)
+SCHLUSS_SEITEN = ("bitcoin-top-to-bottom.html", DD_SEITE, BL_SEITE)
+# Seiten, die zusaetzlich LOW_CLOSE/LOW_DATE tragen, also das Tief
+# dieses Zyklus im Skript weiterrechnen.
+TIEF_SEITEN = (DD_SEITE, BL_SEITE)
 SCHLUSS_SEITE = SCHLUSS_SEITEN[0]   # alter Name, damit nichts still bricht
 
 # die zwei Zuweisungen werden einzeln ersetzt, nicht die ganze Zeile. wer
@@ -152,6 +157,7 @@ SEITEN = [
     ("bitcoin-halving-to-top.html", "halving to top"),
     ("bitcoin-top-to-bottom.html", "top to bottom"),
     ("bitcoin-drawdown.html", "drawdown"),
+    ("bitcoin-bull-run-length.html", "bull run length"),
     ("bitcoin-dominance.html", "dominance"),
     ("markets.html", "markets"),
     ("what-if.html", "what if"),
@@ -163,6 +169,20 @@ SEITEN = [
 # Top-to-Bottom-Seite. CYC_LEN ist die Laenge der Reihen im Seitenskript;
 # der Stempel muss genauso abschneiden, sonst weicht er ab Tag 451 ab.
 VORZYKLEN = (("c13", "2013-12-04"), ("c17", "2017-12-16"), ("c21", "2021-11-08"))
+
+# DIE VIER ZYKLEN ALS PAARE, SEIT 23.09.2026
+# Tief und darauffolgendes Hoch. Dieselben acht Eckpunkte, die auch die
+# anderen drei Zyklusseiten benutzen; sie stehen hier, damit die
+# Bullenseite nicht ihre eigene Lesart erfindet. Das letzte Paar ist offen,
+# sein Hoch ist noch nicht gelaufen.
+#
+# ⚠️ Das Tief 2026-06-30 ist das tiefste bisher, kein bestaetigter Boden.
+# Faellt Bitcoin tiefer, zieht der Lauf es aus dem Archiv nach und die
+# Seite zaehlt ab dem neuen Tag. Genau deshalb steht auf der Seite
+# ueberall "if that low holds" daneben.
+ZYKLEN = (("2015-01-14", "2017-12-16"),
+          ("2018-12-15", "2021-11-08"),
+          ("2022-11-21", HOCH_CLOSE))
 CYC_LEN = 451
 
 DREI = ("gld", "spy", "btc")
@@ -496,7 +516,7 @@ def lauf_schluss():
             fehler += 1
             continue
         meldung = "letzter schluss %s vom %s" % (zahl(zeile["btc"]), zeile["d"])
-        if datei == DD_SEITE:
+        if datei in TIEF_SEITEN:
             if not tief:
                 print("  FEHL %-30s kein tief aus dem archiv" % datei)
                 fehler += 1
@@ -677,6 +697,98 @@ def lauf_rueckgang():
                             "%d rueckgangszahlen, heute %s"
                             % (treffer, felder.get("ddnow") or felder.get("dd")))
     return fehler
+
+
+# --- teil 7, die bullenseite -----------------------------------------
+#
+# Spiegelbild von Teil 6: dort der Weg vom Hoch nach unten, hier der vom
+# Tief nach oben. Die Eckpunkte sind dieselben, nur anders gepaart, und
+# der Lauf prueft sie gegen das Archiv, statt sie zu glauben.
+
+def proz0(wert, bezug):
+    """ganze prozent mit vorzeichen, wie Math.round im seitenskript.
+
+    math.floor(p + 0.5) ist Math.round, Stelle fuer Stelle: beide runden die
+    halbe Stelle nach OBEN, also -47,5 auf -47 und nicht auf -48. Ein
+    int(p - 0.5) fuer negative Werte waere eine Stelle daneben. Hier faellt
+    das nicht auf, weil der Anstieg ueber einem Tief nie negativ wird, aber
+    die Funktion soll auch dann stimmen, wenn sie jemand anders benutzt."""
+    p = (float(wert) / float(bezug) - 1.0) * 100.0
+    return ("+" if p >= 0 else "") + "{:,}".format(int(math.floor(p + 0.5)))
+
+
+def bullrun_werte(archivrows, logrows, bis=None):
+    """rechnet, was bitcoin-bull-run-length.html im browser rechnet.
+    liefert (werte, None) oder (None, grund)."""
+    reihe = archiv_reihe(archivrows)
+    if not reihe:
+        return None, "kein btc im archiv"
+    preis = dict(reihe)
+
+    # jedes eckdatum muss im archiv stehen, sonst wird nicht gestempelt
+    spannen = []
+    for tief, hoch in ZYKLEN:
+        if tief not in preis or hoch not in preis:
+            return None, "eckpunkt fehlt im archiv (%s oder %s)" % (tief, hoch)
+        spannen.append(tage(tief, als_datum(hoch)))
+    if min(spannen) <= 0:
+        return None, "ein hoch liegt nicht nach seinem tief"
+
+    # das laufende tief kommt aus dem archiv, nicht aus der konstante:
+    # faellt bitcoin tiefer, zaehlt die seite ab dem neuen tag.
+    tief = tief_nach(mit_rand(reihe, logrows), HOCH_CLOSE)
+    if not tief:
+        return None, "kein preis nach dem hoch"
+    jetzt = letzter_schluss(logrows)
+    if not jetzt:
+        return None, "kein btc-schluss im log"
+
+    n = tage(tief[0], bis)
+    if n <= 0:
+        return None, "das tief liegt nicht in der vergangenheit"
+    ntxt = "{:,}".format(n)
+    kurz_txt = "{:,}".format(min(spannen))
+    lang_txt = "{:,}".format(max(spannen))
+    return {
+        "blrange": "%s to %s days" % (kurz_txt, lang_txt),
+        "blrange2": "%s to %s" % (kurz_txt, lang_txt),
+        "blspread": "{:,} days".format(max(spannen) - min(spannen)),
+        "blfaq": ", ".join("{:,}".format(x) for x in spannen[:-1])
+                 + " and {:,} days".format(spannen[-1]),
+        "blnow": ntxt,
+        "r26days": ntxt,
+        "blfaq2": ntxt + " days",
+        "blnowsrc": "days since %s, %s USD" % (lang(tief[0]), dollar(tief[1])),
+        "blbarlbl": ntxt + " and counting",
+        "r26low": "%s, %s" % (kurz(tief[0]), dollar(tief[1])),
+        "r26gain": proz0(jetzt["btc"], tief[1]) + "%",
+    }, None
+
+
+def lauf_bullrun():
+    pfad = os.path.join(REPO, BL_SEITE)
+    if not os.path.exists(pfad):
+        print("  ok   %-30s nicht vorhanden, uebersprungen" % BL_SEITE)
+        return 0
+    if not (os.path.exists(ARCHIV) and os.path.exists(LOG)):
+        print("  FEHL %-30s archiv oder log fehlt" % BL_SEITE)
+        return 1
+    with open(ARCHIV, "r", encoding="utf-8") as fh:
+        archivrows = json.load(fh)
+    with open(LOG, "r", encoding="utf-8") as fh:
+        logrows = json.load(fh)
+    werte, grund = bullrun_werte(archivrows, logrows)
+    if werte is None:
+        print("  FEHL %-30s %s" % (BL_SEITE, grund))
+        return 1
+    with open(pfad, "r", encoding="utf-8") as fh:
+        alt = fh.read()
+    neu, treffer, fehlend = setz_text(alt, werte)
+    if fehlend:
+        print("  FEHL %-30s id nicht gefunden %s" % (BL_SEITE, ", ".join(fehlend)))
+        return 1
+    return schreiben(pfad, alt, neu, BL_SEITE,
+                     "%d zahlen, tag %s seit dem tief" % (treffer, werte["blnow"]))
 
 
 # --- teil 4, die leiste ----------------------------------------------
@@ -951,7 +1063,60 @@ def selbsttest():
     pruefe("zweiter lauf ist ruhig",
            setz_tief(fertig2, 58534.28, "2026-06-30")[0], fertig2)
 
+    # --- die bullenseite ---
+    pruefe("ganze prozent hoch", proz0(150.0, 100.0), "+50")
+    pruefe("ganze prozent runter", proz0(50.0, 100.0), "-50")
+    pruefe("grosse prozent mit trenner", proz0(19279.90, 172.0), "+11,109")
+    pruefe("rundet ab", proz0(147.4, 100.0), "+47")
+    pruefe("rundet auf", proz0(147.6, 100.0), "+48")
+    # Math.round rundet die halbe Stelle nach oben, auch im negativen.
+    pruefe("halbe stelle negativ wie javascript", proz0(52.5, 100.0), "-47")
+
+    # ein vollstaendiger durchlauf auf gesetzten zahlen, fester stichtag
+    barchiv = [{"d": "2015-01-14", "btc": 100.0}, {"d": "2017-12-16", "btc": 10000.0},
+               {"d": "2018-12-15", "btc": 200.0}, {"d": "2021-11-08", "btc": 4000.0},
+               {"d": "2022-11-21", "btc": 500.0}, {"d": HOCH_CLOSE, "btc": HOCH_WERT},
+               {"d": "2026-06-30", "btc": 50000.0}]
+    blog = [{"d": "2026-09-22", "btc": 75000.0}]
+    w, grund = bullrun_werte(barchiv, blog, datetime.date(2026, 9, 23))
+    pruefe("kein grund zum abbruch", grund, None)
+    # 2015-01-14 -> 2017-12-16 sind 1067 tage, 2018-12-15 -> 2021-11-08 sind
+    # 1059, 2022-11-21 -> 2025-10-06 sind 1050. spanne also 17 tage.
+    pruefe("spanne der drei bullen", w["blrange"], "1,050 to 1,067 days")
+    pruefe("dieselbe zahl im kasten", w["blrange2"], "1,050 to 1,067")
+    pruefe("streuung", w["blspread"], "17 days")
+    pruefe("faq zaehlt alle drei auf", w["blfaq"], "1,067, 1,059 and 1,050 days")
+    pruefe("tage seit dem tief", w["blnow"], "85")
+    pruefe("dieselbe zahl in der tabelle", w["r26days"], "85")
+    pruefe("tief mit datum und preis", w["blnowsrc"], "days since 30 June 2026, 50,000 USD")
+    pruefe("balken bleibt offen", w["blbarlbl"], "85 and counting")
+    pruefe("tabellenzelle kurz", w["r26low"], "30 Jun 2026, 50,000")
+    pruefe("anstieg bisher", w["r26gain"], "+50%")
+
+    # faellt bitcoin unter das bisherige tief, zaehlt die seite ab dem neuen
+    # tag. genau dafuer steht "if that low holds" auf der seite.
+    tiefer = barchiv + [{"d": "2026-08-01", "btc": 40000.0}]
+    w2, _ = bullrun_werte(tiefer, blog, datetime.date(2026, 9, 23))
+    pruefe("neues tief zieht den zaehler nach", (w2["blnow"], w2["r26low"]),
+           ("53", "1 Aug 2026, 40,000"))
+
+    pruefe("fehlender eckpunkt faellt auf",
+           bullrun_werte([{"d": "2015-01-14", "btc": 1.0}], blog,
+                         datetime.date(2026, 9, 23))[0], None)
+    pruefe("log ohne schluss faellt auf",
+           bullrun_werte(barchiv, [{"d": "2026-09-22", "gld": 1.0}],
+                         datetime.date(2026, 9, 23))[0], None)
+
+    # die acht eckpunkte muessen dieselben sein wie auf den anderen seiten
+    pruefe("bullenhochs sind die zyklushochs",
+           [h for _, h in ZYKLEN],
+           [t for _, t in VORZYKLEN][1:] + [HOCH_CLOSE])
+
     # die neue seite muss in der leiste stehen und in beiden stempelwegen
+    pruefe("bullenseite in der leiste",
+           "bitcoin-bull-run-length.html" in [d for d, _ in SEITEN], True)
+    pruefe("bullenseite bekommt LAST_CLOSE", BL_SEITE in SCHLUSS_SEITEN, True)
+    pruefe("bullenseite bekommt LOW_CLOSE", BL_SEITE in TIEF_SEITEN, True)
     pruefe("drawdownseite in der leiste",
            "bitcoin-drawdown.html" in [d for d, _ in SEITEN], True)
     pruefe("drawdownseite bekommt LAST_CLOSE", DD_SEITE in SCHLUSS_SEITEN, True)
@@ -968,7 +1133,7 @@ def main(argv):
     print("laufzeitpunkt %s utc\n"
           % datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
     fehler = (lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
-              + lauf_schluss() + lauf_rueckgang())
+              + lauf_schluss() + lauf_rueckgang() + lauf_bullrun())
     if fehler:
         print("\n%d seite(n) nicht gestempelt" % fehler)
         return 1
