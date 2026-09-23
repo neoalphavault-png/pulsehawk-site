@@ -1,19 +1,29 @@
 name: langzeitarchiv
 
-# KEIN ZEITPLAN, UND DAS IST ABSICHT
-# Die Historie aendert sich nicht mehr. Der Lauf holt sie einmal und
-# schreibt sie nach data/history.json, danach ist die Datei fertig. Der
-# heutige Rand kommt aus data/market-log.json, den schreibt der
-# Marktlogger ohnehin jeden Tag.
+# WOECHENTLICH, SEIT 23.09.2026
+# Vorher stand hier "kein Zeitplan, und das ist Absicht": die Historie
+# aendere sich nicht mehr, der heutige Rand komme ohnehin aus
+# data/market-log.json. Der zweite Teil stimmt, der erste nicht ganz. Das
+# Archiv waechst am rechten Rand jeden Tag um einen Tag, und weil es nur
+# von Hand lief, hing es am 22.09.2026 einen ganzen Monat hinterher
+# (letzter Tag 21.08.2026). Die Seiten mussten deshalb ihre Tageszahl aus
+# dem Log ziehen statt aus dem Archiv.
 #
-# Starten von Hand ueber Actions, links langzeitarchiv, rechts Run
-# workflow.
+# Also Sonntag 03:00 UTC. Frueh genug, dass der Seitenstempel um 04:17
+# schon das nachgezogene Archiv sieht, und weit weg vom Marktlogger um
+# 21:23. Die Sperre unten teilt sich die Gruppe mit dem Stempel, es kann
+# also ohnehin nie gleichzeitig geschrieben werden.
+#
+# Von Hand starten geht weiter, ueber Actions, links langzeitarchiv,
+# rechts Run workflow.
 #
 # Der Lauf prueft am Ende selbst nach, wie viele Jahre je Feld wirklich
 # im Archiv stehen, und faellt durch, wenn eines unter acht Jahren
 # bleibt. Genau das ist am 23.08.2026 passiert, damals unbemerkt.
 
 on:
+  schedule:
+    - cron: "0 3 * * 0"     # sonntag, 03:00 utc
   workflow_dispatch:
 
 permissions:
