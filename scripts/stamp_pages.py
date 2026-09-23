@@ -735,7 +735,13 @@ def proz0(wert, bezug):
 # ganze Dokument ausser der Fusszeile; dort steht auf jeder Seite "no hype,
 # no price targets", also die Absage und nicht die Sache selbst.
 BULL_VERBOTEN = ("would put", "points to", "targets", "expect", "due in", "by 20")
-RE_JAHR_AB_2027 = re.compile(r"\b20(?:2[7-9]|[3-9]\d)\b")
+
+# JAHRE RELATIV ZUM LAUFENDEN JAHR, SEIT 23.09.2026
+# Hier stand "jede Jahreszahl ab 2027", fest verdrahtet. Das waere am
+# 1. Januar 2027 auf jeder Seite angesprungen, die schlicht das laufende
+# Jahr nennt, und zwar an dem Tag, an dem niemand damit rechnet. Gesucht
+# ist ein Jahr in der ZUKUNFT, also wird gegen das laufende Jahr geprueft.
+RE_JAHR = re.compile(r"\b(?:19|20)\d\d\b")
 RE_FUSS = re.compile(r"<footer>.*?</footer>", re.S)
 
 
@@ -743,11 +749,17 @@ def ohne_fuss(html):
     return RE_FUSS.sub("", html)
 
 
-def prognose_funde(html):
-    """was nach vorhersage aussieht. leere liste heisst sauber."""
+def prognose_funde(html, jahr=None):
+    """was nach vorhersage aussieht. leere liste heisst sauber.
+
+    jahr ist das laufende Jahr; ohne Angabe das heutige in UTC. Der
+    Parameter ist der Eingriffspunkt fuer den Selbsttest, der damit ein
+    anderes Systemjahr vorgaukelt."""
+    if jahr is None:
+        jahr = heute().year
     roh = ohne_fuss(html)
     funde = [w for w in BULL_VERBOTEN if w in roh.lower()]
-    return funde + sorted(set(RE_JAHR_AB_2027.findall(roh)))
+    return funde + sorted(set(j for j in RE_JAHR.findall(roh) if int(j) > jahr))
 
 
 def _zahl_steht(html, text):
@@ -756,25 +768,37 @@ def _zahl_steht(html, text):
     return re.search(r"(?<![\d,])%s(?![\d,])" % re.escape(text), html) is not None
 
 
-def anstieg_funde(html, anst):
-    """meldet jeden anstieg, der fehlt, und jeden, der um eine Stelle
-    daneben dasteht.
+# Ein Anstieg steht in zwei Schreibweisen auf der Seite: "+1,990%" im
+# Fliesstext und in der Tabelle, "1,990 percent" im JSON-LD. Beide werden
+# eingesammelt. Nicht eingesammelt werden Prozentwerte mit Nachkommastelle
+# wie "1.6%", das sind die Streuungsspalten und keine Anstiege.
+RE_ANSTIEG = re.compile(r"\+([\d,]+)%|([\d,]+) percent")
 
-    Die Nachbarpruefung ist der eigentliche Punkt. Am 23.09.2026 stand 1.991
-    an drei von vier Stellen und 1.990 an der vierten, im JSON-LD. Eine
-    Pruefung, die nur fragt "kommt die richtige Zahl irgendwo vor", haette
-    das durchgewunken. Eine Stelle daneben ist der Fingerabdruck des
-    doppelten Rundens, also wird genau darauf geprueft."""
-    fehler = []
-    for a in anst:
-        roh = a.lstrip("+")
-        if not _zahl_steht(html, roh):
-            fehler.append("%s fehlt" % roh)
-        zahl = int(roh.replace(",", ""))
-        for d in (-1, 1):
-            nachbar = "{:,}".format(zahl + d)
-            if _zahl_steht(html, nachbar):
-                fehler.append("%s steht da, richtig waere %s" % (nachbar, roh))
+
+def anstiege_im_text(html):
+    """jeder wert, der auf der seite wie ein anstieg aussieht, einmal."""
+    roh = ohne_fuss(html)
+    return sorted(set(a or b for a, b in RE_ANSTIEG.findall(roh)))
+
+
+def anstieg_funde(html, erlaubt):
+    """vergleicht die Seite gegen die aus dem Archiv gerechnete Menge.
+
+    ZWEI RICHTUNGEN, SEIT 23.09.2026
+    Vorher wurde nur auf den Nachbarn geprueft, also auf eine Abweichung um
+    eins. Das faengt das doppelte Runden vom 23.09.2026, aber weder einen
+    Zahlendreher wie 1.909 statt 1.990 noch eine veraltete Zahl aus einem
+    frueheren Backfill. Jetzt wird jeder Prozentwert, der auf der Seite wie
+    ein Anstieg aussieht, gegen die gerechnete Menge gehalten. Ein Wert, der
+    dort nicht vorkommt, ist ein Fehler und keine Warnung.
+
+    Die Gegenrichtung bleibt: ein gerechneter Anstieg, der auf der Seite
+    ueberhaupt nicht steht, faellt ebenfalls auf."""
+    erlaubt = set(str(x).lstrip("+").rstrip("%") for x in erlaubt)
+    fehler = ["%s steht da, gerechnet sind nur %s" % (a, ", ".join(sorted(erlaubt)))
+              for a in anstiege_im_text(html) if a not in erlaubt]
+    fehler += ["%s fehlt" % a for a in sorted(erlaubt)
+               if not _zahl_steht(ohne_fuss(html), a)]
     return fehler
 
 
@@ -862,7 +886,10 @@ def lauf_bullrun():
     if anst is None:
         print("  FEHL %-30s eckpunkt fuer die anstiege fehlt im archiv" % BL_SEITE)
         return 1
-    fehlt = anstieg_funde(alt, anst)
+    # erlaubt sind die drei gerechneten plus der laufende, der selbst
+    # gestempelt wird und deshalb ohnehin aus dem archiv kommt.
+    erlaubt = list(anst) + [werte["r26gain"]]
+    fehlt = anstieg_funde(alt, erlaubt)
     if fehlt:
         print("  FEHL %-30s anstieg falsch: %s" % (BL_SEITE, "; ".join(fehlt)))
         return 1
@@ -1216,17 +1243,51 @@ def selbsttest():
            bull_anstiege([("2015-01-14", 172.00)]), None)
 
     drei = ["+11,109", "+1,990", "+692"]
-    pruefe("richtige seite faellt nicht auf",
-           anstieg_funde("11,109 percent and +1,990% and +692%", drei), [])
-    # der echte fehler: drei stellen falsch, eine richtig. die alte pruefung
-    # "kommt die zahl irgendwo vor" hat das durchgewunken.
+    ok_seite = "11,109 percent and +1,990% and +692%"
+    pruefe("richtige seite faellt nicht auf", anstieg_funde(ok_seite, drei), [])
+    pruefe("beide schreibweisen werden eingesammelt",
+           anstiege_im_text("+1,990% im text, 692 percent im json-ld"),
+           ["1,990", "692"])
+    # streuungsspalten sind keine anstiege und duerfen nicht anschlagen
+    pruefe("prozent mit nachkommastelle zaehlt nicht",
+           anstiege_im_text("spread 1.6% gegen 11.0%"), [])
+
+    # der echte fehler vom 23.09.2026: eine stelle daneben
     pruefe("eine stelle daneben faellt auf",
-           anstieg_funde("11,109 and +1,991% here, 1,990 percent there, +692%", drei),
-           ["1,991 steht da, richtig waere 1,990"])
+           [f.split(" steht")[0] for f in
+            anstieg_funde("11,109 percent, +1,991%, 1,990 percent, +692%", drei)],
+           ["1,991"])
+    # was der alte nachbarcheck NICHT gefangen haette: ein zahlendreher
+    # hier meldet die wache zwei dinge auf einmal: der fremde wert steht da
+    # UND der richtige fehlt. beides ist gewollt, deshalb je ein fall.
+    pruefe("zahlendreher faellt auf",
+           [f.split(" steht")[0] for f in
+            anstieg_funde("11,109 percent and +1,909% and +692%", drei)
+            if " steht da" in f],
+           ["1,909"])
+    pruefe("und die fehlende richtige zahl faellt gleich mit auf",
+           [f for f in anstieg_funde("11,109 percent and +1,909% and +692%", drei)
+            if "fehlt" in f], ["1,990 fehlt"])
+    # eine veraltete zahl aus einem frueheren backfill
+    pruefe("veralteter wert faellt auf",
+           [f.split(" steht")[0] for f in
+            anstieg_funde("11,109 percent, +1,990%, +688%, +692%", drei)],
+           ["688"])
     pruefe("fehlende zahl faellt auf",
            [f for f in anstieg_funde("+1,990% and +692%", drei) if "fehlt" in f],
            ["11,109 fehlt"])
-    # eine zahl, die nur zufaellig enthalten ist, darf nicht anschlagen
+
+    # ein vierter anstieg, den wir bewusst dazunehmen: erst rot, dann gruen,
+    # sobald er in der gerechneten menge steht.
+    vier_seite = ok_seite + " and +1,234%"
+    pruefe("neuer anstieg faellt erst durch",
+           [f.split(" steht")[0] for f in anstieg_funde(vier_seite, drei)], ["1,234"])
+    pruefe("und wird gruen, sobald er gerechnet ist",
+           anstieg_funde(vier_seite, drei + ["+1,234"]), [])
+    # der laufende anstieg kommt mit prozentzeichen herein
+    pruefe("laufender anstieg wird mitgenommen",
+           anstieg_funde(ok_seite + " and +47%", drei + ["+47%"]), [])
+
     pruefe("teil einer groesseren zahl zaehlt nicht",
            _zahl_steht("das sind 1,692 dollar", "692"), False)
     pruefe("und mit vorzeichen davor schon", _zahl_steht("+692%", "692"), True)
@@ -1234,11 +1295,28 @@ def selbsttest():
     # --- wache 2, kein abgeleitetes datum ---
     pruefe("sauberer text faellt nicht auf",
            prognose_funde("<h1>x</h1><p>1,050 days from the low of 30 June 2026.</p>"), [])
-    pruefe("jahr ab 2027 faellt auf",
-           prognose_funde("<p>that lands in 2027.</p>"), ["2027"])
-    pruefe("auch ein spaeteres jahr", prognose_funde("<p>2031</p>"), ["2031"])
+    # das jahr wird gegen das LAUFENDE jahr geprueft, nicht gegen eine
+    # feste 2027. sonst schlaegt die wache am 01.01.2027 auf jeder seite an,
+    # die schlicht das aktuelle jahr nennt.
+    pruefe("kommendes jahr faellt auf",
+           prognose_funde("<p>that lands in 2027.</p>", jahr=2026), ["2027"])
+    pruefe("auch ein spaeteres jahr", prognose_funde("<p>2031</p>", jahr=2026), ["2031"])
     pruefe("vergangene jahre sind in ordnung",
-           prognose_funde("<p>2015, 2021, 2025 and 2026</p>"), [])
+           prognose_funde("<p>2015, 2021, 2025 and 2026</p>", jahr=2026), [])
+    # gefaelschtes systemjahr: dieselbe seite, ein jahr spaeter gelesen
+    pruefe("2027 ist 2027 kein fund mehr",
+           prognose_funde("<p>that lands in 2027.</p>", jahr=2027), [])
+    pruefe("2028 waere es dann aber",
+           prognose_funde("<p>2027 and 2028</p>", jahr=2027), ["2028"])
+    pruefe("und 2031 gelesen faellt gar kein jahr mehr auf",
+           prognose_funde("<p>2027, 2028, 2029, 2030, 2031</p>", jahr=2031), [])
+    # ohne angabe gilt das echte systemjahr
+    pruefe("ohne angabe das laufende jahr",
+           prognose_funde("<p>%d</p>" % (heute().year + 1)), [str(heute().year + 1)])
+    pruefe("das laufende jahr selbst ist sauber",
+           prognose_funde("<p>%d</p>" % heute().year), [])
+    # vierstellige zahlen, die keine jahresform haben, bleiben aussen vor
+    pruefe("day 1200 ist kein jahr", prognose_funde("<p>day 1200</p>", jahr=2026), [])
     pruefe("rechenbeispiel faellt auf",
            prognose_funde("<p>that would put the next top around then.</p>"), ["would put"])
     pruefe("weitere wendungen faellen auf",
