@@ -75,8 +75,8 @@ MONATE = ["January", "February", "March", "April", "May", "June", "July",
 # Marktlogger einen Tag spaeter kommt, soll die Zeile mit ihm mitgehen
 # statt ins Leere zu laufen.
 EINMAL_AM = "2026-09-23"
-EINMAL = ("we re-dated our archive by one day: the top close is 6 october "
-          "2025, so yesterday's day 350 was day 351.")
+EINMAL = ("archive re-dated by one day: the top reading is 6 october 2025. "
+          "yesterday was day 351, not 350.")
 VERBOTEN = ("—", "–", "→", "←", "->", "<-")
 
 
@@ -204,8 +204,11 @@ def main(argv=None):
 
 def selbsttest():
     schlecht = 0
+    gezaehlt = 0
 
     def pruefe(name, ist, soll):
+        nonlocal gezaehlt
+        gezaehlt += 1
         nonlocal schlecht
         if ist != soll:
             schlecht += 1
@@ -262,9 +265,8 @@ def selbsttest():
     # tag danach ist schon wieder normal. beide duerfen die zeile nicht haben.
     pruefe("am tag davor nicht", EINMAL in post_am("2026-09-22"), False)
     pruefe("am tag danach nicht", EINMAL in post_am("2026-09-24"), False)
-    # die zeile laesst nur noch einen buchstaben luft. bei einem kurs ueber
-    # rund 250.000 waere der post zu lang und ginge gar nicht raus. das ist
-    # die sichere richtung, aber es soll hier stehen und nicht ueberraschen.
+    # mit der kuerzeren fassung vom 23.09. sind es 270 zeichen, also zehn
+    # luft. der fall haelt fest, dass auch ein hoher kurs noch passt.
     pruefe("auch bei 130.000 passt der post",
            len(bauen([{"d": EINMAL_AM, "btc": 130000.0}],
                      'var LAST_CLOSE = 130000, LAST_DATE = "%s";' % EINMAL_AM,
@@ -295,7 +297,10 @@ def selbsttest():
         pruefe("seite traegt dieselben konstanten",
                (float(m.group(1)), m.group(2)) if m else None, (TOP, TOP_DATE))
 
-    print("%d von 34 faellen falsch" % schlecht)
+    # die gesamtzahl kommt aus der fallliste, nicht aus dem kopf des
+    # letzten, der einen fall ergaenzt hat. sie stand schon einmal auf
+    # 22, waehrend 34 faelle liefen.
+    print("%d von %d faellen falsch" % (schlecht, gezaehlt))
     return 1 if schlecht else 0
 
 

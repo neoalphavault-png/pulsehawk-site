@@ -83,12 +83,24 @@ KRAKEN_PAARE = {"btc": "XBTUSD", "eth": "ETHUSD"}
 #
 # Die Werte sind nicht neu erfunden, sie stehen so in b6deb57^.
 #
-# ⚠️ ACHTUNG, HALBE SACHE
-# Der taegliche Logger selbst prueft seit b6deb57 NICHT mehr dagegen,
-# merge() nimmt jeden Wert. Hier steht also die Konstante wieder, das Netz
-# noch nicht. Wer das Netz zurueckwill, muss die Pruefung in merge()
-# wieder einziehen; das ist eine Entscheidung ueber das Verhalten des
-# Loggers und wurde hier bewusst nicht mitgetroffen.
+# DAS NETZ HAENGT SEIT 23.09.2026 WIEDER
+# b6deb57 war kein gezielter Eingriff, sondern eine Neufassung der ganzen
+# Datei, 334 Zeilen rein und 663 raus, mit der Nachricht "Update
+# market_log.py". Mit der alten Holstruktur fiel die ganze Pruefschicht
+# weg: band_ok, drift_ok, pruefe_zeilen, letzte_werte, saeubere_log. Ein
+# Grund dafuer steht weder in der Nachricht noch im Diff, und keine der
+# neuen Funktionen ersetzt sie. Es sieht nach Kollateralschaden aus.
+#
+# Zurueck kommt das BAND, wertweise und laut: ein Wert ausserhalb seiner
+# Grenzen wird nicht uebernommen, und die Zeile im Lauf-Log nennt Feld,
+# Wert, Tag, Quelle und Grenzen. Still verworfen wird nichts.
+#
+# Verworfen wird immer nur der einzelne Wert, nie die ganze Zeile: wenn
+# Gold heute Unsinn liefert, ist das kein Grund, Bitcoin wegzuwerfen.
+#
+# NICHT zurueckgekommen ist DRIFT, das zweite Netz, das einen Wert am
+# Vortageswert misst. Das braucht den Vergleichsstand und eine Regel fuer
+# Luecken im Log, und es ist eine eigene Entscheidung.
 # ---------------------------------------------------------------------------
 
 BAND = {
@@ -110,6 +122,50 @@ BAND = {
 
 def _hide(text):
     return text.replace(TD_KEY, "***") if TD_KEY else text
+
+
+def _kurz(zahl):
+    """grosse grenzen lesbar machen, damit die meldung nicht aus nullen besteht."""
+    zahl = float(zahl)
+    for teiler, zeichen in ((1e12, "T"), (1e9, "B"), (1e6, "M")):
+        if abs(zahl) >= teiler:
+            return "%g%s" % (zahl / teiler, zeichen)
+    return "%g" % zahl
+
+
+def band_ok(key, wert):
+    """liegt der wert im bereich dessen, was diese groesse sein kann."""
+    grenzen = BAND.get(key)
+    if grenzen is None or wert is None:
+        return True
+    try:
+        zahl = float(wert)
+    except (TypeError, ValueError):
+        return False
+    return grenzen[0] <= zahl <= grenzen[1]
+
+
+def sammler():
+    """liefert (rows, put, verworfen).
+
+    put nimmt einen wert nur an, wenn er im band liegt. ein abgewiesener
+    wert verschwindet nicht still, sondern steht mit feld, wert, tag,
+    quelle und grenzen im lauf-log, damit im Actions-Protokoll steht,
+    was fehlt und warum."""
+    rows = {}
+    verworfen = []
+
+    def put(day, key, value, quelle="unbekannt"):
+        if not band_ok(key, value):
+            lo, hi = BAND[key]
+            print(" VERW %-9s %s am %s aus %s, ausserhalb von %s bis %s"
+                  % (key, value, day, quelle, _kurz(lo), _kurz(hi)))
+            verworfen.append((day, key, value, quelle))
+            return False
+        rows.setdefault(day, {"d": day})[key] = value
+        return True
+
+    return rows, put, verworfen
 
 
 def get_json(url, accept="application/json", tries=1, pause=6):
@@ -339,10 +395,7 @@ def run_daily():
     """holt die juengsten werte und verbucht jeden unter dem datum, an dem
     er entstanden ist. genau hier sass der fehler der ersten fassung, die
     alles unter "heute" ablegte und bei verspaeteten laeufen alles verwarf."""
-    rows = {}
-
-    def put(day, key, value):
-        rows.setdefault(day, {"d": day})[key] = value
+    rows, put, verworfen = sammler()
 
     # boersenkurse. der juengste abgeschlossene handelstag zaehlt, unter
     # seinem eigenen datum. am wochenende ist das der freitag, und das
@@ -356,9 +409,9 @@ def run_daily():
             time.sleep(8)
             continue
         newest = max(series)
-        put(newest, key, series[newest]["close"])
+        put(newest, key, series[newest]["close"], "twelve data")
         if key == "spy" and series[newest].get("volume") is not None:
-            put(newest, "spy_vol", series[newest]["volume"])
+            put(newest, "spy_vol", series[newest]["volume"], "twelve data")
         print(" OK   %-9s %s (%s)" % (key, series[newest]["close"], newest))
         time.sleep(8)
 
@@ -367,9 +420,9 @@ def run_daily():
     try:
         prices = cg_price(["bitcoin", "ethereum"])
         if prices.get("bitcoin") is not None:
-            put(today(), "btc", round(float(prices["bitcoin"]), 6))
+            put(today(), "btc", round(float(prices["bitcoin"]), 6), "coingecko")
         if prices.get("ethereum") is not None:
-            put(today(), "eth", round(float(prices["ethereum"]), 6))
+            put(today(), "eth", round(float(prices["ethereum"]), 6), "coingecko")
         print(" OK   krypto    btc %s eth %s (coingecko)"
               % (prices.get("bitcoin"), prices.get("ethereum")))
     except Exception as exc:  # noqa: BLE001
@@ -377,7 +430,7 @@ def run_daily():
         try:
             prices = kraken_price(["btc", "eth"])
             for k, v in prices.items():
-                put(today(), k, v)
+                put(today(), k, v, "kraken")
             print(" OK   krypto    btc %s eth %s (kraken)"
                   % (prices.get("btc"), prices.get("eth")))
         except Exception as exc2:  # noqa: BLE001
@@ -387,7 +440,7 @@ def run_daily():
     try:
         fx_tag, fx_kurs = fx_latest()
         if fx_tag:
-            put(fx_tag, "eurusd", fx_kurs)
+            put(fx_tag, "eurusd", fx_kurs, "frankfurter")
             print(" OK   eurusd    %s (%s)" % (fx_kurs, fx_tag))
     except Exception as exc:  # noqa: BLE001
         print(" FEHL eurusd    %s" % str(exc)[:90])
@@ -397,9 +450,9 @@ def run_daily():
     try:
         dom, total = cg_global()
         if dom is not None:
-            put(today(), "btc_dom", dom)
+            put(today(), "btc_dom", dom, "coingecko")
         if total is not None:
-            put(today(), "total_mcap", total)
+            put(today(), "total_mcap", total, "coingecko")
         print(" OK   global    dominanz %s gesamt %s" % (dom, total))
     except Exception as exc:  # noqa: BLE001
         print(" FEHL global    %s, hier bleibt eine ehrliche luecke"
@@ -410,19 +463,18 @@ def run_daily():
     try:
         reihe = dl_stablecoins(7)
         newest = max(reihe)
-        put(newest, "stables", reihe[newest])
+        put(newest, "stables", reihe[newest], "defillama")
         print(" OK   stables   %s (%s)" % (reihe[newest], newest))
     except Exception as exc:  # noqa: BLE001
         print(" FEHL stables   %s" % str(exc)[:90])
 
+    if verworfen:
+        print(" ---  %d wert(e) vom band abgewiesen, siehe VERW oben" % len(verworfen))
     return [rows[day] for day in sorted(rows)]
 
 
 def run_backfill(days=90):
-    rows = {}
-
-    def put(day, key, value):
-        rows.setdefault(day, {"d": day})[key] = value
+    rows, put, verworfen = sammler()
 
     vorher = time.strftime("%Y-%m-%d", time.gmtime(time.time() - days * 86400))
 
@@ -442,6 +494,7 @@ def run_backfill(days=90):
              ("eurusd", lambda: fx_series(vorher, today()), 1),
              ("stables", lambda: dl_stablecoins(days), 1)]
     for key, fetch, pause in plan:
+        quelle = "twelve data" if key in dict(TD_SYMBOLE) else "reihe"
         try:
             series = fetch()
         except Exception as exc:  # noqa: BLE001
@@ -449,14 +502,16 @@ def run_backfill(days=90):
             continue
         for day, value in series.items():
             if isinstance(value, dict):
-                put(day, key, value["close"])
+                put(day, key, value["close"], quelle)
                 if key == "spy" and value.get("volume") is not None:
-                    put(day, "spy_vol", value["volume"])
+                    put(day, "spy_vol", value["volume"], quelle)
             else:
-                put(day, key, value)
+                put(day, key, value, quelle)
         print(" OK   %-7s %d tage, %s bis %s"
               % (key, len(series), min(series), max(series)))
         time.sleep(pause)
+    if verworfen:
+        print(" ---  %d wert(e) vom band abgewiesen, siehe VERW oben" % len(verworfen))
     return [rows[day] for day in sorted(rows)]
 
 
@@ -464,8 +519,12 @@ def run_backfill(days=90):
 
 def run_selftest():
     fails = []
+    gezaehlt = [0]
 
     def check(name, got, want):
+        # die zahl unten kommt aus dieser liste und nicht aus dem kopf des
+        # letzten, der einen fall ergaenzt hat.
+        gezaehlt[0] += 1
         if got != want:
             fails.append("%s\n  ist  %r\n  soll %r" % (name, got, want))
 
@@ -558,12 +617,39 @@ def run_selftest():
                                         "totalCirculatingUSD": 304.6}]),
           {"2026-08-20": 305})
 
+    # --- das band, seit 23.09.2026 wieder in betrieb ---
+    # ein echter kurs von heute muss durchgehen. wer die grenzen enger
+    # zieht als den markt, verliert echte tage und merkt es spaet.
+    check("heutiger btc-kurs geht durch", band_ok("btc", 86174.0), True)
+    check("unsinn nach oben faellt", band_ok("btc", 5e15), False)
+    check("null faellt", band_ok("btc", 0), False)
+    check("genau auf der untergrenze geht", band_ok("btc", 1000.0), True)
+    check("knapp darunter faellt", band_ok("btc", 999.99), False)
+    check("keine zahl faellt", band_ok("btc", "viel"), False)
+    # ein feld ohne eintrag im band wird nicht geprueft, nicht verworfen
+    check("feld ohne band geht durch", band_ok("gibtsnicht", 1e99), True)
+    check("fehlender wert ist kein fehler", band_ok("btc", None), True)
+
+    rows, put, verworfen = sammler()
+    check("guter wert kommt an", put("2026-09-23", "btc", 86174.0, "kraken"), True)
+    check("schlechter wert kommt nicht an",
+          put("2026-09-23", "btc", 5e15, "coingecko"), False)
+    check("und die null auch nicht", put("2026-09-23", "btc", 0, "kraken"), False)
+    # verworfen wird der einzelne wert, nie die ganze zeile
+    check("gold darf danach weiter rein",
+          put("2026-09-23", "gld", 415.0, "twelve data"), True)
+    check("die zeile behaelt den guten wert",
+          rows["2026-09-23"], {"d": "2026-09-23", "btc": 86174.0, "gld": 415.0})
+    check("zwei abweisungen vermerkt", len(verworfen), 2)
+    check("mit wert und quelle", verworfen[0], ("2026-09-23", "btc", 5e15, "coingecko"))
+    check("grenzen lesbar", (_kurz(1000.0), _kurz(10000000.0)), ("1000", "10M"))
+
     if fails:
         print("selftest FEHLGESCHLAGEN")
         for f in fails:
             print(" " + f)
         return 1
-    print("selftest ok, 17 faelle")
+    print("selftest ok, %d faelle" % gezaehlt[0])
     return 0
 
 

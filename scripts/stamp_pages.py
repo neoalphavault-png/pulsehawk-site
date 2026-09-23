@@ -731,9 +731,11 @@ def lauf_leiste():
 
 def selbsttest():
     schlecht = 0
+    gezaehlt = 0
 
     def pruefe(name, ist, soll):
-        nonlocal schlecht
+        nonlocal schlecht, gezaehlt
+        gezaehlt += 1
         if ist != soll:
             schlecht += 1
             print("  FEHL %s\n    ist  %r\n    soll %r" % (name, ist, soll))
@@ -954,7 +956,8 @@ def selbsttest():
            "bitcoin-drawdown.html" in [d for d, _ in SEITEN], True)
     pruefe("drawdownseite bekommt LAST_CLOSE", DD_SEITE in SCHLUSS_SEITEN, True)
 
-    print("%d von 90 faellen falsch" % schlecht)
+    # die gesamtzahl kommt aus der fallliste, nicht von hand.
+    print("%d von %d faellen falsch" % (schlecht, gezaehlt))
     return 1 if schlecht else 0
 
 
