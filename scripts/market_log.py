@@ -120,6 +120,38 @@ BAND = {
 }
 
 
+def reihe_mit_logvorrang(feld, *, archiv, log):
+    """eine preisreihe [(tag, wert)] aus Archiv UND Tageslog, chronologisch.
+
+    DIE VORRANGREGEL IST HIER EINGEBACKEN, SEIT 24.09.2026
+    Fuer jeden Tag, den beide kennen, gewinnt der MARKTLOG. data/history.json
+    wird nur sonntags nachgezogen und haengt unter der Woche bis zu sechs
+    Tage hinterher. Wer das Archiv gewinnen laesst, baut ein zweites
+    "heute", und keine der beiden Zahlen ist falsch genug, dass es auffiele.
+
+    WARUM ALS FUNKTION UND NICHT ALS WACHE
+    Vorher stand diese Regel zweimal als blosse Reihenfolge in einem
+    concat, in what-if.html und in scripts/multibagger.py. Eine
+    Reihenfolge kann man vertauschen, ohne dass irgendetwas anschlaegt.
+    Deshalb sind archiv und log KEYWORD-ONLY: wer sie vertauschen will,
+    muss die Namen hinschreiben und es also wollen.
+
+    Nicht zu verwechseln mit mit_rand() in stamp_pages.py. Dort gewinnt
+    das Archiv fuer jeden Tag, den es hat, und das Log haengt nur hinten
+    an; das ist fuer ein Minimum ueber einen ganzen Zyklus richtig und
+    beruehrt den rechten Rand nicht. Hier geht es um den rechten Rand.
+    """
+    ser = {}
+    for rows in (archiv, log):          # log zuletzt, also gewinnt es
+        for r in rows or []:
+            if not isinstance(r, dict):
+                continue
+            tag, wert = r.get("d"), r.get(feld)
+            if isinstance(tag, str) and isinstance(wert, (int, float)) and wert > 0:
+                ser[tag] = float(wert)
+    return sorted(ser.items())
+
+
 def _hide(text):
     return text.replace(TD_KEY, "***") if TD_KEY else text
 
