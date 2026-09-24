@@ -22,7 +22,7 @@ Korrektur faellt der hoechste Tagespreis auf den 06.10.2025. Das ist
 derselbe Kalendertag wie das Intraday-Hoch, aber weiter ein anderer Preis:
 124.776,68 statt 126.198. Die Tageszahl im Post steigt dadurch um eins.
 
-FUENF SPERREN, DAMIT NIE UNSINN RAUSGEHT
+SECHS SPERREN, DAMIT NIE UNSINN RAUSGEHT
   1. Der Schluss muss frisch sein. Ist die juengste btc-Zeile aelter als
      --max-age Tage (Standard 3), wird nicht gepostet. Ein Marktlogger, der
      still steht, hat das Haus schon einmal zwoelf Tage gekostet.
@@ -35,7 +35,7 @@ FUENF SPERREN, DAMIT NIE UNSINN RAUSGEHT
      Sperre, die die Zaehltag-Gruppe der Stichtagswache hier durchsetzt.
   3. Doppelpost-Sperre ueber x_post.py, Schluessel dayn-<datum des schlusses>.
      Zwei Laeufe am selben Tag posten einmal. data/x-post-log.json merkt es.
-  5. Die Karte muss den Check bestehen. grafik_check.py baut sie, prueft sie
+  6. Die Karte muss den Check bestehen. grafik_check.py baut sie, prueft sie
      und schreibt die 390px-Vorschau. Reisst der Check, geht KEIN Post raus,
      auch kein reiner Textpost: lieber eine Luecke im Archiv als eine
      unlesbare Karte. Es gibt absichtlich keinen Schalter, der das umgeht.
@@ -75,30 +75,38 @@ MONATE = ["January", "February", "March", "April", "May", "June", "July",
           "August", "September", "October", "November", "December"]
 
 # EINE EINZIGE ZEILE, AN EINEM EINZIGEN TAG
-# Am 22.09.2026 ist die Bitcoinreihe im Archiv um einen Tag zurueckgesetzt
-# worden, siehe bc_tag() in history.py. Der Post vom 22.09. war da schon
-# raus und trug die alte Zaehlung, day 350. Mit dem neuen Stichtag waere es
-# die 351 gewesen, und der naechste Post springt auf 352. Im Feed fehlt
-# damit eine Zahl, ohne dass jemand erklaeren wuerde, warum.
+# WARUM AN EINEM TAG EIN VERMERK UNTER DEM POST STEHT
 #
-# Diese Zeile erklaert den Sprung genau an dem Tag, an dem er sichtbar
-# wird, und danach nie wieder. Verglichen wird das Datum des SCHLUSSES,
-# nicht das des Laufs: der Post gehoert zu seinem Schluss, und wenn der
-# Marktlogger einen Tag spaeter kommt, soll die Zeile mit ihm mitgehen
-# statt ins Leere zu laufen.
-# ABGESCHALTET AM 24.09.2026, BEVOR SIE JE RAUSGING.
-# Die Zeile war fuer die alte Zaehlung geschrieben und behauptet
-# "yesterday was day 351, not 350". Seit der Zaehltag heute ist, war
-# gestern Tag 352, die Zeile waere also falsch. Sie ist ausserdem
-# gegenstandslos: der letzte Post (22.09.) stand auf Tag 351, heute
-# steht 353 - ueber zwei Kalendertage genau zwei Tage weiter, also
-# springt fuer einen Leser nichts. Wortlaut bleibt fuer die Akte stehen.
-# Auf ein Datum gesetzt, feuert sie wieder.
-EINMAL_AM = None
-EINMAL_AM_ALT = "2026-09-23"
-EINMAL = ("archive re-dated by one day: the top reading is 6 october 2025. "
-          "yesterday was day 351, not 350.")
-VERBOTEN = ("—", "–", "→", "←", "->", "<-")
+# Die veroeffentlichte Reihe war in sich stimmig, entgegen dem ersten
+# Verdacht: 344, 345, 346, 347, 348, 350 - alle gerechnet vom damaligen
+# Top 2025-10-07 bis zum Schlusstag, eine Regel, keine zwei. Der Sprung
+# 348 -> 350 ist kein Regelwechsel, sondern ein fehlender Post: am
+# 21.09. stand im Marktlog eine Zeile ohne btc-Wert, die Quelle war aus.
+# Dass die Posts im Profil einen Tag nach ihrem Preis zu stehen scheinen,
+# ist der Zeitzonenrand: gelaufen wird 21:52 utc, angekommen gegen 23:37
+# utc, und das ist in Berlin schon der naechste Tag.
+#
+# Der Sprung von 350 auf 353 heute hat drei Glieder, und nur zwei davon
+# aendern die Zahl:
+#   350   letzter Post (22.09., Top 2025-10-07, bis zum Schlusstag)
+#   351   waere heute ohne jede Aenderung
+#   +1    Umdatierung des Tops auf 2025-10-06
+#   +1    Zaehltag heute statt Schlusstag
+#   353   heute
+# Der fehlende Post vom 23.09. traegt 0 bei. Er ist der Grund, warum
+# beide Aenderungen in EINEM Schritt sichtbar werden statt in zweien.
+#
+# Deshalb steht der Vermerk heute einmal da, und er wird gerechnet, nicht
+# geschrieben: die 353 ist die eigene Zahl, die 350 steht im zuletzt
+# veroeffentlichten Post. Waere eine von beiden hier festgeschrieben,
+# waere der Vermerk beim naechsten Mal falsch.
+
+# DER TAG, AN DEM DER ZAEHLTAG UMGESTELLT WURDE.
+# An diesem einen Zaehltag nennt der Post beide Regelaenderungen. Danach
+# nie wieder: ab dem 25.09. waechst der Zaehler um genau 1 am Tag, und
+# dann steht kein Vermerk mehr da.
+EINMAL_AM = "2026-09-24"
+VERBOTEN = ("\u2014", "\u2013", "\u2192", "\u2190", "->", "<-")
 
 
 def lang(iso):
@@ -159,7 +167,81 @@ def text(n, close, datum):
         # "prices", nicht "closes": die Archivreihe ist ein
         # boersenuebergreifender Tagesdurchschnitt von blockchain.com.
         "counted from daily prices, never intraday highs.",
-    ] + ([""] + [EINMAL] if datum == EINMAL_AM else []))
+    ])
+    # Der Vermerk bei einem Sprung haengt NICHT hier dran: er braucht den
+    # zuletzt veroeffentlichten Post und den Zaehltag, und beides kennt
+    # nur bauen(). Frueher wurde er hier am SCHLUSStag festgemacht - das
+    # war der falsche Anker, seit der Zaehler bis heute laeuft.
+
+
+def letzte_zahl(xlog):
+    """(tageszahl, kalendertag) des juengsten DAY-N-Posts, oder (None, None).
+
+    Gelesen wird der veroeffentlichte TEXT, nicht eine mitgefuehrte Zahl.
+    Was im Profil steht, ist die Wahrheit, gegen die der naechste Post
+    sich messen lassen muss."""
+    letzte = None
+    for e in xlog or []:
+        if str(e.get("key", "")).startswith("dayn-"):
+            letzte = e
+    if not letzte:
+        return None, None
+    m = re.search(r"\bday (\d+)\.", letzte.get("text", ""))
+    if not m:
+        return None, None
+    return int(m.group(1)), letzte["key"][len("dayn-"):]
+
+
+def hinweis(letzter_n, luecke, zaehltag):
+    """der vermerk unter dem post, wenn der zaehler nicht um 1 gewachsen ist.
+
+    Die eigene Zahl steht schon in der ersten Zeile des Posts, der
+    Vermerk nennt deshalb nur die vorige - und die kommt aus dem zuletzt
+    veroeffentlichten Text, nicht von hier. Waere eine der beiden Zahlen
+    festgeschrieben, waere der Vermerk beim naechsten Mal falsch. Das ist
+    auch der Grund fuer die knappe Fassung: 280 Zeichen sind hart, und
+    der Grundpost braucht davon 173."""
+    teile = []
+    if luecke == 1:
+        teile.append("no post yesterday.")
+    elif luecke > 1:
+        teile.append("no post for %d days." % luecke)
+    if zaehltag == EINMAL_AM:
+        teile.append("counter now runs to today, top moved to %s."
+                     % lang(TOP_DATE))
+    if not teile:
+        return ""
+    teile.append("the last post read %d." % letzter_n)
+    return " ".join(teile)
+
+
+def sprung_problem(n, letzter_n, vermerk, volltext=""):
+    """haelt den post an, wenn der zaehler nicht sauber weiterlaeuft.
+
+    Der Zaehler ist ein Kalenderzaehler: zwischen zwei Posts waechst er
+    um genau 1, sonst fehlt ein Tag - und dann muss die Luecke im Text
+    stehen, nicht nur in der Logdatei."""
+    if letzter_n is None:
+        return None
+    d = n - letzter_n
+    if d == 0:
+        return ("zaehler steht still: der letzte post stand schon auf tag %d. "
+                "zweimal derselbe tag geht nicht raus." % n)
+    if d < 0:
+        return ("zaehler laeuft rueckwaerts: tag %d nach tag %d"
+                % (n, letzter_n))
+    if d == 1:
+        return None
+    if not vermerk:
+        return ("zaehler springt von %d auf %d ohne vermerk im text"
+                % (letzter_n, n))
+    # beide zahlen muessen im post stehen, damit ein leser den sprung
+    # nachvollziehen kann. die eigene steht in zeile eins, die vorige im
+    # vermerk - geprueft wird deshalb der ganze text.
+    for zahl in (n, letzter_n):
+        if str(zahl) not in volltext:
+            return "der post nennt %d nicht, obwohl er springt" % zahl
+    return None
 
 
 def seite_tageszahl(html):
@@ -171,7 +253,7 @@ def seite_tageszahl(html):
     return int(m.group(1).replace(",", "")) if m else None
 
 
-def bauen(rows, html, heute, max_age):
+def bauen(rows, html, heute, max_age, xlog=None):
     """Alles, was ohne Netz geprueft werden kann. Gibt (text, key, problem)."""
     zeile = letzter_btc(rows)
     if not zeile:
@@ -204,7 +286,18 @@ def bauen(rows, html, heute, max_age):
         return None, None, ("post zaehlt tag %d, die seite zaehlt tag %d. "
                             "zwei zaehltage sind ein fehler, kein zeitversatz."
                             % (n, s_tag))
+    # der zaehler muss gegenueber dem zuletzt veroeffentlichten post um
+    # genau 1 gewachsen sein, sonst fehlt ein tag und der muss dastehen
+    letzter_n, letzter_tag = letzte_zahl(xlog)
+    luecke = max(0, tage(letzter_tag, heute) - 1) if letzter_tag else 0
+    vermerk = hinweis(letzter_n, luecke, heute) if letzter_n else ""
+
     t = text(n, float(zeile["btc"]), zeile["d"])
+    if vermerk:
+        t = t.rstrip() + "\n\n" + vermerk
+    fehl = sprung_problem(n, letzter_n, vermerk, t)
+    if fehl:
+        return None, None, fehl
     for z in VERBOTEN:
         if z in t:
             return None, None, "schreibregel verletzt, gefunden %r" % z
@@ -234,7 +327,9 @@ def main(argv=None):
     with open(SEITE, encoding="utf-8") as fh:
         html = fh.read()
     heute = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
-    t, key, problem = bauen(rows, html, heute, a.max_age)
+    with open(XLOG, encoding="utf-8") as fh:
+        xlog = json.load(fh)
+    t, key, problem = bauen(rows, html, heute, a.max_age, xlog)
     if problem:
         print("kein post: %s" % problem)
         return 1
@@ -315,19 +410,18 @@ def selbsttest():
     pruefe("kein schlusskurs behauptet", "traded at" in t and "closed at" not in t, True)
     pruefe("uhrzeit steht dabei", "(21:23 utc)" in t, True)
 
-    # --- die einmalige zeile zur umdatierung, abgeschaltet ---
-    def post_am(tag, bis=None):
-        return bauen([{"d": tag, "btc": 75608.0}],
-                     'var LAST_CLOSE = 75608, LAST_DATE = "%s";' % tag,
-                     bis or tag, 3)[0]
-
-    pruefe("die einmalige zeile ist abgeschaltet", EINMAL_AM, None)
-    pruefe("und geht an keinem der fraglichen tage raus",
-           [EINMAL in post_am(d) for d in ("2026-09-22", EINMAL_AM_ALT,
-                                           "2026-09-24")],
-           [False, False, False])
-    pruefe("der wortlaut steht noch fuer die akte da",
-           EINMAL.startswith("archive re-dated by one day"), True)
+    # --- die einmalige zeile haengt am zaehltag, nicht am schlusstag ---
+    pruefe("der umstellungstag ist der zaehltag der umstellung",
+           EINMAL_AM, "2026-09-24")
+    pruefe("die zeile nennt das top aus der konstante, nicht aus dem text",
+           lang(TOP_DATE) in hinweis(350, 1, EINMAL_AM), True)
+    pruefe("an einem anderen tag nennt sie die regel nicht",
+           "counter now runs to today" in hinweis(350, 1, "2026-09-30"), False)
+    pruefe("ohne luecke und ohne umstellung gibt es keinen vermerk",
+           hinweis(352, 0, "2026-09-30"), "")
+    pruefe("eine luecke allein reicht fuer einen vermerk",
+           hinweis(352, 1, "2026-09-30"),
+           "no post yesterday. the last post read 352.")
 
     # die drei Sperren
     pruefe("alter schluss postet nicht",
@@ -341,6 +435,76 @@ def selbsttest():
            bauen(log, 'var LAST_CLOSE = 75608, LAST_DATE = "2026-09-14";',
                  "2026-09-16", 3)[2] is not None, True)
     pruefe("leeres log postet nicht", bauen([], js, "2026-09-16", 3)[2] is not None, True)
+
+    # --- sperre 4: der zaehler waechst um genau 1 ---
+    def lauf(zaehltag, schluss, log):
+        return bauen([{"d": schluss, "btc": 84424.0}],
+                     'var LAST_CLOSE = 84424, LAST_DATE = "%s";' % schluss,
+                     zaehltag, 3, log)
+
+    def gepostet(tag, n):
+        return [{"key": "dayn-%s" % tag, "text": "day %d.\n\nrest" % n}]
+
+    # normaler tag: +1, kein vermerk
+    t1, _, p1 = lauf("2026-09-26", "2026-09-25", gepostet("2026-09-25", 354))
+    pruefe("normaler tag geht raus", p1, None)
+    pruefe("und zaehlt um genau eins weiter", t1.split("\n")[0], "day 355.")
+    pruefe("ohne vermerk", "the last post read" in t1, False)
+
+    # ausgefallener tag: +2 mit vermerk
+    t2, _, p2 = lauf("2026-09-27", "2026-09-26", gepostet("2026-09-25", 354))
+    pruefe("nach einem ausfall geht der post raus", p2, None)
+    pruefe("die luecke steht im text", "no post yesterday." in t2, True)
+    pruefe("und der vermerk nennt die vorige zahl",
+           "the last post read 354." in t2, True)
+    pruefe("die eigene zahl steht in zeile eins", t2.split("\n")[0], "day 356.")
+    pruefe("auch mit vermerk passt der post in einen tweet", len(t2) <= 280, True)
+
+    # zwei tage ausgefallen: der vermerk zaehlt sie
+    t2b = lauf("2026-09-28", "2026-09-27", gepostet("2026-09-25", 354))[0]
+    pruefe("zwei fehlende tage werden benannt",
+           "no post for 2 days." in t2b, True)
+
+    # zweimal derselbe tag: abbruch
+    p3 = lauf("2026-09-26", "2026-09-25", gepostet("2026-09-25", 355))[2]
+    pruefe("zweimal derselbe tag geht nicht raus", p3 is not None, True)
+    pruefe("und sagt warum", "zweimal derselbe tag" in p3, True)
+    pruefe("rueckwaerts auch nicht",
+           "rueckwaerts" in lauf("2026-09-26", "2026-09-25",
+                                 gepostet("2026-09-25", 400))[2], True)
+
+    # der erste post ueberhaupt hat nichts zu vergleichen
+    pruefe("leeres sperrlog haelt nichts an", lauf("2026-09-26", "2026-09-25", [])[2], None)
+    pruefe("ein post ohne tageszahl im text wird nicht geraten",
+           letzte_zahl([{"key": "dayn-2026-09-25", "text": "kaputt"}]), (None, None))
+    pruefe("fremde eintraege zaehlen nicht mit",
+           letzte_zahl([{"key": "dayn-2026-09-25", "text": "day 354."},
+                        {"key": "weekly-2026-09-26", "text": "day 999."}]),
+           (354, "2026-09-25"))
+
+    # --- der umstellungstag selbst, aus echten daten ---
+    echt = [{"key": "dayn-2026-09-22",
+             "text": "day 350.\n\nbitcoin traded at 86,174 on 22 September 2026 (21:23 utc)."}]
+    tu, _, pu = lauf("2026-09-24", "2026-09-23", echt)
+    pruefe("der umstellungstag geht raus", pu, None)
+    pruefe("er nennt beide regelaenderungen",
+           ("counter now runs to today" in tu
+            and "top moved to 6 October 2025" in tu), True)
+    pruefe("und die luecke vom 23.09.", "no post yesterday." in tu, True)
+    pruefe("350 kommt aus dem log, nicht aus dem quelltext",
+           "the last post read 350." in tu, True)
+    pruefe("353 kommt aus der rechnung", tu.split("\n")[0], "day 353.")
+    pruefe("der umstellungstag passt in einen tweet", len(tu) <= 280, True)
+    # der beweis, dass nichts festgeschrieben ist: anderes log, andere zahl
+    anders = lauf("2026-09-24", "2026-09-23",
+                  [{"key": "dayn-2026-09-21", "text": "day 349."}])[0]
+    pruefe("eine andere vorgeschichte gibt einen anderen vermerk",
+           "the last post read 349." in anders, True)
+    # und am tag danach steht nichts mehr da
+    danach = lauf("2026-09-25", "2026-09-24", gepostet("2026-09-24", 353))[0]
+    pruefe("am tag nach der umstellung kein vermerk mehr",
+           ("the last post read" in danach, danach.split("\n")[0]),
+           (False, "day 354."))
 
     # --- der zaehltag ist heute, nicht der schlusstag ---
     # am 24.09. mit dem schluss vom 23.09.: 353, nicht 352.
