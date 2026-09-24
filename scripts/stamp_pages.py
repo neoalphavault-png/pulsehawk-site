@@ -131,6 +131,7 @@ DOM_SEITE = "bitcoin-dominance.html"
 MARKT_SEITE = "markets.html"
 DD_SEITE = "bitcoin-drawdown.html"
 BL_SEITE = "bitcoin-bull-run-length.html"
+GOLD_SEITE = "gold-in-bitcoin-bear-markets.html"
 # Beide Seiten rechnen im Browser mit LAST_CLOSE weiter, also wird in beide
 # gestempelt. Die Drawdownseite hat zusaetzlich LOW_CLOSE und LOW_DATE.
 SCHLUSS_SEITEN = ("bitcoin-top-to-bottom.html", DD_SEITE, BL_SEITE)
@@ -157,7 +158,12 @@ SEITEN = [
     ("bitcoin-halving-to-top.html", "halving to top"),
     ("bitcoin-top-to-bottom.html", "top to bottom"),
     ("bitcoin-drawdown.html", "drawdown"),
-    ("bitcoin-bull-run-length.html", "bull run length"),
+    # "bull run length" auf "bull run" gekuerzt und die goldseite nur
+    # "gold" genannt: bei fuenf zyklusseiten soll die leiste nicht
+    # weiter wachsen. die hub-seite ist beschlossen und ein eigener
+    # auftrag, bis dahin traegt die leiste alles.
+    ("bitcoin-bull-run-length.html", "bull run"),
+    ("gold-in-bitcoin-bear-markets.html", "gold"),
     ("bitcoin-dominance.html", "dominance"),
     ("markets.html", "markets"),
     ("what-if.html", "what if"),
@@ -183,6 +189,14 @@ VORZYKLEN = (("c13", "2013-12-04"), ("c17", "2017-12-16"), ("c21", "2021-11-08")
 ZYKLEN = (("2015-01-14", "2017-12-16"),
           ("2018-12-15", "2021-11-08"),
           ("2022-11-21", HOCH_CLOSE))
+
+# DIE DREI ABGESCHLOSSENEN BAERMAERKTE, fuer die Goldseite.
+# Hoch, Tief, Vorsilbe der Element-ids. Der laufende kommt nicht aus
+# dieser Liste, sein Tief holt der Lauf aus dem Archiv, damit die Seite
+# nachzieht, wenn Bitcoin tiefer faellt.
+BAERFENSTER = (("2013-12-04", "2015-01-14", "b1"),
+               ("2017-12-16", "2018-12-15", "b2"),
+               ("2021-11-08", "2022-11-21", "b3"))
 CYC_LEN = 451
 
 DREI = ("gld", "spy", "btc")
@@ -886,28 +900,156 @@ def lauf_bullrun():
     if anst is None:
         print("  FEHL %-30s eckpunkt fuer die anstiege fehlt im archiv" % BL_SEITE)
         return 1
-    # erlaubt sind die drei gerechneten plus der laufende, der selbst
-    # gestempelt wird und deshalb ohnehin aus dem archiv kommt.
-    erlaubt = list(anst) + [werte["r26gain"]]
-    fehlt = anstieg_funde(alt, erlaubt)
-    if fehlt:
-        print("  FEHL %-30s anstieg falsch: %s" % (BL_SEITE, "; ".join(fehlt)))
-        return 1
-
-    # wache 2: kein abgeleitetes datum, keine vorhersage
-    funde = prognose_funde(alt)
-    if funde:
-        print("  FEHL %-30s sieht nach vorhersage aus: %s"
-              % (BL_SEITE, ", ".join(funde)))
-        return 1
-
     neu, treffer, fehlend = setz_text(alt, werte)
     if fehlend:
         print("  FEHL %-30s id nicht gefunden %s" % (BL_SEITE, ", ".join(fehlend)))
         return 1
+
+    # BEIDE WACHEN LAUFEN AUF DEM GESTEMPELTEN TEXT, NICHT AUF DEM ALTEN.
+    # Die erste Fassung pruefte vorher, und das ging am 24.09.2026 schief:
+    # der laufende Anstieg war ueber Nacht von +47 auf +44 Prozent gewandert,
+    # die gerechnete Menge kannte schon die 44, auf der Seite stand noch die
+    # 47, und die Wache blockierte damit genau die Aktualisierung, die den
+    # Widerspruch aufgeloest haette. Geprueft wird das Ergebnis.
+    erlaubt = list(anst) + [werte["r26gain"]]
+    fehlt = anstieg_funde(neu, erlaubt)
+    if fehlt:
+        print("  FEHL %-30s anstieg falsch: %s" % (BL_SEITE, "; ".join(fehlt)))
+        return 1
+    funde = prognose_funde(neu)
+    if funde:
+        print("  FEHL %-30s sieht nach vorhersage aus: %s"
+              % (BL_SEITE, ", ".join(funde)))
+        return 1
     return schreiben(pfad, alt, neu, BL_SEITE,
                      "%d zahlen, anstiege %s, tag %s seit dem tief"
                      % (treffer, "/".join(anst), werte["blnow"]))
+
+
+# --- teil 8, gold in bitcoins baermaerkten ---------------------------
+#
+# Dieselben Fenster wie ueberall, nur mit zwei weiteren Reihen daneben.
+# Bitcoin hat fuer jeden Kalendertag einen Wert, GLD und SPY nur fuer
+# Boersentage. Fuer eine Fenstergrenze, die auf einen Samstag faellt,
+# wird bei GLD und SPY der letzte Boersentag davor genommen. Das steht
+# so auch auf der Seite, mit Zahl und Datum.
+
+def archiv_feld(rows, feld):
+    """eine beliebige spalte des archivs als sortierte liste."""
+    return sorted((r["d"], float(r[feld])) for r in (rows or [])
+                  if isinstance(r, dict) and isinstance(r.get("d"), str)
+                  and isinstance(r.get(feld), (int, float)))
+
+
+def proz2(neu, alt):
+    """zwei nachkommastellen mit vorzeichen. auf der goldseite steht eine
+    stelle mehr als sonst, weil die seite von kleinen unterschieden
+    handelt: aus -5,0 laesst sich nicht ablesen, dass der wert ueber
+    fuenf prozent liegt, aus -5,03 schon."""
+    return "%+.2f%%" % ((float(neu) / float(alt) - 1.0) * 100.0)
+
+
+def _roh(neu, alt):
+    return (float(neu) / float(alt) - 1.0) * 100.0
+
+
+def gold_werte(archivrows, bis=None):
+    """rechnet, was die goldseite zeigt. (werte, None) oder (None, grund)."""
+    btc = archiv_reihe(archivrows)
+    gld = archiv_feld(archivrows, "gld")
+    spy = archiv_feld(archivrows, "spy")
+    if not (btc and gld and spy):
+        return None, "btc, gld oder spy fehlt im archiv"
+    reihen = {"btc": btc, "gld": gld, "spy": spy}
+
+    werte = {}
+    gld_fertig = []
+    spy_fertig = []
+    for von, nach, vorsilbe in BAERFENSTER:
+        for feld in ("btc", "gld", "spy"):
+            a = am_oder_vor(reihen[feld], von)
+            b = am_oder_vor(reihen[feld], nach)
+            if not a or not b:
+                return None, "kein %s-wert fuer %s..%s" % (feld, von, nach)
+            werte[vorsilbe + feld] = proz2(b[1], a[1])
+            if feld == "gld":
+                gld_fertig.append(_roh(b[1], a[1]))
+            if feld == "spy":
+                spy_fertig.append(_roh(b[1], a[1]))
+
+    # der laufende: einmal bis zum tief, einmal bis zum rand des archivs
+    tief = tief_nach(btc, HOCH_CLOSE)
+    if not tief:
+        return None, "kein preis nach dem hoch"
+    rand = btc[-1][0]
+    for nach, vorsilbe in ((tief[0], "b4"), (rand, "b5")):
+        for feld in ("btc", "gld", "spy"):
+            a = am_oder_vor(reihen[feld], HOCH_CLOSE)
+            b = am_oder_vor(reihen[feld], nach)
+            if not a or not b:
+                return None, "kein %s-wert fuer das laufende fenster" % feld
+            werte[vorsilbe + feld] = proz2(b[1], a[1])
+    werte["b5end"] = kurz(rand)
+    werte["cur1"] = werte["b4gld"]
+    werte["cur2"] = werte["b5gld"]
+    werte["cur2d"] = lang(rand)
+    werte["faq1"] = werte["b5gld"]
+
+    # gold gegen den hoechsten schluss im archiv
+    spitze = max(gld, key=lambda x: x[1])
+    letzt = gld[-1]
+    werte["gpeakd"] = lang(spitze[0])
+    werte["gpeak"] = "%.2f" % spitze[1]
+    werte["gnowd"] = lang(letzt[0])
+    werte["gnow"] = "%.2f" % letzt[1]
+    werte["gdd"] = "%.2f%%" % abs(_roh(letzt[1], spitze[1]))
+    werte["faq2"] = werte["gdd"]
+
+    # die beiden spannen, aus den ungerundeten werten
+    werte["gldspread"] = "%.2f" % (max(gld_fertig) - min(gld_fertig))
+    werte["spyspread"] = "%.2f" % (max(spy_fertig) - min(spy_fertig))
+
+    # "innerhalb von X" wird AUFGERUNDET, sonst behauptet die seite etwas,
+    # das um hundertstel nicht stimmt. -5,0279 ergibt 5,1 und nicht 5,0.
+    # vor dem aufrunden wird die darstellungsunschaerfe weggerundet. ohne
+    # das round() wuerde ein wert, der mathematisch genau 5,00 ist, als
+    # 5.000000000000004 ankommen und zu 5,1 aufgerundet, also strenger
+    # behauptet als noetig. der selbsttest haelt beide faelle fest.
+    schlimmst = round(max(abs(x) for x in gld_fertig), 6)
+    werte["gworst"] = "within %.1f%%" % (math.ceil(schlimmst * 10) / 10.0)
+    return werte, None
+
+
+def lauf_gold():
+    pfad = os.path.join(REPO, GOLD_SEITE)
+    if not os.path.exists(pfad):
+        print("  ok   %-30s nicht vorhanden, uebersprungen" % GOLD_SEITE)
+        return 0
+    if not os.path.exists(ARCHIV):
+        print("  FEHL %-30s data/history.json fehlt" % GOLD_SEITE)
+        return 1
+    with open(ARCHIV, "r", encoding="utf-8") as fh:
+        archivrows = json.load(fh)
+    werte, grund = gold_werte(archivrows)
+    if werte is None:
+        print("  FEHL %-30s %s" % (GOLD_SEITE, grund))
+        return 1
+    with open(pfad, "r", encoding="utf-8") as fh:
+        alt = fh.read()
+    neu, treffer, fehlend = setz_text(alt, werte)
+    if fehlend:
+        print("  FEHL %-30s id nicht gefunden %s" % (GOLD_SEITE, ", ".join(fehlend)))
+        return 1
+    # wie bei der bullenseite: geprueft wird das ergebnis, nicht der stand
+    # von gestern.
+    funde = prognose_funde(neu)
+    if funde:
+        print("  FEHL %-30s sieht nach vorhersage aus: %s"
+              % (GOLD_SEITE, ", ".join(funde)))
+        return 1
+    return schreiben(pfad, alt, neu, GOLD_SEITE,
+                     "%d zahlen, gold %s im laufenden baer, %s unter der spitze"
+                     % (treffer, werte["b5gld"], werte["gdd"]))
 
 
 # --- teil 4, die leiste ----------------------------------------------
@@ -1082,8 +1224,13 @@ def selbsttest():
     # --- die leiste ---
     pruefe("eigene seite ohne verweis",
            "<span>markets</span>" in leiste("markets.html"), True)
+    # gezaehlt wird die PILLE, nicht der teilstring: seit es
+    # gold-in-bitcoin-bear-markets.html gibt, steht "markets" auch in einem
+    # fremden href, und eine teilstringzaehlung waere hier falsch geworden.
     pruefe("eigene seite nicht doppelt",
-           leiste("markets.html").count("markets"), 1)
+           leiste("markets.html").count("<span>markets</span>"), 1)
+    pruefe("und nicht zusaetzlich als verweis",
+           ">markets</a>" in leiste("markets.html"), False)
     pruefe("fremde seiten als verweis",
            leiste("markets.html").count("<a href="), len(SEITEN) - 1)
     pruefe("alle punkte drin",
@@ -1334,6 +1481,83 @@ def selbsttest():
            [h for _, h in ZYKLEN],
            [t for _, t in VORZYKLEN][1:] + [HOCH_CLOSE])
 
+    # --- die goldseite ---
+    pruefe("zwei stellen mit vorzeichen", proz2(105.0, 100.0), "+5.00%")
+    pruefe("und nach unten", proz2(95.0, 100.0), "-5.00%")
+    # der grund fuer die zweite stelle: -5,0279 darf nicht als -5,0
+    # dastehen, sonst liest man "innerhalb von fuenf prozent" heraus.
+    pruefe("die zweite stelle traegt die aussage",
+           proz2(161.88, 170.45), "-5.03%")
+
+    # gesetztes archiv: boersentage nur mo-fr, btc jeden tag.
+    # 2013-12-04 ist ein mittwoch, 2015-01-14 ein mittwoch,
+    # 2017-12-16 ein SAMSTAG, 2018-12-15 ein SAMSTAG.
+    garchiv = []
+    for tag, b, g, sp in (
+            ("2013-12-04", 1000.0, 100.0, 100.0),
+            ("2015-01-14", 150.0, 98.0, 110.0),
+            ("2017-12-15", None, 200.0, 200.0),   # freitag vor dem samstag
+            ("2017-12-16", 2000.0, None, None),   # samstag, nur btc
+            ("2018-12-14", None, 190.0, 180.0),   # freitag vor dem samstag
+            ("2018-12-15", 400.0, None, None),    # samstag, nur btc
+            ("2021-11-08", 5000.0, 300.0, 300.0),
+            ("2022-11-21", 1000.0, 285.0, 240.0),
+            (HOCH_CLOSE, 10000.0, 400.0, 400.0),
+            ("2026-06-30", 5000.0, 404.0, 440.0),
+            ("2026-09-22", 7000.0, 440.0, 460.0)):
+        z = {"d": tag}
+        if b is not None:
+            z["btc"] = b
+        if g is not None:
+            z["gld"] = g
+            z["spy"] = sp
+        garchiv.append(z)
+    w, grund = gold_werte(garchiv)
+    pruefe("kein grund zum abbruch", grund, None)
+    pruefe("fenster 1 btc", w["b1btc"], "-85.00%")
+    pruefe("fenster 1 gold", w["b1gld"], "-2.00%")
+    pruefe("fenster 1 aktien", w["b1spy"], "+10.00%")
+    # hier zaehlt der rueckgriff: der samstag hat keinen gld-wert, also
+    # muss der freitag davor genommen werden, an beiden raendern.
+    pruefe("samstagsgrenze greift auf den freitag zurueck",
+           (w["b2gld"], w["b2spy"]), ("-5.00%", "-10.00%"))
+    pruefe("btc rechnet am samstag selbst", w["b2btc"], "-80.00%")
+    pruefe("fenster 3 gold", w["b3gld"], "-5.00%")
+    # der laufende: einmal bis zum tief, einmal bis zum archivrand
+    pruefe("laufend bis zum tief", (w["b4btc"], w["b4gld"]), ("-50.00%", "+1.00%"))
+    pruefe("laufend bis zum rand", (w["b5btc"], w["b5gld"]), ("-30.00%", "+10.00%"))
+    pruefe("das enddatum steht dabei", w["b5end"], "22 Sep 2026")
+    pruefe("faq und fliesstext tragen dieselbe zahl",
+           (w["cur1"], w["cur2"], w["faq1"]), (w["b4gld"], w["b5gld"], w["b5gld"]))
+
+    # gold gegen den hoechsten schluss im archiv
+    pruefe("spitze gefunden", (w["gpeakd"], w["gpeak"]), ("22 September 2026", "440.00"))
+    pruefe("stand heute", (w["gnowd"], w["gnow"]), ("22 September 2026", "440.00"))
+    pruefe("kein abstand, wenn heute die spitze ist", w["gdd"], "0.00%")
+
+    # spannen aus den UNGERUNDETEN werten. gold -2, -5, -5 spannt 3,00.
+    pruefe("goldspanne", w["gldspread"], "3.00")
+    # spy: +10,00 / -10,00 / -20,00 im testarchiv, spanne also 30,00
+    pruefe("aktienspanne", w["spyspread"], "30.00")
+
+    # "innerhalb von" wird aufgerundet, nie ab
+    # genau 5,00 bleibt 5,0 und wird nicht von der gleitkommaunschaerfe
+    # auf 5,1 hochgezogen
+    pruefe("genau fuenf bleibt fuenf", w["gworst"], "within 5.0%")
+    g2 = [dict(z) for z in garchiv]
+    for z in g2:
+        if z["d"] == "2022-11-21":
+            z["gld"] = 284.9          # -5,0333 prozent
+    w2, _ = gold_werte(g2)
+    pruefe("5,03 wird zu 5,1 und nicht zu 5,0", w2["gworst"], "within 5.1%")
+
+    pruefe("archiv ohne gold faellt auf",
+           gold_werte([{"d": "2020-01-01", "btc": 1.0}])[0], None)
+    pruefe("goldseite in der leiste",
+           "gold-in-bitcoin-bear-markets.html" in [d for d, _ in SEITEN], True)
+    pruefe("bullenpille ist gekuerzt",
+           dict((n, d) for d, n in SEITEN)["bull run"], "bitcoin-bull-run-length.html")
+
     # die neue seite muss in der leiste stehen und in beiden stempelwegen
     pruefe("bullenseite in der leiste",
            "bitcoin-bull-run-length.html" in [d for d, _ in SEITEN], True)
@@ -1355,7 +1579,8 @@ def main(argv):
     print("laufzeitpunkt %s utc\n"
           % datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
     fehler = (lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
-              + lauf_schluss() + lauf_rueckgang() + lauf_bullrun())
+              + lauf_schluss() + lauf_rueckgang() + lauf_bullrun()
+              + lauf_gold())
     if fehler:
         print("\n%d seite(n) nicht gestempelt" % fehler)
         return 1
