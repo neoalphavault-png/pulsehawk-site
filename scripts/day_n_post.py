@@ -101,11 +101,19 @@ MONATE = ["January", "February", "March", "April", "May", "June", "July",
 # veroeffentlichten Post. Waere eine von beiden hier festgeschrieben,
 # waere der Vermerk beim naechsten Mal falsch.
 
-# DER TAG, AN DEM DER ZAEHLTAG UMGESTELLT WURDE.
-# An diesem einen Zaehltag nennt der Post beide Regelaenderungen. Danach
-# nie wieder: ab dem 25.09. waechst der Zaehler um genau 1 am Tag, und
-# dann steht kein Vermerk mehr da.
-EINMAL_AM = "2026-09-24"
+# DIE UMSTELLUNG WIRD ERKLAERT, SOLANGE SIE UNERKLAERT IST.
+# Kein Datum. Ein Datum waere eine Vermutung darueber, WANN etwas
+# passiert; faellt der Post an dem Tag aus, steht morgen ein vergangenes
+# Datum im Code und der Sprung im Feed ohne Erklaerung. Die Bedingung ist
+# eine Aussage darueber, was WAHR sein muss: der Zaehler springt, und die
+# Erklaerung ist noch nicht raus.
+#
+# Abgeschrieben wird sie im Sperrlog, nicht ueber eine Konstante: steht
+# die Marke unten in einem veroeffentlichten Post, feuert sie nie wieder.
+# Eine Konstante muesste jemand von Hand zuruecksetzen, und das vergisst
+# man.
+UMSTELLUNG = "counter now runs to today"
+
 VERBOTEN = ("\u2014", "\u2013", "\u2192", "\u2190", "->", "<-")
 
 
@@ -189,10 +197,32 @@ def letzte_zahl(xlog):
     m = re.search(r"\bday (\d+)\.", letzte.get("text", ""))
     if not m:
         return None, None
-    return int(m.group(1)), letzte["key"][len("dayn-"):]
+    # Der Kalendertag kommt aus posted_at, NICHT aus dem Schluessel: der
+    # Schluessel traegt den Preistag, und der liegt seit dem 24.09.2026
+    # einen Tag vor dem Zaehltag. Mit dem Schluessel als Anker haette ab
+    # morgen JEDER Post "no post yesterday" getragen, obwohl keiner fehlt.
+    # Unter der neuen Regel ist der Zaehltag der utc-Tag des Laufs, und
+    # genau den haelt posted_at fest.
+    tag = str(letzte.get("posted_at", ""))[:10]
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", tag):
+        tag = letzte["key"][len("dayn-"):]
+    return int(m.group(1)), tag
 
 
-def hinweis(letzter_n, luecke, zaehltag):
+def umstellung_erklaert(xlog):
+    """steht die erklaerung schon in einem veroeffentlichten post?
+
+    Gelesen wird der Text im Sperrlog, also das, was im Profil steht.
+    Damit schreibt sich die Zeile selbst ab, sobald sie einmal drausen
+    war - ohne dass jemand etwas zuruecksetzen muss."""
+    for e in xlog or []:
+        if (str(e.get("key", "")).startswith("dayn-")
+                and UMSTELLUNG in str(e.get("text", ""))):
+            return True
+    return False
+
+
+def hinweis(letzter_n, luecke, erklaeren):
     """der vermerk unter dem post, wenn der zaehler nicht um 1 gewachsen ist.
 
     Die eigene Zahl steht schon in der ersten Zeile des Posts, der
@@ -206,9 +236,12 @@ def hinweis(letzter_n, luecke, zaehltag):
         teile.append("no post yesterday.")
     elif luecke > 1:
         teile.append("no post for %d days." % luecke)
-    if zaehltag == EINMAL_AM:
-        teile.append("counter now runs to today, top moved to %s."
-                     % lang(TOP_DATE))
+    # Die Luecke steht GENAU EINMAL da, auch wenn beide Ursachen
+    # zusammenfallen: sie gehoert zum Lueckensatz oben, nicht in den
+    # Umstellungssatz. Faellt naechsten Monat ein Tag aus, ohne dass sich
+    # an der Zaehlung etwas geaendert hat, steht nur der Lueckensatz da.
+    if erklaeren:
+        teile.append("%s, top moved to %s." % (UMSTELLUNG, lang(TOP_DATE)))
     if not teile:
         return ""
     teile.append("the last post read %d." % letzter_n)
@@ -289,8 +322,15 @@ def bauen(rows, html, heute, max_age, xlog=None):
     # der zaehler muss gegenueber dem zuletzt veroeffentlichten post um
     # genau 1 gewachsen sein, sonst fehlt ein tag und der muss dastehen
     letzter_n, letzter_tag = letzte_zahl(xlog)
-    luecke = max(0, tage(letzter_tag, heute) - 1) if letzter_tag else 0
-    vermerk = hinweis(letzter_n, luecke, heute) if letzter_n else ""
+    # Ein Vermerk entsteht NUR, wenn der Zaehler wirklich springt. Vorher
+    # wurde die Luecke unabhaengig davon gerechnet, und ein
+    # Rundungsproblem im Anker haette sie jeden Tag erzeugt.
+    sprung = (n - letzter_n) if letzter_n is not None else 1
+    if sprung > 1:
+        luecke = max(0, tage(letzter_tag, heute) - 1) if letzter_tag else 0
+        vermerk = hinweis(letzter_n, luecke, not umstellung_erklaert(xlog))
+    else:
+        vermerk = ""
 
     t = text(n, float(zeile["btc"]), zeile["d"])
     if vermerk:
@@ -410,18 +450,34 @@ def selbsttest():
     pruefe("kein schlusskurs behauptet", "traded at" in t and "closed at" not in t, True)
     pruefe("uhrzeit steht dabei", "(21:23 utc)" in t, True)
 
-    # --- die einmalige zeile haengt am zaehltag, nicht am schlusstag ---
-    pruefe("der umstellungstag ist der zaehltag der umstellung",
-           EINMAL_AM, "2026-09-24")
-    pruefe("die zeile nennt das top aus der konstante, nicht aus dem text",
-           lang(TOP_DATE) in hinweis(350, 1, EINMAL_AM), True)
-    pruefe("an einem anderen tag nennt sie die regel nicht",
-           "counter now runs to today" in hinweis(350, 1, "2026-09-30"), False)
+    # --- die umstellungszeile haengt an einer bedingung, nicht an einem datum ---
+    # nach namen im modul gefragt, nicht nach text in der datei: die
+    # frage "steht das wort im quelltext" beantwortet sich selbst mit ja,
+    # sobald sie im quelltext steht.
+    pruefe("kein datum mehr, nur eine bedingung",
+           [x for x in globals() if x.startswith("EINMAL")], [])
+    pruefe("die marke steht im text, an dem sie sich wiedererkennt",
+           UMSTELLUNG in hinweis(350, 1, True), True)
+    pruefe("sie nennt das top aus der konstante",
+           lang(TOP_DATE) in hinweis(350, 1, True), True)
+    pruefe("ohne erklaerungsbedarf nennt sie die regel nicht",
+           UMSTELLUNG in hinweis(350, 1, False), False)
+    # kein grund, kein vermerk - und weil hinweis() nur bei sprung > 1
+    # gerufen wird, faellt ein sprung ohne erkennbaren grund danach bei
+    # sprung_problem() laut durch, statt still einen satz zu erfinden.
     pruefe("ohne luecke und ohne umstellung gibt es keinen vermerk",
-           hinweis(352, 0, "2026-09-30"), "")
+           hinweis(352, 0, False), "")
     pruefe("eine luecke allein reicht fuer einen vermerk",
-           hinweis(352, 1, "2026-09-30"),
+           hinweis(352, 1, False),
            "no post yesterday. the last post read 352.")
+
+    # sie schreibt sich im sperrlog ab, nicht ueber eine konstante
+    raus = [{"key": "dayn-2026-09-24", "posted_at": "2026-09-24T21:55:00Z",
+             "text": "day 353.\n\n%s, top moved to 6 October 2025." % UMSTELLUNG}]
+    pruefe("vor dem post gilt sie als unerklaert", umstellung_erklaert([]), False)
+    pruefe("danach als erklaert", umstellung_erklaert(raus), True)
+    pruefe("ein fremder posttyp zaehlt dafuer nicht",
+           umstellung_erklaert([{"key": "weekly-1", "text": UMSTELLUNG}]), False)
 
     # die drei Sperren
     pruefe("alter schluss postet nicht",
@@ -505,6 +561,47 @@ def selbsttest():
     pruefe("am tag nach der umstellung kein vermerk mehr",
            ("the last post read" in danach, danach.split("\n")[0]),
            (False, "day 354."))
+
+    # --- die kollision: luecke UND umstellung sagen "no post yesterday" ---
+    # naechsten monat faellt ein tag aus, an der zaehlung hat sich nichts
+    # geaendert. dann steht GENAU EIN vermerk da, nicht zwei.
+    erklaert = [{"key": "dayn-2026-09-24", "posted_at": "2026-09-24T21:55:00Z",
+                 "text": "day 353.\n\n%s, top moved to 6 October 2025." % UMSTELLUNG},
+                {"key": "dayn-2026-10-19", "posted_at": "2026-10-20T21:55:00Z",
+                 "text": "day 379.\n\nrest"}]
+    tk, _, pk = lauf("2026-10-22", "2026-10-21", erklaert)
+    pruefe("sprung +2 ohne zaehlungsaenderung geht raus", pk, None)
+    pruefe("und traegt genau einen lueckenvermerk", tk.count("no post"), 1)
+    pruefe("die umstellung wird nicht wiederholt", UMSTELLUNG in tk, False)
+    pruefe("der vermerk nennt die vorige zahl", "the last post read 379." in tk, True)
+    pruefe("die zahl selbst stimmt", tk.split("\n")[0], "day 381.")
+
+    # am umstellungstag fallen beide ursachen zusammen - auch dann einmal
+    pruefe("auch am umstellungstag steht die luecke nur einmal",
+           lauf("2026-09-24", "2026-09-23",
+                [{"key": "dayn-2026-09-22", "posted_at": "2026-09-22T00:18:42Z",
+                  "text": "day 350.\n\nrest"}])[0].count("no post"), 1)
+
+    # --- der anker ist posted_at, nicht der schluesseltag ---
+    # der schluessel traegt den PREIStag, und der liegt einen tag vor dem
+    # zaehltag. mit ihm als anker haette ab dem 25.09. jeder post
+    # "no post yesterday" getragen, obwohl keiner fehlt.
+    nach_heute = [{"key": "dayn-2026-09-23", "posted_at": "2026-09-24T21:55:00Z",
+                   "text": "day 353.\n\n%s, top moved to 6 October 2025." % UMSTELLUNG}]
+    pruefe("posted_at ist der anker, nicht der schluessel",
+           letzte_zahl(nach_heute), (353, "2026-09-24"))
+    tm, _, pm = lauf("2026-09-25", "2026-09-24", nach_heute)
+    pruefe("der tag nach der umstellung geht raus", pm, None)
+    pruefe("und traegt gar keinen vermerk",
+           ("no post" in tm, UMSTELLUNG in tm, "the last post read" in tm),
+           (False, False, False))
+    pruefe("er zaehlt einfach eins weiter", tm.split("\n")[0], "day 354.")
+    pruefe("ohne posted_at faellt er auf den schluessel zurueck",
+           letzte_zahl([{"key": "dayn-2026-09-23", "text": "day 353."}]),
+           (353, "2026-09-23"))
+    pruefe("und ein kaputtes posted_at auch",
+           letzte_zahl([{"key": "dayn-2026-09-23", "posted_at": "spaeter",
+                         "text": "day 353."}]), (353, "2026-09-23"))
 
     # --- der zaehltag ist heute, nicht der schlusstag ---
     # am 24.09. mit dem schluss vom 23.09.: 353, nicht 352.
