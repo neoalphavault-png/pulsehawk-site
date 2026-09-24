@@ -1,27 +1,27 @@
 {
- "date": "2026-09-23",
+ "date": "2026-09-24",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "LITE",
+  "name": "Lumentum",
+  "sector": "Information Technology",
+  "industry": "Communications Equipment",
   "indices": [
    "sp500"
   ],
-  "mult": 6.8735,
-  "pct": 587.4,
-  "from_1000": 6874,
+  "mult": 5.7414,
+  "pct": 474.1,
+  "from_1000": 5741,
   "d": "2026-09-22",
-  "close": 182.56,
+  "close": 945.67,
   "d_1y": "2025-09-22",
-  "close_1y": 26.56,
-  "low": 22.36,
-  "high": 182.56,
-  "drawdown_pct": -15.8,
+  "close_1y": 164.71,
+  "low": 149.61,
+  "high": 1053.09,
+  "drawdown_pct": -9.2,
   "verified": {
    "source": "tiingo",
-   "mult": 6.8735,
-   "diff_pct": 0
+   "mult": 5.7138,
+   "diff_pct": 0.48
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 16.0,
-   "d": "2026-09-22",
-   "d_1y": "2025-09-22"
+   "pct": 15.8,
+   "d": "2026-09-23",
+   "d_1y": "2025-09-23"
   },
   "gold": {
-   "pct": 15.9,
-   "d": "2026-09-22",
-   "d_1y": "2025-09-22"
+   "pct": 13.4,
+   "d": "2026-09-23",
+   "d_1y": "2025-09-23"
   }
  },
- "candidates_total": 72,
+ "candidates_total": 73,
  "top10": [
   {
    "ticker": "MRNA",
@@ -54,8 +54,12 @@
    "mult": 5.7414
   },
   {
+   "ticker": "VICR",
+   "mult": 5.2612
+  },
+  {
    "ticker": "MXL",
-   "mult": 5.0251
+   "mult": 5.101
   },
   {
    "ticker": "INTC",
@@ -64,10 +68,6 @@
   {
    "ticker": "WDC",
    "mult": 4.1331
-  },
-  {
-   "ticker": "VICR",
-   "mult": 4.0917
   },
   {
    "ticker": "DELL",
@@ -82,10 +82,15 @@
    "mult": 3.9037
   },
   {
-   "ticker": "VSTS",
-   "mult": 3.5368
+   "ticker": "DOCN",
+   "mult": 3.8206
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (2.73%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
