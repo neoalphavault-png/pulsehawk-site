@@ -58,6 +58,7 @@ Text daneben und nicht die Kurve.
     python3 scripts/stamp_pages.py --selftest
 """
 
+import calendar
 import datetime
 import json
 import math
@@ -66,6 +67,12 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+# Die Vorrangregel steht genau einmal, dort. Bricht dieser Import, faellt
+# der Lauf laut aus, und das ist gewollt: lieber ein roter Stempellauf als
+# eine zweite Kopie der Regel, die leise auseinanderlaeuft.
+from market_log import reihe_mit_logvorrang  # noqa: E402
+
 REPO = os.path.dirname(HERE)
 LOG = os.path.join(REPO, "data", "market-log.json")
 ARCHIV = os.path.join(REPO, "data", "history.json")
@@ -115,6 +122,9 @@ HOCH_WERT = 124776.68
 # seite, dann je element-id das startdatum und ein anhaengsel.
 # die ids stehen im html, sie sind der anker. wer im html eine id
 # umbenennt, muss sie hier mitaendern, sonst faellt es beim lauf auf.
+# seiten, die ihren bezugstag ausgeschrieben zeigen, und die id dafuer
+ZYKLUS_ASOF = {"bitcoin-halving-to-top.html": "hvasof"}
+
 ZYKLUS = {
     "bitcoin-halving-to-top.html": [
         ("d1", HALVING, ""),              # tage seit dem halving
@@ -131,6 +141,81 @@ DOM_SEITE = "bitcoin-dominance.html"
 MARKT_SEITE = "markets.html"
 DD_SEITE = "bitcoin-drawdown.html"
 BL_SEITE = "bitcoin-bull-run-length.html"
+GOLD_SEITE = "gold-in-bitcoin-bear-markets.html"
+WI_SEITE = "what-if.html"
+
+# WHAT-IF, DIE VOREINGESTELLTE ANSICHT
+# Die Seite rechnet auf Eingaben, aber im Quelltext kann nur EINE Ansicht
+# stehen: die, die ein Besucher ohne Klick sieht. Genau die stand bis zum
+# 24.09.2026 als "loading" da, also existierte die Seite fuer
+# Antwortmaschinen nicht. Diese Werte sind die Voreinstellungen der drei
+# Eingabefelder; wer sie im HTML aendert, muss sie hier mitaendern, und
+# der Selbsttest liest beide gegeneinander.
+WI_LUMP = ("btc", 1000.0, 5)          # betrag, anlage, jahre
+WI_DCA = ("spy", 200.0, 5)            # monatlich
+WI_DAY = (8.0, 10, "a pack of cigarettes")
+
+# EIN HEUTE FUER ALLE ZYKLUSSEITEN, SEIT 24.09.2026
+# Jede Zyklusseite mit einem Preis rechnet auf einen juengsten Tag. Wenn
+# zwei Seiten verschiedene Tage tragen, sieht ein Leser, der zwischen
+# ihnen wechselt, zwei verschiedene "heute", und keine der beiden Zahlen
+# ist falsch genug, dass es auffiele. Genau das war am 24.09.2026 der
+# Fall: die Goldseite rechnete auf den Archivrand (22.09.), die drei
+# anderen auf den Marktlog (23.09.), weil das Archiv nur sonntags
+# nachgezogen wird.
+#
+# Jeder Teil traegt seinen Stichtag hier ein, und lauf_stichtag() am Ende
+# haelt den Lauf an, wenn sie auseinanderlaufen.
+#
+# bitcoin-halving-to-top.html steht bewusst NICHT drin: die Seite zeigt
+# keinen Preis, ihre beiden Zaehler sind reine Datumsarithmetik.
+STICHTAG = {}      # datei -> tag des juengsten PREISES
+ZAEHLTAG = {}      # datei -> tag, gegen den die TAGESZAEHLER rechnen
+
+# Die Halving-Seite zeigt keinen Preis, aber ihre beiden Zaehler rechnen
+# gegen heute, und das ist genauso ein Stichtag. Faellt ihr Stempel aus,
+# zeigt sie stillschweigend gestern, waehrend die anderen heute zeigen:
+# derselbe Fehler, nur in Tagen statt in Dollar. Sie muss ihren Bezugstag
+# deshalb sichtbar nennen, sonst ist ein eingefrorener Zaehler von aussen
+# ueberhaupt nicht zu erkennen.
+NENNT_ZAEHLTAG = ("bitcoin-halving-to-top.html",)
+
+
+# ---------------------------------------------------------------------------
+# EINE QUELLE FUER "HEUTE", REGEL VOM 24.09.2026
+#
+# Es gibt zwei Dateien mit Preisen, und sie sind verschieden alt:
+#   data/market-log.json   taeglich 21:23 UTC
+#   data/history.json      nur sonntags, unter der woche bis zu 6 tage alt
+#
+# Der rechte Rand jeder LAUFENDEN Zahl kommt IMMER aus dem Marktlog.
+# history.json liefert Historie, nie den aktuellen Wert. Wer das dreht,
+# baut ein zweites "heute", und keine der beiden Zahlen ist falsch genug,
+# dass es auffiele. Genau so ist der Fehler der Goldseite entstanden.
+#
+# mit_rand() ist die eine erlaubte Mischung: das Archiv gewinnt fuer jeden
+# Tag, den es hat, das Log haengt nur hinten an. Das ist fuer ein Minimum
+# ueber den ganzen Zyklus richtig und beruehrt den rechten Rand nicht.
+# ---------------------------------------------------------------------------
+
+# KOPF-WACHE, AUSNAHMEN
+# Was der Stempel in den Rumpf schreibt, darf nicht zusaetzlich im <head>
+# stehen: dorthin kommt setz_text nicht, der Wert friert also ein. Die
+# Ausnahmen unten sind bewusst gesetzte Dopplungen, keine Versehen. Es sind
+# durchweg ABGESCHLOSSENE Werte, die sich nur aendern, wenn das Archiv
+# selbst korrigiert wird. Passiert das, ist diese Liste die Stelle, an der
+# man nachsieht.
+#
+# Nicht auf dieser Liste stehen und deshalb am 24.09.2026 aus den Koepfen
+# entfernt wurden: das Zyklustief der Drawdownseite (faellt Bitcoin
+# tiefer, wandert es) und das Datum der Goldspitze (wandert bei einem
+# neuen Hoch). Beide waren schon eingefroren, nur hatte es niemand gesehen.
+KOPF_AUSNAHMEN = {
+    "bitcoin-bull-run-length.html": ("blrange2", "blspread", "blfaq"),
+    "gold-in-bitcoin-bear-markets.html": (
+        "b1btc", "b1gld", "b1spy", "b2btc", "b2gld", "b2spy",
+        "b3btc", "b3gld", "b3spy", "gldspread", "spyspread", "gworst"),
+}
 # Beide Seiten rechnen im Browser mit LAST_CLOSE weiter, also wird in beide
 # gestempelt. Die Drawdownseite hat zusaetzlich LOW_CLOSE und LOW_DATE.
 SCHLUSS_SEITEN = ("bitcoin-top-to-bottom.html", DD_SEITE, BL_SEITE)
@@ -157,7 +242,12 @@ SEITEN = [
     ("bitcoin-halving-to-top.html", "halving to top"),
     ("bitcoin-top-to-bottom.html", "top to bottom"),
     ("bitcoin-drawdown.html", "drawdown"),
-    ("bitcoin-bull-run-length.html", "bull run length"),
+    # "bull run length" auf "bull run" gekuerzt und die goldseite nur
+    # "gold" genannt: bei fuenf zyklusseiten soll die leiste nicht
+    # weiter wachsen. die hub-seite ist beschlossen und ein eigener
+    # auftrag, bis dahin traegt die leiste alles.
+    ("bitcoin-bull-run-length.html", "bull run"),
+    ("gold-in-bitcoin-bear-markets.html", "gold"),
     ("bitcoin-dominance.html", "dominance"),
     ("markets.html", "markets"),
     ("what-if.html", "what if"),
@@ -183,6 +273,14 @@ VORZYKLEN = (("c13", "2013-12-04"), ("c17", "2017-12-16"), ("c21", "2021-11-08")
 ZYKLEN = (("2015-01-14", "2017-12-16"),
           ("2018-12-15", "2021-11-08"),
           ("2022-11-21", HOCH_CLOSE))
+
+# DIE DREI ABGESCHLOSSENEN BAERMAERKTE, fuer die Goldseite.
+# Hoch, Tief, Vorsilbe der Element-ids. Der laufende kommt nicht aus
+# dieser Liste, sein Tief holt der Lauf aus dem Archiv, damit die Seite
+# nachzieht, wenn Bitcoin tiefer faellt.
+BAERFENSTER = (("2013-12-04", "2015-01-14", "b1"),
+               ("2017-12-16", "2018-12-15", "b2"),
+               ("2021-11-08", "2022-11-21", "b3"))
 CYC_LEN = 451
 
 DREI = ("gld", "spy", "btc")
@@ -325,6 +423,8 @@ def lauf_zyklus():
             alt = fh.read()
         werte = dict((k, "{:,}".format(tage(start)) + anhang)
                      for k, start, anhang in felder)
+        if datei in ZYKLUS_ASOF:
+            werte[ZYKLUS_ASOF[datei]] = lang(heute().isoformat())
         neu, treffer, fehlend = setz_text(alt, werte)
         if fehlend:
             # das ist kein schoenheitsfehler. wenn eine id verschwindet,
@@ -332,6 +432,12 @@ def lauf_zyklus():
             print("  FEHL %-30s id nicht gefunden %s" % (datei, ", ".join(fehlend)))
             fehler += 1
             continue
+        ko = kopf_funde(datei, neu, werte)
+        if ko:
+            print("  FEHL %-30s %s" % (datei, "; ".join(ko)))
+            fehler += 1
+            continue
+        ZAEHLTAG[datei] = heute().isoformat()
         fehler += schreiben(pfad, alt, neu, datei, "%d zaehler" % treffer)
     return fehler
 
@@ -380,6 +486,10 @@ def lauf_dominanz():
     if fehlend:
         print("  FEHL %-30s id nicht gefunden %s" % (DOM_SEITE, ", ".join(fehlend)))
         return 1
+    ko = kopf_funde(DOM_SEITE, neu, werte)
+    if ko:
+        print("  FEHL %-30s %s" % (DOM_SEITE, "; ".join(ko)))
+        return 1
     neu, n1 = setz_breite(neu, "barb", dom)
     neu, n2 = setz_breite(neu, "barr", 100 - dom)
     if not (n1 and n2):
@@ -406,9 +516,17 @@ def markt_werte(rows):
     alt = vor(rows, versatz(neu["d"], -7), DREI)
     if not alt:
         return None
+    # die drei beschriftungen des diagramms. das skript setzt sie aus
+    # derselben reihe, also aus den log-zeilen mit allen drei preisen.
+    # geometrie wird weiter nicht gestempelt, aber ein datum ist keine
+    # geometrie, und im quelltext stand dort "today" und "start of record".
+    mitdrei = [r for r in rows if _hat(r, DREI)]
     werte = {
         "dend": lang(neu["d"]),
         "periodlabel": "%s to %s" % (lang(alt["d"]), lang(neu["d"])),
+        "chstart": lang(mitdrei[0]["d"]),
+        "chend": lang(mitdrei[-1]["d"]),
+        "chartperiod": "since " + lang(mitdrei[0]["d"]),
     }
     for feld, kennung in (("gld", "g7"), ("spy", "s7"), ("btc", "b7")):
         werte[kennung] = proz(neu[feld], alt[feld])
@@ -447,6 +565,10 @@ def lauf_markt():
     neu, _, fehlend = setz_text(alt, werte)
     if fehlend:
         print("  FEHL %-30s id nicht gefunden %s" % (MARKT_SEITE, ", ".join(fehlend)))
+        return 1
+    ko = kopf_funde(MARKT_SEITE, neu, werte)
+    if ko:
+        print("  FEHL %-30s %s" % (MARKT_SEITE, "; ".join(ko)))
         return 1
     return schreiben(pfad, alt, neu, MARKT_SEITE, werte["periodlabel"])
 
@@ -515,6 +637,7 @@ def lauf_schluss():
                   % (datei, n1, n2))
             fehler += 1
             continue
+        STICHTAG[datei] = zeile["d"]
         meldung = "letzter schluss %s vom %s" % (zahl(zeile["btc"]), zeile["d"])
         if datei in TIEF_SEITEN:
             if not tief:
@@ -693,6 +816,12 @@ def lauf_rueckgang():
             print("  FEHL %-30s id nicht gefunden %s" % (datei, ", ".join(fehlend)))
             fehler += 1
             continue
+        ko = kopf_funde(datei, neu, felder)
+        if ko:
+            print("  FEHL %-30s %s" % (datei, "; ".join(ko)))
+            fehler += 1
+            continue
+        ZAEHLTAG[datei] = heute().isoformat()
         fehler += schreiben(pfad, alt, neu, datei,
                             "%d rueckgangszahlen, heute %s"
                             % (treffer, felder.get("ddnow") or felder.get("dd")))
@@ -735,7 +864,13 @@ def proz0(wert, bezug):
 # ganze Dokument ausser der Fusszeile; dort steht auf jeder Seite "no hype,
 # no price targets", also die Absage und nicht die Sache selbst.
 BULL_VERBOTEN = ("would put", "points to", "targets", "expect", "due in", "by 20")
-RE_JAHR_AB_2027 = re.compile(r"\b20(?:2[7-9]|[3-9]\d)\b")
+
+# JAHRE RELATIV ZUM LAUFENDEN JAHR, SEIT 23.09.2026
+# Hier stand "jede Jahreszahl ab 2027", fest verdrahtet. Das waere am
+# 1. Januar 2027 auf jeder Seite angesprungen, die schlicht das laufende
+# Jahr nennt, und zwar an dem Tag, an dem niemand damit rechnet. Gesucht
+# ist ein Jahr in der ZUKUNFT, also wird gegen das laufende Jahr geprueft.
+RE_JAHR = re.compile(r"\b(?:19|20)\d\d\b")
 RE_FUSS = re.compile(r"<footer>.*?</footer>", re.S)
 
 
@@ -743,11 +878,17 @@ def ohne_fuss(html):
     return RE_FUSS.sub("", html)
 
 
-def prognose_funde(html):
-    """was nach vorhersage aussieht. leere liste heisst sauber."""
+def prognose_funde(html, jahr=None):
+    """was nach vorhersage aussieht. leere liste heisst sauber.
+
+    jahr ist das laufende Jahr; ohne Angabe das heutige in UTC. Der
+    Parameter ist der Eingriffspunkt fuer den Selbsttest, der damit ein
+    anderes Systemjahr vorgaukelt."""
+    if jahr is None:
+        jahr = heute().year
     roh = ohne_fuss(html)
     funde = [w for w in BULL_VERBOTEN if w in roh.lower()]
-    return funde + sorted(set(RE_JAHR_AB_2027.findall(roh)))
+    return funde + sorted(set(j for j in RE_JAHR.findall(roh) if int(j) > jahr))
 
 
 def _zahl_steht(html, text):
@@ -756,25 +897,37 @@ def _zahl_steht(html, text):
     return re.search(r"(?<![\d,])%s(?![\d,])" % re.escape(text), html) is not None
 
 
-def anstieg_funde(html, anst):
-    """meldet jeden anstieg, der fehlt, und jeden, der um eine Stelle
-    daneben dasteht.
+# Ein Anstieg steht in zwei Schreibweisen auf der Seite: "+1,990%" im
+# Fliesstext und in der Tabelle, "1,990 percent" im JSON-LD. Beide werden
+# eingesammelt. Nicht eingesammelt werden Prozentwerte mit Nachkommastelle
+# wie "1.6%", das sind die Streuungsspalten und keine Anstiege.
+RE_ANSTIEG = re.compile(r"\+([\d,]+)%|([\d,]+) percent")
 
-    Die Nachbarpruefung ist der eigentliche Punkt. Am 23.09.2026 stand 1.991
-    an drei von vier Stellen und 1.990 an der vierten, im JSON-LD. Eine
-    Pruefung, die nur fragt "kommt die richtige Zahl irgendwo vor", haette
-    das durchgewunken. Eine Stelle daneben ist der Fingerabdruck des
-    doppelten Rundens, also wird genau darauf geprueft."""
-    fehler = []
-    for a in anst:
-        roh = a.lstrip("+")
-        if not _zahl_steht(html, roh):
-            fehler.append("%s fehlt" % roh)
-        zahl = int(roh.replace(",", ""))
-        for d in (-1, 1):
-            nachbar = "{:,}".format(zahl + d)
-            if _zahl_steht(html, nachbar):
-                fehler.append("%s steht da, richtig waere %s" % (nachbar, roh))
+
+def anstiege_im_text(html):
+    """jeder wert, der auf der seite wie ein anstieg aussieht, einmal."""
+    roh = ohne_fuss(html)
+    return sorted(set(a or b for a, b in RE_ANSTIEG.findall(roh)))
+
+
+def anstieg_funde(html, erlaubt):
+    """vergleicht die Seite gegen die aus dem Archiv gerechnete Menge.
+
+    ZWEI RICHTUNGEN, SEIT 23.09.2026
+    Vorher wurde nur auf den Nachbarn geprueft, also auf eine Abweichung um
+    eins. Das faengt das doppelte Runden vom 23.09.2026, aber weder einen
+    Zahlendreher wie 1.909 statt 1.990 noch eine veraltete Zahl aus einem
+    frueheren Backfill. Jetzt wird jeder Prozentwert, der auf der Seite wie
+    ein Anstieg aussieht, gegen die gerechnete Menge gehalten. Ein Wert, der
+    dort nicht vorkommt, ist ein Fehler und keine Warnung.
+
+    Die Gegenrichtung bleibt: ein gerechneter Anstieg, der auf der Seite
+    ueberhaupt nicht steht, faellt ebenfalls auf."""
+    erlaubt = set(str(x).lstrip("+").rstrip("%") for x in erlaubt)
+    fehler = ["%s steht da, gerechnet sind nur %s" % (a, ", ".join(sorted(erlaubt)))
+              for a in anstiege_im_text(html) if a not in erlaubt]
+    fehler += ["%s fehlt" % a for a in sorted(erlaubt)
+               if not _zahl_steht(ohne_fuss(html), a)]
     return fehler
 
 
@@ -833,6 +986,7 @@ def bullrun_werte(archivrows, logrows, bis=None):
         "blfaq2": ntxt + " days",
         "blnowsrc": "days since %s, %s USD" % (lang(tief[0]), dollar(tief[1])),
         "blbarlbl": ntxt + " and counting",
+        "blasof": lang(jetzt["d"]),
         "r26low": "%s, %s" % (kurz(tief[0]), dollar(tief[1])),
         "r26gain": proz0(jetzt["btc"], tief[1]) + "%",
     }, None
@@ -862,25 +1016,472 @@ def lauf_bullrun():
     if anst is None:
         print("  FEHL %-30s eckpunkt fuer die anstiege fehlt im archiv" % BL_SEITE)
         return 1
-    fehlt = anstieg_funde(alt, anst)
-    if fehlt:
-        print("  FEHL %-30s anstieg falsch: %s" % (BL_SEITE, "; ".join(fehlt)))
-        return 1
-
-    # wache 2: kein abgeleitetes datum, keine vorhersage
-    funde = prognose_funde(alt)
-    if funde:
-        print("  FEHL %-30s sieht nach vorhersage aus: %s"
-              % (BL_SEITE, ", ".join(funde)))
-        return 1
-
     neu, treffer, fehlend = setz_text(alt, werte)
     if fehlend:
         print("  FEHL %-30s id nicht gefunden %s" % (BL_SEITE, ", ".join(fehlend)))
         return 1
+
+    # BEIDE WACHEN LAUFEN AUF DEM GESTEMPELTEN TEXT, NICHT AUF DEM ALTEN.
+    # Die erste Fassung pruefte vorher, und das ging am 24.09.2026 schief:
+    # der laufende Anstieg war ueber Nacht von +47 auf +44 Prozent gewandert,
+    # die gerechnete Menge kannte schon die 44, auf der Seite stand noch die
+    # 47, und die Wache blockierte damit genau die Aktualisierung, die den
+    # Widerspruch aufgeloest haette. Geprueft wird das Ergebnis.
+    erlaubt = list(anst) + [werte["r26gain"]]
+    fehlt = anstieg_funde(neu, erlaubt)
+    if fehlt:
+        print("  FEHL %-30s anstieg falsch: %s" % (BL_SEITE, "; ".join(fehlt)))
+        return 1
+    funde = prognose_funde(neu)
+    if funde:
+        print("  FEHL %-30s sieht nach vorhersage aus: %s"
+              % (BL_SEITE, ", ".join(funde)))
+        return 1
+    ko = kopf_funde(BL_SEITE, neu, werte)
+    if ko:
+        print("  FEHL %-30s %s" % (BL_SEITE, "; ".join(ko)))
+        return 1
+    ZAEHLTAG[BL_SEITE] = heute().isoformat()
     return schreiben(pfad, alt, neu, BL_SEITE,
                      "%d zahlen, anstiege %s, tag %s seit dem tief"
                      % (treffer, "/".join(anst), werte["blnow"]))
+
+
+# --- teil 8, gold in bitcoins baermaerkten ---------------------------
+#
+# Dieselben Fenster wie ueberall, nur mit zwei weiteren Reihen daneben.
+# Bitcoin hat fuer jeden Kalendertag einen Wert, GLD und SPY nur fuer
+# Boersentage. Fuer eine Fenstergrenze, die auf einen Samstag faellt,
+# wird bei GLD und SPY der letzte Boersentag davor genommen. Das steht
+# so auch auf der Seite, mit Zahl und Datum.
+
+def archiv_feld(rows, feld):
+    """eine beliebige spalte des archivs als sortierte liste."""
+    return sorted((r["d"], float(r[feld])) for r in (rows or [])
+                  if isinstance(r, dict) and isinstance(r.get("d"), str)
+                  and isinstance(r.get(feld), (int, float)))
+
+
+def proz2(neu, alt):
+    """zwei nachkommastellen mit vorzeichen. auf der goldseite steht eine
+    stelle mehr als sonst, weil die seite von kleinen unterschieden
+    handelt: aus -5,0 laesst sich nicht ablesen, dass der wert ueber
+    fuenf prozent liegt, aus -5,03 schon."""
+    return "%+.2f%%" % ((float(neu) / float(alt) - 1.0) * 100.0)
+
+
+def _roh(neu, alt):
+    return (float(neu) / float(alt) - 1.0) * 100.0
+
+
+def gold_werte(archivrows, logrows, bis=None):
+    """rechnet, was die goldseite zeigt. (werte, None) oder (None, grund).
+
+    Der rechte Rand des laufenden Fensters kommt aus dem MARKTLOG, nicht
+    aus dem Archiv. Das Archiv wird nur sonntags nachgezogen und haengt
+    unter der Woche bis zu sechs Tage hinterher; die anderen Zyklusseiten
+    rechnen laengst auf den Marktlog. Gold und Aktien kommen weiter aus
+    dem Archiv, zum selben Stichtag mit Rueckgriff auf den letzten
+    Boersentag."""
+    btc = archiv_reihe(archivrows)
+    gld = archiv_feld(archivrows, "gld")
+    spy = archiv_feld(archivrows, "spy")
+    if not (btc and gld and spy):
+        return None, "btc, gld oder spy fehlt im archiv"
+    reihen = {"btc": btc, "gld": gld, "spy": spy}
+
+    werte = {}
+    gld_fertig = []
+    spy_fertig = []
+    for von, nach, vorsilbe in BAERFENSTER:
+        for feld in ("btc", "gld", "spy"):
+            a = am_oder_vor(reihen[feld], von)
+            b = am_oder_vor(reihen[feld], nach)
+            if not a or not b:
+                return None, "kein %s-wert fuer %s..%s" % (feld, von, nach)
+            werte[vorsilbe + feld] = proz2(b[1], a[1])
+            if feld == "gld":
+                gld_fertig.append(_roh(b[1], a[1]))
+            if feld == "spy":
+                spy_fertig.append(_roh(b[1], a[1]))
+
+    # der laufende: einmal bis zum tief, einmal bis zum juengsten tag
+    jetzt = letzter_schluss(logrows)
+    if not jetzt:
+        return None, "kein btc-schluss im log"
+    tief = tief_nach(mit_rand(btc, logrows), HOCH_CLOSE)
+    if not tief:
+        return None, "kein preis nach dem hoch"
+    rand = jetzt["d"]
+    for nach, vorsilbe in ((tief[0], "b4"), (rand, "b5")):
+        for feld in ("btc", "gld", "spy"):
+            a = am_oder_vor(reihen[feld], HOCH_CLOSE)
+            # fuer btc am rechten rand gilt der marktlog, sonst das archiv
+            if feld == "btc" and nach == rand:
+                b = (rand, jetzt["btc"])
+            else:
+                b = am_oder_vor(reihen[feld], nach)
+            if not a or not b:
+                return None, "kein %s-wert fuer das laufende fenster" % feld
+            werte[vorsilbe + feld] = proz2(b[1], a[1])
+    werte["b5end"] = kurz(rand)
+    werte["b5tag"] = rand      # nur fuer die stichtagswache, nicht gestempelt
+    werte["cur1"] = werte["b4gld"]
+    werte["cur2"] = werte["b5gld"]
+    werte["cur2d"] = lang(rand)
+    werte["faq1"] = werte["b5gld"]
+
+    # gold gegen den hoechsten schluss im archiv
+    spitze = max(gld, key=lambda x: x[1])
+    letzt = gld[-1]
+    werte["gpeakd"] = lang(spitze[0])
+    werte["gpeak"] = "%.2f" % spitze[1]
+    werte["gnowd"] = lang(letzt[0])
+    werte["gnow"] = "%.2f" % letzt[1]
+    werte["gdd"] = "%.2f%%" % abs(_roh(letzt[1], spitze[1]))
+    werte["faq2"] = werte["gdd"]
+
+    # die beiden spannen, aus den ungerundeten werten
+    werte["gldspread"] = "%.2f" % (max(gld_fertig) - min(gld_fertig))
+    werte["spyspread"] = "%.2f" % (max(spy_fertig) - min(spy_fertig))
+
+    # "innerhalb von X" wird AUFGERUNDET, sonst behauptet die seite etwas,
+    # das um hundertstel nicht stimmt. -5,0279 ergibt 5,1 und nicht 5,0.
+    # vor dem aufrunden wird die darstellungsunschaerfe weggerundet. ohne
+    # das round() wuerde ein wert, der mathematisch genau 5,00 ist, als
+    # 5.000000000000004 ankommen und zu 5,1 aufgerundet, also strenger
+    # behauptet als noetig. der selbsttest haelt beide faelle fest.
+    schlimmst = round(max(abs(x) for x in gld_fertig), 6)
+    werte["gworst"] = "within %.1f%%" % (math.ceil(schlimmst * 10) / 10.0)
+    return werte, None
+
+
+def lauf_gold():
+    pfad = os.path.join(REPO, GOLD_SEITE)
+    if not os.path.exists(pfad):
+        print("  ok   %-30s nicht vorhanden, uebersprungen" % GOLD_SEITE)
+        return 0
+    if not (os.path.exists(ARCHIV) and os.path.exists(LOG)):
+        print("  FEHL %-30s archiv oder log fehlt" % GOLD_SEITE)
+        return 1
+    with open(ARCHIV, "r", encoding="utf-8") as fh:
+        archivrows = json.load(fh)
+    with open(LOG, "r", encoding="utf-8") as fh:
+        logrows = json.load(fh)
+    werte, grund = gold_werte(archivrows, logrows)
+    if werte is None:
+        print("  FEHL %-30s %s" % (GOLD_SEITE, grund))
+        return 1
+    with open(pfad, "r", encoding="utf-8") as fh:
+        alt = fh.read()
+    stempel = dict((k, v) for k, v in werte.items() if k != "b5tag")
+    neu, treffer, fehlend = setz_text(alt, stempel)
+    if fehlend:
+        print("  FEHL %-30s id nicht gefunden %s" % (GOLD_SEITE, ", ".join(fehlend)))
+        return 1
+    # wie bei der bullenseite: geprueft wird das ergebnis, nicht der stand
+    # von gestern.
+    funde = prognose_funde(neu)
+    if funde:
+        print("  FEHL %-30s sieht nach vorhersage aus: %s"
+              % (GOLD_SEITE, ", ".join(funde)))
+        return 1
+    ko = kopf_funde(GOLD_SEITE, neu, stempel)
+    if ko:
+        print("  FEHL %-30s %s" % (GOLD_SEITE, "; ".join(ko)))
+        return 1
+    STICHTAG[GOLD_SEITE] = werte["b5tag"]
+    return schreiben(pfad, alt, neu, GOLD_SEITE,
+                     "%d zahlen, gold %s im laufenden baer, %s unter der spitze"
+                     % (treffer, werte["b5gld"], werte["gdd"]))
+
+
+# --- teil 9, ein heute fuer alle -------------------------------------
+
+def nur_kopf(html):
+    """alles vor </head>. dort kommt setz_text nicht hin."""
+    i = html.find("</head>")
+    return html[:i] if i >= 0 else ""
+
+
+def kopf_funde(datei, html, werte):
+    """jeder wert, den dieser lauf in den rumpf geschrieben hat und der
+    zusaetzlich im kopf steht, ohne dort angemeldet zu sein.
+
+    keine heuristik: geprueft wird nicht, ob ein wert beweglich AUSSIEHT,
+    sondern ob der stempel ihn in diesem lauf gesetzt hat. hat er das,
+    kontrolliert er ihn, und eine zweite kopie im kopf kontrolliert er
+    nicht."""
+    kopf = nur_kopf(html)
+    frei = set(KOPF_AUSNAHMEN.get(datei, ()))
+    return ["%s=%r steht auch im kopf" % (i, v)
+            for i, v in sorted(werte.items())
+            if i not in frei and v and str(v) in kopf]
+
+
+def stichtag_funde(eintraege, lies=None, nennen=None):
+    """prueft, ob alle zyklusseiten denselben stichtag tragen.
+
+    zwei pruefungen, beide muessen halten:
+      1. alle eingetragenen seiten nennen denselben tag,
+      2. dieser tag steht ausgeschrieben auch wirklich auf jeder seite.
+
+    die zweite faengt den fall, dass eine seite gar nicht gestempelt
+    wurde und noch den tag von gestern zeigt, waehrend die sammelstelle
+    schon den neuen kennt.
+
+    lies(datei) liefert den seitentext; ohne angabe wird von platte
+    gelesen. der selbsttest reicht hier eine eigene funktion herein."""
+    if not eintraege:
+        return ["keine zyklusseite hat einen stichtag eingetragen"]
+    tage = sorted(set(eintraege.values()))
+    if len(tage) > 1:
+        return ["%s rechnet auf %s" % (d, t)
+                for d, t in sorted(eintraege.items())]
+    tag = tage[0]
+    if lies is None:
+        def lies(datei):
+            pfad = os.path.join(REPO, datei)
+            if not os.path.exists(pfad):
+                return ""
+            with open(pfad, "r", encoding="utf-8") as fh:
+                return fh.read()
+    pflicht = sorted(eintraege) if nennen is None else sorted(set(eintraege) & set(nennen))
+    return ["%s nennt %s nicht" % (d, lang(tag))
+            for d in pflicht if lang(tag) not in lies(d)]
+
+
+def lauf_stichtag():
+    """zwei gruppen, jede fuer sich stimmig.
+
+    preis     der juengste preis, den eine seite zeigt
+    zaehltag  der tag, gegen den ihre tageszaehler rechnen
+
+    Die beiden duerfen sich unterscheiden, und sie tun es meistens: der
+    zaehler laeuft bis heute, der juengste preis ist der von gestern
+    abend. Was nicht sein darf, ist dass zwei SEITEN innerhalb derselben
+    gruppe auseinanderlaufen."""
+    fehler = 0
+    for name, eintraege, nennen in (("preis", STICHTAG, None),
+                                    ("zaehltag", ZAEHLTAG, NENNT_ZAEHLTAG)):
+        funde = stichtag_funde(eintraege, None, nennen)
+        if funde:
+            print("  FEHL stichtag %-8s             %s" % (name, "; ".join(funde)))
+            print("       zwei seiten mit verschiedenem heute sind ein fehler,")
+            print("       nicht eine kleinigkeit. der lauf haelt hier an.")
+            fehler += 1
+        else:
+            print("  ok   stichtag %-8s             %s auf %d seite(n)"
+                  % (name, sorted(set(eintraege.values()))[0], len(eintraege)))
+    return fehler
+
+
+# --- teil 10, what-if ------------------------------------------------
+#
+# Die Seite rechnet im Browser auf Eingaben. Gestempelt wird die
+# voreingestellte Ansicht, also das, was ohne einen einzigen Klick
+# dasteht. Die Arithmetik unten ist dieselbe wie im Seitenskript,
+# einschliesslich der Rundungen; die Dopplung ist unvermeidlich und der
+# Grund, warum fuer jede Zahl ein Testfall steht.
+
+def wi_usd(x):
+    """usd() aus dem seitenskript, zeichen fuer zeichen."""
+    x = float(x)
+    if x >= 1e9:
+        return "$%.2fB" % (x / 1e9)
+    if x >= 1e6:
+        return "$%.2fM" % (x / 1e6)
+    return "$" + "{:,}".format(int(math.floor(x + 0.5)))
+
+
+def wi_px(x):
+    """px() aus dem seitenskript."""
+    x = float(x)
+    return "$" + ("{:,}".format(int(math.floor(x + 0.5))) if x >= 100
+                  else "%.2f" % x)
+
+
+def wi_jahre_zurueck(iso_tag, jahre):
+    """setUTCFullYear(y - n) aus javascript. der 29. februar rutscht dort
+    auf den 1. maerz, weil der 29.02. im zieljahr nicht existiert."""
+    j, m, t = [int(x) for x in iso_tag.split("-")]
+    z = j - jahre
+    letzter = calendar.monthrange(z, m)[1]
+    if t > letzter:
+        return (datetime.date(z, m, letzter)
+                + datetime.timedelta(days=t - letzter)).isoformat()
+    return datetime.date(z, m, t).isoformat()
+
+
+def wi_ab(reihe, tag):
+    """erster punkt am oder nach dem tag."""
+    for d, v in reihe:
+        if d >= tag:
+            return (d, v)
+    return None
+
+
+def wi_bis(reihe, tag):
+    """letzter punkt am oder vor dem tag."""
+    tref = None
+    for d, v in reihe:
+        if d > tag:
+            break
+        tref = (d, v)
+    return tref
+
+
+def wi_lump(reihe, betrag, jahre):
+    if not reihe:
+        return None
+    jetzt = reihe[-1]
+    davor = wi_ab(reihe, wi_jahre_zurueck(jetzt[0], jahre))
+    if not davor or davor[1] <= 0:
+        return None
+    mult = jetzt[1] / davor[1]
+    return {"davor": davor, "jetzt": jetzt, "mult": mult, "wert": betrag * mult}
+
+
+def wi_dca(reihe, monatlich, jahre):
+    """monatsend-kaeufe, genau wie im seitenskript."""
+    if not reihe:
+        return None
+    jetzt = reihe[-1]
+    ende = datetime.date(*[int(x) for x in jetzt[0].split("-")])
+    j, m = ende.year - jahre, ende.month - 1        # m nullbasiert
+    anteile = paid = kaeufe = 0.0
+    erster = None
+    while j < ende.year or (j == ende.year and m <= ende.month - 1):
+        me = datetime.date(j, m + 1, calendar.monthrange(j, m + 1)[1])
+        if me > ende:
+            break
+        pkt = wi_bis(reihe, me.isoformat())
+        if pkt and pkt[1] > 0:
+            anteile += monatlich / pkt[1]
+            paid += monatlich
+            kaeufe += 1
+            if erster is None:
+                erster = pkt[0]
+        m += 1
+        if m > 11:
+            m = 0
+            j += 1
+    if kaeufe < 6:
+        return None
+    return {"wert": anteile * jetzt[1], "paid": paid, "kaeufe": int(kaeufe),
+            "erster": erster, "jetzt": jetzt}
+
+
+WI_LABEL = {"btc": "bitcoin", "spy": "the S&amp;P 500", "gld": "gold"}
+
+
+def whatif_werte(archivrows, logrows):
+    """(werte, None) oder (None, grund). werte fuer die voreingestellte
+    ansicht der drei reiter."""
+    reihen = dict((f, reihe_mit_logvorrang(f, archiv=archivrows, log=logrows))
+                  for f in ("btc", "spy", "gld"))
+    if not all(reihen.values()):
+        return None, "btc, spy oder gld fehlt"
+    asof = min(r[-1][0] for r in reihen.values())
+
+    lf, lbetrag, ljahre = WI_LUMP
+    L = wi_lump(reihen[lf], lbetrag, ljahre)
+    if not L:
+        return None, "einmalkauf laesst sich nicht rechnen"
+    df, dbetrag, djahre = WI_DCA
+    D = wi_dca(reihen[df], dbetrag, djahre)
+    if not D:
+        return None, "sparplan laesst sich nicht rechnen"
+    proTag, ajahre, aname = WI_DAY
+    monatlich = proTag * 365.0 / 12.0
+    A = dict((f, wi_dca(reihen[f], monatlich, ajahre)) for f in ("spy", "gld", "btc"))
+    if not all(A.values()):
+        return None, "tagesbetrag laesst sich nicht rechnen"
+
+    tag = lambda n: ("%d" % n) if float(n) == int(n) else ("%s" % n)
+    werte = {
+        "asof": "%s (bitcoin %s)" % (lang(asof), lang(reihen["btc"][-1][0])),
+        "l-big": wi_usd(L["wert"]),
+        "l-used": "Counted with: close on %s %s \u2192 close on %s %s."
+                  % (lang(L["davor"][0]), wi_px(L["davor"][1]),
+                     lang(L["jetzt"][0]), wi_px(L["jetzt"][1])),
+        "d-big": wi_usd(D["wert"]),
+        "d-used": "Counted with: %d month-end buys from %s to %s, valued at %s."
+                  % (D["kaeufe"], lang(D["erster"]), lang(D["jetzt"][0]),
+                     wi_px(D["jetzt"][1])),
+        "a-k": "$%s a day (%s), bought at every month end, %d years"
+               % (tag(proTag), aname, ajahre),
+        "a-spent": wi_usd(A["spy"]["paid"]),
+        "a-spy": wi_usd(A["spy"]["wert"]),
+        "a-gld": wi_usd(A["gld"]["wert"]),
+        "a-btc": wi_usd(A["btc"]["wert"]),
+        "a-used": ("Counted with: $%s \u00d7 365 \u00f7 12 = %s a month, %d "
+                   "month-end buys from %s to %s, each asset at its own closes."
+                   % (tag(proTag), wi_usd(monatlich), A["spy"]["kaeufe"],
+                      lang(A["spy"]["erster"]), lang(A["spy"]["jetzt"][0]))),
+    }
+    # die beiden saetze mit <b> darin, als ganzer innenraum ersetzt
+    innen = {
+        "l-sub": ("<b>%s</b> in %s %d years ago is <b>%s</b> today, <b>%s\u00d7</b> "
+                  "the money." % (wi_usd(lbetrag), WI_LABEL[lf], ljahre,
+                                  wi_usd(L["wert"]),
+                                  ("%.0f" % L["mult"]) if L["mult"] >= 10
+                                  else ("%.2f" % L["mult"]))),
+        "d-sub": ("<b>%s a month</b> into %s for %d years: <b>%s</b> paid in, "
+                  "worth <b>%s</b> today (%.2f\u00d7 what you paid)."
+                  % (wi_usd(dbetrag), WI_LABEL[df], djahre, wi_usd(D["paid"]),
+                     wi_usd(D["wert"]), D["wert"] / D["paid"])),
+    }
+    return {"text": werte, "innen": innen, "asof": asof}, None
+
+
+RE_INNEN = {}
+
+
+def setz_innen(html, kennung, inhalt):
+    """ersetzt den ganzen innenraum eines div, auch wenn tags darin stehen.
+    setz_text kann das nicht, es hoert beim ersten < auf."""
+    muster = re.compile(r'(<div[^>]*id="%s"[^>]*>)(.*?)(</div>)'
+                        % re.escape(kennung), re.S)
+    return muster.subn(lambda m: m.group(1) + inhalt + m.group(3), html)
+
+
+def lauf_whatif():
+    pfad = os.path.join(REPO, WI_SEITE)
+    if not os.path.exists(pfad):
+        print("  ok   %-30s nicht vorhanden, uebersprungen" % WI_SEITE)
+        return 0
+    if not (os.path.exists(ARCHIV) and os.path.exists(LOG)):
+        print("  FEHL %-30s archiv oder log fehlt" % WI_SEITE)
+        return 1
+    with open(ARCHIV, "r", encoding="utf-8") as fh:
+        archivrows = json.load(fh)
+    with open(LOG, "r", encoding="utf-8") as fh:
+        logrows = json.load(fh)
+    w, grund = whatif_werte(archivrows, logrows)
+    if w is None:
+        print("  FEHL %-30s %s" % (WI_SEITE, grund))
+        return 1
+    with open(pfad, "r", encoding="utf-8") as fh:
+        alt = fh.read()
+    neu, treffer, fehlend = setz_text(alt, w["text"])
+    if fehlend:
+        print("  FEHL %-30s id nicht gefunden %s" % (WI_SEITE, ", ".join(fehlend)))
+        return 1
+    for kennung, inhalt in sorted(w["innen"].items()):
+        neu, n = setz_innen(neu, kennung, inhalt)
+        if n != 1:
+            print("  FEHL %-30s %s nicht genau einmal gefunden (%d)"
+                  % (WI_SEITE, kennung, n))
+            return 1
+        treffer += 1
+    ko = kopf_funde(WI_SEITE, neu, w["text"])
+    if ko:
+        print("  FEHL %-30s %s" % (WI_SEITE, "; ".join(ko)))
+        return 1
+    STICHTAG[WI_SEITE] = w["asof"]
+    return schreiben(pfad, alt, neu, WI_SEITE,
+                     "%d zahlen, stand %s" % (treffer, w["asof"]))
 
 
 # --- teil 4, die leiste ----------------------------------------------
@@ -1055,8 +1656,13 @@ def selbsttest():
     # --- die leiste ---
     pruefe("eigene seite ohne verweis",
            "<span>markets</span>" in leiste("markets.html"), True)
+    # gezaehlt wird die PILLE, nicht der teilstring: seit es
+    # gold-in-bitcoin-bear-markets.html gibt, steht "markets" auch in einem
+    # fremden href, und eine teilstringzaehlung waere hier falsch geworden.
     pruefe("eigene seite nicht doppelt",
-           leiste("markets.html").count("markets"), 1)
+           leiste("markets.html").count("<span>markets</span>"), 1)
+    pruefe("und nicht zusaetzlich als verweis",
+           ">markets</a>" in leiste("markets.html"), False)
     pruefe("fremde seiten als verweis",
            leiste("markets.html").count("<a href="), len(SEITEN) - 1)
     pruefe("alle punkte drin",
@@ -1216,17 +1822,51 @@ def selbsttest():
            bull_anstiege([("2015-01-14", 172.00)]), None)
 
     drei = ["+11,109", "+1,990", "+692"]
-    pruefe("richtige seite faellt nicht auf",
-           anstieg_funde("11,109 percent and +1,990% and +692%", drei), [])
-    # der echte fehler: drei stellen falsch, eine richtig. die alte pruefung
-    # "kommt die zahl irgendwo vor" hat das durchgewunken.
+    ok_seite = "11,109 percent and +1,990% and +692%"
+    pruefe("richtige seite faellt nicht auf", anstieg_funde(ok_seite, drei), [])
+    pruefe("beide schreibweisen werden eingesammelt",
+           anstiege_im_text("+1,990% im text, 692 percent im json-ld"),
+           ["1,990", "692"])
+    # streuungsspalten sind keine anstiege und duerfen nicht anschlagen
+    pruefe("prozent mit nachkommastelle zaehlt nicht",
+           anstiege_im_text("spread 1.6% gegen 11.0%"), [])
+
+    # der echte fehler vom 23.09.2026: eine stelle daneben
     pruefe("eine stelle daneben faellt auf",
-           anstieg_funde("11,109 and +1,991% here, 1,990 percent there, +692%", drei),
-           ["1,991 steht da, richtig waere 1,990"])
+           [f.split(" steht")[0] for f in
+            anstieg_funde("11,109 percent, +1,991%, 1,990 percent, +692%", drei)],
+           ["1,991"])
+    # was der alte nachbarcheck NICHT gefangen haette: ein zahlendreher
+    # hier meldet die wache zwei dinge auf einmal: der fremde wert steht da
+    # UND der richtige fehlt. beides ist gewollt, deshalb je ein fall.
+    pruefe("zahlendreher faellt auf",
+           [f.split(" steht")[0] for f in
+            anstieg_funde("11,109 percent and +1,909% and +692%", drei)
+            if " steht da" in f],
+           ["1,909"])
+    pruefe("und die fehlende richtige zahl faellt gleich mit auf",
+           [f for f in anstieg_funde("11,109 percent and +1,909% and +692%", drei)
+            if "fehlt" in f], ["1,990 fehlt"])
+    # eine veraltete zahl aus einem frueheren backfill
+    pruefe("veralteter wert faellt auf",
+           [f.split(" steht")[0] for f in
+            anstieg_funde("11,109 percent, +1,990%, +688%, +692%", drei)],
+           ["688"])
     pruefe("fehlende zahl faellt auf",
            [f for f in anstieg_funde("+1,990% and +692%", drei) if "fehlt" in f],
            ["11,109 fehlt"])
-    # eine zahl, die nur zufaellig enthalten ist, darf nicht anschlagen
+
+    # ein vierter anstieg, den wir bewusst dazunehmen: erst rot, dann gruen,
+    # sobald er in der gerechneten menge steht.
+    vier_seite = ok_seite + " and +1,234%"
+    pruefe("neuer anstieg faellt erst durch",
+           [f.split(" steht")[0] for f in anstieg_funde(vier_seite, drei)], ["1,234"])
+    pruefe("und wird gruen, sobald er gerechnet ist",
+           anstieg_funde(vier_seite, drei + ["+1,234"]), [])
+    # der laufende anstieg kommt mit prozentzeichen herein
+    pruefe("laufender anstieg wird mitgenommen",
+           anstieg_funde(ok_seite + " and +47%", drei + ["+47%"]), [])
+
     pruefe("teil einer groesseren zahl zaehlt nicht",
            _zahl_steht("das sind 1,692 dollar", "692"), False)
     pruefe("und mit vorzeichen davor schon", _zahl_steht("+692%", "692"), True)
@@ -1234,11 +1874,28 @@ def selbsttest():
     # --- wache 2, kein abgeleitetes datum ---
     pruefe("sauberer text faellt nicht auf",
            prognose_funde("<h1>x</h1><p>1,050 days from the low of 30 June 2026.</p>"), [])
-    pruefe("jahr ab 2027 faellt auf",
-           prognose_funde("<p>that lands in 2027.</p>"), ["2027"])
-    pruefe("auch ein spaeteres jahr", prognose_funde("<p>2031</p>"), ["2031"])
+    # das jahr wird gegen das LAUFENDE jahr geprueft, nicht gegen eine
+    # feste 2027. sonst schlaegt die wache am 01.01.2027 auf jeder seite an,
+    # die schlicht das aktuelle jahr nennt.
+    pruefe("kommendes jahr faellt auf",
+           prognose_funde("<p>that lands in 2027.</p>", jahr=2026), ["2027"])
+    pruefe("auch ein spaeteres jahr", prognose_funde("<p>2031</p>", jahr=2026), ["2031"])
     pruefe("vergangene jahre sind in ordnung",
-           prognose_funde("<p>2015, 2021, 2025 and 2026</p>"), [])
+           prognose_funde("<p>2015, 2021, 2025 and 2026</p>", jahr=2026), [])
+    # gefaelschtes systemjahr: dieselbe seite, ein jahr spaeter gelesen
+    pruefe("2027 ist 2027 kein fund mehr",
+           prognose_funde("<p>that lands in 2027.</p>", jahr=2027), [])
+    pruefe("2028 waere es dann aber",
+           prognose_funde("<p>2027 and 2028</p>", jahr=2027), ["2028"])
+    pruefe("und 2031 gelesen faellt gar kein jahr mehr auf",
+           prognose_funde("<p>2027, 2028, 2029, 2030, 2031</p>", jahr=2031), [])
+    # ohne angabe gilt das echte systemjahr
+    pruefe("ohne angabe das laufende jahr",
+           prognose_funde("<p>%d</p>" % (heute().year + 1)), [str(heute().year + 1)])
+    pruefe("das laufende jahr selbst ist sauber",
+           prognose_funde("<p>%d</p>" % heute().year), [])
+    # vierstellige zahlen, die keine jahresform haben, bleiben aussen vor
+    pruefe("day 1200 ist kein jahr", prognose_funde("<p>day 1200</p>", jahr=2026), [])
     pruefe("rechenbeispiel faellt auf",
            prognose_funde("<p>that would put the next top around then.</p>"), ["would put"])
     pruefe("weitere wendungen faellen auf",
@@ -1255,6 +1912,234 @@ def selbsttest():
     pruefe("bullenhochs sind die zyklushochs",
            [h for _, h in ZYKLEN],
            [t for _, t in VORZYKLEN][1:] + [HOCH_CLOSE])
+
+    # --- die goldseite ---
+    pruefe("zwei stellen mit vorzeichen", proz2(105.0, 100.0), "+5.00%")
+    pruefe("und nach unten", proz2(95.0, 100.0), "-5.00%")
+    # der grund fuer die zweite stelle: -5,0279 darf nicht als -5,0
+    # dastehen, sonst liest man "innerhalb von fuenf prozent" heraus.
+    pruefe("die zweite stelle traegt die aussage",
+           proz2(161.88, 170.45), "-5.03%")
+
+    # gesetztes archiv: boersentage nur mo-fr, btc jeden tag.
+    # 2013-12-04 ist ein mittwoch, 2015-01-14 ein mittwoch,
+    # 2017-12-16 ein SAMSTAG, 2018-12-15 ein SAMSTAG.
+    garchiv = []
+    for tag, b, g, sp in (
+            ("2013-12-04", 1000.0, 100.0, 100.0),
+            ("2015-01-14", 150.0, 98.0, 110.0),
+            ("2017-12-15", None, 200.0, 200.0),   # freitag vor dem samstag
+            ("2017-12-16", 2000.0, None, None),   # samstag, nur btc
+            ("2018-12-14", None, 190.0, 180.0),   # freitag vor dem samstag
+            ("2018-12-15", 400.0, None, None),    # samstag, nur btc
+            ("2021-11-08", 5000.0, 300.0, 300.0),
+            ("2022-11-21", 1000.0, 285.0, 240.0),
+            (HOCH_CLOSE, 10000.0, 400.0, 400.0),
+            ("2026-06-30", 5000.0, 404.0, 440.0),
+            ("2026-09-22", 7000.0, 440.0, 460.0)):
+        z = {"d": tag}
+        if b is not None:
+            z["btc"] = b
+        if g is not None:
+            z["gld"] = g
+            z["spy"] = sp
+        garchiv.append(z)
+    # der rechte rand kommt aus dem LOG, nicht aus dem archiv, genau wie
+    # im echten lauf. das archiv endet hier am 22., das log am 23.
+    glog = [{"d": "2026-09-22", "btc": 6500.0}, {"d": "2026-09-23", "btc": 7000.0}]
+    w, grund = gold_werte(garchiv, glog)
+    pruefe("kein grund zum abbruch", grund, None)
+    pruefe("fenster 1 btc", w["b1btc"], "-85.00%")
+    pruefe("fenster 1 gold", w["b1gld"], "-2.00%")
+    pruefe("fenster 1 aktien", w["b1spy"], "+10.00%")
+    # hier zaehlt der rueckgriff: der samstag hat keinen gld-wert, also
+    # muss der freitag davor genommen werden, an beiden raendern.
+    pruefe("samstagsgrenze greift auf den freitag zurueck",
+           (w["b2gld"], w["b2spy"]), ("-5.00%", "-10.00%"))
+    pruefe("btc rechnet am samstag selbst", w["b2btc"], "-80.00%")
+    pruefe("fenster 3 gold", w["b3gld"], "-5.00%")
+    # der laufende: einmal bis zum tief, einmal bis zum archivrand
+    pruefe("laufend bis zum tief", (w["b4btc"], w["b4gld"]), ("-50.00%", "+1.00%"))
+    pruefe("laufend bis zum rand", (w["b5btc"], w["b5gld"]), ("-30.00%", "+10.00%"))
+    pruefe("faq und fliesstext tragen dieselbe zahl",
+           (w["cur1"], w["cur2"], w["faq1"]), (w["b4gld"], w["b5gld"], w["b5gld"]))
+
+    # gold gegen den hoechsten schluss im archiv
+    pruefe("spitze gefunden", (w["gpeakd"], w["gpeak"]), ("22 September 2026", "440.00"))
+    pruefe("stand heute", (w["gnowd"], w["gnow"]), ("22 September 2026", "440.00"))
+    pruefe("kein abstand, wenn heute die spitze ist", w["gdd"], "0.00%")
+
+    # spannen aus den UNGERUNDETEN werten. gold -2, -5, -5 spannt 3,00.
+    pruefe("goldspanne", w["gldspread"], "3.00")
+    # spy: +10,00 / -10,00 / -20,00 im testarchiv, spanne also 30,00
+    pruefe("aktienspanne", w["spyspread"], "30.00")
+
+    # "innerhalb von" wird aufgerundet, nie ab
+    # genau 5,00 bleibt 5,0 und wird nicht von der gleitkommaunschaerfe
+    # auf 5,1 hochgezogen
+    pruefe("genau fuenf bleibt fuenf", w["gworst"], "within 5.0%")
+    g2 = [dict(z) for z in garchiv]
+    for z in g2:
+        if z["d"] == "2022-11-21":
+            z["gld"] = 284.9          # -5,0333 prozent
+    w2, _ = gold_werte(g2, glog)
+    pruefe("5,03 wird zu 5,1 und nicht zu 5,0", w2["gworst"], "within 5.1%")
+
+    pruefe("archiv ohne gold faellt auf",
+           gold_werte([{"d": "2020-01-01", "btc": 1.0}], glog)[0], None)
+    pruefe("log ohne schluss faellt auf",
+           gold_werte(garchiv, [{"d": "2026-09-23", "gld": 1.0}])[0], None)
+    # der stichtag der goldseite ist der LOGRAND, nicht der archivrand.
+    # genau daran ist am 24.09.2026 das zweite "heute" entstanden.
+    pruefe("stichtag kommt aus dem log", w["b5tag"], "2026-09-23")
+    pruefe("und nicht aus dem archiv", w["b5tag"] != garchiv[-1]["d"], True)
+    pruefe("das enddatum auf der seite passt dazu", w["b5end"], "23 Sep 2026")
+    # --- die gemeinsame vorrangregel ---
+    a = [{"d": "2026-09-22", "gld": 1.0}, {"d": "2026-09-23", "gld": 2.0}]
+    l = [{"d": "2026-09-23", "gld": 99.0}, {"d": "2026-09-24", "gld": 3.0}]
+    pruefe("am gemeinsamen tag gewinnt das log",
+           reihe_mit_logvorrang("gld", archiv=a, log=l),
+           [("2026-09-22", 1.0), ("2026-09-23", 99.0), ("2026-09-24", 3.0)])
+    # die reihenfolge laesst sich nicht mehr versehentlich drehen
+    fehl = None
+    try:
+        reihe_mit_logvorrang("gld", a, l)
+    except TypeError as exc:
+        fehl = "positional"
+    pruefe("archiv und log sind keyword-only", fehl, "positional")
+    pruefe("null und leeres faellt raus",
+           reihe_mit_logvorrang("gld", archiv=[{"d": "x", "gld": 0}, "kein dict"],
+                                log=[{"d": "y"}]), [])
+
+    # --- what-if ---
+    pruefe("usd unter einer million", wi_usd(1880.6), "$1,881")
+    pruefe("usd in millionen", wi_usd(2_500_000), "$2.50M")
+    pruefe("usd in milliarden", wi_usd(3_100_000_000), "$3.10B")
+    pruefe("preis ab hundert ohne cents", wi_px(84424.0), "$84,424")
+    pruefe("preis darunter mit cents", wi_px(44.889), "$44.89")
+    pruefe("fuenf jahre zurueck", wi_jahre_zurueck("2026-09-23", 5), "2021-09-23")
+    # javascript schiebt den 29. februar auf den 1. maerz, wenn das zieljahr
+    # keinen hat. das muss hier genauso laufen.
+    pruefe("schalttag wie in javascript", wi_jahre_zurueck("2024-02-29", 3), "2021-03-01")
+    pruefe("schalttag auf schaltjahr bleibt", wi_jahre_zurueck("2024-02-29", 4), "2020-02-29")
+
+    # der 20.09. liegt VOR dem stichtag 2021-09-23 und darf nicht genommen
+    # werden. wuerde er es, kaeme 4000 statt 2000 heraus.
+    reihe = [("2021-09-20", 50.0), ("2021-09-30", 100.0), ("2026-09-23", 200.0)]
+    r = wi_lump(reihe, 1000.0, 5)
+    pruefe("einmalkauf nimmt den ersten tag AB dem stichtag",
+           (r["davor"][0], r["wert"]), ("2021-09-30", 2000.0))
+    pruefe("ohne genug reihe nichts", wi_lump([], 1000.0, 5), None)
+
+    # sparplan: monatsende von 2025-10 bis 2026-09, also 12 kaeufe
+    mreihe = []
+    for j, m in [(2025, x) for x in range(9, 13)] + [(2026, x) for x in range(1, 10)]:
+        mreihe.append(("%04d-%02d-%02d" % (j, m, 28), 10.0))
+    mreihe.append(("2026-09-23", 10.0))
+    mreihe.sort()
+    d = wi_dca(mreihe, 100.0, 1)
+    pruefe("sparplan zaehlt die monatsenden", (d["kaeufe"], d["paid"]), (12, 1200.0))
+    pruefe("und bewertet zum letzten kurs", d["wert"], 1200.0)
+    pruefe("unter sechs kaeufen nichts", wi_dca(mreihe[:3], 100.0, 1), None)
+
+    # die voreinstellungen muessen zu denen im html passen, sonst stempelt
+    # der lauf eine ansicht, die niemand zu sehen bekommt
+    wipfad = os.path.join(REPO, WI_SEITE)
+    if os.path.exists(wipfad):
+        with open(wipfad, encoding="utf-8") as fh:
+            wihtml = fh.read()
+        def _vor(kennung):
+            m = re.search(r'id="%s"[^>]*value="([^"]*)"' % kennung, wihtml)
+            return float(m.group(1)) if m else None
+        pruefe("einmalkauf-betrag wie im html", _vor("l-amt"), WI_LUMP[1])
+        pruefe("sparplan-betrag wie im html", _vor("d-amt"), WI_DCA[1])
+        pruefe("tagesbetrag wie im html", _vor("a-amt"), WI_DAY[0])
+        pruefe("what-if steht in der leiste",
+               WI_SEITE in [d for d, _ in SEITEN], True)
+
+    # --- die kopf-wache ---
+    seite = ('<head><meta name="description" content="fiel -53.1% am 30 June 2026">'
+             '</head><body><b id="a">-53.1%</b><b id="b">267</b></body>')
+    pruefe("gestempelter wert im kopf faellt auf",
+           kopf_funde("x.html", seite, {"a": "-53.1%", "b": "267"}),
+           ["a='-53.1%' steht auch im kopf"])
+    pruefe("was nur im rumpf steht ist in ordnung",
+           kopf_funde("x.html", seite, {"b": "267"}), [])
+    pruefe("ohne kopf kein fund", kopf_funde("x.html", "<body>-53.1%</body>",
+           {"a": "-53.1%"}), [])
+    pruefe("nur_kopf schneidet vor dem schliessenden tag ab",
+           nur_kopf("<head>oben</head><body>unten</body>"), "<head>oben")
+    pruefe("ohne head bleibt nichts uebrig", nur_kopf("<body>nur rumpf</body>"), "")
+    # die angemeldete ausnahme: ein abgeschlossener wert darf doppelt stehen
+    pruefe("angemeldete ausnahme schweigt",
+           kopf_funde("bitcoin-bull-run-length.html",
+                      "<head>1,050 to 1,067</head><body>x</body>",
+                      {"blrange2": "1,050 to 1,067"}), [])
+    pruefe("aber nur fuer ihre eigene seite",
+           kopf_funde("andere.html", "<head>1,050 to 1,067</head><body>x</body>",
+                      {"blrange2": "1,050 to 1,067"}),
+           ["blrange2='1,050 to 1,067' steht auch im kopf"])
+    pruefe("leerer wert schlaegt nicht an",
+           kopf_funde("x.html", "<head></head><body></body>", {"a": ""}), [])
+    # jede ausnahme muss eine id sein, die es auch gibt, sonst schuetzt sie
+    # nichts und niemand merkt es
+    pruefe("keine ausnahme ohne seite",
+           [d for d in KOPF_AUSNAHMEN if not os.path.exists(os.path.join(REPO, d))], [])
+
+    # --- die stichtagswache ---
+    seiten = {"a.html": "2026-09-23", "b.html": "2026-09-23"}
+    text = {"a.html": "price of 23 September 2026",
+            "b.html": "as of 23 September 2026"}
+    pruefe("gleicher tag, beide nennen ihn",
+           stichtag_funde(seiten, lambda d: text[d]), [])
+    # der echte fall vom 24.09.2026: die goldseite rechnete auf den
+    # archivrand, die drei anderen auf den marktlog.
+    zwei = {"a.html": "2026-09-23", "b.html": "2026-09-22"}
+    pruefe("zwei verschiedene heute halten den lauf an",
+           stichtag_funde(zwei, lambda d: "egal"),
+           ["a.html rechnet auf 2026-09-23", "b.html rechnet auf 2026-09-22"])
+    # gleicher tag, aber eine seite nennt ihn nicht: dann wurde sie nicht
+    # gestempelt und zeigt noch gestern
+    pruefe("stiller tag faellt auf",
+           stichtag_funde(seiten, lambda d: text[d] if d == "a.html" else "nichts"),
+           ["b.html nennt 23 September 2026 nicht"])
+    pruefe("leere sammelstelle faellt auf", stichtag_funde({}, lambda d: ""),
+           ["keine zyklusseite hat einen stichtag eingetragen"])
+    pruefe("eine einzige seite reicht",
+           stichtag_funde({"a.html": "2026-09-23"}, lambda d: text[d]), [])
+    # drei gegen eine, alle vier werden gemeldet, damit man sieht welche
+    drei = {"a.html": "2026-09-23", "b.html": "2026-09-23",
+            "c.html": "2026-09-23", "d.html": "2026-09-21"}
+    pruefe("alle vier werden genannt", len(stichtag_funde(drei, lambda d: "egal")), 4)
+    # die halving-seite zeigt keinen PREIS, aber sie zaehlt tage, und
+    # dafuer steht sie sehr wohl in der zweiten gruppe.
+    pruefe("halving-seite traegt keinen preisstichtag",
+           "bitcoin-halving-to-top.html" in SCHLUSS_SEITEN, False)
+    pruefe("aber sie muss ihren zaehltag nennen",
+           "bitcoin-halving-to-top.html" in NENNT_ZAEHLTAG, True)
+    pruefe("und sie hat eine id dafuer",
+           ZYKLUS_ASOF.get("bitcoin-halving-to-top.html"), "hvasof")
+
+    # nennen: nur die genannten seiten muessen den tag ausschreiben
+    drei2 = {"a.html": "2026-09-24", "b.html": "2026-09-24"}
+    pruefe("ohne nennpflicht reicht uebereinstimmung",
+           stichtag_funde(drei2, lambda d: "nichts", nennen=()), [])
+    pruefe("mit nennpflicht wird ausgeschrieben verlangt",
+           stichtag_funde(drei2, lambda d: "nichts", nennen=("b.html",)),
+           ["b.html nennt 24 September 2026 nicht"])
+    pruefe("und erfuellt schweigt sie",
+           stichtag_funde(drei2, lambda d: "24 September 2026",
+                          nennen=("b.html",)), [])
+    # ein eingefrorener zaehler: die seite zaehlt noch gegen gestern
+    pruefe("eingefrorener zaehltag faellt auf",
+           stichtag_funde({"a.html": "2026-09-24", "b.html": "2026-09-23"},
+                          lambda d: "egal"),
+           ["a.html rechnet auf 2026-09-24", "b.html rechnet auf 2026-09-23"])
+
+    pruefe("goldseite in der leiste",
+           "gold-in-bitcoin-bear-markets.html" in [d for d, _ in SEITEN], True)
+    pruefe("bullenpille ist gekuerzt",
+           dict((n, d) for d, n in SEITEN)["bull run"], "bitcoin-bull-run-length.html")
 
     # die neue seite muss in der leiste stehen und in beiden stempelwegen
     pruefe("bullenseite in der leiste",
@@ -1277,7 +2162,8 @@ def main(argv):
     print("laufzeitpunkt %s utc\n"
           % datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
     fehler = (lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
-              + lauf_schluss() + lauf_rueckgang() + lauf_bullrun())
+              + lauf_schluss() + lauf_rueckgang() + lauf_bullrun()
+              + lauf_gold() + lauf_whatif() + lauf_stichtag())
     if fehler:
         print("\n%d seite(n) nicht gestempelt" % fehler)
         return 1
