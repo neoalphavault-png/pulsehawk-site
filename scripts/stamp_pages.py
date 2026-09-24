@@ -520,6 +520,17 @@ def markt_werte(rows):
     # derselben reihe, also aus den log-zeilen mit allen drei preisen.
     # geometrie wird weiter nicht gestempelt, aber ein datum ist keine
     # geometrie, und im quelltext stand dort "today" und "start of record".
+    #
+    # NICHT GESTEMPELT: chhi und chlo, die enden der prozentachse.
+    # Bens Entscheidung vom 24.09.2026, und der Grund ist nicht Aufwand,
+    # sondern die Art des Fehlers. Im Quelltext steht dort ein Punkt. Eine
+    # Antwortmaschine, die einen Punkt liest, weiss dass dort nichts steht;
+    # eine, die einen alten Wert liest, glaubt ihn. Ein Platzhalter ist
+    # keine falsche Zahl, und die Skalierung in Python nachzubauen waere
+    # viel Flaeche fuer keinen Gewinn.
+    #
+    # Wieder anzusehen, sobald die Achse eine Aussage traegt und nicht nur
+    # Geometrie. Bis dahin ist das hier kein vergessener Rest.
     mitdrei = [r for r in rows if _hat(r, DREI)]
     werte = {
         "dend": lang(neu["d"]),
