@@ -132,6 +132,22 @@ MARKT_SEITE = "markets.html"
 DD_SEITE = "bitcoin-drawdown.html"
 BL_SEITE = "bitcoin-bull-run-length.html"
 GOLD_SEITE = "gold-in-bitcoin-bear-markets.html"
+
+# EIN HEUTE FUER ALLE ZYKLUSSEITEN, SEIT 24.09.2026
+# Jede Zyklusseite mit einem Preis rechnet auf einen juengsten Tag. Wenn
+# zwei Seiten verschiedene Tage tragen, sieht ein Leser, der zwischen
+# ihnen wechselt, zwei verschiedene "heute", und keine der beiden Zahlen
+# ist falsch genug, dass es auffiele. Genau das war am 24.09.2026 der
+# Fall: die Goldseite rechnete auf den Archivrand (22.09.), die drei
+# anderen auf den Marktlog (23.09.), weil das Archiv nur sonntags
+# nachgezogen wird.
+#
+# Jeder Teil traegt seinen Stichtag hier ein, und lauf_stichtag() am Ende
+# haelt den Lauf an, wenn sie auseinanderlaufen.
+#
+# bitcoin-halving-to-top.html steht bewusst NICHT drin: die Seite zeigt
+# keinen Preis, ihre beiden Zaehler sind reine Datumsarithmetik.
+STICHTAG = {}
 # Beide Seiten rechnen im Browser mit LAST_CLOSE weiter, also wird in beide
 # gestempelt. Die Drawdownseite hat zusaetzlich LOW_CLOSE und LOW_DATE.
 SCHLUSS_SEITEN = ("bitcoin-top-to-bottom.html", DD_SEITE, BL_SEITE)
@@ -529,6 +545,7 @@ def lauf_schluss():
                   % (datei, n1, n2))
             fehler += 1
             continue
+        STICHTAG[datei] = zeile["d"]
         meldung = "letzter schluss %s vom %s" % (zahl(zeile["btc"]), zeile["d"])
         if datei in TIEF_SEITEN:
             if not tief:
@@ -871,6 +888,7 @@ def bullrun_werte(archivrows, logrows, bis=None):
         "blfaq2": ntxt + " days",
         "blnowsrc": "days since %s, %s USD" % (lang(tief[0]), dollar(tief[1])),
         "blbarlbl": ntxt + " and counting",
+        "blasof": lang(jetzt["d"]),
         "r26low": "%s, %s" % (kurz(tief[0]), dollar(tief[1])),
         "r26gain": proz0(jetzt["btc"], tief[1]) + "%",
     }, None
@@ -953,8 +971,15 @@ def _roh(neu, alt):
     return (float(neu) / float(alt) - 1.0) * 100.0
 
 
-def gold_werte(archivrows, bis=None):
-    """rechnet, was die goldseite zeigt. (werte, None) oder (None, grund)."""
+def gold_werte(archivrows, logrows, bis=None):
+    """rechnet, was die goldseite zeigt. (werte, None) oder (None, grund).
+
+    Der rechte Rand des laufenden Fensters kommt aus dem MARKTLOG, nicht
+    aus dem Archiv. Das Archiv wird nur sonntags nachgezogen und haengt
+    unter der Woche bis zu sechs Tage hinterher; die anderen Zyklusseiten
+    rechnen laengst auf den Marktlog. Gold und Aktien kommen weiter aus
+    dem Archiv, zum selben Stichtag mit Rueckgriff auf den letzten
+    Boersentag."""
     btc = archiv_reihe(archivrows)
     gld = archiv_feld(archivrows, "gld")
     spy = archiv_feld(archivrows, "spy")
@@ -977,19 +1002,27 @@ def gold_werte(archivrows, bis=None):
             if feld == "spy":
                 spy_fertig.append(_roh(b[1], a[1]))
 
-    # der laufende: einmal bis zum tief, einmal bis zum rand des archivs
-    tief = tief_nach(btc, HOCH_CLOSE)
+    # der laufende: einmal bis zum tief, einmal bis zum juengsten tag
+    jetzt = letzter_schluss(logrows)
+    if not jetzt:
+        return None, "kein btc-schluss im log"
+    tief = tief_nach(mit_rand(btc, logrows), HOCH_CLOSE)
     if not tief:
         return None, "kein preis nach dem hoch"
-    rand = btc[-1][0]
+    rand = jetzt["d"]
     for nach, vorsilbe in ((tief[0], "b4"), (rand, "b5")):
         for feld in ("btc", "gld", "spy"):
             a = am_oder_vor(reihen[feld], HOCH_CLOSE)
-            b = am_oder_vor(reihen[feld], nach)
+            # fuer btc am rechten rand gilt der marktlog, sonst das archiv
+            if feld == "btc" and nach == rand:
+                b = (rand, jetzt["btc"])
+            else:
+                b = am_oder_vor(reihen[feld], nach)
             if not a or not b:
                 return None, "kein %s-wert fuer das laufende fenster" % feld
             werte[vorsilbe + feld] = proz2(b[1], a[1])
     werte["b5end"] = kurz(rand)
+    werte["b5tag"] = rand      # nur fuer die stichtagswache, nicht gestempelt
     werte["cur1"] = werte["b4gld"]
     werte["cur2"] = werte["b5gld"]
     werte["cur2d"] = lang(rand)
@@ -1025,18 +1058,21 @@ def lauf_gold():
     if not os.path.exists(pfad):
         print("  ok   %-30s nicht vorhanden, uebersprungen" % GOLD_SEITE)
         return 0
-    if not os.path.exists(ARCHIV):
-        print("  FEHL %-30s data/history.json fehlt" % GOLD_SEITE)
+    if not (os.path.exists(ARCHIV) and os.path.exists(LOG)):
+        print("  FEHL %-30s archiv oder log fehlt" % GOLD_SEITE)
         return 1
     with open(ARCHIV, "r", encoding="utf-8") as fh:
         archivrows = json.load(fh)
-    werte, grund = gold_werte(archivrows)
+    with open(LOG, "r", encoding="utf-8") as fh:
+        logrows = json.load(fh)
+    werte, grund = gold_werte(archivrows, logrows)
     if werte is None:
         print("  FEHL %-30s %s" % (GOLD_SEITE, grund))
         return 1
     with open(pfad, "r", encoding="utf-8") as fh:
         alt = fh.read()
-    neu, treffer, fehlend = setz_text(alt, werte)
+    stempel = dict((k, v) for k, v in werte.items() if k != "b5tag")
+    neu, treffer, fehlend = setz_text(alt, stempel)
     if fehlend:
         print("  FEHL %-30s id nicht gefunden %s" % (GOLD_SEITE, ", ".join(fehlend)))
         return 1
@@ -1047,9 +1083,55 @@ def lauf_gold():
         print("  FEHL %-30s sieht nach vorhersage aus: %s"
               % (GOLD_SEITE, ", ".join(funde)))
         return 1
+    STICHTAG[GOLD_SEITE] = werte["b5tag"]
     return schreiben(pfad, alt, neu, GOLD_SEITE,
                      "%d zahlen, gold %s im laufenden baer, %s unter der spitze"
                      % (treffer, werte["b5gld"], werte["gdd"]))
+
+
+# --- teil 9, ein heute fuer alle -------------------------------------
+
+def stichtag_funde(eintraege, lies=None):
+    """prueft, ob alle zyklusseiten denselben stichtag tragen.
+
+    zwei pruefungen, beide muessen halten:
+      1. alle eingetragenen seiten nennen denselben tag,
+      2. dieser tag steht ausgeschrieben auch wirklich auf jeder seite.
+
+    die zweite faengt den fall, dass eine seite gar nicht gestempelt
+    wurde und noch den tag von gestern zeigt, waehrend die sammelstelle
+    schon den neuen kennt.
+
+    lies(datei) liefert den seitentext; ohne angabe wird von platte
+    gelesen. der selbsttest reicht hier eine eigene funktion herein."""
+    if not eintraege:
+        return ["keine zyklusseite hat einen stichtag eingetragen"]
+    tage = sorted(set(eintraege.values()))
+    if len(tage) > 1:
+        return ["%s rechnet auf %s" % (d, t)
+                for d, t in sorted(eintraege.items())]
+    tag = tage[0]
+    if lies is None:
+        def lies(datei):
+            pfad = os.path.join(REPO, datei)
+            if not os.path.exists(pfad):
+                return ""
+            with open(pfad, "r", encoding="utf-8") as fh:
+                return fh.read()
+    return ["%s nennt %s nicht" % (d, lang(tag))
+            for d in sorted(eintraege) if lang(tag) not in lies(d)]
+
+
+def lauf_stichtag():
+    funde = stichtag_funde(STICHTAG)
+    if funde:
+        print("  FEHL stichtag                      %s" % "; ".join(funde))
+        print("       zwei seiten mit verschiedenem heute sind ein fehler,")
+        print("       nicht eine kleinigkeit. der lauf haelt hier an.")
+        return 1
+    print("  ok   stichtag                      %s auf %d zyklusseiten"
+          % (sorted(set(STICHTAG.values()))[0], len(STICHTAG)))
+    return 0
 
 
 # --- teil 4, die leiste ----------------------------------------------
@@ -1512,7 +1594,10 @@ def selbsttest():
             z["gld"] = g
             z["spy"] = sp
         garchiv.append(z)
-    w, grund = gold_werte(garchiv)
+    # der rechte rand kommt aus dem LOG, nicht aus dem archiv, genau wie
+    # im echten lauf. das archiv endet hier am 22., das log am 23.
+    glog = [{"d": "2026-09-22", "btc": 6500.0}, {"d": "2026-09-23", "btc": 7000.0}]
+    w, grund = gold_werte(garchiv, glog)
     pruefe("kein grund zum abbruch", grund, None)
     pruefe("fenster 1 btc", w["b1btc"], "-85.00%")
     pruefe("fenster 1 gold", w["b1gld"], "-2.00%")
@@ -1526,7 +1611,6 @@ def selbsttest():
     # der laufende: einmal bis zum tief, einmal bis zum archivrand
     pruefe("laufend bis zum tief", (w["b4btc"], w["b4gld"]), ("-50.00%", "+1.00%"))
     pruefe("laufend bis zum rand", (w["b5btc"], w["b5gld"]), ("-30.00%", "+10.00%"))
-    pruefe("das enddatum steht dabei", w["b5end"], "22 Sep 2026")
     pruefe("faq und fliesstext tragen dieselbe zahl",
            (w["cur1"], w["cur2"], w["faq1"]), (w["b4gld"], w["b5gld"], w["b5gld"]))
 
@@ -1548,11 +1632,47 @@ def selbsttest():
     for z in g2:
         if z["d"] == "2022-11-21":
             z["gld"] = 284.9          # -5,0333 prozent
-    w2, _ = gold_werte(g2)
+    w2, _ = gold_werte(g2, glog)
     pruefe("5,03 wird zu 5,1 und nicht zu 5,0", w2["gworst"], "within 5.1%")
 
     pruefe("archiv ohne gold faellt auf",
-           gold_werte([{"d": "2020-01-01", "btc": 1.0}])[0], None)
+           gold_werte([{"d": "2020-01-01", "btc": 1.0}], glog)[0], None)
+    pruefe("log ohne schluss faellt auf",
+           gold_werte(garchiv, [{"d": "2026-09-23", "gld": 1.0}])[0], None)
+    # der stichtag der goldseite ist der LOGRAND, nicht der archivrand.
+    # genau daran ist am 24.09.2026 das zweite "heute" entstanden.
+    pruefe("stichtag kommt aus dem log", w["b5tag"], "2026-09-23")
+    pruefe("und nicht aus dem archiv", w["b5tag"] != garchiv[-1]["d"], True)
+    pruefe("das enddatum auf der seite passt dazu", w["b5end"], "23 Sep 2026")
+    # --- die stichtagswache ---
+    seiten = {"a.html": "2026-09-23", "b.html": "2026-09-23"}
+    text = {"a.html": "price of 23 September 2026",
+            "b.html": "as of 23 September 2026"}
+    pruefe("gleicher tag, beide nennen ihn",
+           stichtag_funde(seiten, lambda d: text[d]), [])
+    # der echte fall vom 24.09.2026: die goldseite rechnete auf den
+    # archivrand, die drei anderen auf den marktlog.
+    zwei = {"a.html": "2026-09-23", "b.html": "2026-09-22"}
+    pruefe("zwei verschiedene heute halten den lauf an",
+           stichtag_funde(zwei, lambda d: "egal"),
+           ["a.html rechnet auf 2026-09-23", "b.html rechnet auf 2026-09-22"])
+    # gleicher tag, aber eine seite nennt ihn nicht: dann wurde sie nicht
+    # gestempelt und zeigt noch gestern
+    pruefe("stiller tag faellt auf",
+           stichtag_funde(seiten, lambda d: text[d] if d == "a.html" else "nichts"),
+           ["b.html nennt 23 September 2026 nicht"])
+    pruefe("leere sammelstelle faellt auf", stichtag_funde({}, lambda d: ""),
+           ["keine zyklusseite hat einen stichtag eingetragen"])
+    pruefe("eine einzige seite reicht",
+           stichtag_funde({"a.html": "2026-09-23"}, lambda d: text[d]), [])
+    # drei gegen eine, alle vier werden gemeldet, damit man sieht welche
+    drei = {"a.html": "2026-09-23", "b.html": "2026-09-23",
+            "c.html": "2026-09-23", "d.html": "2026-09-21"}
+    pruefe("alle vier werden genannt", len(stichtag_funde(drei, lambda d: "egal")), 4)
+    # die halving-seite hat keinen preis und steht bewusst nicht drin
+    pruefe("halving-seite traegt keinen stichtag",
+           "bitcoin-halving-to-top.html" in SCHLUSS_SEITEN, False)
+
     pruefe("goldseite in der leiste",
            "gold-in-bitcoin-bear-markets.html" in [d for d, _ in SEITEN], True)
     pruefe("bullenpille ist gekuerzt",
@@ -1580,7 +1700,7 @@ def main(argv):
           % datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
     fehler = (lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
               + lauf_schluss() + lauf_rueckgang() + lauf_bullrun()
-              + lauf_gold())
+              + lauf_gold() + lauf_stichtag())
     if fehler:
         print("\n%d seite(n) nicht gestempelt" % fehler)
         return 1
