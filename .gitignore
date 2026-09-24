@@ -1,0 +1,10 @@
+
+# die tageskarte wird vor jedem post neu gebaut. sie taeglich zu
+# committen waere 178 kB churn am tag fuer null gewinn, und
+# 'git add -A' im stempelschritt wuerde sie sonst mitnehmen.
+graphics/
+
+# python-bytecode. scripts/__pycache__/market_log.cpython-311.pyc ist seit
+# laengerem versehentlich eingecheckt und bleibt es hier auch - das
+# auszutragen ist ein eigener handgriff und braucht Bens ja.
+__pycache__/

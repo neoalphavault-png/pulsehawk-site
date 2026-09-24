@@ -22,7 +22,7 @@ Korrektur faellt der hoechste Tagespreis auf den 06.10.2025. Das ist
 derselbe Kalendertag wie das Intraday-Hoch, aber weiter ein anderer Preis:
 124.776,68 statt 126.198. Die Tageszahl im Post steigt dadurch um eins.
 
-DREI SPERREN, DAMIT NIE UNSINN RAUSGEHT
+VIER SPERREN, DAMIT NIE UNSINN RAUSGEHT
   1. Der Schluss muss frisch sein. Ist die juengste btc-Zeile aelter als
      --max-age Tage (Standard 3), wird nicht gepostet. Ein Marktlogger, der
      still steht, hat das Haus schon einmal zwoelf Tage gekostet.
@@ -32,6 +32,17 @@ DREI SPERREN, DAMIT NIE UNSINN RAUSGEHT
      eine Abweichung ein echter Fehler und kein Zeitversatz.
   3. Doppelpost-Sperre ueber x_post.py, Schluessel dayn-<datum des schlusses>.
      Zwei Laeufe am selben Tag posten einmal. data/x-post-log.json merkt es.
+  4. Die Karte muss den Check bestehen. grafik_check.py baut sie, prueft sie
+     und schreibt die 390px-Vorschau. Reisst der Check, geht KEIN Post raus,
+     auch kein reiner Textpost: lieber eine Luecke im Archiv als eine
+     unlesbare Karte. Es gibt absichtlich keinen Schalter, der das umgeht.
+
+DIE KARTE ZAEHLT WIE DIESER POST, NICHT WIE DIE SEITEN
+Die Seiten zaehlen bis heute, dieser Post zaehlt bis zum Tag des juengsten
+Schlusses. Am 24.09.2026 sind das 353 gegen 352. Beides ist fuer sich
+stimmig, aber Bild und Text gehen zusammen raus, also bekommt die Karte
+ihren Zaehltag von hier uebergeben. Dass Seite und Post verschieden zaehlen,
+bleibt davon unberuehrt und ist ein offener Punkt, kein Nebeneffekt.
 
 KEIN LINK IM HAUPTPOST (Kostenregel aus stufe3-x.md): 0,015 $ statt 0,20 $.
 KEIN KURSZIEL, KEIN MOTIV, KEIN GEDANKENSTRICH, KEIN PFEIL.
@@ -171,6 +182,9 @@ def bauen(rows, html, heute, max_age):
     return t, "dayn-%s" % zeile["d"], None
 
 
+import dayn_grafik  # noqa: E402  (nach sys.path-anpassung oben)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -195,11 +209,28 @@ def main(argv=None):
         return 1
     print("key %s, %d zeichen\n" % (key, len(t)))
     print(t)
+
+    # sperre 4: die karte. sie zaehlt bis zum tag des schlusses, also bis
+    # zu demselben tag wie der text darueber.
+    zaehltag = key[len("dayn-"):]
+    print("\n--- grafik_check, zaehltag %s ---" % zaehltag)
+    try:
+        import grafik_check
+        rc = grafik_check.lauf(bis=zaehltag)
+    except Exception as e:
+        print("kein post: die karte liess sich nicht bauen (%s: %s)"
+              % (type(e).__name__, e))
+        return 1
+    if rc != 0:
+        print("\nkein post: der grafik-check ist gerissen.")
+        return 1
+
     if not a.post or a.dry_run:
         print("\n(dry run, nichts gepostet)")
         return 0
     return subprocess.call([sys.executable, os.path.join(HERE, "x_post.py"),
-                            "--text", t, "--key", key, "--log", XLOG])
+                            "--text", t, "--key", key, "--log", XLOG,
+                            "--image", dayn_grafik.ZIEL])
 
 
 def selbsttest():
@@ -288,6 +319,22 @@ def selbsttest():
            bauen(log, 'var LAST_CLOSE = 75608, LAST_DATE = "2026-09-14";',
                  "2026-09-16", 3)[2] is not None, True)
     pruefe("leeres log postet nicht", bauen([], js, "2026-09-16", 3)[2] is not None, True)
+
+    # --- sperre 4: karte und text zaehlen denselben tag ---
+    # das ist der fall, der einen widerspruch im selben tweet verhindert.
+    for tag in ("2026-09-16", "2026-09-23", "2026-09-24"):
+        txt, schluessel, _ = bauen([{"d": tag, "btc": 75608.0}],
+                                   'var LAST_CLOSE = 75608, LAST_DATE = "%s";' % tag,
+                                   tag, 3)
+        karte, _ = dayn_grafik.zahlen(
+            [{"d": TOP_DATE, "btc": TOP}, {"d": "2026-06-30", "btc": 58534.28}],
+            [{"d": tag, "btc": 75608.0}], bis=schluessel[len("dayn-"):])
+        pruefe("karte und text zaehlen gleich am %s" % tag,
+               karte["tage_hoch"], txt.split("\n")[0][len("day "):-1])
+    pruefe("der zaehltag steckt im sperrschluessel",
+           bauen([{"d": "2026-09-23", "btc": 75608.0}],
+                 'var LAST_CLOSE = 75608, LAST_DATE = "2026-09-23";',
+                 "2026-09-24", 3)[1][len("dayn-"):], "2026-09-23")
 
     # das Skript auf der Seite und dieses hier muessen dieselbe Zahl rechnen
     if os.path.exists(SEITE):
