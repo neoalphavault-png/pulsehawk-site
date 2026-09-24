@@ -347,6 +347,32 @@ def bauen(rows, html, heute, max_age, xlog=None):
 
 
 import dayn_grafik  # noqa: E402  (nach sys.path-anpassung oben)
+from x_post import log_eintrag  # noqa: E402
+
+
+def laufzeit(jetzt=None):
+    """(zaehltag, posted_at) aus EINEM Zeitpunkt.
+
+    Frueher kam der Zaehltag aus einem now() hier und posted_at aus einem
+    zweiten now() in x_post.py, in einem anderen Prozess, nach Kartenbau
+    und Bild-Upload. Laeuft der Post um 23:59:58 utc, fiel der Zaehltag
+    auf den einen Tag und posted_at auf den naechsten - und der Folgetag
+    rechnete eine Luecke von 0 statt 1, der Vermerk fehlte genau dann,
+    wenn er gebraucht wird. Jetzt gibt es im ganzen Lauf genau einen
+    Zeitpunkt, und x_post.py bekommt ihn mit."""
+    if jetzt is None:
+        jetzt = datetime.datetime.now(datetime.timezone.utc)
+    jetzt = jetzt.astimezone(datetime.timezone.utc)
+    return (jetzt.date().isoformat(),
+            jetzt.isoformat(timespec="seconds").replace("+00:00", "Z"))
+
+
+def post_befehl(t, key, stempel):
+    """der aufruf von x_post.py. herausgezogen, damit ein test sieht, dass
+    der zeitstempel wirklich mitgeht."""
+    return [sys.executable, os.path.join(HERE, "x_post.py"),
+            "--text", t, "--key", key, "--log", XLOG,
+            "--image", dayn_grafik.ZIEL, "--posted-at", stempel]
 
 
 def main(argv=None):
@@ -366,7 +392,8 @@ def main(argv=None):
         rows = json.load(fh)
     with open(SEITE, encoding="utf-8") as fh:
         html = fh.read()
-    heute = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    # EIN zeitpunkt fuer den ganzen lauf. kein zweites now() weiter unten.
+    heute, stempel = laufzeit()
     with open(XLOG, encoding="utf-8") as fh:
         xlog = json.load(fh)
     t, key, problem = bauen(rows, html, heute, a.max_age, xlog)
@@ -394,9 +421,7 @@ def main(argv=None):
     if not a.post or a.dry_run:
         print("\n(dry run, nichts gepostet)")
         return 0
-    return subprocess.call([sys.executable, os.path.join(HERE, "x_post.py"),
-                            "--text", t, "--key", key, "--log", XLOG,
-                            "--image", dayn_grafik.ZIEL])
+    return subprocess.call(post_befehl(t, key, stempel))
 
 
 def selbsttest():
@@ -602,6 +627,53 @@ def selbsttest():
     pruefe("und ein kaputtes posted_at auch",
            letzte_zahl([{"key": "dayn-2026-09-23", "posted_at": "spaeter",
                          "text": "day 353."}]), (353, "2026-09-23"))
+
+    # --- ein zeitpunkt fuer den ganzen lauf ---
+    spaet = datetime.datetime(2026, 9, 24, 23, 59, 58, tzinfo=datetime.timezone.utc)
+    zt, st = laufzeit(spaet)
+    pruefe("um 23:59:58 utc: zaehltag und posted_at aus einem zeitpunkt",
+           (zt, st), ("2026-09-24", "2026-09-24T23:59:58Z"))
+    pruefe("posted_at faellt auf den zaehltag", st[:10], zt)
+    pruefe("der zeitstempel geht an x_post.py mit",
+           post_befehl("t", "dayn-2026-09-23", st)[-2:],
+           ["--posted-at", "2026-09-24T23:59:58Z"])
+    berlin = datetime.timezone(datetime.timedelta(hours=2))
+    pruefe("ein zeitpunkt in anderer zone wird auf utc gebracht",
+           laufzeit(datetime.datetime(2026, 9, 25, 1, 59, 58, tzinfo=berlin)),
+           ("2026-09-24", "2026-09-24T23:59:58Z"))
+
+    # der ganze weg um 23:59:58: post bauen, so loggen wie x_post.py es
+    # tut, und dann den folgetag und den tag danach rechnen.
+    vorher = [{"key": "dayn-2026-09-22", "posted_at": "2026-09-22T00:18:42Z",
+               "text": "day 350.\n\nrest"}]
+    heutig, schl, _ = lauf(zt, "2026-09-23", vorher)
+    nachher = vorher + [log_eintrag(schl, "1", heutig, "dayn.png", st)]
+    morgen = lauf("2026-09-25", "2026-09-24", nachher)[0]
+    pruefe("post um 23:59:58, folgetag: kein falscher vermerk",
+           (morgen.split("\n")[0], "no post" in morgen), ("day 354.", False))
+    uebermorgen = lauf("2026-09-26", "2026-09-25", nachher)[0]
+    pruefe("post um 23:59:58, ein tag fehlt: der vermerk ist da",
+           "no post yesterday." in uebermorgen, True)
+
+    # und der fehler, den das verhindert: zweites now() eine sekunde nach
+    # mitternacht. die luecke rechnet dann 0 statt 1, der vermerk bleibt
+    # leer - und sperre 4 haelt den post an, weil der zaehler um 2
+    # springt ohne vermerk. das netz haelt, aber es kostet einen weiteren
+    # tag, und die luecke waechst.
+    zwei_uhren = vorher + [log_eintrag(schl, "1", heutig, "dayn.png",
+                                        "2026-09-25T00:00:01Z")]
+    _, _, p_uhren = lauf("2026-09-26", "2026-09-25", zwei_uhren)
+    pruefe("mit zwei uhren waere der post angehalten worden (so war es)",
+           p_uhren is not None and "ohne vermerk" in p_uhren, True)
+
+    # --- die marke ueberlebt den weg durchs sperrlog ---
+    # vorher kuerzte x_post.py den text auf 120 zeichen, die marke stand
+    # bei 194. die zeile haette sich nie abgeschrieben.
+    pruefe("die marke steht hinter zeichen 120", heutig.find(UMSTELLUNG) > 120, True)
+    pruefe("und ist nach dem loggen trotzdem lesbar",
+           umstellung_erklaert(nachher), True)
+    pruefe("so dass sie sich beim naechsten sprung nicht wiederholt",
+           UMSTELLUNG in uebermorgen, False)
 
     # --- der zaehltag ist heute, nicht der schlusstag ---
     # am 24.09. mit dem schluss vom 23.09.: 353, nicht 352.
