@@ -220,6 +220,32 @@ def berlin_today():
     return (now + berlin_offset(now)).date()
 
 
+ZEITSTEMPEL = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+
+
+def log_eintrag(key, pid, text, image=None, posted_at=None):
+    """der eintrag im sperrlog, an EINER stelle gebaut.
+
+    Der Text wird VOLLSTAENDIG gespeichert. Bis zum 24.09.2026 stand hier
+    text[:120], und day_n_post.py liest aus dem Sperrlog, ob eine
+    Erklaerung schon draussen ist - die steht aber am Ende des Posts, ab
+    Zeichen 194. Mit dem gekuerzten Text haette sich die Zeile nie
+    abgeschrieben. Ein Post hat hoechstens 280 Zeichen, es gibt nichts zu
+    sparen.
+
+    posted_at kommt vom Aufrufer, wenn der ihn hat. day_n_post.py nimmt
+    EINEN Zeitstempel zu Beginn des Laufs und leitet Zaehltag und
+    posted_at daraus ab; ein zweites now() hier koennte um 23:59:58 utc
+    auf den naechsten Tag fallen."""
+    if posted_at is None:
+        posted_at = dt.datetime.now(dt.timezone.utc).isoformat(
+            timespec="seconds").replace("+00:00", "Z")
+    if not ZEITSTEMPEL.match(posted_at):
+        raise ValueError("posted_at muss JJJJ-MM-TTThh:mm:ssZ sein: %r" % posted_at)
+    return {"key": key, "id": pid, "posted_at": posted_at, "text": text,
+            "image": os.path.basename(image) if image else None}
+
+
 def load_log(path):
     if os.path.isfile(path):
         with open(path, encoding="utf-8") as fh:
@@ -290,12 +316,14 @@ def run(args):
         print("Bild: %s, %d/%d Zeichen" % (args.image, weighted_len(text), MAX_CHARS))
         return 0
 
+    if args.posted_at and not ZEITSTEMPEL.match(args.posted_at):
+        sys.exit("--posted-at muss JJJJ-MM-TTThh:mm:ssZ sein, war %r. Nichts gepostet."
+                 % args.posted_at)
     creds = creds_from_env()
     if not entry or not entry.get("id"):
         media_id = upload_image(args.image, creds) if args.image else None
         pid = post(text, creds, media_id=media_id)
-        entry = {"key": key, "id": pid, "posted_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
-                 "text": text[:120], "image": os.path.basename(args.image) if args.image else None}
+        entry = log_eintrag(key, pid, text, args.image, args.posted_at)
         log.append(entry)
         save_log(args.log, log)          # sofort merken, bevor irgendetwas anderes passiert
         print("gepostet: %s (key %s)" % (pid, key))
@@ -327,7 +355,23 @@ def selftest():
     assert weighted_len("see kaspapulse.com/kaspa-weekly.html now") == len("see ") + 23 + len(" now")
     assert has_link("priced on kaspapulse.com.") and not has_link("one kas buys 47 sats.")
     assert has_link("https://x.com/abc") and has_link("www.example.org")
-    print("selftest ok: Signatur stimmt mit dem X-Testvektor ueberein, Link-Erkennung ok")
+    # der logeintrag: voller text, uebergebener zeitstempel
+    lang_text = "x" * 270
+    e = log_eintrag("dayn-2026-09-24", "1", lang_text, "graphics/dayn.png",
+                    "2026-09-24T23:59:58Z")
+    assert e["text"] == lang_text, "der text darf nicht gekuerzt werden"
+    assert e["posted_at"] == "2026-09-24T23:59:58Z"
+    assert e["image"] == "dayn.png"
+    assert ZEITSTEMPEL.match(log_eintrag("k", "1", "t")["posted_at"])
+    for kaputt in ("2026-09-24", "2026-09-24T23:59:58+00:00", "morgen"):
+        try:
+            log_eintrag("k", "1", "t", posted_at=kaputt)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("haette abbrechen muessen: %r" % kaputt)
+    print("selftest ok: Signatur stimmt mit dem X-Testvektor ueberein, Link-Erkennung ok, "
+          "Logeintrag voll und mit uebergebenem Zeitstempel")
 
 
 def main():
@@ -337,6 +381,9 @@ def main():
     ap.add_argument("--image", help="PNG/JPG bis 5 MB")
     ap.add_argument("--from-nod", help="data/number-of-day.json: post.x als Text, post.reply als Antwort (nur mit Link)")
     ap.add_argument("--key", help="Sperrschluessel, z. B. nod-2026-09-11")
+    ap.add_argument("--posted-at", help="Zeitstempel fuers Sperrlog, JJJJ-MM-TTThh:mm:ssZ. "
+                    "Der Aufrufer gibt ihn mit, damit Zaehltag und Logeintrag aus EINEM "
+                    "Zeitpunkt stammen.")
     ap.add_argument("--log", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "x-post-log.json"))
     ap.add_argument("--delete", metavar="ID", help="einen Post loeschen und beenden")
     ap.add_argument("--delete-after", action="store_true", help="Testlauf: posten und sofort wieder loeschen")
