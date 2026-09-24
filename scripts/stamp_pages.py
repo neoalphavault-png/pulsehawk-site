@@ -180,6 +180,15 @@ ZAEHLTAG = {}      # datei -> tag, gegen den die TAGESZAEHLER rechnen
 # ueberhaupt nicht zu erkennen.
 NENNT_ZAEHLTAG = ("bitcoin-halving-to-top.html",)
 
+# Der taegliche DAY-N-Post ist keine Seite, gehoert aber seit dem
+# 24.09.2026 in dieselbe Zaehltag-Gruppe: er zaehlt bis heute, wie die
+# Seiten. Er steht hier mit drin, damit die Gruppe vollstaendig ist und
+# eine kuenftige Aenderung an einer der beiden Seiten sichtbar wird.
+# Durchgesetzt wird der Gleichstand nicht hier, sondern in day_n_post.py:
+# Sperre 5 liest den gestempelten Zaehler d1 der Seite und postet nicht,
+# wenn er von der eigenen Zahl abweicht.
+ZAEHLTAG_MIT = ("dayn.yml",)
+
 
 # ---------------------------------------------------------------------------
 # EINE QUELLE FUER "HEUTE", REGEL VOM 24.09.2026
@@ -1262,6 +1271,13 @@ def stichtag_funde(eintraege, lies=None, nennen=None):
             for d in pflicht if lang(tag) not in lies(d)]
 
 
+def zaehltag_nachtragen():
+    """die mitzaehler eintragen, die keine seite sind."""
+    for name in ZAEHLTAG_MIT:
+        ZAEHLTAG[name] = heute().isoformat()
+    return ZAEHLTAG
+
+
 def lauf_stichtag():
     """zwei gruppen, jede fuer sich stimmig.
 
@@ -1272,6 +1288,7 @@ def lauf_stichtag():
     zaehler laeuft bis heute, der juengste preis ist der von gestern
     abend. Was nicht sein darf, ist dass zwei SEITEN innerhalb derselben
     gruppe auseinanderlaufen."""
+    zaehltag_nachtragen()
     fehler = 0
     for name, eintraege, nennen in (("preis", STICHTAG, None),
                                     ("zaehltag", ZAEHLTAG, NENNT_ZAEHLTAG)):
@@ -1282,7 +1299,9 @@ def lauf_stichtag():
             print("       nicht eine kleinigkeit. der lauf haelt hier an.")
             fehler += 1
         else:
-            print("  ok   stichtag %-8s             %s auf %d seite(n)"
+            # "stelle(n)", nicht "seite(n)": in der zaehltag-gruppe steht
+            # seit dem 24.09.2026 auch dayn.yml, und das ist keine seite.
+            print("  ok   stichtag %-8s             %s auf %d stelle(n)"
                   % (name, sorted(set(eintraege.values()))[0], len(eintraege)))
     return fehler
 
@@ -2128,6 +2147,14 @@ def selbsttest():
            "bitcoin-halving-to-top.html" in SCHLUSS_SEITEN, False)
     pruefe("aber sie muss ihren zaehltag nennen",
            "bitcoin-halving-to-top.html" in NENNT_ZAEHLTAG, True)
+    # der DAY-N-Post zaehlt seit dem 24.09.2026 bis heute, wie die Seiten,
+    # und gehoert damit in dieselbe Gruppe.
+    pruefe("der day-n-post steht in der zaehltag-gruppe",
+           "dayn.yml" in ZAEHLTAG_MIT, True)
+    pruefe("und wird beim lauf wirklich eingetragen",
+           zaehltag_nachtragen().get("dayn.yml"), heute().isoformat())
+    pruefe("er nennt seinen zaehltag nicht auf einer seite, also keine "
+           "nennpflicht", "dayn.yml" in NENNT_ZAEHLTAG, False)
     pruefe("und sie hat eine id dafuer",
            ZYKLUS_ASOF.get("bitcoin-halving-to-top.html"), "hvasof")
 

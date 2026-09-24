@@ -25,6 +25,12 @@ name: day n
 # das ist am 21.08.2026 einmal passiert.
 #
 # KOSTEN: ein Post ohne Link, 0,015 $ am Tag, rund 0,46 $ im Monat.
+# Ab dem 24.09.2026 haengt eine Karte am Post. Ob X ein Bild gesondert
+# abrechnet, ist HIER NICHT GEPRUEFT: dafuer braeuchte es einen echten
+# Post mit Zugangsdaten, und der kostet Geld. Beide Enden sind gerechnet:
+# wird das Bild nicht gesondert berechnet, bleibt es bei 0,46 $ im Monat;
+# wuerde es wie ein Link mit 0,20 $ zaehlen, waeren es 6,00 $ im Monat.
+# Beides liegt unter dem Spend Cap von 15 $, der ohne Auto-Recharge bleibt.
 # Die Doppelpostsperre liegt in data/x-post-log.json (key dayn-<datum>);
 # ein zweiter Lauf am selben Tag postet nicht noch einmal.
 
@@ -57,11 +63,20 @@ jobs:
         with:
           python-version: "3.11"
 
+      # Ohne Renderer keine Karte, und ohne Karte kein Post. Das hier
+      # scheitert an einem benannten Schritt statt mitten im Postlauf.
+      - name: renderer pruefen
+        run: |
+          python3 -c "import sys; sys.path.insert(0,'scripts'); \
+            import dayn_grafik; print('renderer:', dayn_grafik.chrome())"
+
       - name: selbsttests
         run: |
           python3 scripts/stamp_pages.py --selftest
           python3 scripts/day_n_post.py --selftest
           python3 scripts/x_post.py --selftest
+          python3 scripts/dayn_grafik.py --selftest
+          python3 scripts/grafik_check.py --selftest
 
       - name: seiten stempeln
         run: python3 scripts/stamp_pages.py
@@ -98,6 +113,18 @@ jobs:
       - name: nur zeigen
         if: ${{ inputs.dry_run == true }}
         run: python3 scripts/day_n_post.py --dry-run
+
+      # Die Karte und die 390px-Vorschau des Laufs, damit ein Mensch
+      # nachsehen kann, was rausgegangen ist. Sie liegen bewusst nicht im
+      # Repo: taeglich 178 kB committen waere Laerm ohne Gewinn.
+      - name: karte aufheben
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dayn-karte
+          path: graphics/
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: sperrlog sichern
         if: always()
