@@ -22,6 +22,13 @@ DATEN
 Archiv plus Tageslog ueber market_log.reihe_mit_logvorrang, also mit dem
 Marktlog am rechten Rand. Korrigierte Datierung (bc_tag).
 
+⚠️ DIESER IMPORT IST DER GRUND FUER DEN GROSSEN DIFF DES BRANCHES
+Die Funktion liegt auf pages/gold-2026-09-24, deshalb wurde dieser Branch
+am 24.09.2026 darauf gemergt. Ohne den Merge muesste hier die
+Vorrangregel ein drittes Mal stehen, und genau das sollte die gemeinsame
+Funktion beenden. Siehe mess/LIESMICH.md: der Unterbau ist Absicht und
+gehoert nicht "aufgeraeumt".
+
     python3 mess/rueckschlaege.py
     python3 mess/rueckschlaege.py --schwelle 15
     python3 mess/rueckschlaege.py --selftest
