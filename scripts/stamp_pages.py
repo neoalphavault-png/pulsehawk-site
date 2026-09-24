@@ -115,6 +115,9 @@ HOCH_WERT = 124776.68
 # seite, dann je element-id das startdatum und ein anhaengsel.
 # die ids stehen im html, sie sind der anker. wer im html eine id
 # umbenennt, muss sie hier mitaendern, sonst faellt es beim lauf auf.
+# seiten, die ihren bezugstag ausgeschrieben zeigen, und die id dafuer
+ZYKLUS_ASOF = {"bitcoin-halving-to-top.html": "hvasof"}
+
 ZYKLUS = {
     "bitcoin-halving-to-top.html": [
         ("d1", HALVING, ""),              # tage seit dem halving
@@ -147,7 +150,53 @@ GOLD_SEITE = "gold-in-bitcoin-bear-markets.html"
 #
 # bitcoin-halving-to-top.html steht bewusst NICHT drin: die Seite zeigt
 # keinen Preis, ihre beiden Zaehler sind reine Datumsarithmetik.
-STICHTAG = {}
+STICHTAG = {}      # datei -> tag des juengsten PREISES
+ZAEHLTAG = {}      # datei -> tag, gegen den die TAGESZAEHLER rechnen
+
+# Die Halving-Seite zeigt keinen Preis, aber ihre beiden Zaehler rechnen
+# gegen heute, und das ist genauso ein Stichtag. Faellt ihr Stempel aus,
+# zeigt sie stillschweigend gestern, waehrend die anderen heute zeigen:
+# derselbe Fehler, nur in Tagen statt in Dollar. Sie muss ihren Bezugstag
+# deshalb sichtbar nennen, sonst ist ein eingefrorener Zaehler von aussen
+# ueberhaupt nicht zu erkennen.
+NENNT_ZAEHLTAG = ("bitcoin-halving-to-top.html",)
+
+
+# ---------------------------------------------------------------------------
+# EINE QUELLE FUER "HEUTE", REGEL VOM 24.09.2026
+#
+# Es gibt zwei Dateien mit Preisen, und sie sind verschieden alt:
+#   data/market-log.json   taeglich 21:23 UTC
+#   data/history.json      nur sonntags, unter der woche bis zu 6 tage alt
+#
+# Der rechte Rand jeder LAUFENDEN Zahl kommt IMMER aus dem Marktlog.
+# history.json liefert Historie, nie den aktuellen Wert. Wer das dreht,
+# baut ein zweites "heute", und keine der beiden Zahlen ist falsch genug,
+# dass es auffiele. Genau so ist der Fehler der Goldseite entstanden.
+#
+# mit_rand() ist die eine erlaubte Mischung: das Archiv gewinnt fuer jeden
+# Tag, den es hat, das Log haengt nur hinten an. Das ist fuer ein Minimum
+# ueber den ganzen Zyklus richtig und beruehrt den rechten Rand nicht.
+# ---------------------------------------------------------------------------
+
+# KOPF-WACHE, AUSNAHMEN
+# Was der Stempel in den Rumpf schreibt, darf nicht zusaetzlich im <head>
+# stehen: dorthin kommt setz_text nicht, der Wert friert also ein. Die
+# Ausnahmen unten sind bewusst gesetzte Dopplungen, keine Versehen. Es sind
+# durchweg ABGESCHLOSSENE Werte, die sich nur aendern, wenn das Archiv
+# selbst korrigiert wird. Passiert das, ist diese Liste die Stelle, an der
+# man nachsieht.
+#
+# Nicht auf dieser Liste stehen und deshalb am 24.09.2026 aus den Koepfen
+# entfernt wurden: das Zyklustief der Drawdownseite (faellt Bitcoin
+# tiefer, wandert es) und das Datum der Goldspitze (wandert bei einem
+# neuen Hoch). Beide waren schon eingefroren, nur hatte es niemand gesehen.
+KOPF_AUSNAHMEN = {
+    "bitcoin-bull-run-length.html": ("blrange2", "blspread", "blfaq"),
+    "gold-in-bitcoin-bear-markets.html": (
+        "b1btc", "b1gld", "b1spy", "b2btc", "b2gld", "b2spy",
+        "b3btc", "b3gld", "b3spy", "gldspread", "spyspread", "gworst"),
+}
 # Beide Seiten rechnen im Browser mit LAST_CLOSE weiter, also wird in beide
 # gestempelt. Die Drawdownseite hat zusaetzlich LOW_CLOSE und LOW_DATE.
 SCHLUSS_SEITEN = ("bitcoin-top-to-bottom.html", DD_SEITE, BL_SEITE)
@@ -355,6 +404,8 @@ def lauf_zyklus():
             alt = fh.read()
         werte = dict((k, "{:,}".format(tage(start)) + anhang)
                      for k, start, anhang in felder)
+        if datei in ZYKLUS_ASOF:
+            werte[ZYKLUS_ASOF[datei]] = lang(heute().isoformat())
         neu, treffer, fehlend = setz_text(alt, werte)
         if fehlend:
             # das ist kein schoenheitsfehler. wenn eine id verschwindet,
@@ -362,6 +413,12 @@ def lauf_zyklus():
             print("  FEHL %-30s id nicht gefunden %s" % (datei, ", ".join(fehlend)))
             fehler += 1
             continue
+        ko = kopf_funde(datei, neu, werte)
+        if ko:
+            print("  FEHL %-30s %s" % (datei, "; ".join(ko)))
+            fehler += 1
+            continue
+        ZAEHLTAG[datei] = heute().isoformat()
         fehler += schreiben(pfad, alt, neu, datei, "%d zaehler" % treffer)
     return fehler
 
@@ -409,6 +466,10 @@ def lauf_dominanz():
     neu, _, fehlend = setz_text(alt, werte)
     if fehlend:
         print("  FEHL %-30s id nicht gefunden %s" % (DOM_SEITE, ", ".join(fehlend)))
+        return 1
+    ko = kopf_funde(DOM_SEITE, neu, werte)
+    if ko:
+        print("  FEHL %-30s %s" % (DOM_SEITE, "; ".join(ko)))
         return 1
     neu, n1 = setz_breite(neu, "barb", dom)
     neu, n2 = setz_breite(neu, "barr", 100 - dom)
@@ -477,6 +538,10 @@ def lauf_markt():
     neu, _, fehlend = setz_text(alt, werte)
     if fehlend:
         print("  FEHL %-30s id nicht gefunden %s" % (MARKT_SEITE, ", ".join(fehlend)))
+        return 1
+    ko = kopf_funde(MARKT_SEITE, neu, werte)
+    if ko:
+        print("  FEHL %-30s %s" % (MARKT_SEITE, "; ".join(ko)))
         return 1
     return schreiben(pfad, alt, neu, MARKT_SEITE, werte["periodlabel"])
 
@@ -724,6 +789,12 @@ def lauf_rueckgang():
             print("  FEHL %-30s id nicht gefunden %s" % (datei, ", ".join(fehlend)))
             fehler += 1
             continue
+        ko = kopf_funde(datei, neu, felder)
+        if ko:
+            print("  FEHL %-30s %s" % (datei, "; ".join(ko)))
+            fehler += 1
+            continue
+        ZAEHLTAG[datei] = heute().isoformat()
         fehler += schreiben(pfad, alt, neu, datei,
                             "%d rueckgangszahlen, heute %s"
                             % (treffer, felder.get("ddnow") or felder.get("dd")))
@@ -939,6 +1010,11 @@ def lauf_bullrun():
         print("  FEHL %-30s sieht nach vorhersage aus: %s"
               % (BL_SEITE, ", ".join(funde)))
         return 1
+    ko = kopf_funde(BL_SEITE, neu, werte)
+    if ko:
+        print("  FEHL %-30s %s" % (BL_SEITE, "; ".join(ko)))
+        return 1
+    ZAEHLTAG[BL_SEITE] = heute().isoformat()
     return schreiben(pfad, alt, neu, BL_SEITE,
                      "%d zahlen, anstiege %s, tag %s seit dem tief"
                      % (treffer, "/".join(anst), werte["blnow"]))
@@ -1083,6 +1159,10 @@ def lauf_gold():
         print("  FEHL %-30s sieht nach vorhersage aus: %s"
               % (GOLD_SEITE, ", ".join(funde)))
         return 1
+    ko = kopf_funde(GOLD_SEITE, neu, stempel)
+    if ko:
+        print("  FEHL %-30s %s" % (GOLD_SEITE, "; ".join(ko)))
+        return 1
     STICHTAG[GOLD_SEITE] = werte["b5tag"]
     return schreiben(pfad, alt, neu, GOLD_SEITE,
                      "%d zahlen, gold %s im laufenden baer, %s unter der spitze"
@@ -1091,7 +1171,28 @@ def lauf_gold():
 
 # --- teil 9, ein heute fuer alle -------------------------------------
 
-def stichtag_funde(eintraege, lies=None):
+def nur_kopf(html):
+    """alles vor </head>. dort kommt setz_text nicht hin."""
+    i = html.find("</head>")
+    return html[:i] if i >= 0 else ""
+
+
+def kopf_funde(datei, html, werte):
+    """jeder wert, den dieser lauf in den rumpf geschrieben hat und der
+    zusaetzlich im kopf steht, ohne dort angemeldet zu sein.
+
+    keine heuristik: geprueft wird nicht, ob ein wert beweglich AUSSIEHT,
+    sondern ob der stempel ihn in diesem lauf gesetzt hat. hat er das,
+    kontrolliert er ihn, und eine zweite kopie im kopf kontrolliert er
+    nicht."""
+    kopf = nur_kopf(html)
+    frei = set(KOPF_AUSNAHMEN.get(datei, ()))
+    return ["%s=%r steht auch im kopf" % (i, v)
+            for i, v in sorted(werte.items())
+            if i not in frei and v and str(v) in kopf]
+
+
+def stichtag_funde(eintraege, lies=None, nennen=None):
     """prueft, ob alle zyklusseiten denselben stichtag tragen.
 
     zwei pruefungen, beide muessen halten:
@@ -1118,20 +1219,34 @@ def stichtag_funde(eintraege, lies=None):
                 return ""
             with open(pfad, "r", encoding="utf-8") as fh:
                 return fh.read()
+    pflicht = sorted(eintraege) if nennen is None else sorted(set(eintraege) & set(nennen))
     return ["%s nennt %s nicht" % (d, lang(tag))
-            for d in sorted(eintraege) if lang(tag) not in lies(d)]
+            for d in pflicht if lang(tag) not in lies(d)]
 
 
 def lauf_stichtag():
-    funde = stichtag_funde(STICHTAG)
-    if funde:
-        print("  FEHL stichtag                      %s" % "; ".join(funde))
-        print("       zwei seiten mit verschiedenem heute sind ein fehler,")
-        print("       nicht eine kleinigkeit. der lauf haelt hier an.")
-        return 1
-    print("  ok   stichtag                      %s auf %d zyklusseiten"
-          % (sorted(set(STICHTAG.values()))[0], len(STICHTAG)))
-    return 0
+    """zwei gruppen, jede fuer sich stimmig.
+
+    preis     der juengste preis, den eine seite zeigt
+    zaehltag  der tag, gegen den ihre tageszaehler rechnen
+
+    Die beiden duerfen sich unterscheiden, und sie tun es meistens: der
+    zaehler laeuft bis heute, der juengste preis ist der von gestern
+    abend. Was nicht sein darf, ist dass zwei SEITEN innerhalb derselben
+    gruppe auseinanderlaufen."""
+    fehler = 0
+    for name, eintraege, nennen in (("preis", STICHTAG, None),
+                                    ("zaehltag", ZAEHLTAG, NENNT_ZAEHLTAG)):
+        funde = stichtag_funde(eintraege, None, nennen)
+        if funde:
+            print("  FEHL stichtag %-8s             %s" % (name, "; ".join(funde)))
+            print("       zwei seiten mit verschiedenem heute sind ein fehler,")
+            print("       nicht eine kleinigkeit. der lauf haelt hier an.")
+            fehler += 1
+        else:
+            print("  ok   stichtag %-8s             %s auf %d seite(n)"
+                  % (name, sorted(set(eintraege.values()))[0], len(eintraege)))
+    return fehler
 
 
 # --- teil 4, die leiste ----------------------------------------------
@@ -1644,6 +1759,35 @@ def selbsttest():
     pruefe("stichtag kommt aus dem log", w["b5tag"], "2026-09-23")
     pruefe("und nicht aus dem archiv", w["b5tag"] != garchiv[-1]["d"], True)
     pruefe("das enddatum auf der seite passt dazu", w["b5end"], "23 Sep 2026")
+    # --- die kopf-wache ---
+    seite = ('<head><meta name="description" content="fiel -53.1% am 30 June 2026">'
+             '</head><body><b id="a">-53.1%</b><b id="b">267</b></body>')
+    pruefe("gestempelter wert im kopf faellt auf",
+           kopf_funde("x.html", seite, {"a": "-53.1%", "b": "267"}),
+           ["a='-53.1%' steht auch im kopf"])
+    pruefe("was nur im rumpf steht ist in ordnung",
+           kopf_funde("x.html", seite, {"b": "267"}), [])
+    pruefe("ohne kopf kein fund", kopf_funde("x.html", "<body>-53.1%</body>",
+           {"a": "-53.1%"}), [])
+    pruefe("nur_kopf schneidet vor dem schliessenden tag ab",
+           nur_kopf("<head>oben</head><body>unten</body>"), "<head>oben")
+    pruefe("ohne head bleibt nichts uebrig", nur_kopf("<body>nur rumpf</body>"), "")
+    # die angemeldete ausnahme: ein abgeschlossener wert darf doppelt stehen
+    pruefe("angemeldete ausnahme schweigt",
+           kopf_funde("bitcoin-bull-run-length.html",
+                      "<head>1,050 to 1,067</head><body>x</body>",
+                      {"blrange2": "1,050 to 1,067"}), [])
+    pruefe("aber nur fuer ihre eigene seite",
+           kopf_funde("andere.html", "<head>1,050 to 1,067</head><body>x</body>",
+                      {"blrange2": "1,050 to 1,067"}),
+           ["blrange2='1,050 to 1,067' steht auch im kopf"])
+    pruefe("leerer wert schlaegt nicht an",
+           kopf_funde("x.html", "<head></head><body></body>", {"a": ""}), [])
+    # jede ausnahme muss eine id sein, die es auch gibt, sonst schuetzt sie
+    # nichts und niemand merkt es
+    pruefe("keine ausnahme ohne seite",
+           [d for d in KOPF_AUSNAHMEN if not os.path.exists(os.path.join(REPO, d))], [])
+
     # --- die stichtagswache ---
     seiten = {"a.html": "2026-09-23", "b.html": "2026-09-23"}
     text = {"a.html": "price of 23 September 2026",
@@ -1669,9 +1813,30 @@ def selbsttest():
     drei = {"a.html": "2026-09-23", "b.html": "2026-09-23",
             "c.html": "2026-09-23", "d.html": "2026-09-21"}
     pruefe("alle vier werden genannt", len(stichtag_funde(drei, lambda d: "egal")), 4)
-    # die halving-seite hat keinen preis und steht bewusst nicht drin
-    pruefe("halving-seite traegt keinen stichtag",
+    # die halving-seite zeigt keinen PREIS, aber sie zaehlt tage, und
+    # dafuer steht sie sehr wohl in der zweiten gruppe.
+    pruefe("halving-seite traegt keinen preisstichtag",
            "bitcoin-halving-to-top.html" in SCHLUSS_SEITEN, False)
+    pruefe("aber sie muss ihren zaehltag nennen",
+           "bitcoin-halving-to-top.html" in NENNT_ZAEHLTAG, True)
+    pruefe("und sie hat eine id dafuer",
+           ZYKLUS_ASOF.get("bitcoin-halving-to-top.html"), "hvasof")
+
+    # nennen: nur die genannten seiten muessen den tag ausschreiben
+    drei2 = {"a.html": "2026-09-24", "b.html": "2026-09-24"}
+    pruefe("ohne nennpflicht reicht uebereinstimmung",
+           stichtag_funde(drei2, lambda d: "nichts", nennen=()), [])
+    pruefe("mit nennpflicht wird ausgeschrieben verlangt",
+           stichtag_funde(drei2, lambda d: "nichts", nennen=("b.html",)),
+           ["b.html nennt 24 September 2026 nicht"])
+    pruefe("und erfuellt schweigt sie",
+           stichtag_funde(drei2, lambda d: "24 September 2026",
+                          nennen=("b.html",)), [])
+    # ein eingefrorener zaehler: die seite zaehlt noch gegen gestern
+    pruefe("eingefrorener zaehltag faellt auf",
+           stichtag_funde({"a.html": "2026-09-24", "b.html": "2026-09-23"},
+                          lambda d: "egal"),
+           ["a.html rechnet auf 2026-09-24", "b.html rechnet auf 2026-09-23"])
 
     pruefe("goldseite in der leiste",
            "gold-in-bitcoin-bear-markets.html" in [d for d, _ in SEITEN], True)
