@@ -58,6 +58,7 @@ Text daneben und nicht die Kurve.
     python3 scripts/stamp_pages.py --selftest
 """
 
+import calendar
 import datetime
 import json
 import math
@@ -66,6 +67,12 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+# Die Vorrangregel steht genau einmal, dort. Bricht dieser Import, faellt
+# der Lauf laut aus, und das ist gewollt: lieber ein roter Stempellauf als
+# eine zweite Kopie der Regel, die leise auseinanderlaeuft.
+from market_log import reihe_mit_logvorrang  # noqa: E402
+
 REPO = os.path.dirname(HERE)
 LOG = os.path.join(REPO, "data", "market-log.json")
 ARCHIV = os.path.join(REPO, "data", "history.json")
@@ -135,6 +142,18 @@ MARKT_SEITE = "markets.html"
 DD_SEITE = "bitcoin-drawdown.html"
 BL_SEITE = "bitcoin-bull-run-length.html"
 GOLD_SEITE = "gold-in-bitcoin-bear-markets.html"
+WI_SEITE = "what-if.html"
+
+# WHAT-IF, DIE VOREINGESTELLTE ANSICHT
+# Die Seite rechnet auf Eingaben, aber im Quelltext kann nur EINE Ansicht
+# stehen: die, die ein Besucher ohne Klick sieht. Genau die stand bis zum
+# 24.09.2026 als "loading" da, also existierte die Seite fuer
+# Antwortmaschinen nicht. Diese Werte sind die Voreinstellungen der drei
+# Eingabefelder; wer sie im HTML aendert, muss sie hier mitaendern, und
+# der Selbsttest liest beide gegeneinander.
+WI_LUMP = ("btc", 1000.0, 5)          # betrag, anlage, jahre
+WI_DCA = ("spy", 200.0, 5)            # monatlich
+WI_DAY = (8.0, 10, "a pack of cigarettes")
 
 # EIN HEUTE FUER ALLE ZYKLUSSEITEN, SEIT 24.09.2026
 # Jede Zyklusseite mit einem Preis rechnet auf einen juengsten Tag. Wenn
@@ -497,9 +516,17 @@ def markt_werte(rows):
     alt = vor(rows, versatz(neu["d"], -7), DREI)
     if not alt:
         return None
+    # die drei beschriftungen des diagramms. das skript setzt sie aus
+    # derselben reihe, also aus den log-zeilen mit allen drei preisen.
+    # geometrie wird weiter nicht gestempelt, aber ein datum ist keine
+    # geometrie, und im quelltext stand dort "today" und "start of record".
+    mitdrei = [r for r in rows if _hat(r, DREI)]
     werte = {
         "dend": lang(neu["d"]),
         "periodlabel": "%s to %s" % (lang(alt["d"]), lang(neu["d"])),
+        "chstart": lang(mitdrei[0]["d"]),
+        "chend": lang(mitdrei[-1]["d"]),
+        "chartperiod": "since " + lang(mitdrei[0]["d"]),
     }
     for feld, kennung in (("gld", "g7"), ("spy", "s7"), ("btc", "b7")):
         werte[kennung] = proz(neu[feld], alt[feld])
@@ -1249,6 +1276,214 @@ def lauf_stichtag():
     return fehler
 
 
+# --- teil 10, what-if ------------------------------------------------
+#
+# Die Seite rechnet im Browser auf Eingaben. Gestempelt wird die
+# voreingestellte Ansicht, also das, was ohne einen einzigen Klick
+# dasteht. Die Arithmetik unten ist dieselbe wie im Seitenskript,
+# einschliesslich der Rundungen; die Dopplung ist unvermeidlich und der
+# Grund, warum fuer jede Zahl ein Testfall steht.
+
+def wi_usd(x):
+    """usd() aus dem seitenskript, zeichen fuer zeichen."""
+    x = float(x)
+    if x >= 1e9:
+        return "$%.2fB" % (x / 1e9)
+    if x >= 1e6:
+        return "$%.2fM" % (x / 1e6)
+    return "$" + "{:,}".format(int(math.floor(x + 0.5)))
+
+
+def wi_px(x):
+    """px() aus dem seitenskript."""
+    x = float(x)
+    return "$" + ("{:,}".format(int(math.floor(x + 0.5))) if x >= 100
+                  else "%.2f" % x)
+
+
+def wi_jahre_zurueck(iso_tag, jahre):
+    """setUTCFullYear(y - n) aus javascript. der 29. februar rutscht dort
+    auf den 1. maerz, weil der 29.02. im zieljahr nicht existiert."""
+    j, m, t = [int(x) for x in iso_tag.split("-")]
+    z = j - jahre
+    letzter = calendar.monthrange(z, m)[1]
+    if t > letzter:
+        return (datetime.date(z, m, letzter)
+                + datetime.timedelta(days=t - letzter)).isoformat()
+    return datetime.date(z, m, t).isoformat()
+
+
+def wi_ab(reihe, tag):
+    """erster punkt am oder nach dem tag."""
+    for d, v in reihe:
+        if d >= tag:
+            return (d, v)
+    return None
+
+
+def wi_bis(reihe, tag):
+    """letzter punkt am oder vor dem tag."""
+    tref = None
+    for d, v in reihe:
+        if d > tag:
+            break
+        tref = (d, v)
+    return tref
+
+
+def wi_lump(reihe, betrag, jahre):
+    if not reihe:
+        return None
+    jetzt = reihe[-1]
+    davor = wi_ab(reihe, wi_jahre_zurueck(jetzt[0], jahre))
+    if not davor or davor[1] <= 0:
+        return None
+    mult = jetzt[1] / davor[1]
+    return {"davor": davor, "jetzt": jetzt, "mult": mult, "wert": betrag * mult}
+
+
+def wi_dca(reihe, monatlich, jahre):
+    """monatsend-kaeufe, genau wie im seitenskript."""
+    if not reihe:
+        return None
+    jetzt = reihe[-1]
+    ende = datetime.date(*[int(x) for x in jetzt[0].split("-")])
+    j, m = ende.year - jahre, ende.month - 1        # m nullbasiert
+    anteile = paid = kaeufe = 0.0
+    erster = None
+    while j < ende.year or (j == ende.year and m <= ende.month - 1):
+        me = datetime.date(j, m + 1, calendar.monthrange(j, m + 1)[1])
+        if me > ende:
+            break
+        pkt = wi_bis(reihe, me.isoformat())
+        if pkt and pkt[1] > 0:
+            anteile += monatlich / pkt[1]
+            paid += monatlich
+            kaeufe += 1
+            if erster is None:
+                erster = pkt[0]
+        m += 1
+        if m > 11:
+            m = 0
+            j += 1
+    if kaeufe < 6:
+        return None
+    return {"wert": anteile * jetzt[1], "paid": paid, "kaeufe": int(kaeufe),
+            "erster": erster, "jetzt": jetzt}
+
+
+WI_LABEL = {"btc": "bitcoin", "spy": "the S&amp;P 500", "gld": "gold"}
+
+
+def whatif_werte(archivrows, logrows):
+    """(werte, None) oder (None, grund). werte fuer die voreingestellte
+    ansicht der drei reiter."""
+    reihen = dict((f, reihe_mit_logvorrang(f, archiv=archivrows, log=logrows))
+                  for f in ("btc", "spy", "gld"))
+    if not all(reihen.values()):
+        return None, "btc, spy oder gld fehlt"
+    asof = min(r[-1][0] for r in reihen.values())
+
+    lf, lbetrag, ljahre = WI_LUMP
+    L = wi_lump(reihen[lf], lbetrag, ljahre)
+    if not L:
+        return None, "einmalkauf laesst sich nicht rechnen"
+    df, dbetrag, djahre = WI_DCA
+    D = wi_dca(reihen[df], dbetrag, djahre)
+    if not D:
+        return None, "sparplan laesst sich nicht rechnen"
+    proTag, ajahre, aname = WI_DAY
+    monatlich = proTag * 365.0 / 12.0
+    A = dict((f, wi_dca(reihen[f], monatlich, ajahre)) for f in ("spy", "gld", "btc"))
+    if not all(A.values()):
+        return None, "tagesbetrag laesst sich nicht rechnen"
+
+    tag = lambda n: ("%d" % n) if float(n) == int(n) else ("%s" % n)
+    werte = {
+        "asof": "%s (bitcoin %s)" % (lang(asof), lang(reihen["btc"][-1][0])),
+        "l-big": wi_usd(L["wert"]),
+        "l-used": "Counted with: close on %s %s \u2192 close on %s %s."
+                  % (lang(L["davor"][0]), wi_px(L["davor"][1]),
+                     lang(L["jetzt"][0]), wi_px(L["jetzt"][1])),
+        "d-big": wi_usd(D["wert"]),
+        "d-used": "Counted with: %d month-end buys from %s to %s, valued at %s."
+                  % (D["kaeufe"], lang(D["erster"]), lang(D["jetzt"][0]),
+                     wi_px(D["jetzt"][1])),
+        "a-k": "$%s a day (%s), bought at every month end, %d years"
+               % (tag(proTag), aname, ajahre),
+        "a-spent": wi_usd(A["spy"]["paid"]),
+        "a-spy": wi_usd(A["spy"]["wert"]),
+        "a-gld": wi_usd(A["gld"]["wert"]),
+        "a-btc": wi_usd(A["btc"]["wert"]),
+        "a-used": ("Counted with: $%s \u00d7 365 \u00f7 12 = %s a month, %d "
+                   "month-end buys from %s to %s, each asset at its own closes."
+                   % (tag(proTag), wi_usd(monatlich), A["spy"]["kaeufe"],
+                      lang(A["spy"]["erster"]), lang(A["spy"]["jetzt"][0]))),
+    }
+    # die beiden saetze mit <b> darin, als ganzer innenraum ersetzt
+    innen = {
+        "l-sub": ("<b>%s</b> in %s %d years ago is <b>%s</b> today, <b>%s\u00d7</b> "
+                  "the money." % (wi_usd(lbetrag), WI_LABEL[lf], ljahre,
+                                  wi_usd(L["wert"]),
+                                  ("%.0f" % L["mult"]) if L["mult"] >= 10
+                                  else ("%.2f" % L["mult"]))),
+        "d-sub": ("<b>%s a month</b> into %s for %d years: <b>%s</b> paid in, "
+                  "worth <b>%s</b> today (%.2f\u00d7 what you paid)."
+                  % (wi_usd(dbetrag), WI_LABEL[df], djahre, wi_usd(D["paid"]),
+                     wi_usd(D["wert"]), D["wert"] / D["paid"])),
+    }
+    return {"text": werte, "innen": innen, "asof": asof}, None
+
+
+RE_INNEN = {}
+
+
+def setz_innen(html, kennung, inhalt):
+    """ersetzt den ganzen innenraum eines div, auch wenn tags darin stehen.
+    setz_text kann das nicht, es hoert beim ersten < auf."""
+    muster = re.compile(r'(<div[^>]*id="%s"[^>]*>)(.*?)(</div>)'
+                        % re.escape(kennung), re.S)
+    return muster.subn(lambda m: m.group(1) + inhalt + m.group(3), html)
+
+
+def lauf_whatif():
+    pfad = os.path.join(REPO, WI_SEITE)
+    if not os.path.exists(pfad):
+        print("  ok   %-30s nicht vorhanden, uebersprungen" % WI_SEITE)
+        return 0
+    if not (os.path.exists(ARCHIV) and os.path.exists(LOG)):
+        print("  FEHL %-30s archiv oder log fehlt" % WI_SEITE)
+        return 1
+    with open(ARCHIV, "r", encoding="utf-8") as fh:
+        archivrows = json.load(fh)
+    with open(LOG, "r", encoding="utf-8") as fh:
+        logrows = json.load(fh)
+    w, grund = whatif_werte(archivrows, logrows)
+    if w is None:
+        print("  FEHL %-30s %s" % (WI_SEITE, grund))
+        return 1
+    with open(pfad, "r", encoding="utf-8") as fh:
+        alt = fh.read()
+    neu, treffer, fehlend = setz_text(alt, w["text"])
+    if fehlend:
+        print("  FEHL %-30s id nicht gefunden %s" % (WI_SEITE, ", ".join(fehlend)))
+        return 1
+    for kennung, inhalt in sorted(w["innen"].items()):
+        neu, n = setz_innen(neu, kennung, inhalt)
+        if n != 1:
+            print("  FEHL %-30s %s nicht genau einmal gefunden (%d)"
+                  % (WI_SEITE, kennung, n))
+            return 1
+        treffer += 1
+    ko = kopf_funde(WI_SEITE, neu, w["text"])
+    if ko:
+        print("  FEHL %-30s %s" % (WI_SEITE, "; ".join(ko)))
+        return 1
+    STICHTAG[WI_SEITE] = w["asof"]
+    return schreiben(pfad, alt, neu, WI_SEITE,
+                     "%d zahlen, stand %s" % (treffer, w["asof"]))
+
+
 # --- teil 4, die leiste ----------------------------------------------
 
 PNAV = re.compile(r'(<div class="pnav">)(.*?)(</div>)', re.S)
@@ -1759,6 +1994,69 @@ def selbsttest():
     pruefe("stichtag kommt aus dem log", w["b5tag"], "2026-09-23")
     pruefe("und nicht aus dem archiv", w["b5tag"] != garchiv[-1]["d"], True)
     pruefe("das enddatum auf der seite passt dazu", w["b5end"], "23 Sep 2026")
+    # --- die gemeinsame vorrangregel ---
+    a = [{"d": "2026-09-22", "gld": 1.0}, {"d": "2026-09-23", "gld": 2.0}]
+    l = [{"d": "2026-09-23", "gld": 99.0}, {"d": "2026-09-24", "gld": 3.0}]
+    pruefe("am gemeinsamen tag gewinnt das log",
+           reihe_mit_logvorrang("gld", archiv=a, log=l),
+           [("2026-09-22", 1.0), ("2026-09-23", 99.0), ("2026-09-24", 3.0)])
+    # die reihenfolge laesst sich nicht mehr versehentlich drehen
+    fehl = None
+    try:
+        reihe_mit_logvorrang("gld", a, l)
+    except TypeError as exc:
+        fehl = "positional"
+    pruefe("archiv und log sind keyword-only", fehl, "positional")
+    pruefe("null und leeres faellt raus",
+           reihe_mit_logvorrang("gld", archiv=[{"d": "x", "gld": 0}, "kein dict"],
+                                log=[{"d": "y"}]), [])
+
+    # --- what-if ---
+    pruefe("usd unter einer million", wi_usd(1880.6), "$1,881")
+    pruefe("usd in millionen", wi_usd(2_500_000), "$2.50M")
+    pruefe("usd in milliarden", wi_usd(3_100_000_000), "$3.10B")
+    pruefe("preis ab hundert ohne cents", wi_px(84424.0), "$84,424")
+    pruefe("preis darunter mit cents", wi_px(44.889), "$44.89")
+    pruefe("fuenf jahre zurueck", wi_jahre_zurueck("2026-09-23", 5), "2021-09-23")
+    # javascript schiebt den 29. februar auf den 1. maerz, wenn das zieljahr
+    # keinen hat. das muss hier genauso laufen.
+    pruefe("schalttag wie in javascript", wi_jahre_zurueck("2024-02-29", 3), "2021-03-01")
+    pruefe("schalttag auf schaltjahr bleibt", wi_jahre_zurueck("2024-02-29", 4), "2020-02-29")
+
+    # der 20.09. liegt VOR dem stichtag 2021-09-23 und darf nicht genommen
+    # werden. wuerde er es, kaeme 4000 statt 2000 heraus.
+    reihe = [("2021-09-20", 50.0), ("2021-09-30", 100.0), ("2026-09-23", 200.0)]
+    r = wi_lump(reihe, 1000.0, 5)
+    pruefe("einmalkauf nimmt den ersten tag AB dem stichtag",
+           (r["davor"][0], r["wert"]), ("2021-09-30", 2000.0))
+    pruefe("ohne genug reihe nichts", wi_lump([], 1000.0, 5), None)
+
+    # sparplan: monatsende von 2025-10 bis 2026-09, also 12 kaeufe
+    mreihe = []
+    for j, m in [(2025, x) for x in range(9, 13)] + [(2026, x) for x in range(1, 10)]:
+        mreihe.append(("%04d-%02d-%02d" % (j, m, 28), 10.0))
+    mreihe.append(("2026-09-23", 10.0))
+    mreihe.sort()
+    d = wi_dca(mreihe, 100.0, 1)
+    pruefe("sparplan zaehlt die monatsenden", (d["kaeufe"], d["paid"]), (12, 1200.0))
+    pruefe("und bewertet zum letzten kurs", d["wert"], 1200.0)
+    pruefe("unter sechs kaeufen nichts", wi_dca(mreihe[:3], 100.0, 1), None)
+
+    # die voreinstellungen muessen zu denen im html passen, sonst stempelt
+    # der lauf eine ansicht, die niemand zu sehen bekommt
+    wipfad = os.path.join(REPO, WI_SEITE)
+    if os.path.exists(wipfad):
+        with open(wipfad, encoding="utf-8") as fh:
+            wihtml = fh.read()
+        def _vor(kennung):
+            m = re.search(r'id="%s"[^>]*value="([^"]*)"' % kennung, wihtml)
+            return float(m.group(1)) if m else None
+        pruefe("einmalkauf-betrag wie im html", _vor("l-amt"), WI_LUMP[1])
+        pruefe("sparplan-betrag wie im html", _vor("d-amt"), WI_DCA[1])
+        pruefe("tagesbetrag wie im html", _vor("a-amt"), WI_DAY[0])
+        pruefe("what-if steht in der leiste",
+               WI_SEITE in [d for d, _ in SEITEN], True)
+
     # --- die kopf-wache ---
     seite = ('<head><meta name="description" content="fiel -53.1% am 30 June 2026">'
              '</head><body><b id="a">-53.1%</b><b id="b">267</b></body>')
@@ -1865,7 +2163,7 @@ def main(argv):
           % datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
     fehler = (lauf_leiste() + lauf_zyklus() + lauf_dominanz() + lauf_markt()
               + lauf_schluss() + lauf_rueckgang() + lauf_bullrun()
-              + lauf_gold() + lauf_stichtag())
+              + lauf_gold() + lauf_whatif() + lauf_stichtag())
     if fehler:
         print("\n%d seite(n) nicht gestempelt" % fehler)
         return 1

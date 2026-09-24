@@ -43,6 +43,9 @@ import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from market_log import reihe_mit_logvorrang  # noqa: E402
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 DATA = os.path.join(REPO, "data")
@@ -409,15 +412,11 @@ def benchmarks():
         mlog = mlog.get("rows", [])
     out = {}
     for field, label in (("spy", "s&p 500"), ("gld", "gold")):
-        ser = {}
-        for src in (hist, mlog):
-            for row in src or []:
-                v = row.get(field) if isinstance(row, dict) else None
-                if v not in (None, "") and row.get("d"):
-                    ser[row["d"]] = float(v)
-        if len(ser) < 250:
+        # die vorrangregel steht in market_log.reihe_mit_logvorrang und
+        # nicht mehr hier als reihenfolge in einer schleife. siehe dort.
+        s = reihe_mit_logvorrang(field, archiv=hist, log=mlog)
+        if len(s) < 250:
             continue
-        s = sorted(ser.items())
         rec = one_year(s)
         out[label] = {"pct": round((rec["mult"] - 1) * 100, 1), "d": rec["d"], "d_1y": rec["d_1y"]}
     return out
