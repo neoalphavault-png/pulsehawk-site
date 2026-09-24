@@ -224,9 +224,10 @@ def logo_data():
 
 
 # Die Schriftgroessen stehen hier als Zahlen, weil grafik_check.py sie
-# gegen die 390px-Vorschau rechnet. Wer eine aendert, aendert die Pruefung
-# mit.
-SCHRIFT = {"zahl": 190, "label": 34, "bezug": 30, "marke": 40, "fuss": 30}
+# gegen die Hausnorm aus content-doktrin.md prueft. Wer eine aendert,
+# aendert die Pruefung mit. Der Schluessel ist die Rolle in der Norm,
+# nicht das Element: NORM in grafik_check.py haelt die Spannen.
+SCHRIFT = {"zahl": 220, "label": 58, "bezug": 48, "marke": 80, "fuss": 34}
 
 
 def html(w, skala=1.0):
@@ -246,23 +247,25 @@ def html(w, skala=1.0):
          background-image:radial-gradient(ellipse 120%% 55%% at 50%% -8%%,
                           rgba(73,234,203,0.13), transparent 60%%);
          display:flex; flex-direction:column; }
-  .marke { display:flex; align-items:center; gap:20px; padding:56px 72px 0; }
+  .marke { display:flex; align-items:center; gap:26px; padding:44px 72px 0; }
   .marke img { width:%(MI)dpx; }
-  .marke b { font-size:%(FM)dpx; letter-spacing:9px; font-weight:800; }
+  .marke b { font-size:%(FM)dpx; letter-spacing:12px; font-weight:800; }
   .marke b span { color:#49EACB; }
   .mitte { flex:1; display:flex; flex-direction:column; justify-content:center;
-           gap:72px; padding:0 72px; }
-  .block { border-left:8px solid #D95926; padding:6px 0 6px 36px; }
+           gap:56px; padding:0 72px; }
+  .block { border-left:10px solid #D95926; padding:4px 0 4px 34px; }
   .block.t { border-left-color:#49EACB; }
-  .label { font-size:%(FL)dpx; letter-spacing:5px; text-transform:uppercase;
+  .label { font-size:%(FL)dpx; letter-spacing:4px; text-transform:uppercase;
            color:#9BA3AB; font-weight:700; }
-  .zahl { font-size:%(FZ)dpx; line-height:1.02; font-weight:800;
-          letter-spacing:-6px; color:#D95926; margin:6px 0 10px; }
-  .block.t .zahl { color:#49EACB; }
-  .bezug { font-size:%(FB)dpx; line-height:1.5; color:#9BA3AB; }
+  /* Hausnorm: die grosse Zahl ist WEISS. Die Bloecke unterscheiden sich
+     am Rand, nicht an der Zahl - sonst konkurriert die Marke mit den
+     Daten. */
+  .zahl { font-size:%(FZ)dpx; line-height:1.0; font-weight:800;
+          letter-spacing:-7px; color:#FFFFFF; margin:2px 0 6px; }
+  .bezug { font-size:%(FB)dpx; line-height:1.38; color:#9BA3AB; }
   .bezug b { color:#fff; font-weight:600; }
   .fuss { display:flex; align-items:center; justify-content:space-between;
-          margin:0 72px; padding:36px 0 44px; border-top:1px solid #2A313A; }
+          margin:0 72px; padding:30px 0 40px; border-top:1px solid #2A313A; }
   .fuss .l { display:flex; align-items:center; gap:16px; }
   .fuss img { width:%(FI)dpx; }
   .fuss span { font-size:%(FF)dpx; color:#9BA3AB; letter-spacing:1px; }
@@ -278,20 +281,55 @@ def html(w, skala=1.0):
     <div class="block t">
       <div class="label">days since the low</div>
       <div class="zahl" id="g-tage-tief">%(tage_tief)s</div>
-      <div class="bezug">lowest price since was <b>%(tief_datum)s</b><br>at
+      <div class="bezug">lowest so far was <b>%(tief_datum)s</b><br>at
         <b>%(tief_preis)s</b>, if that low holds</div>
     </div>
   </div>
   <div class="fuss">
-    <div class="l"><img src="%(L)s" alt=""><span>counted from daily prices to %(zaehltag)s</span></div>
+    <div class="l"><img src="%(L)s" alt=""><span>daily prices to %(zaehltag)s</span></div>
     <span class="adr">pulsehawk.io</span>
   </div>
-</div></body></html>""" % dict(w, B=BREITE, H=HOEHE, L=L, MI=62, FI=52, S=skala,
+</div></body></html>""" % dict(w, B=BREITE, H=HOEHE, L=L, MI=92, FI=54, S=skala,
                          VB=int(round(BREITE * skala)),
                          VH=int(round(HOEHE * skala)),
                          FZ=SCHRIFT["zahl"], FL=SCHRIFT["label"],
                          FB=SCHRIFT["bezug"], FM=SCHRIFT["marke"],
                          FF=SCHRIFT["fuss"])
+
+
+# Was die Vorlage ueber sich selbst wissen muss, holt sich der Check aus
+# dem echten Layout statt es zu schaetzen. Zeichenbreiten haengen an der
+# Schrift, und die Fusszeile ist schon einmal still auf zwei Zeilen
+# umgebrochen, weil ich sie ueberschlagen statt gemessen habe.
+MESSSKRIPT = """<script>window.addEventListener('load',function(){
+ var o={};
+ function kasten(s){var e=document.querySelector(s); if(!e) return null;
+   var r=e.getBoundingClientRect();
+   return {oben:Math.round(r.top), unten:Math.round(r.bottom),
+           rechts:Math.round(r.right), hoch:Math.round(r.height),
+           ueber: e.scrollWidth > e.clientWidth + 1};}
+ ['.karte','.marke','.mitte','.fuss','.fuss .l span','.fuss .adr',
+  '#g-tage-hoch','#g-tage-tief'].forEach(function(s){o[s]=kasten(s);});
+ o.seite = {hoch: document.body.scrollHeight};
+ document.title = JSON.stringify(o);});</script>"""
+
+
+def geometrie(w):
+    """das echte layout, vom browser gemessen. dict oder RuntimeError."""
+    quelle = os.path.join(os.path.dirname(ZIEL) or ".", "messung.html")
+    os.makedirs(os.path.dirname(quelle), exist_ok=True)
+    with open(quelle, "w", encoding="utf-8") as fh:
+        fh.write(html(w).replace("</body>", MESSSKRIPT + "</body>"))
+    r = subprocess.run([chrome(), "--headless", "--disable-gpu", "--no-sandbox",
+                        "--virtual-time-budget=4000",
+                        "--window-size=%d,%d" % (BREITE, HOEHE + UEBERHANG),
+                        "--dump-dom", "file://" + quelle], capture_output=True)
+    os.remove(quelle)
+    dom = r.stdout.decode("utf-8", "replace")
+    a, b = dom.find("<title>"), dom.find("</title>")
+    if a < 0 or b < a:
+        raise RuntimeError("die messung kam ohne ergebnis zurueck")
+    return json.loads(dom[a + 7:b].replace("&quot;", '"').replace("&amp;", "&"))
 
 
 def bauen(w, ziel=ZIEL, skala=1.0):
@@ -359,7 +397,7 @@ def selbsttest():
     pruefe("logo oben und unten", seite.count("data:image/png;base64,"), 2)
     pruefe("adresse in der fusszeile", "pulsehawk.io" in seite, True)
     pruefe("der zaehltag steht auf der karte",
-           "counted from daily prices to 24 September 2026" in seite, True)
+           "daily prices to 24 September 2026" in seite, True)
     # die karte zaehlt, was man ihr sagt. das ist der ganze grund fuer 'bis'.
     frueher, _ = zahlen(arch, log, bis="2026-09-23")
     pruefe("ein anderer zaehltag gibt andere zahlen",
