@@ -4,23 +4,44 @@ name: marktlog
 # Postet nichts. Der schluessel wird nie gedruckt, das skript meldet nur,
 # ob einer gesetzt ist.
 #
-# 21:23 utc liegt nach dem us-boersenschluss, damit der tagesschluss von
-# GLD und SPY schon vorliegt. An wochenenden schreibt das skript fuer
-# diese beiden bewusst nichts, statt einen alten kurs auf heute zu datieren.
+# 20:00 UTC SEIT DEM 25.09.2026, vorher 21:23.
+# GitHub startet geplante Laeufe verspaetet. Gemessen an allen 41 Laeufen
+# bis zum 24.09.: meist 1:32 bis 3:17 h, dreimal 3:29, 5:49 und 8:06 h.
+# Mit 21:23 rutschten sieben Laeufe ueber Mitternacht utc, und der Wert
+# landete im Folgetag; mit 20:00 waeren es zwei gewesen. Das verringert
+# die Faelle, es ersetzt nicht die Messzeit: das Datum einer Kryptozeile
+# kommt aus dem Zeitstempel der Quelle, nicht aus dem Laufdatum.
+#
+# Boersenschluss: New York schliesst um 20:00 utc (Sommer) und 21:00 utc
+# (Winter). Ein puenktlicher Lauf um 20:00 kaeme also vor dem Schluss.
+# Das Skript nimmt den heutigen Balken erst 15 Minuten nach 16:00 New
+# Yorker Zeit, vorher den Vortag; der heutige kommt dann am naechsten Tag
+# unter seinem eigenen Datum. An Wochenenden schreibt es fuer GLD und SPY
+# bewusst nichts, statt einen alten Kurs auf heute zu datieren.
+#
+# HERKUNFT: das Skript baut data/market-log-herkunft.json beim ersten
+# Lauf ohne diese Datei aus der Git-Historie auf. Dafuer checkt der
+# Workflow die volle Historie aus (fetch-depth: 0).
 
 on:
   schedule:
-    - cron: "23 21 * * *"
+    - cron: "0 20 * * *"
   workflow_dispatch:
     inputs:
       modus:
-        description: "taeglich oder backfill"
+        description: "taeglich, backfill, nachtragen oder herkunft"
         required: true
         default: "taeglich"
         type: choice
         options:
           - taeglich
           - backfill
+          - nachtragen
+          - herkunft
+      tage:
+        description: "nur fuer nachtragen: tage mit komma, leer = alle offenen luecken der letzten 88 tage"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -31,6 +52,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          # volle historie: daraus wird die herkunft einmalig rekonstruiert
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -42,18 +66,24 @@ jobs:
       - name: werte holen
         env:
           TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+          TAGE: ${{ github.event.inputs.tage }}
         run: |
-          if [ "${{ github.event.inputs.modus }}" = "backfill" ]; then
-            python3 scripts/market_log.py --backfill
-          else
-            python3 scripts/market_log.py
-          fi
+          case "${{ github.event.inputs.modus }}" in
+            backfill)   python3 scripts/market_log.py --backfill ;;
+            nachtragen) python3 scripts/market_log.py --nachtragen "$TAGE" ;;
+            herkunft)   python3 scripts/market_log.py --herkunft ;;
+            *)          python3 scripts/market_log.py ;;
+          esac
 
       - name: log sichern
         run: |
           git config user.name "pulsehawk bot"
           git config user.email "bot@users.noreply.github.com"
           git add data/market-log.json
+          # die herkunft gibt es erst, wenn sie einmal aufgebaut ist
+          if [ -f data/market-log-herkunft.json ]; then
+            git add data/market-log-herkunft.json
+          fi
           if git diff --cached --quiet; then
             echo "nichts neues"
             exit 0
