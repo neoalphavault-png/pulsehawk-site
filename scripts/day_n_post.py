@@ -114,7 +114,7 @@ MONATE = ["January", "February", "March", "April", "May", "June", "July",
 # man.
 UMSTELLUNG = "counter now runs to today"
 
-VERBOTEN = ("\u2014", "\u2013", "\u2192", "\u2190", "->", "<-", "percent", "21:23")
+VERBOTEN = ("\u2014", "\u2013", "\u2192", "\u2190", "->", "<-", "percent")
 
 
 def lang(iso):
@@ -129,11 +129,11 @@ def tage(seit, bis):
 
 
 def letzter_btc(rows):
-    for r in reversed(rows if isinstance(rows, list) else []):
-        if isinstance(r, dict) and isinstance(r.get("btc"), (int, float)) \
-                and isinstance(r.get("d"), str):
-            return r
-    return None
+    """die juengste LIVE gemessene btc-zeile. dieselbe funktion wie auf den
+    seiten (market_log.letzter_live), sonst haelt sperre 2 den post an.
+    ein nachgetragener wert ist nie der tageswert (beschluss 25.09.2026)."""
+    from market_log import letzter_live
+    return letzter_live(rows, "btc")
 
 
 def seite_lesen(html):
@@ -152,7 +152,28 @@ def prozent(close, top=TOP):
     return (float(close) / float(top) - 1.0) * 100.0
 
 
-def text(n, close, datum):
+def messzeit(herkunft, zeile):
+    """"HH:MM" der btc-messung dieser zeile, oder None. Dieselbe Funktion
+    wie auf der Karte, aus market_log."""
+    from market_log import messzeit_hhmm
+    return messzeit_hhmm(herkunft, zeile, "btc")
+
+
+def uhrzeit_problem(t, erlaubt):
+    """jede uhrzeit im text muss die gemessene sein.
+
+    Ersetzt seit dem 25.09.2026 die Sperre auf den Text "21:23": die hielt
+    eine falsche Cron-Zeit fern, haette aber auch eine echte Messung um
+    21:23 blockiert. Jetzt gilt umgekehrt: eine Uhrzeit darf nur im Post
+    stehen, wenn sie genau die aus der Herkunft ist."""
+    for z in re.findall(r"\b\d{1,2}:\d{2}\b", t):
+        if z != erlaubt:
+            return ("uhrzeit %s im text, gemessen ist %s"
+                    % (z, erlaubt or "keine mit echter zeit"))
+    return None
+
+
+def text(n, close, datum, uhrzeit=None):
     """Der Post. Vier kurze Zeilen, die Zahl zuerst, die Methode zuletzt.
     Kein Link (Kostenregel), keine Deutung, kein Kursziel."""
     return "\n".join([
@@ -161,14 +182,13 @@ def text(n, close, datum):
         # "traded at", nicht "closed at": der Wert ist eine Momentaufnahme
         # des Marktloggers, kein Schlusskurs und kein Tagesdurchschnitt.
         #
-        # KEINE UHRZEIT, bis der Logger echte Messzeiten speichert (Ben,
-        # 25.09.2026). Hier stand "(21:23 utc)", die geplante Cron-Zeit.
-        # Gemessen wurde tatsaechlich zwischen 22:56 und 00:11 utc, die
-        # Uhrzeit war also jeden Tag falsch. "21:23" steht deshalb in
-        # VERBOTEN. Die Uhrzeit kommt zurueck, sobald sie aus dem
-        # Zeitstempel der Quelle stammt.
-        "bitcoin traded at %s on %s."
-        % ("{:,.0f}".format(close), lang(datum)),
+        # Die Uhrzeit steht nur da, wenn sie gemessen ist: aus dem
+        # Zeitstempel der Quelle (Auftrag B). Bis zum 25.09.2026 stand hier
+        # "(21:23 utc)", die geplante Cron-Zeit, gemessen wurde aber
+        # zwischen 22:56 und 00:11 utc. Ohne gemessene Zeit: keine Zeit.
+        ("bitcoin traded at %s on %s (%s utc)." % ("{:,.0f}".format(close), lang(datum), uhrzeit)
+         if uhrzeit else
+         "bitcoin traded at %s on %s." % ("{:,.0f}".format(close), lang(datum))),
         "",
         # abs(): "minus 39,4 Prozent unter" waere doppelt verneint. Liegt der
         # Schluss ueber dem Hoch, heisst die Zeile "above" und der Zyklus ist
@@ -343,7 +363,7 @@ def seite_tageszahl(html):
     return int(m.group(1).replace(",", "")) if m else None
 
 
-def bauen(rows, html, heute, max_age, xlog=None):
+def bauen(rows, html, heute, max_age, xlog=None, herkunft=None):
     """Alles, was ohne Netz geprueft werden kann. Gibt (text, key, problem)."""
     zeile = letzter_btc(rows)
     if not zeile:
@@ -391,12 +411,16 @@ def bauen(rows, html, heute, max_age, xlog=None):
     else:
         vermerk = ""
 
-    t = text(n, float(zeile["btc"]), zeile["d"])
+    uhr = messzeit(herkunft, zeile)
+    t = text(n, float(zeile["btc"]), zeile["d"], uhr)
     if vermerk:
         t = t.rstrip() + "\n\n" + vermerk
     fehl = sprung_problem(n, letzter_n, vermerk, t)
     if fehl:
         return None, None, fehl
+    fehl_uhr = uhrzeit_problem(t, uhr)
+    if fehl_uhr:
+        return None, None, fehl_uhr
     for z in VERBOTEN:
         if z in t:
             return None, None, "schreibregel verletzt, gefunden %r" % z
@@ -455,7 +479,9 @@ def main(argv=None):
     heute, stempel = laufzeit()
     with open(XLOG, encoding="utf-8") as fh:
         xlog = json.load(fh)
-    t, key, problem = bauen(rows, html, heute, a.max_age, xlog)
+    from market_log import load_herkunft
+    herkunft = load_herkunft()
+    t, key, problem = bauen(rows, html, heute, a.max_age, xlog, herkunft)
     if problem:
         print("kein post: %s" % problem)
         return exitcode(problem)
@@ -538,7 +564,31 @@ def selbsttest():
     pruefe("keine uhrzeit im post", ("21:23" in t, "utc" in t), (False, False))
     pruefe("die kurszeile endet auf dem datum",
            t.split("\n")[2], "bitcoin traded at 75,608 on 15 September 2026.")
-    pruefe("21:23 ist verboten", "21:23" in VERBOTEN, True)
+    # --- die uhrzeit kommt aus der herkunft (auftrag b) ---
+    def h_btc(tag, zeit, zeit_aus="quelle", art="momentaufnahme"):
+        return {tag: {"btc": {"art": art, "zeit": zeit, "zeit_aus": zeit_aus}}}
+    zl = {"d": "2026-09-25", "btc": 84392.0}
+    pruefe("messzeit aus der quelle", messzeit(h_btc("2026-09-25", "2026-09-25T22:07:41Z"), zl), "22:07")
+    pruefe("auch vom abruf", messzeit(h_btc("2026-09-25", "2026-09-25T22:07:41Z", "abruf"), zl), "22:07")
+    pruefe("aus einem commit rekonstruiert: keine uhrzeit",
+           messzeit(h_btc("2026-09-25", "2026-09-25T22:07:41Z", "commit"), zl), None)
+    pruefe("eine messzeit von einem anderen tag passt nicht zum datum",
+           messzeit(h_btc("2026-09-25", "2026-09-26T00:11:54Z"), zl), None)
+    pruefe("ein nachgetragener wert bekommt keine uhrzeit",
+           messzeit(h_btc("2026-09-25", "2026-09-25T23:00:07Z", art="nachgetragen"), zl), None)
+    pruefe("ohne herkunft keine uhrzeit", messzeit(None, zl), None)
+    mit_uhr = bauen([{"d": "2026-09-25", "btc": 84392.0}],
+                    'var LAST_CLOSE = 84392, LAST_DATE = "2026-09-25";', "2026-09-26", 3,
+                    None, h_btc("2026-09-25", "2026-09-25T22:07:41Z"))
+    pruefe("die gemessene zeit steht im post",
+           mit_uhr[0].split("\n")[2], "bitcoin traded at 84,392 on 25 September 2026 (22:07 utc).")
+    pruefe("eine erfundene 21:23 haelt den post an",
+           uhrzeit_problem("bitcoin traded at 1 on 1 May 2026 (21:23 utc).", None) is not None, True)
+    pruefe("eine falsche zeit neben einer gemessenen auch",
+           uhrzeit_problem("(21:23 utc)", "22:07") is not None, True)
+    pruefe("eine echt gemessene 21:23 geht durch",
+           uhrzeit_problem("(21:23 utc)", "21:23"), None)
+    pruefe("21:23 steht nicht mehr als text in VERBOTEN", "21:23" in VERBOTEN, False)
 
     # --- die umstellungszeile haengt an einer bedingung, nicht an einem datum ---
     # nach namen im modul gefragt, nicht nach text in der datei: die

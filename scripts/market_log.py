@@ -559,6 +559,24 @@ def letzter_live(rows, feld):
     return None
 
 
+def messzeit_hhmm(herkunft, zeile, feld="btc"):
+    """"HH:MM" der messung dieses felds in dieser zeile, oder None.
+
+    Nur eine Zeit aus der Quelle oder vom Abruf zaehlt. Eine aus der
+    Git-Historie rekonstruierte ("commit") ist auf Minuten ungenau und
+    steht deshalb nicht im Post. Die Messzeit muss am Tag der Zeile liegen,
+    sonst passt sie nicht zum Datum daneben."""
+    if not herkunft or not zeile:
+        return None
+    e = (herkunft.get(zeile.get("d")) or {}).get(feld) or {}
+    z = e.get("zeit")
+    if e.get("art") != "momentaufnahme" or e.get("zeit_aus") not in ("quelle", "abruf"):
+        return None
+    if not isinstance(z, str) or z[:10] != zeile.get("d") or len(z) < 16:
+        return None
+    return z[11:16]
+
+
 def mischen(rows, herkunft, new_rows, new_herkunft=None):
     """neue werte in den log, nach der regel vom 25.09.2026.
 
