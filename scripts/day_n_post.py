@@ -114,7 +114,7 @@ MONATE = ["January", "February", "March", "April", "May", "June", "July",
 # man.
 UMSTELLUNG = "counter now runs to today"
 
-VERBOTEN = ("\u2014", "\u2013", "\u2192", "\u2190", "->", "<-")
+VERBOTEN = ("\u2014", "\u2013", "\u2192", "\u2190", "->", "<-", "percent")
 
 
 def lang(iso):
@@ -168,7 +168,10 @@ def text(n, close, datum):
         # abs(): "minus 39,4 Prozent unter" waere doppelt verneint. Liegt der
         # Schluss ueber dem Hoch, heisst die Zeile "above" und der Zyklus ist
         # ein anderer; dann faellt es hier auf und nicht erst im Post.
-        "%.1f percent %s the %s top of %s." % (
+        # "%" statt "percent": X-Regel vom 25.09.2026, gilt fuer alles, was
+        # auf X rausgeht. VERBOTEN haelt den Lauf an, falls "percent" je
+        # zurueckkommt.
+        "%.1f%% %s the %s top of %s." % (
             abs(prozent(close)), "below" if prozent(close) < 0 else "above",
             lang(TOP_DATE), "{:,.0f}".format(TOP)),
         "",
@@ -496,11 +499,13 @@ def selbsttest():
            t.split("\n")[0], "day 345.")
     pruefe("post passt in einen tweet", len(t) <= 280, True)
     pruefe("kein link im hauptpost", "http" in t or ".com" in t or ".io" in t, False)
-    pruefe("rueckgang im text", "39.4 percent below" in t, True)
+    pruefe("rueckgang im text, mit prozentzeichen", "39.4% below" in t, True)
+    pruefe("das wort percent steht nirgends im post", "percent" in t, False)
+    pruefe("percent ist verboten", "percent" in VERBOTEN, True)
     pruefe("kein doppeltes minus", "-39.4" in t, False)
     ueber = bauen([{"d": "2026-09-15", "btc": 130000.0}],
                   'var LAST_CLOSE = 130000, LAST_DATE = "2026-09-15";', "2026-09-16", 3)[0]
-    pruefe("ueber dem hoch heisst above", "percent above the" in ueber, True)
+    pruefe("ueber dem hoch heisst above", "% above the" in ueber, True)
     pruefe("methode steht dabei",
            t.strip().endswith("counted from daily prices, never intraday highs."), True)
     pruefe("kein schlusskurs behauptet", "traded at" in t and "closed at" not in t, True)
