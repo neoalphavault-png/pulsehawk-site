@@ -114,7 +114,7 @@ MONATE = ["January", "February", "March", "April", "May", "June", "July",
 # man.
 UMSTELLUNG = "counter now runs to today"
 
-VERBOTEN = ("\u2014", "\u2013", "\u2192", "\u2190", "->", "<-", "percent")
+VERBOTEN = ("\u2014", "\u2013", "\u2192", "\u2190", "->", "<-", "percent", "21:23")
 
 
 def lang(iso):
@@ -158,11 +158,16 @@ def text(n, close, datum):
     return "\n".join([
         "day %s." % "{:,}".format(n),
         "",
-        # "traded at", nicht "closed at": der Wert kommt aus dem
-        # Marktlogger, der um 21:23 UTC einen Momentanpreis abgreift.
-        # Ein Schlusskurs ist das nicht, und der Tagesdurchschnitt aus
-        # dem Archiv waere es auch nicht.
-        "bitcoin traded at %s on %s (21:23 utc)."
+        # "traded at", nicht "closed at": der Wert ist eine Momentaufnahme
+        # des Marktloggers, kein Schlusskurs und kein Tagesdurchschnitt.
+        #
+        # KEINE UHRZEIT, bis der Logger echte Messzeiten speichert (Ben,
+        # 25.09.2026). Hier stand "(21:23 utc)", die geplante Cron-Zeit.
+        # Gemessen wurde tatsaechlich zwischen 22:56 und 00:11 utc, die
+        # Uhrzeit war also jeden Tag falsch. "21:23" steht deshalb in
+        # VERBOTEN. Die Uhrzeit kommt zurueck, sobald sie aus dem
+        # Zeitstempel der Quelle stammt.
+        "bitcoin traded at %s on %s."
         % ("{:,.0f}".format(close), lang(datum)),
         "",
         # abs(): "minus 39,4 Prozent unter" waere doppelt verneint. Liegt der
@@ -280,6 +285,25 @@ def hinweis(letzter_n, luecke, erklaeren):
     return " ".join(teile)
 
 
+class SchonGepostet(str):
+    """kein post, aber auch kein fehler: dieser zaehltag ist schon draussen.
+
+    Entscheidung vom 25.09.2026 (Ben): endet gruen mit Meldung, wie die
+    Doppelpost-Sperre in x_post.py. Das passiert, wenn GitHub einen Lauf
+    nach Mitternacht utc startet und der naechste wieder davor: dann faellt
+    derselbe Kalendertag zweimal an, und der zweite Lauf hat nichts zu tun.
+    Rot bleibt Sperre 4 nur bei einem Sprung ohne Vermerk und bei einem
+    Rueckschritt - das sind echte Fehler."""
+    gruen = True
+
+
+def exitcode(problem):
+    """0 fuer 'nichts zu tun', 1 fuer alles, was einen Menschen braucht."""
+    if not problem:
+        return 0
+    return 0 if getattr(problem, "gruen", False) else 1
+
+
 def sprung_problem(n, letzter_n, vermerk, volltext=""):
     """haelt den post an, wenn der zaehler nicht sauber weiterlaeuft.
 
@@ -290,8 +314,9 @@ def sprung_problem(n, letzter_n, vermerk, volltext=""):
         return None
     d = n - letzter_n
     if d == 0:
-        return ("zaehler steht still: der letzte post stand schon auf tag %d. "
-                "zweimal derselbe tag geht nicht raus." % n)
+        return SchonGepostet(
+            "schon gepostet: der letzte post stand schon auf tag %d. "
+            "zweimal derselbe tag geht nicht raus, nichts zu tun." % n)
     if d < 0:
         return ("zaehler laeuft rueckwaerts: tag %d nach tag %d"
                 % (n, letzter_n))
@@ -433,7 +458,7 @@ def main(argv=None):
     t, key, problem = bauen(rows, html, heute, a.max_age, xlog)
     if problem:
         print("kein post: %s" % problem)
-        return 1
+        return exitcode(problem)
     print("key %s, %d zeichen\n" % (key, len(t)))
     print(t)
 
@@ -509,7 +534,11 @@ def selbsttest():
     pruefe("methode steht dabei",
            t.strip().endswith("counted from daily prices, never intraday highs."), True)
     pruefe("kein schlusskurs behauptet", "traded at" in t and "closed at" not in t, True)
-    pruefe("uhrzeit steht dabei", "(21:23 utc)" in t, True)
+    # die uhrzeit ist raus, bis sie aus der quelle kommt
+    pruefe("keine uhrzeit im post", ("21:23" in t, "utc" in t), (False, False))
+    pruefe("die kurszeile endet auf dem datum",
+           t.split("\n")[2], "bitcoin traded at 75,608 on 15 September 2026.")
+    pruefe("21:23 ist verboten", "21:23" in VERBOTEN, True)
 
     # --- die umstellungszeile haengt an einer bedingung, nicht an einem datum ---
     # nach namen im modul gefragt, nicht nach text in der datei: die
@@ -586,6 +615,24 @@ def selbsttest():
     p3 = lauf("2026-09-26", "2026-09-25", gepostet("2026-09-25", 355))[2]
     pruefe("zweimal derselbe tag geht nicht raus", p3 is not None, True)
     pruefe("und sagt warum", "zweimal derselbe tag" in p3, True)
+    # entscheidung vom 25.09.: derselbe tag endet gruen, sprung und
+    # rueckschritt bleiben rot
+    pruefe("derselbe tag endet gruen", exitcode(p3), 0)
+    pruefe("und meldet es", p3.startswith("schon gepostet"), True)
+    p_rueck = lauf("2026-09-26", "2026-09-25", gepostet("2026-09-25", 400))[2]
+    pruefe("ein rueckschritt endet rot", exitcode(p_rueck), 1)
+    p_ohne = sprung_problem(356, 354, "", "day 356.")
+    pruefe("ein sprung ohne vermerk endet rot",
+           ("ohne vermerk" in p_ohne, exitcode(p_ohne)), (True, 1))
+    p_falsch = sprung_problem(356, 354, "no post yesterday.", "day 356.\n\nno post yesterday.")
+    pruefe("ein vermerk ohne die vorige zahl endet rot",
+           ("nennt 354 nicht" in p_falsch, exitcode(p_falsch)), (True, 1))
+    pruefe("ein sprung mit richtigem vermerk geht raus",
+           sprung_problem(356, 354, "no post yesterday. the last post read 354.",
+                          "day 356.\n\nno post yesterday. the last post read 354."), None)
+    pruefe("andere sperren bleiben rot",
+           exitcode("juengster btc-schluss ist 5 tage alt"), 1)
+    pruefe("kein problem heisst gruen", exitcode(None), 0)
     pruefe("rueckwaerts auch nicht",
            "rueckwaerts" in lauf("2026-09-26", "2026-09-25",
                                  gepostet("2026-09-25", 400))[2], True)
@@ -761,7 +808,7 @@ def selbsttest():
                   "2026-09-24", 3)
     pruefe("der zaehler laeuft bis heute", spaet[0].split("\n")[0], "day 353.")
     pruefe("der preis traegt trotzdem seinen eigenen tag",
-           "on 23 September 2026 (21:23 utc)" in spaet[0], True)
+           "on 23 September 2026." in spaet[0], True)
     pruefe("die sperre haengt weiter am preistag", spaet[1], "dayn-2026-09-23")
     # zwei laeufe an zwei tagen mit demselben schluss zaehlen verschieden,
     # und genau das ist der punkt: der tag vergeht auch ohne neue kerze.
