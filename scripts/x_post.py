@@ -19,16 +19,9 @@ Selbstantwort, und die gibt es nur, wenn sie einen Link enthaelt.
 
   python3 scripts/x_post.py --text "..." --image bild.png [--reply "..."] --key nod-2026-09-11
   python3 scripts/x_post.py --from-nod data/number-of-day.json --image graphics/number-of-day.png
-  python3 scripts/x_post.py --weekly --queue data/weekly-x-queue.json
   python3 scripts/x_post.py --text "counting test, ignore" --image bild.png --delete-after
   python3 scripts/x_post.py --delete 1234567890
   python3 scripts/x_post.py --selftest        # Signatur gegen den dokumentierten X-Testvektor
-
-Montags (--weekly): Hauptpost mit der Wochengrafik im Format 4:5, danach
-zwei Selbstantworten als Faden, erst der YouTube-Link der Montagsfolge, dann
-der Newsletter-Anmeldelink. Texte, Bild und Videolink stehen in
-data/weekly-x-queue.json. Kosten je Montag rund 0,42 $ (Hauptpost 0,015,
-zwei Antworten mit Link je 0,20), Spend Cap 15 $ im Monat.
 
 Sperre: data/x-post-log.json merkt sich je --key die Post-ID. Gleicher Key
 noch einmal = nichts posten, Exit 0. Ist der Hauptpost drin, aber die
@@ -59,7 +52,7 @@ MAX_CHARS = 280
 URL_WEIGHT = 23   # X zaehlt jede URL als 23 Zeichen (t.co)
 LINK_RE = re.compile(r"(https?://\S+|\bwww\.\S+|\b[a-z0-9][a-z0-9-]*\.(?:com|io|org|net|de|xyz|html)(?:/\S*)?)", re.I)
 ENV = ("X_API_KEY", "X_API_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_SECRET")
-WEEKLY_FIELDS = ("date", "main", "image", "reply_video", "reply_newsletter", "video_url")
+
 
 
 # ---------------------------------------------------------------- OAuth 1.0a
@@ -227,119 +220,31 @@ def berlin_today():
     return (now + berlin_offset(now)).date()
 
 
-def png_ratio(path):
-    """Breite durch Hoehe eines PNG, ohne Fremdbibliothek. None bei allem
-    anderen (JPG wird nicht geprueft, nur nicht behauptet)."""
-    try:
-        with open(path, "rb") as fh:
-            head = fh.read(33)
-        if head[:8] != b"\x89PNG\r\n\x1a\n":
-            return None
-        import struct
-        w, h = struct.unpack(">II", head[16:24])
-        return w / h if h else None
-    except OSError:
-        return None
+ZEITSTEMPEL = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 
-def weekly_texts(q):
-    """Aus der Queue die drei fertigen Texte bauen. Der Videolink wird in die
-    erste Antwort eingesetzt, entweder an die Stelle {video_url} oder hinten
-    angehaengt. Bricht laut ab, wenn etwas fehlt."""
-    missing = [k for k in WEEKLY_FIELDS if k not in q]
-    if missing:
-        sys.exit("data/weekly-x-queue.json fehlen felder: %s" % ", ".join(missing))
-    video_url = (q.get("video_url") or "").strip()
-    if not video_url:
-        sys.exit("video_url ist leer. Die Sperre weekly-guard.yml traegt sie ein, "
-                 "sobald die Montagsfolge oeffentlich ist. Ohne Video kein X-Faden.")
-    if not has_link(video_url):
-        sys.exit("video_url sieht nicht nach einer adresse aus: %r" % video_url[:80])
-    main = (q.get("main") or "").strip()
-    r_video = (q.get("reply_video") or "").strip()
-    r_news = (q.get("reply_newsletter") or "").strip()
-    if "{video_url}" in r_video:
-        r_video = r_video.replace("{video_url}", video_url)
-    elif video_url not in r_video:
-        r_video = (r_video + " " + video_url).strip()
-    if has_link(main):
-        sys.exit("der hauptpost traegt einen link. montags kostet das 0,20 $ statt "
-                 "0,015 $, und der link gehoert in die antwort. text: %r" % main[:80])
-    if not has_link(r_news):
-        sys.exit("die zweite antwort traegt keinen anmeldelink: %r" % r_news[:80])
-    return main, r_video, r_news
+def log_eintrag(key, pid, text, image=None, posted_at=None):
+    """der eintrag im sperrlog, an EINER stelle gebaut.
 
+    Der Text wird VOLLSTAENDIG gespeichert. Bis zum 24.09.2026 stand hier
+    text[:120], und day_n_post.py liest aus dem Sperrlog, ob eine
+    Erklaerung schon draussen ist - die steht aber am Ende des Posts, ab
+    Zeichen 194. Mit dem gekuerzten Text haette sich die Zeile nie
+    abgeschrieben. Ein Post hat hoechstens 280 Zeichen, es gibt nichts zu
+    sparen.
 
-def run_weekly(args):
-    with open(args.queue, encoding="utf-8") as fh:
-        q = json.load(fh)
-    day = (q.get("date") or "").strip()
-    today = str(berlin_today())
-    if day != today and not args.force_date:
-        sys.exit("weekly-x-queue.json traegt %r, heute ist %r. Nichts gepostet "
-                 "(--force-date ueberstimmt das)." % (day, today))
-    main, r_video, r_news = weekly_texts(q)
-    main = check_text(main, "Hauptpost")
-    r_video = check_text(r_video, "Antwort mit Videolink")
-    r_news = check_text(r_news, "Antwort mit Anmeldelink")
-    image = q.get("image") or args.image
-    if not image or not os.path.isfile(image):
-        sys.exit("wochengrafik fehlt: %r" % image)
-    ratio = png_ratio(image)
-    if ratio is not None and abs(ratio - 0.8) > 0.02:
-        print("WARNUNG: %s hat das seitenverhaeltnis %.3f, erwartet sind 0.800 (4:5)"
-              % (image, ratio))
-    key = args.key or "weekly-%s" % day
-    cost = 0.015 + 0.20 + 0.20
-    print("montagsfaden %s, bild %s, kosten dieses laufs rund %.3f $" % (key, image, cost))
+    posted_at kommt vom Aufrufer, wenn der ihn hat. day_n_post.py nimmt
+    EINEN Zeitstempel zu Beginn des Laufs und leitet Zaehltag und
+    posted_at daraus ab; ein zweites now() hier koennte um 23:59:58 utc
+    auf den naechsten Tag fallen."""
+    if posted_at is None:
+        posted_at = dt.datetime.now(dt.timezone.utc).isoformat(
+            timespec="seconds").replace("+00:00", "Z")
+    if not ZEITSTEMPEL.match(posted_at):
+        raise ValueError("posted_at muss JJJJ-MM-TTThh:mm:ssZ sein: %r" % posted_at)
+    return {"key": key, "id": pid, "posted_at": posted_at, "text": text,
+            "image": os.path.basename(image) if image else None}
 
-    if args.dry_run:
-        print("DRY_RUN, das ginge raus (key %s):\n\n%s\n\n-> %s\n\n-> %s\n"
-              % (key, main, r_video, r_news))
-        for what, txt in (("hauptpost", main), ("antwort 1", r_video), ("antwort 2", r_news)):
-            print("%s: %d/%d zeichen" % (what, weighted_len(txt), MAX_CHARS))
-        return 0
-
-    log = load_log(args.log)
-    entry = find(log, key)
-    if entry and entry.get("id") and entry.get("reply_id") and entry.get("reply2_id"):
-        print("schon gepostet (key %s, id %s), nichts zu tun" % (key, entry["id"]))
-        return 0
-    creds = creds_from_env()
-    if not entry:
-        entry = {"key": key}
-        log.append(entry)
-    if not entry.get("id"):
-        media_id = upload_image(image, creds)
-        entry["id"] = post(main, creds, media_id=media_id)
-        entry["posted_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
-        entry["text"] = main[:120]
-        entry["image"] = os.path.basename(image)
-        save_log(args.log, log)      # sofort merken, bevor irgendetwas anderes passiert
-        print("gepostet: %s (key %s)" % (entry["id"], key))
-    if not entry.get("reply_id"):
-        entry["reply_id"] = post(r_video, creds, reply_to=entry["id"])
-        entry["reply_has_link"] = True
-        save_log(args.log, log)
-        print("antwort 1 (videolink): %s" % entry["reply_id"])
-    if not entry.get("reply2_id"):
-        # haengt an der ersten antwort, damit ein faden entsteht und nicht
-        # zwei lose antworten am hauptpost
-        entry["reply2_id"] = post(r_news, creds, reply_to=entry["reply_id"])
-        entry["reply2_has_link"] = True
-        save_log(args.log, log)
-        print("antwort 2 (anmeldelink): %s" % entry["reply2_id"])
-    if args.delete_after:
-        for pid in [entry.get("reply2_id"), entry.get("reply_id"), entry.get("id")]:
-            if pid:
-                delete(pid, creds)
-        entry["deleted"] = True
-        save_log(args.log, log)
-        print("test beendet, der faden ist wieder geloescht.")
-    return 0
-
-
-# ---------------------------------------------------------------- Log
 
 def load_log(path):
     if os.path.isfile(path):
@@ -411,12 +316,14 @@ def run(args):
         print("Bild: %s, %d/%d Zeichen" % (args.image, weighted_len(text), MAX_CHARS))
         return 0
 
+    if args.posted_at and not ZEITSTEMPEL.match(args.posted_at):
+        sys.exit("--posted-at muss JJJJ-MM-TTThh:mm:ssZ sein, war %r. Nichts gepostet."
+                 % args.posted_at)
     creds = creds_from_env()
     if not entry or not entry.get("id"):
         media_id = upload_image(args.image, creds) if args.image else None
         pid = post(text, creds, media_id=media_id)
-        entry = {"key": key, "id": pid, "posted_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
-                 "text": text[:120], "image": os.path.basename(args.image) if args.image else None}
+        entry = log_eintrag(key, pid, text, args.image, args.posted_at)
         log.append(entry)
         save_log(args.log, log)          # sofort merken, bevor irgendetwas anderes passiert
         print("gepostet: %s (key %s)" % (pid, key))
@@ -448,28 +355,23 @@ def selftest():
     assert weighted_len("see kaspapulse.com/kaspa-weekly.html now") == len("see ") + 23 + len(" now")
     assert has_link("priced on kaspapulse.com.") and not has_link("one kas buys 47 sats.")
     assert has_link("https://x.com/abc") and has_link("www.example.org")
-    # Montagsfaden: Videolink wird eingesetzt, fehlende Angaben brechen ab
-    q = {"date": "2026-09-14", "main": "one kas buys 46 sats.",
-         "image": "pulse-week5.png", "reply_video": "the full breakdown {video_url}",
-         "reply_newsletter": "the numbers by email, kaspapulse.com",
-         "video_url": "https://www.youtube.com/watch?v=abc"}
-    m, rv, rn = weekly_texts(q)
-    assert rv == "the full breakdown https://www.youtube.com/watch?v=abc", rv
-    q2 = dict(q, reply_video="the full breakdown")
-    assert weekly_texts(q2)[1].endswith("https://www.youtube.com/watch?v=abc")
-    for broken, why in ((dict(q, video_url=""), "ohne videolink"),
-                        (dict(q, main="see kaspapulse.com"), "link im hauptpost"),
-                        (dict(q, reply_newsletter="sign up"), "antwort ohne link")):
+    # der logeintrag: voller text, uebergebener zeitstempel
+    lang_text = "x" * 270
+    e = log_eintrag("dayn-2026-09-24", "1", lang_text, "graphics/dayn.png",
+                    "2026-09-24T23:59:58Z")
+    assert e["text"] == lang_text, "der text darf nicht gekuerzt werden"
+    assert e["posted_at"] == "2026-09-24T23:59:58Z"
+    assert e["image"] == "dayn.png"
+    assert ZEITSTEMPEL.match(log_eintrag("k", "1", "t")["posted_at"])
+    for kaputt in ("2026-09-24", "2026-09-24T23:59:58+00:00", "morgen"):
         try:
-            weekly_texts(broken)
-        except SystemExit:
+            log_eintrag("k", "1", "t", posted_at=kaputt)
+        except ValueError:
             pass
         else:
-            raise AssertionError("haette abbrechen muessen: %s" % why)
-    assert berlin_offset(dt.datetime(2026, 9, 14, 14, 0, tzinfo=dt.timezone.utc)) == dt.timedelta(hours=2)
-    assert berlin_offset(dt.datetime(2026, 11, 2, 14, 0, tzinfo=dt.timezone.utc)) == dt.timedelta(hours=1)
+            raise AssertionError("haette abbrechen muessen: %r" % kaputt)
     print("selftest ok: Signatur stimmt mit dem X-Testvektor ueberein, Link-Erkennung ok, "
-          "Montagsfaden prueft Videolink und Kosten")
+          "Logeintrag voll und mit uebergebenem Zeitstempel")
 
 
 def main():
@@ -478,11 +380,10 @@ def main():
     ap.add_argument("--reply", help="Selbstantwort (zweiter Post, antwortet auf den ersten)")
     ap.add_argument("--image", help="PNG/JPG bis 5 MB")
     ap.add_argument("--from-nod", help="data/number-of-day.json: post.x als Text, post.reply als Antwort (nur mit Link)")
-    ap.add_argument("--weekly", action="store_true",
-                    help="Montagsfaden aus data/weekly-x-queue.json: Hauptpost mit 4:5-Grafik, zwei Selbstantworten")
-    ap.add_argument("--queue", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "weekly-x-queue.json"))
-    ap.add_argument("--force-date", action="store_true", help="Montagsfaden auch posten, wenn das Datum in der Queue nicht heute ist")
     ap.add_argument("--key", help="Sperrschluessel, z. B. nod-2026-09-11")
+    ap.add_argument("--posted-at", help="Zeitstempel fuers Sperrlog, JJJJ-MM-TTThh:mm:ssZ. "
+                    "Der Aufrufer gibt ihn mit, damit Zaehltag und Logeintrag aus EINEM "
+                    "Zeitpunkt stammen.")
     ap.add_argument("--log", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "x-post-log.json"))
     ap.add_argument("--delete", metavar="ID", help="einen Post loeschen und beenden")
     ap.add_argument("--delete-after", action="store_true", help="Testlauf: posten und sofort wieder loeschen")
@@ -494,8 +395,6 @@ def main():
     if a.delete:
         delete(a.delete, creds_from_env())
         return 0
-    if a.weekly:
-        return run_weekly(a)
     return run(a)
 
 
