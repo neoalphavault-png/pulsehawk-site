@@ -182,6 +182,17 @@ def text(n, close, datum):
     # war der falsche Anker, seit der Zaehler bis heute laeuft.
 
 
+def bestaetigt(e):
+    """ein DAY-N-Eintrag, der nachweislich veroeffentlicht wurde.
+
+    Nur Eintraege mit einer Post-ID zaehlen. x_post.py schreibt zwar erst
+    nach erfolgreichem Post, aber erzwungen war das nicht: ein Eintrag
+    ohne ID ist ein Versuch, kein Post, und der naechste Post darf sich
+    nicht an ihm messen."""
+    return (str(e.get("key", "")).startswith("dayn-")
+            and str(e.get("id") or "").strip() != "")
+
+
 def letzte_zahl(xlog):
     """(tageszahl, kalendertag) des juengsten DAY-N-Posts, oder (None, None).
 
@@ -190,7 +201,7 @@ def letzte_zahl(xlog):
     sich messen lassen muss."""
     letzte = None
     for e in xlog or []:
-        if str(e.get("key", "")).startswith("dayn-"):
+        if bestaetigt(e):
             letzte = e
     if not letzte:
         return None, None
@@ -216,10 +227,28 @@ def umstellung_erklaert(xlog):
     Damit schreibt sich die Zeile selbst ab, sobald sie einmal drausen
     war - ohne dass jemand etwas zuruecksetzen muss."""
     for e in xlog or []:
-        if (str(e.get("key", "")).startswith("dayn-")
-                and UMSTELLUNG in str(e.get("text", ""))):
+        if bestaetigt(e) and UMSTELLUNG in str(e.get("text", "")):
             return True
     return False
+
+
+def nach_alter_regel(letzter_n, letzter_tag):
+    """wurde der letzte bestaetigte post noch nach der alten regel gezaehlt?
+
+    Nach der neuen Regel ist die Tageszahl eines Posts genau die Zahl der
+    Tage von TOP_DATE bis zu seinem Lauftag. Stimmt das nicht, stammt er
+    aus der Zeit davor (anderes Top, Zaehlung bis zum Schlusstag), und
+    zwischen ihm und heute liegt die Umstellung.
+
+    Warum das noetig ist (Entscheidung vom 25.09.2026, Variante a): der
+    Sprung 350 -> 354 wurde nie erklaert, die Marke steht in keinem Post.
+    Mit der Marke allein haette der erste Ausfall im Oktober die
+    Umstellung vom September angekuendigt. Diese Pruefung folgt aus den
+    Daten, nicht aus einem Datum: sobald ein Post nach neuer Regel draussen
+    ist, kann sie nie wieder wahr werden."""
+    if letzter_n is None or not letzter_tag:
+        return False
+    return tage(TOP_DATE, letzter_tag) != letzter_n
 
 
 def hinweis(letzter_n, luecke, erklaeren):
@@ -328,7 +357,9 @@ def bauen(rows, html, heute, max_age, xlog=None):
     sprung = (n - letzter_n) if letzter_n is not None else 1
     if sprung > 1:
         luecke = max(0, tage(letzter_tag, heute) - 1) if letzter_tag else 0
-        vermerk = hinweis(letzter_n, luecke, not umstellung_erklaert(xlog))
+        erklaeren = (nach_alter_regel(letzter_n, letzter_tag)
+                     and not umstellung_erklaert(xlog))
+        vermerk = hinweis(letzter_n, luecke, erklaeren)
     else:
         vermerk = ""
 
@@ -497,7 +528,7 @@ def selbsttest():
            "no post yesterday. the last post read 352.")
 
     # sie schreibt sich im sperrlog ab, nicht ueber eine konstante
-    raus = [{"key": "dayn-2026-09-24", "posted_at": "2026-09-24T21:55:00Z",
+    raus = [{"id": "1", "key": "dayn-2026-09-24", "posted_at": "2026-09-24T21:55:00Z",
              "text": "day 353.\n\n%s, top moved to 6 October 2025." % UMSTELLUNG}]
     pruefe("vor dem post gilt sie als unerklaert", umstellung_erklaert([]), False)
     pruefe("danach als erklaert", umstellung_erklaert(raus), True)
@@ -524,7 +555,7 @@ def selbsttest():
                      zaehltag, 3, log)
 
     def gepostet(tag, n):
-        return [{"key": "dayn-%s" % tag, "text": "day %d.\n\nrest" % n}]
+        return [{"id": "1", "key": "dayn-%s" % tag, "text": "day %d.\n\nrest" % n}]
 
     # normaler tag: +1, kein vermerk
     t1, _, p1 = lauf("2026-09-26", "2026-09-25", gepostet("2026-09-25", 354))
@@ -557,14 +588,14 @@ def selbsttest():
     # der erste post ueberhaupt hat nichts zu vergleichen
     pruefe("leeres sperrlog haelt nichts an", lauf("2026-09-26", "2026-09-25", [])[2], None)
     pruefe("ein post ohne tageszahl im text wird nicht geraten",
-           letzte_zahl([{"key": "dayn-2026-09-25", "text": "kaputt"}]), (None, None))
+           letzte_zahl([{"id": "1", "key": "dayn-2026-09-25", "text": "kaputt"}]), (None, None))
     pruefe("fremde eintraege zaehlen nicht mit",
-           letzte_zahl([{"key": "dayn-2026-09-25", "text": "day 354."},
+           letzte_zahl([{"id": "1", "key": "dayn-2026-09-25", "text": "day 354."},
                         {"key": "weekly-2026-09-26", "text": "day 999."}]),
            (354, "2026-09-25"))
 
     # --- der umstellungstag selbst, aus echten daten ---
-    echt = [{"key": "dayn-2026-09-22",
+    echt = [{"id": "1", "key": "dayn-2026-09-22",
              "text": "day 350.\n\nbitcoin traded at 86,174 on 22 September 2026 (21:23 utc)."}]
     tu, _, pu = lauf("2026-09-24", "2026-09-23", echt)
     pruefe("der umstellungstag geht raus", pu, None)
@@ -578,7 +609,7 @@ def selbsttest():
     pruefe("der umstellungstag passt in einen tweet", len(tu) <= 280, True)
     # der beweis, dass nichts festgeschrieben ist: anderes log, andere zahl
     anders = lauf("2026-09-24", "2026-09-23",
-                  [{"key": "dayn-2026-09-21", "text": "day 349."}])[0]
+                  [{"id": "1", "key": "dayn-2026-09-21", "text": "day 349."}])[0]
     pruefe("eine andere vorgeschichte gibt einen anderen vermerk",
            "the last post read 349." in anders, True)
     # und am tag danach steht nichts mehr da
@@ -590,9 +621,9 @@ def selbsttest():
     # --- die kollision: luecke UND umstellung sagen "no post yesterday" ---
     # naechsten monat faellt ein tag aus, an der zaehlung hat sich nichts
     # geaendert. dann steht GENAU EIN vermerk da, nicht zwei.
-    erklaert = [{"key": "dayn-2026-09-24", "posted_at": "2026-09-24T21:55:00Z",
+    erklaert = [{"id": "1", "key": "dayn-2026-09-24", "posted_at": "2026-09-24T21:55:00Z",
                  "text": "day 353.\n\n%s, top moved to 6 October 2025." % UMSTELLUNG},
-                {"key": "dayn-2026-10-19", "posted_at": "2026-10-20T21:55:00Z",
+                {"id": "1", "key": "dayn-2026-10-19", "posted_at": "2026-10-20T21:55:00Z",
                  "text": "day 379.\n\nrest"}]
     tk, _, pk = lauf("2026-10-22", "2026-10-21", erklaert)
     pruefe("sprung +2 ohne zaehlungsaenderung geht raus", pk, None)
@@ -604,14 +635,14 @@ def selbsttest():
     # am umstellungstag fallen beide ursachen zusammen - auch dann einmal
     pruefe("auch am umstellungstag steht die luecke nur einmal",
            lauf("2026-09-24", "2026-09-23",
-                [{"key": "dayn-2026-09-22", "posted_at": "2026-09-22T00:18:42Z",
+                [{"id": "1", "key": "dayn-2026-09-22", "posted_at": "2026-09-22T00:18:42Z",
                   "text": "day 350.\n\nrest"}])[0].count("no post"), 1)
 
     # --- der anker ist posted_at, nicht der schluesseltag ---
     # der schluessel traegt den PREIStag, und der liegt einen tag vor dem
     # zaehltag. mit ihm als anker haette ab dem 25.09. jeder post
     # "no post yesterday" getragen, obwohl keiner fehlt.
-    nach_heute = [{"key": "dayn-2026-09-23", "posted_at": "2026-09-24T21:55:00Z",
+    nach_heute = [{"id": "1", "key": "dayn-2026-09-23", "posted_at": "2026-09-24T21:55:00Z",
                    "text": "day 353.\n\n%s, top moved to 6 October 2025." % UMSTELLUNG}]
     pruefe("posted_at ist der anker, nicht der schluessel",
            letzte_zahl(nach_heute), (353, "2026-09-24"))
@@ -622,11 +653,54 @@ def selbsttest():
            (False, False, False))
     pruefe("er zaehlt einfach eins weiter", tm.split("\n")[0], "day 354.")
     pruefe("ohne posted_at faellt er auf den schluessel zurueck",
-           letzte_zahl([{"key": "dayn-2026-09-23", "text": "day 353."}]),
+           letzte_zahl([{"id": "1", "key": "dayn-2026-09-23", "text": "day 353."}]),
            (353, "2026-09-23"))
     pruefe("und ein kaputtes posted_at auch",
-           letzte_zahl([{"key": "dayn-2026-09-23", "posted_at": "spaeter",
+           letzte_zahl([{"id": "1", "key": "dayn-2026-09-23", "posted_at": "spaeter",
                          "text": "day 353."}]), (353, "2026-09-23"))
+
+    # --- nur bestaetigte posts zaehlen (entscheidung vom 25.09.2026) ---
+    bestaetigt_354 = [{"id": "2103274283241738600", "key": "dayn-2026-09-24",
+                       "posted_at": "2026-09-25T00:04:00Z", "text": "day 354.\n\nrest"}]
+    for ohne in ({"key": "dayn-2026-09-25", "posted_at": "2026-09-26T00:01:00Z",
+                  "text": "day 355.\n\nrest"},
+                 {"id": "", "key": "dayn-2026-09-25", "posted_at": "2026-09-26T00:01:00Z",
+                  "text": "day 355.\n\nrest"},
+                 {"id": None, "key": "dayn-2026-09-25", "posted_at": "2026-09-26T00:01:00Z",
+                  "text": "day 355.\n\nrest"}):
+        pruefe("ein eintrag mit id=%r zaehlt nicht" % ohne.get("id", "fehlt"),
+               letzte_zahl(bestaetigt_354 + [ohne]), (354, "2026-09-25"))
+    # ohne den filter haette der lauf gegen die unbestaetigte 355 gemessen
+    # und "zweimal derselbe tag" gemeldet, obwohl 355 nie draussen war.
+    t_id, _, p_id = lauf("2026-09-26", "2026-09-25", bestaetigt_354 +
+                         [{"key": "dayn-2026-09-25", "text": "day 355.\n\nrest",
+                           "posted_at": "2026-09-26T00:01:00Z"}])
+    pruefe("gegen den letzten BESTAETIGTEN post gemessen: 355 geht raus",
+           (p_id, t_id.split("\n")[0]), (None, "day 355."))
+    pruefe("ein sperrlog nur aus unbestaetigten eintraegen haelt nichts an",
+           letzte_zahl([{"key": "dayn-2026-09-25", "text": "day 355."}]),
+           (None, None))
+    pruefe("eine marke in einem unbestaetigten eintrag erklaert nichts",
+           umstellung_erklaert([{"key": "dayn-2026-09-25", "text": UMSTELLUNG}]),
+           False)
+
+    # --- entscheidung (a): die luecke 350 -> 354 wird nicht erklaert ---
+    pruefe("350 vom 22.09. war nach alter regel gezaehlt",
+           nach_alter_regel(350, "2026-09-22"), True)
+    pruefe("354 vom 25.09. ist nach neuer regel gezaehlt",
+           nach_alter_regel(354, "2026-09-25"), False)
+    # die marke ging nie raus. ohne die regelpruefung haette der erste
+    # ausfall im oktober die umstellung vom september angekuendigt.
+    okt = bestaetigt_354 + [{"id": "9", "key": "dayn-2026-10-18",
+                             "posted_at": "2026-10-19T23:40:00Z", "text": "day 378.\n\nrest"}]
+    t_okt = lauf("2026-10-21", "2026-10-20", okt)[0]
+    pruefe("ausfall im oktober ohne marke im log: nur der lueckenvermerk",
+           t_okt.strip().split("\n")[-1],
+           "no post yesterday. the last post read 378.")
+    pruefe("die umstellung wird dort nicht angekuendigt", UMSTELLUNG in t_okt, False)
+    pruefe("heute nacht nach 354: kein vermerk",
+           "the last post read" in lauf("2026-09-26", "2026-09-25", bestaetigt_354)[0],
+           False)
 
     # --- ein zeitpunkt fuer den ganzen lauf ---
     spaet = datetime.datetime(2026, 9, 24, 23, 59, 58, tzinfo=datetime.timezone.utc)
@@ -644,7 +718,7 @@ def selbsttest():
 
     # der ganze weg um 23:59:58: post bauen, so loggen wie x_post.py es
     # tut, und dann den folgetag und den tag danach rechnen.
-    vorher = [{"key": "dayn-2026-09-22", "posted_at": "2026-09-22T00:18:42Z",
+    vorher = [{"id": "1", "key": "dayn-2026-09-22", "posted_at": "2026-09-22T00:18:42Z",
                "text": "day 350.\n\nrest"}]
     heutig, schl, _ = lauf(zt, "2026-09-23", vorher)
     nachher = vorher + [log_eintrag(schl, "1", heutig, "dayn.png", st)]
