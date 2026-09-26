@@ -104,7 +104,7 @@ TEAL = "#49EACB"
 ZAHL_FARBE = "#FFFFFF"   # die grosse zahl ist weiss, nicht teal
 
 PFLICHTTEXT = ("days since the top", "days since the low", "pulsehawk.io",
-               "if that low holds", "daily prices to ")
+               "if that low holds", "day count as of ", "last price ")
 
 
 def png_kopf(pfad):
@@ -204,12 +204,23 @@ def layout_funde(werte):
         if kasten.get("rechts", 0) > G.BREITE:
             schlimm.append("%s reicht bis %s, ueber den rand der karte (%d)"
                            % (wahl, kasten.get("rechts"), G.BREITE))
-    # eine zeile bei 34px ist rund 47px hoch, zwei sind rund 78
-    fuss = g.get(".fuss .l span") or {}
-    if fuss.get("hoch", 0) > G.SCHRIFT["fuss"] * 1.7:
-        schlimm.append("die fusszeile bricht um (%spx hoch bei %dpx schrift) - "
-                       "kuerzer fassen, nicht kleiner setzen"
-                       % (fuss.get("hoch"), G.SCHRIFT["fuss"]))
+    # die fusszeile hat zwei zeilen, zaehltag und letzten kurs. jede muss
+    # fuer sich einzeilig sein und darf nicht in die adresse laufen: mit
+    # nowrap bricht nichts mehr um, eine zu lange zeile schoebe sich
+    # stattdessen unter "pulsehawk.io".
+    adr = g.get(".fuss .adr") or {}
+    for wahl, name in ((".fuss .z1", "zaehltag"), (".fuss .z2", "letzter kurs")):
+        z = g.get(wahl) or {}
+        if not z:
+            schlimm.append("die fusszeile '%s' fehlt" % name)
+            continue
+        if z.get("hoch", 0) > G.SCHRIFT["fuss"] * 1.7:
+            schlimm.append("die fusszeile '%s' bricht um (%spx hoch bei %dpx schrift)"
+                           % (name, z.get("hoch"), G.SCHRIFT["fuss"]))
+        if adr and z.get("rechts", 0) + 16 > adr.get("links", 10 ** 6):
+            schlimm.append("die fusszeile '%s' reicht bis %s und laeuft in die "
+                           "adresse (ab %s) - kuerzer fassen, nicht kleiner setzen"
+                           % (name, z.get("rechts"), adr.get("links")))
     return schlimm
 
 
@@ -251,7 +262,7 @@ def pruefe(png, werte, soll, vorschau_pfad=VORSCHAU, schrift=None, layout=True):
 
     # die wichtigste pruefung: stimmt die karte mit der frischen rechnung?
     for feld in ("tage_hoch", "tage_tief", "hoch_datum", "tief_datum",
-                 "hoch_preis", "tief_preis", "zaehltag"):
+                 "hoch_preis", "tief_preis", "zaehltag", "preis_zeile"):
         if werte.get(feld) != soll.get(feld):
             klagen.append("%s auf der karte %r, frisch gerechnet %r"
                           % (feld, werte.get(feld), soll.get(feld)))
@@ -298,7 +309,8 @@ def lauf(bauen=True, bis=None):
         arch = json.load(fh)
     with open(LOG, encoding="utf-8") as fh:
         log = json.load(fh)
-    soll, grund = G.zahlen(arch, log, bis=bis)
+    from market_log import load_herkunft
+    soll, grund = G.zahlen(arch, log, bis=bis, herkunft=load_herkunft())
     if soll is None:
         print("KEIN POST: %s" % grund)
         return 2
@@ -366,8 +378,10 @@ def selbsttest():
     p("eine echte karte besteht", pruefe(echt, soll, soll, vorschau_pfad=vs), [])
     p("der browser findet nichts am layout", layout_funde(soll), [])
     p("eine zu lange fusszeile reisst den check",
-      any("bricht um" in x for x in layout_funde(
+      any("in die adresse" in x for x in layout_funde(
           dict(soll, zaehltag="24 September 2026 und noch viel mehr text"))), True)
+    p("die laengste denkbare kurszeile passt",
+      layout_funde(dict(soll, preis_zeile="last price 30 September 2026, 23:59 utc")), [])
 
     # eine leere karte darf nicht durchgehen
     leer = os.path.join(tmp, "leer.png")

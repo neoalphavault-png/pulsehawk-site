@@ -33,6 +33,9 @@ aufrufe:
     python3 scripts/market_log.py --selftest
     python3 scripts/market_log.py                 (taeglich)
     python3 scripts/market_log.py --backfill      (holt bis zu 90 tage nach)
+    python3 scripts/market_log.py --nachtragen 2026-08-31,2026-09-21
+                                                  (btc/eth fuer luecken, als nachgetragen)
+    python3 scripts/market_log.py --herkunft      (nur herkunft aufbauen und luecken fuellen)
 """
 import json
 import os
@@ -62,6 +65,42 @@ TD_SYMBOLE = [("gld", "GLD"), ("spy", "SPY"), ("xlk", "XLK"),
               ("xly", "XLY"), ("xlu", "XLU"), ("xlp", "XLP")]
 
 KRAKEN_PAARE = {"btc": "XBTUSD", "eth": "ETHUSD"}
+
+# ---------------------------------------------------------------------------
+# HERKUNFT JE FELD, SEIT DEM 25.09.2026 (Auftrag B, Bens Beschluss)
+#
+# Jeder Wert im Log hat eine Herkunft: woher er kommt, was fuer eine Art
+# Wert er ist und wann er gemessen wurde. Sie steht in einer Begleitdatei,
+# data/market-log-herkunft.json, Tag -> Feld -> Angaben. Nicht in der
+# Logdatei selbst: drei Seiten laden die Logdatei bei jedem Aufruf im
+# Browser, und die Herkunft haette sie von 31 kB auf rund 170 kB gebracht.
+#
+# In der Logdatei steht nur, was ein Leser ohne Begleitdatei wissen muss:
+# an einer Zeile, deren Wert nachgetragen wurde, steht "nachgetragen" mit
+# den betroffenen Feldern. Beides schreibt save_alles() aus derselben
+# Herkunft, damit die Dateien nicht auseinanderlaufen.
+#
+# ARTEN
+#   momentaufnahme  live gemessen (btc, eth, dominanz, gesamtmarkt). Nur
+#                   so ein Wert darf der Tageswert fuer DAY-N sein.
+#   tageswert       die Quelle sagt, zu welchem Tag der Wert gehoert:
+#                   Boersenschluss, EZB-Kurs, Stablecoin-Tagespunkt.
+#   reihe           spaeter aus einer Tagesreihe geholt (--backfill).
+#   nachgetragen    eine Luecke, spaeter aus der Stundenreihe gefuellt.
+#   luecke          kein Wert, mit Grund. Wird nicht geschaetzt.
+#
+# ZEIT_AUS          woher die Messzeit stammt
+#   quelle          Zeitstempel der Quelle
+#   abruf           Zeitpunkt des Abrufs (Kraken-Ticker hat keinen)
+#   commit          aus der Git-Historie rekonstruiert, auf Minuten genau
+#   quelle-datum    die Quelle nennt nur den Tag, keine Uhrzeit
+# ---------------------------------------------------------------------------
+
+HERKUNFT = os.path.join(REPO, "data", "market-log-herkunft.json")
+KRYPTO = ("btc", "eth", "btc_dom", "total_mcap")
+NACHTRAGBAR = ("btc", "eth")          # dominanz und gesamtmarkt: keine quelle
+NICHT_LIVE = ("reihe", "nachgetragen")  # an der zeile als "nachgetragen" markiert
+MARKE = "nachgetragen"
 
 # ---------------------------------------------------------------------------
 # BAND   was ueberhaupt eine ernstzunehmende zahl sein kann. gilt immer,
@@ -186,8 +225,10 @@ def sammler():
     was fehlt und warum."""
     rows = {}
     verworfen = []
+    herkunft = {}
 
-    def put(day, key, value, quelle="unbekannt"):
+    def put(day, key, value, quelle="unbekannt", art=None, zeit=None,
+            zeit_aus=None, **mehr):
         if not band_ok(key, value):
             lo, hi = BAND[key]
             print(" VERW %-9s %s am %s aus %s, ausserhalb von %s bis %s"
@@ -195,8 +236,14 @@ def sammler():
             verworfen.append((day, key, value, quelle))
             return False
         rows.setdefault(day, {"d": day})[key] = value
+        if art:
+            h = {"quelle": quelle, "art": art, "zeit": zeit, "zeit_aus": zeit_aus}
+            h.update(mehr)
+            herkunft.setdefault(day, {})[key] = h
         return True
 
+    # die herkunft haengt an put, damit die drei rueckgabewerte bleiben
+    put.herkunft = herkunft
     return rows, put, verworfen
 
 
@@ -244,9 +291,22 @@ def td_roh(symbol, points):
 
 
 def cg_price(ids):
-    url = "%s/simple/price?ids=%s&vs_currencies=usd" % (CG, ",".join(ids))
+    """{coin: (preis, messzeit)}. die messzeit kommt aus last_updated_at,
+    also aus der quelle. fehlt sie, ist sie None und der aufrufer nimmt
+    den abrufzeitpunkt, als solchen gekennzeichnet."""
+    url = ("%s/simple/price?ids=%s&vs_currencies=usd&include_last_updated_at=true"
+           % (CG, ",".join(ids)))
     data = get_json(url, tries=3)
-    return {k: (v or {}).get("usd") for k, v in data.items()}
+    return cg_price_lesen(data)
+
+
+def cg_price_lesen(data):
+    out = {}
+    for k, v in (data or {}).items():
+        v = v or {}
+        ts = v.get("last_updated_at")
+        out[k] = (v.get("usd"), iso_utc(ts) if isinstance(ts, (int, float)) else None)
+    return out
 
 
 def kraken_price(keys):
@@ -270,11 +330,18 @@ def kraken_price(keys):
 
 
 def cg_global():
-    data = (get_json("%s/global" % CG, tries=3) or {}).get("data") or {}
+    """(dominanz, gesamtmarkt, messzeit). messzeit aus updated_at der quelle."""
+    return cg_global_lesen(get_json("%s/global" % CG, tries=3))
+
+
+def cg_global_lesen(antwort):
+    data = (antwort or {}).get("data") or {}
     dom = (data.get("market_cap_percentage") or {}).get("btc")
     total = (data.get("total_market_cap") or {}).get("usd")
+    ts = data.get("updated_at")
     return (round(float(dom), 3) if dom is not None else None,
-            round(float(total)) if total is not None else None)
+            round(float(total)) if total is not None else None,
+            iso_utc(ts) if isinstance(ts, (int, float)) else None)
 
 
 def cg_chart(coin, days):
@@ -283,9 +350,9 @@ def cg_chart(coin, days):
            % (CG, coin, days))
     data = get_json(url, tries=3)
     out = {}
-    for ts, price in (data.get("prices") or []):
+    for ts, price in sorted(data.get("prices") or []):
         day = time.strftime("%Y-%m-%d", time.gmtime(ts / 1000))
-        out[day] = round(float(price), 6)
+        out[day] = (round(float(price), 6), iso_utc(ts / 1000))
     out.pop(today(), None)
     if not out:
         raise RuntimeError("keine reihe fuer %s" % coin)
@@ -310,7 +377,8 @@ def kraken_chart(key, days):
     for c in rows[:-1]:
         day = time.strftime("%Y-%m-%d", time.gmtime(int(c[0])))
         if day >= grenze:
-            out[day] = round(float(c[4]), 6)
+            # schluss der utc-kerze: die letzte sekunde des tages
+            out[day] = (round(float(c[4]), 6), iso_utc(int(c[0]) + 86399))
     if not out:
         raise RuntimeError("kraken ohlc ohne tage im fenster")
     return out
@@ -383,6 +451,34 @@ def today():
     return time.strftime("%Y-%m-%d", time.gmtime())
 
 
+def iso_utc(sekunden):
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(int(sekunden)))
+
+
+def jetzt_iso():
+    return iso_utc(time.time())
+
+
+def boerse_zu(jetzt=None, puffer_min=15):
+    """ist der heutige us-boersenschluss schon durch (plus puffer)?
+
+    Twelve Data liefert den laufenden Tag waehrend der Handelszeit als
+    Tagesbalken mit dem aktuellen Kurs als "close". Laeuft der Logger vor
+    dem Schluss, waere das ein Zwischenstand unter dem heutigen Datum.
+    Geprueft seit dem Vorziehen des Crons auf 20:00 utc: im Sommer
+    schliesst New York um 20:00 utc, im Winter um 21:00 utc."""
+    import datetime as _dt
+    jetzt = jetzt or _dt.datetime.now(_dt.timezone.utc)
+    try:
+        from zoneinfo import ZoneInfo
+        ny = jetzt.astimezone(ZoneInfo("America/New_York"))
+        schluss = ny.replace(hour=16, minute=0, second=0, microsecond=0)
+        return ny >= schluss + _dt.timedelta(minutes=puffer_min)
+    except Exception:  # noqa: BLE001
+        # ohne zeitzonendaten die vorsichtige winterzeit
+        return (jetzt.hour, jetzt.minute) >= (21, puffer_min)
+
+
 # ---------- log ----------
 
 def load_log(path=LOG):
@@ -400,8 +496,106 @@ def save_log(rows, path=LOG):
         fh.write("\n")
 
 
-def merge(rows, new_rows):
-    by_day = {r["d"]: dict(r) for r in rows}
+def load_herkunft(path=None):
+    """die herkunft, oder None, wenn es die datei noch nicht gibt."""
+    path = path or HERKUNFT
+    if not os.path.exists(path):
+        return None
+    with open(path, "r", encoding="utf-8") as fh:
+        data = json.load(fh)
+    return data if isinstance(data, dict) else None
+
+
+def save_alles(rows, herkunft, log_path=None, herkunft_path=None):
+    """log und herkunft zusammen schreiben, aus einer einzigen herkunft.
+
+    Die Marke "nachgetragen" an den Zeilen wird hier aus der Herkunft
+    abgeleitet und nicht getrennt gepflegt, damit die beiden Dateien nicht
+    auseinanderlaufen koennen."""
+    rows = markieren(rows, herkunft)
+    save_log(rows, log_path or LOG)
+    herkunft_path = herkunft_path or HERKUNFT
+    os.makedirs(os.path.dirname(herkunft_path), exist_ok=True)
+    with open(herkunft_path, "w", encoding="utf-8") as fh:
+        json.dump({t: {f: herkunft[t][f] for f in sorted(herkunft[t])}
+                   for t in sorted(herkunft)}, fh, indent=1, ensure_ascii=False)
+        fh.write("\n")
+    return rows
+
+
+def markieren(rows, herkunft):
+    """die marke "nachgetragen" an jede zeile, deren werte nicht live
+    gemessen wurden. ohne herkunft bleiben vorhandene marken stehen."""
+    out = []
+    for r in rows:
+        r = dict(r)
+        if herkunft is not None:
+            h = herkunft.get(r["d"], {})
+            felder = sorted(f for f in FIELDS
+                            if r.get(f) is not None
+                            and (h.get(f) or {}).get("art") in NICHT_LIVE)
+            r.pop(MARKE, None)
+            if felder:
+                r[MARKE] = felder
+        out.append(r)
+    return out
+
+
+def ist_live(row, feld):
+    """darf dieser wert als tageswert gelten? nachgetragenes nie."""
+    return (isinstance(row, dict) and isinstance(row.get(feld), (int, float))
+            and feld not in (row.get(MARKE) or []))
+
+
+def letzter_live(rows, feld):
+    """die juengste zeile, deren wert fuer dieses feld live gemessen wurde.
+
+    EINE Funktion fuer alle, die einen Tageswert brauchen: die Seiten
+    (stamp_pages.letzter_schluss), der DAY-N-Post und die Karte. Wuerden
+    sie verschieden auswaehlen, hielte Sperre 2 den Post jeden Tag an."""
+    for r in reversed(rows if isinstance(rows, list) else []):
+        if ist_live(r, feld) and isinstance(r.get("d"), str):
+            return r
+    return None
+
+
+def messzeit_hhmm(herkunft, zeile, feld="btc"):
+    """"HH:MM" der messung dieses felds in dieser zeile, oder None.
+
+    Nur eine Zeit aus der Quelle oder vom Abruf zaehlt. Eine aus der
+    Git-Historie rekonstruierte ("commit") ist auf Minuten ungenau und
+    steht deshalb nicht im Post. Die Messzeit muss am Tag der Zeile liegen,
+    sonst passt sie nicht zum Datum daneben."""
+    if not herkunft or not zeile:
+        return None
+    e = (herkunft.get(zeile.get("d")) or {}).get(feld) or {}
+    z = e.get("zeit")
+    if e.get("art") != "momentaufnahme" or e.get("zeit_aus") not in ("quelle", "abruf"):
+        return None
+    if not isinstance(z, str) or z[:10] != zeile.get("d") or len(z) < 16:
+        return None
+    return z[11:16]
+
+
+def mischen(rows, herkunft, new_rows, new_herkunft=None):
+    """neue werte in den log, nach der regel vom 25.09.2026.
+
+    Gibt (rows, herkunft, meldungen). Nichts wird still ueberschrieben:
+    jede Ersetzung und jedes Behalten steht in den Meldungen, und main()
+    druckt sie ins Lauf-Log.
+
+    REGEL: haben alter und neuer Wert eine Messzeit, gewinnt die spaetere
+    - ein Wert von 23:55 schlaegt einen von 00:53 desselben Tages. Fehlt
+    einer Seite die Messzeit (Altbestand, Tageswert der Quelle), gewinnt
+    der neue Wert, aber laut.
+
+    herkunft None heisst: Altbetrieb ohne Herkunftsdatei. Dann wird wie
+    frueher gemischt, und vorhandene Marken bleiben stehen."""
+    import copy
+    meldungen = []
+    by_day = {r["d"]: dict(r) for r in rows if isinstance(r, dict) and r.get("d")}
+    h = copy.deepcopy(herkunft) if herkunft is not None else None
+    nh = new_herkunft or {}
     for new in new_rows:
         day = new.get("d")
         if not day:
@@ -409,16 +603,258 @@ def merge(rows, new_rows):
         cur = by_day.setdefault(day, {"d": day})
         for key in FIELDS:
             val = new.get(key)
-            if val is not None:
+            if val is None:
+                continue
+            h_neu = (nh.get(day) or {}).get(key)
+            h_alt = ((h or {}).get(day) or {}).get(key)
+            alt = cur.get(key)
+            if alt is None:
                 cur[key] = val
+            elif alt == val:
+                pass
+            else:
+                z_neu = (h_neu or {}).get("zeit")
+                z_alt = (h_alt or {}).get("zeit")
+                if z_neu and z_alt and z_neu <= z_alt:
+                    meldungen.append("BEHALTEN  %-10s %s  %s von %s, der neue "
+                                     "wert %s von %s ist nicht spaeter"
+                                     % (key, day, alt, z_alt, val, z_neu))
+                    continue
+                grund = ("spaeter gemessen, %s nach %s" % (z_neu, z_alt)
+                         if z_neu and z_alt else "ohne vergleichbare messzeit")
+                meldungen.append("ERSETZT   %-10s %s  %s -> %s (%s)"
+                                 % (key, day, alt, val, grund))
+                cur[key] = val
+            if h is not None and h_neu is not None:
+                h.setdefault(day, {})[key] = h_neu
+        # luecken ohne wert: nur eintragen, wo weder wert noch herkunft steht
+        if h is not None:
+            for key, eintrag in (nh.get(day) or {}).items():
+                if (eintrag or {}).get("art") == "luecke" \
+                        and cur.get(key) is None and key not in h.get(day, {}):
+                    h.setdefault(day, {})[key] = eintrag
+    # luecken-eintraege fuer tage, an denen gar keine neue zeile kam
+    if h is not None:
+        for day, felder in nh.items():
+            for key, eintrag in felder.items():
+                if (eintrag or {}).get("art") == "luecke" \
+                        and (by_day.get(day) or {}).get(key) is None \
+                        and key not in h.get(day, {}):
+                    h.setdefault(day, {})[key] = eintrag
     out = []
     for day in sorted(by_day):
         row = {"d": day}
         for key in FIELDS:
             if by_day[day].get(key) is not None:
                 row[key] = by_day[day][key]
+        if by_day[day].get(MARKE):
+            row[MARKE] = by_day[day][MARKE]
         out.append(row)
+    if h is not None:
+        out = markieren(out, h)
+    return out, h, meldungen
+
+
+def merge(rows, new_rows):
+    """altes verhalten, fuer aufrufer ohne herkunft: der neue wert gewinnt."""
+    return mischen(rows, None, new_rows)[0]
+
+
+def pruefe_herkunft(rows, herkunft):
+    """jeder wert hat eine herkunft, jede herkunft (ausser luecke) einen
+    wert, und die marken an den zeilen stimmen. liste der probleme."""
+    probleme = []
+    werte = {(r["d"], f) for r in rows for f in FIELDS if r.get(f) is not None}
+    for t, f in sorted(werte):
+        e = (herkunft.get(t) or {}).get(f)
+        if not e:
+            probleme.append("%s %s hat keine herkunft" % (t, f))
+        elif e.get("art") == "luecke":
+            probleme.append("%s %s hat einen wert, ist aber als luecke gefuehrt" % (t, f))
+    for t, felder in herkunft.items():
+        for f, e in felder.items():
+            if (e or {}).get("art") != "luecke" and (t, f) not in werte:
+                probleme.append("%s %s hat eine herkunft, aber keinen wert" % (t, f))
+    soll = markieren(rows, herkunft)
+    for a, b in zip(rows, soll):
+        if a.get(MARKE) != b.get(MARKE):
+            probleme.append("%s marke %s, soll %s" % (a["d"], a.get(MARKE), b.get(MARKE)))
+    return probleme
+
+
+# ---------- herkunft aus der git-historie (einmalig) ----------
+#
+# Bis zum 25.09.2026 hat der Logger keine Herkunft gespeichert. Die einzige
+# Aufzeichnung ist die Git-Historie der Logdatei: jeder Bot-Commit ist ein
+# Lauf, seine Zeit ist die Zeit des Laufs auf Minuten genau. Daraus wird die
+# Herkunft jedes Werts einmal rekonstruiert, beim ersten Lauf, der keine
+# Herkunftsdatei vorfindet. Der Workflow checkt dafuer die volle Historie aus.
+
+TAGESWERT_QUELLE = {"gld": "twelve data", "spy": "twelve data", "spy_vol": "twelve data",
+                    "xlk": "twelve data", "xly": "twelve data", "xlu": "twelve data",
+                    "xlp": "twelve data", "eurusd": "frankfurter", "stables": "defillama"}
+
+
+def klassifiziere(tag, feld, commit_zeit):
+    """herkunft eines altwerts aus dem commit, der ihn zuletzt gesetzt hat.
+
+    Krypto am selben utc-tag gesetzt: eine momentaufnahme dieses laufs,
+    messzeit = commit-zeit. Krypto an einem spaeteren tag gesetzt: aus
+    einer tagesreihe nachgeholt (--backfill), die messzeit ist nicht
+    ueberliefert. Alles andere nennt seinen tag selbst."""
+    if feld in KRYPTO:
+        if commit_zeit[:10] == tag:
+            return {"quelle": "coingecko oder kraken, nicht aufgezeichnet",
+                    "art": "momentaufnahme", "zeit": commit_zeit, "zeit_aus": "commit"}
+        return {"quelle": "coingecko oder kraken, tagesreihe, nicht aufgezeichnet",
+                "art": "reihe", "zeit": None, "zeit_aus": None,
+                "eingetragen": commit_zeit, "eingetragen_aus": "commit"}
+    return {"quelle": TAGESWERT_QUELLE.get(feld, "unbekannt"), "art": "tageswert",
+            "zeit": None, "zeit_aus": "quelle-datum",
+            "eingetragen": commit_zeit, "eingetragen_aus": "commit"}
+
+
+def _git(*args, cwd=None):
+    import subprocess
+    return subprocess.check_output(["git"] + list(args), cwd=cwd or REPO).decode("utf-8")
+
+
+def rekonstruiere_herkunft(pfad="data/market-log.json", cwd=None):
+    """die herkunft aller heutigen werte aus der git-historie."""
+    import datetime as _dt
+    if _git("rev-parse", "--is-shallow-repository", cwd=cwd).strip() == "true":
+        raise RuntimeError("flacher checkout, keine historie. im workflow "
+                           "fetch-depth: 0 setzen")
+    commits = [z.split(" ", 1) for z in
+               _git("log", "--reverse", "--format=%H %cI", "--", pfad, cwd=cwd).split("\n") if z]
+    gesetzt = {}          # (tag, feld) -> commit-zeit des letzten wechsels
+    vorher = {}
+    for h, zeit in commits:
+        t = _dt.datetime.fromisoformat(zeit).astimezone(_dt.timezone.utc)
+        z = t.strftime("%Y-%m-%dT%H:%M:%SZ")
+        try:
+            daten = json.loads(_git("show", "%s:%s" % (h, pfad), cwd=cwd))
+        except Exception:  # noqa: BLE001
+            continue
+        jetzt = {r["d"]: r for r in daten if isinstance(r, dict) and r.get("d")}
+        for tag, r in jetzt.items():
+            for f in FIELDS:
+                if r.get(f) is not None and r.get(f) != vorher.get(tag, {}).get(f):
+                    gesetzt[(tag, f)] = z
+        vorher = jetzt
+    herkunft = {}
+    for tag, r in vorher.items():
+        for f in FIELDS:
+            if r.get(f) is not None and (tag, f) in gesetzt:
+                herkunft.setdefault(tag, {})[f] = klassifiziere(tag, f, gesetzt[(tag, f)])
+    return herkunft
+
+
+def luecken(rows, herkunft, bis_tag):
+    """krypto-tage ohne wert, vom ersten wert des felds bis vor bis_tag.
+
+    Gibt {tag: {feld: eintrag}} fuer tage, die noch keine herkunft haben.
+    btc und eth warten auf den nachtrag aus der stundenreihe, dominanz und
+    gesamtmarkt haben keine quelle mit historie und werden nicht geschaetzt."""
+    import datetime as _dt
+    werte = {r["d"]: r for r in rows if isinstance(r, dict) and r.get("d")}
+    out = {}
+    for f in KRYPTO:
+        tage = sorted(t for t, r in werte.items() if r.get(f) is not None)
+        if not tage:
+            continue
+        t = _dt.date.fromisoformat(tage[0])
+        ende = _dt.date.fromisoformat(bis_tag)
+        while t < ende:
+            s_ = t.isoformat()
+            if (werte.get(s_) or {}).get(f) is None and f not in (herkunft.get(s_) or {}):
+                out.setdefault(s_, {})[f] = {
+                    "art": "luecke",
+                    "grund": ("noch nicht nachgetragen" if f in NACHTRAGBAR
+                              else "keine quelle")}
+            t += _dt.timedelta(days=1)
     return out
+
+
+def waehle_punkt(punkte, tag):
+    """(sekunden, preis) des letzten punkts, der am utc-tag liegt, oder None.
+    punkte: [(sekunden, preis), ...] in beliebiger reihenfolge."""
+    passend = [(s_, p) for s_, p in punkte
+               if time.strftime("%Y-%m-%d", time.gmtime(s_)) == tag]
+    return max(passend) if passend else None
+
+
+def cg_punkte(coin, days):
+    """stundenreihe als [(sekunden, preis)]. coingecko liefert fuer 2 bis 90
+    tage stundenwerte, darueber nur tageswerte um 00:00 - die taugen nicht
+    als tagesende und werden deshalb gar nicht erst angefragt."""
+    if days > 90:
+        raise RuntimeError("aelter als 90 tage, keine stundenreihe")
+    url = ("%s/coins/%s/market_chart?vs_currency=usd&days=%d"
+           % (CG, coin, max(2, days)))
+    data = get_json(url, tries=3)
+    return [(ts / 1000.0, float(p)) for ts, p in (data.get("prices") or [])]
+
+
+def kraken_kerzen(key):
+    """tageskerzen als [(sekunden der letzten tagessekunde, schluss)]."""
+    data = get_json("%s/OHLC?pair=%s&interval=1440" % (KR, KRAKEN_PAARE[key]), tries=2)
+    if data.get("error"):
+        raise RuntimeError("kraken meldet %s" % data["error"])
+    for k, v in (data.get("result") or {}).items():
+        if k != "last" and v:
+            return [(int(c[0]) + 86399, float(c[4])) for c in v[:-1]]
+    raise RuntimeError("kraken ohlc leer")
+
+
+def nachtragen(rows, herkunft, tage=None, heute=None, holen=None):
+    """btc und eth fuer fehlende tage aus der stundenreihe, als nachgetragen.
+
+    tage None heisst: alle offenen luecken der letzten 88 tage. Gefuellt
+    wird nur, wo KEIN wert steht - ein nachtrag ersetzt nie eine
+    momentaufnahme. holen ist fuer den selbsttest: (coin, key, days) ->
+    (punkte, quelle, zeit_aus)."""
+    import datetime as _dt
+    heute = heute or today()
+    werte = {r["d"]: r for r in rows if isinstance(r, dict) and r.get("d")}
+    if tage is None:
+        grenze = (_dt.date.fromisoformat(heute) - _dt.timedelta(days=88)).isoformat()
+        offen = luecken(rows, {}, heute)
+        tage = sorted(t for t, felder in offen.items()
+                      if t >= grenze and any(f in NACHTRAGBAR for f in felder))
+    neu_rows, put, _ = sammler()
+    meldungen = []
+    if not tage:
+        return [], {}, meldungen
+
+    def standard(coin, key, days):
+        try:
+            return cg_punkte(coin, days), "coingecko market_chart, stundenreihe"
+        except Exception as exc:  # noqa: BLE001
+            meldungen.append("coingecko %s: %s, zweiter weg ueber kraken" % (key, str(exc)[:60]))
+            return kraken_kerzen(key), "kraken ohlc, tageskerze"
+
+    holen = holen or standard
+    days = (_dt.date.fromisoformat(heute) - _dt.date.fromisoformat(min(tage))).days + 2
+    for coin, key in (("bitcoin", "btc"), ("ethereum", "eth")):
+        brauchen = [t for t in tage if (werte.get(t) or {}).get(key) is None]
+        if not brauchen:
+            continue
+        try:
+            punkte, quelle = holen(coin, key, days)
+        except Exception as exc:  # noqa: BLE001
+            meldungen.append("NACHTRAG %s nicht moeglich: %s" % (key, str(exc)[:80]))
+            continue
+        for t in brauchen:
+            p = waehle_punkt(punkte, t)
+            if not p:
+                meldungen.append("NACHTRAG %s %s: kein punkt in der reihe" % (key, t))
+                continue
+            if put(t, key, round(p[1], 6), quelle, art="nachgetragen",
+                   zeit=iso_utc(p[0]), zeit_aus="quelle", eingetragen=heute):
+                meldungen.append("NACHTRAG %s %s = %s, gemessen %s (%s)"
+                                 % (key, t, round(p[1], 2), iso_utc(p[0]), quelle))
+    return [neu_rows[d] for d in sorted(neu_rows)], put.herkunft, meldungen
 
 
 # ---------- laeufe ----------
@@ -441,30 +877,46 @@ def run_daily():
             time.sleep(8)
             continue
         newest = max(series)
-        put(newest, key, series[newest]["close"], "twelve data")
+        # vor dem us-schluss ist der heutige balken ein zwischenstand
+        if newest == today() and not boerse_zu():
+            print(" ---  %-9s heutiger balken vor boersenschluss, nehme den vortag" % key)
+            frueher = sorted(series)[:-1]
+            if not frueher:
+                continue
+            newest = frueher[-1]
+        tw = dict(art="tageswert", zeit=None, zeit_aus="quelle-datum")
+        put(newest, key, series[newest]["close"], "twelve data", **tw)
         if key == "spy" and series[newest].get("volume") is not None:
-            put(newest, "spy_vol", series[newest]["volume"], "twelve data")
+            put(newest, "spy_vol", series[newest]["volume"], "twelve data", **tw)
         print(" OK   %-9s %s (%s)" % (key, series[newest]["close"], newest))
         time.sleep(8)
 
     # krypto-preise sind momentaufnahmen und gehoeren zum laufzeitpunkt.
     # coingecko zuerst, kraken als ersatz.
+    # das datum der zeile kommt aus der messzeit, nicht aus dem laufdatum.
     try:
+        abruf = jetzt_iso()
         prices = cg_price(["bitcoin", "ethereum"])
-        if prices.get("bitcoin") is not None:
-            put(today(), "btc", round(float(prices["bitcoin"]), 6), "coingecko")
-        if prices.get("ethereum") is not None:
-            put(today(), "eth", round(float(prices["ethereum"]), 6), "coingecko")
-        print(" OK   krypto    btc %s eth %s (coingecko)"
-              % (prices.get("bitcoin"), prices.get("ethereum")))
+        for coin, key in (("bitcoin", "btc"), ("ethereum", "eth")):
+            preis, zeit = prices.get(coin, (None, None))
+            if preis is None:
+                continue
+            zeit_aus = "quelle" if zeit else "abruf"
+            zeit = zeit or abruf
+            put(zeit[:10], key, round(float(preis), 6), "coingecko",
+                art="momentaufnahme", zeit=zeit, zeit_aus=zeit_aus)
+            print(" OK   %-9s %s, gemessen %s (%s)" % (key, preis, zeit, zeit_aus))
     except Exception as exc:  # noqa: BLE001
         print(" FEHL krypto    coingecko %s, versuche kraken" % str(exc)[:70])
         try:
+            abruf = jetzt_iso()
             prices = kraken_price(["btc", "eth"])
             for k, v in prices.items():
-                put(today(), k, v, "kraken")
-            print(" OK   krypto    btc %s eth %s (kraken)"
-                  % (prices.get("btc"), prices.get("eth")))
+                # der kraken-ticker hat keine zeit: abrufzeitpunkt, so benannt
+                put(abruf[:10], k, v, "kraken", art="momentaufnahme",
+                    zeit=abruf, zeit_aus="abruf")
+            print(" OK   krypto    btc %s eth %s (kraken, gemessen %s beim abruf)"
+                  % (prices.get("btc"), prices.get("eth"), abruf))
         except Exception as exc2:  # noqa: BLE001
             print(" FEHL krypto    auch kraken %s" % str(exc2)[:70])
 
@@ -472,7 +924,8 @@ def run_daily():
     try:
         fx_tag, fx_kurs = fx_latest()
         if fx_tag:
-            put(fx_tag, "eurusd", fx_kurs, "frankfurter")
+            put(fx_tag, "eurusd", fx_kurs, "frankfurter",
+                art="tageswert", zeit=None, zeit_aus="quelle-datum")
             print(" OK   eurusd    %s (%s)" % (fx_kurs, fx_tag))
     except Exception as exc:  # noqa: BLE001
         print(" FEHL eurusd    %s" % str(exc)[:90])
@@ -480,12 +933,16 @@ def run_daily():
 
     # dominanz und gesamtmarkt, momentaufnahme, kein freier ersatz.
     try:
-        dom, total = cg_global()
-        if dom is not None:
-            put(today(), "btc_dom", dom, "coingecko")
-        if total is not None:
-            put(today(), "total_mcap", total, "coingecko")
-        print(" OK   global    dominanz %s gesamt %s" % (dom, total))
+        abruf = jetzt_iso()
+        dom, total, zeit = cg_global()
+        zeit_aus = "quelle" if zeit else "abruf"
+        zeit = zeit or abruf
+        for key, wert in (("btc_dom", dom), ("total_mcap", total)):
+            if wert is not None:
+                put(zeit[:10], key, wert, "coingecko", art="momentaufnahme",
+                    zeit=zeit, zeit_aus=zeit_aus)
+        print(" OK   global    dominanz %s gesamt %s, gemessen %s (%s)"
+              % (dom, total, zeit, zeit_aus))
     except Exception as exc:  # noqa: BLE001
         print(" FEHL global    %s, hier bleibt eine ehrliche luecke"
               % str(exc)[:70])
@@ -495,14 +952,15 @@ def run_daily():
     try:
         reihe = dl_stablecoins(7)
         newest = max(reihe)
-        put(newest, "stables", reihe[newest], "defillama")
+        put(newest, "stables", reihe[newest], "defillama",
+            art="tageswert", zeit=None, zeit_aus="quelle-datum")
         print(" OK   stables   %s (%s)" % (reihe[newest], newest))
     except Exception as exc:  # noqa: BLE001
         print(" FEHL stables   %s" % str(exc)[:90])
 
     if verworfen:
         print(" ---  %d wert(e) vom band abgewiesen, siehe VERW oben" % len(verworfen))
-    return [rows[day] for day in sorted(rows)]
+    return [rows[day] for day in sorted(rows)], put.herkunft
 
 
 def run_backfill(days=90):
@@ -532,19 +990,24 @@ def run_backfill(days=90):
         except Exception as exc:  # noqa: BLE001
             print(" FEHL %-7s %s" % (key, _hide(str(exc))[:90]))
             continue
+        tw = dict(art="tageswert", zeit=None, zeit_aus="quelle-datum")
         for day, value in series.items():
             if isinstance(value, dict):
-                put(day, key, value["close"], quelle)
+                put(day, key, value["close"], quelle, **tw)
                 if key == "spy" and value.get("volume") is not None:
-                    put(day, "spy_vol", value["volume"], quelle)
+                    put(day, "spy_vol", value["volume"], quelle, **tw)
+            elif isinstance(value, tuple):
+                # krypto aus der reihe: preis mit messzeit des punkts
+                put(day, key, value[0], quelle, art="reihe", zeit=value[1],
+                    zeit_aus="quelle", eingetragen=today())
             else:
-                put(day, key, value, quelle)
+                put(day, key, value, quelle, **tw)
         print(" OK   %-7s %d tage, %s bis %s"
               % (key, len(series), min(series), max(series)))
         time.sleep(pause)
     if verworfen:
         print(" ---  %d wert(e) vom band abgewiesen, siehe VERW oben" % len(verworfen))
-    return [rows[day] for day in sorted(rows)]
+    return [rows[day] for day in sorted(rows)], put.herkunft
 
 
 # ---------- selbsttest ----------
@@ -676,6 +1139,181 @@ def run_selftest():
     check("mit wert und quelle", verworfen[0], ("2026-09-23", "btc", 5e15, "coingecko"))
     check("grenzen lesbar", (_kurz(1000.0), _kurz(10000000.0)), ("1000", "10M"))
 
+    # ================= seit dem 25.09.2026: messzeit und herkunft =================
+    import datetime as _dt
+    UTC = _dt.timezone.utc
+
+    # --- die quellen liefern ihre messzeit ---
+    check("coingecko-preis mit messzeit der quelle",
+          cg_price_lesen({"bitcoin": {"usd": 84392.0, "last_updated_at": 1790380502}}),
+          {"bitcoin": (84392.0, "2026-09-25T23:55:02Z")})
+    check("ohne last_updated_at keine erfundene zeit",
+          cg_price_lesen({"bitcoin": {"usd": 1.0}}), {"bitcoin": (1.0, None)})
+    check("dominanz mit messzeit der quelle",
+          cg_global_lesen({"data": {"market_cap_percentage": {"btc": 58.5804},
+                                    "total_market_cap": {"usd": 2.8887e12},
+                                    "updated_at": 1790380502}}),
+          (58.58, 2888700000000, "2026-09-25T23:55:02Z"))
+
+    # --- das datum der zeile kommt aus der messzeit ---
+    # der fall vom 21.09.: der lauf fuer den 21. misst um 00:11 am 22.
+    rows, put, _ = sammler()
+    put("2026-09-22T00:11:54Z"[:10], "btc", 86325.0, "coingecko",
+        art="momentaufnahme", zeit="2026-09-22T00:11:54Z", zeit_aus="quelle")
+    check("eine messung um 00:11 gehoert zum tag, an dem sie gemessen wurde",
+          sorted(rows), ["2026-09-22"])
+    check("und traegt ihre messzeit", put.herkunft["2026-09-22"]["btc"]["zeit"],
+          "2026-09-22T00:11:54Z")
+
+    # --- mischen: der spaetere zeitstempel desselben tages gewinnt ---
+    h0 = {"2026-09-22": {"btc": {"art": "momentaufnahme", "zeit": "2026-09-22T00:11:54Z"}}}
+    abend = ([{"d": "2026-09-22", "btc": 86174.0}],
+             {"2026-09-22": {"btc": {"art": "momentaufnahme", "zeit": "2026-09-22T23:39:21Z"}}})
+    r1, h1, m1 = mischen([{"d": "2026-09-22", "btc": 86325.0}], h0, *abend)
+    check("der abendwert ersetzt den nachtwert", r1[0]["btc"], 86174.0)
+    check("und das steht laut im log", m1[0].startswith("ERSETZT   btc"), True)
+    check("mit grund", "spaeter gemessen" in m1[0], True)
+    r2, h2, m2 = mischen(r1, h1, [{"d": "2026-09-22", "btc": 86325.0}], h0)
+    check("umgekehrt bleibt der abendwert stehen", r2[0]["btc"], 86174.0)
+    check("und auch das steht im log", m2[0].startswith("BEHALTEN  btc"), True)
+    check("gleiche werte erzeugen keine meldung",
+          mischen(r1, h1, *abend)[2], [])
+    r3, _, m3 = mischen([{"d": "2026-08-01", "gld": 400.0}], {},
+                        [{"d": "2026-08-01", "gld": 401.0}], {})
+    check("ohne messzeit gewinnt der neue wert, aber laut",
+          (r3[0]["gld"], m3[0].startswith("ERSETZT") and "ohne vergleichbare" in m3[0]),
+          (401.0, True))
+
+    # --- die marke an der zeile folgt der herkunft ---
+    hm = {"2026-09-21": {"btc": {"art": "nachgetragen"}, "gld": {"art": "tageswert"}},
+          "2026-09-22": {"btc": {"art": "momentaufnahme"}}}
+    zeilen = markieren([{"d": "2026-09-21", "btc": 1.0, "gld": 2.0},
+                        {"d": "2026-09-22", "btc": 3.0}], hm)
+    check("nachgetragenes wird an der zeile markiert", zeilen[0].get(MARKE), ["btc"])
+    check("live gemessenes nicht", zeilen[1].get(MARKE), None)
+    check("der tageswert ist die juengste live-zeile",
+          letzter_live(zeilen, "btc")["d"], "2026-09-22")
+    nur_nach = markieren([{"d": "2026-09-22", "btc": 3.0}, {"d": "2026-09-23", "btc": 4.0}],
+                         {"2026-09-22": {"btc": {"art": "momentaufnahme"}},
+                          "2026-09-23": {"btc": {"art": "nachgetragen"}}})
+    check("ein nachgetragener juengster wert ist nie der tageswert",
+          letzter_live(nur_nach, "btc")["d"], "2026-09-22")
+    check("ohne live-wert gibt es keinen tageswert",
+          letzter_live([{"d": "2026-09-23", "btc": 4.0, MARKE: ["btc"]}], "btc"), None)
+
+    # --- die pruefung vor dem speichern ---
+    check("vollstaendige herkunft ist sauber", pruefe_herkunft(zeilen, hm), [])
+    check("ein wert ohne herkunft faellt auf",
+          pruefe_herkunft([{"d": "2026-09-22", "btc": 3.0, "eth": 1.0}],
+                          {"2026-09-22": {"btc": {"art": "momentaufnahme"}}}),
+          ["2026-09-22 eth hat keine herkunft"])
+    check("eine herkunft ohne wert faellt auf",
+          pruefe_herkunft([{"d": "2026-09-21", "gld": 2.0, MARKE: ["btc"]}],
+                          {"2026-09-21": {"btc": {"art": "nachgetragen"},
+                                          "gld": {"art": "tageswert"}}})[0],
+          "2026-09-21 btc hat eine herkunft, aber keinen wert")
+    check("eine falsche marke faellt auf",
+          "marke" in " ".join(pruefe_herkunft([{"d": "2026-09-22", "btc": 3.0, MARKE: ["btc"]}],
+                                              {"2026-09-22": {"btc": {"art": "momentaufnahme"}}})),
+          True)
+    check("eine luecke ohne wert ist in ordnung",
+          pruefe_herkunft([], {"2026-09-21": {"btc_dom": {"art": "luecke", "grund": "keine quelle"}}}),
+          [])
+
+    # --- rekonstruktion: klassifizierung eines altwerts ---
+    k = klassifiziere("2026-08-27", "btc_dom", "2026-08-27T00:53:41Z")
+    check("krypto am selben tag gesetzt: momentaufnahme mit commit-zeit",
+          (k["art"], k["zeit"], k["zeit_aus"]),
+          ("momentaufnahme", "2026-08-27T00:53:41Z", "commit"))
+    check("krypto spaeter gesetzt: aus der reihe, ohne messzeit",
+          (klassifiziere("2026-08-24", "btc", "2026-08-29T05:29:40Z")["art"],
+           klassifiziere("2026-08-24", "btc", "2026-08-29T05:29:40Z")["zeit"]), ("reihe", None))
+    check("gold nennt seinen tag selbst",
+          (klassifiziere("2026-09-24", "gld", "2026-09-24T23:55:27Z")["art"],
+           klassifiziere("2026-09-24", "gld", "2026-09-24T23:55:27Z")["zeit_aus"]),
+          ("tageswert", "quelle-datum"))
+
+    # --- luecken: nicht schaetzen, sondern benennen ---
+    lz = luecken([{"d": "2026-09-19", "btc": 1.0, "btc_dom": 58.0},
+                  {"d": "2026-09-20", "btc": 1.0, "btc_dom": 58.0},
+                  {"d": "2026-09-22", "btc": 1.0, "btc_dom": 58.0}], {}, "2026-09-23")
+    check("der fehlende 21.09. wird gefunden", sorted(lz), ["2026-09-21"])
+    check("btc wartet auf den nachtrag", lz["2026-09-21"]["btc"]["grund"], "noch nicht nachgetragen")
+    check("dominanz hat keine quelle", lz["2026-09-21"]["btc_dom"]["grund"], "keine quelle")
+    check("der laufende tag ist keine luecke",
+          luecken([{"d": "2026-09-22", "btc": 1.0}], {}, "2026-09-23"), {})
+    check("schon gefuehrte luecken werden nicht doppelt gemeldet",
+          luecken([{"d": "2026-09-20", "btc": 1.0}, {"d": "2026-09-22", "btc": 1.0}],
+                  {"2026-09-21": {"btc": {"art": "luecke"}}}, "2026-09-23"), {})
+
+    # --- nachtrag aus der stundenreihe ---
+    def sek(iso):
+        return _dt.datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp()
+    stunden = [(sek("2026-09-21T22:00:00Z"), 85900.0), (sek("2026-09-21T23:00:07Z"), 86010.0),
+               (sek("2026-09-22T00:00:03Z"), 86300.0)]
+    check("der letzte punkt des tages", waehle_punkt(stunden, "2026-09-21"),
+          (sek("2026-09-21T23:00:07Z"), 86010.0))
+    check("mitternacht gehoert zum neuen tag", waehle_punkt(stunden, "2026-09-22")[1], 86300.0)
+    check("ohne punkt kein wert", waehle_punkt(stunden, "2026-09-20"), None)
+
+    basis = [{"d": "2026-09-20", "btc": 81177.0, "eth": 1.0},
+             {"d": "2026-09-21", "gld": 400.0},
+             {"d": "2026-09-22", "btc": 86174.0, "eth": 1.0}]
+    aufrufe = []
+    def fake(coin, key, days):
+        aufrufe.append((key, days))
+        return stunden, "coingecko market_chart, stundenreihe"
+    n_rows, n_h, n_m = nachtragen(basis, {}, heute="2026-09-26", holen=fake)
+    check("der nachtrag findet den 21.09. selbst", [r["d"] for r in n_rows], ["2026-09-21"])
+    check("mit dem abendwert der stundenreihe", n_rows[0]["btc"], 86010.0)
+    e = n_h["2026-09-21"]["btc"]
+    check("als nachgetragen, mit messzeit der quelle",
+          (e["art"], e["zeit"], e["zeit_aus"], e["eingetragen"]),
+          ("nachgetragen", "2026-09-21T23:00:07Z", "quelle", "2026-09-26"))
+    check("nur btc und eth werden angefragt", sorted(k for k, _ in aufrufe), ["btc", "eth"])
+    check("mit genug tagen fuer die stundenreihe", aufrufe[0][1], 7)
+    check("ein vorhandener wert wird nie ersetzt",
+          nachtragen(basis, {}, tage=["2026-09-22"], heute="2026-09-26", holen=fake)[0], [])
+    # eine einzige luecke am 02.05., sonst jeder tag bis zum 25.09. belegt
+    alt_luecke = []
+    t = _dt.date(2026, 5, 1)
+    while t <= _dt.date(2026, 9, 25):
+        if t != _dt.date(2026, 5, 2):
+            alt_luecke.append({"d": t.isoformat(), "btc": 1.0, "eth": 1.0})
+        t += _dt.timedelta(days=1)
+    check("luecken aelter als 88 tage bleiben liegen",
+          nachtragen(alt_luecke, {}, heute="2026-09-26", holen=fake)[0], [])
+    def kaputt(coin, key, days):
+        raise RuntimeError("403")
+    k_rows, _, k_m = nachtragen(basis, {}, heute="2026-09-26", holen=kaputt)
+    check("scheitert die quelle, bleibt die luecke und das steht im log",
+          (k_rows, any("nicht moeglich" in z for z in k_m)), ([], True))
+
+    # nach dem nachtrag: marke gesetzt, luecke weg, pruefung sauber
+    hb = {"2026-09-20": {"btc": {"art": "momentaufnahme", "zeit": "2026-09-20T23:19:00Z"},
+                         "eth": {"art": "momentaufnahme", "zeit": "2026-09-20T23:19:00Z"}},
+          "2026-09-21": {"gld": {"art": "tageswert"}, "btc": {"art": "luecke", "grund": "noch nicht nachgetragen"},
+                         "eth": {"art": "luecke", "grund": "noch nicht nachgetragen"}},
+          "2026-09-22": {"btc": {"art": "momentaufnahme", "zeit": "2026-09-22T23:39:21Z"},
+                         "eth": {"art": "momentaufnahme", "zeit": "2026-09-22T23:39:21Z"}}}
+    fertig, hf, _ = mischen(basis, hb, n_rows, n_h)
+    check("die zeile vom 21.09. hat jetzt btc und ist markiert",
+          (fertig[1].get("btc"), fertig[1].get(MARKE)), (86010.0, ["btc", "eth"]))
+    check("die luecke ist durch den nachtrag ersetzt", hf["2026-09-21"]["btc"]["art"], "nachgetragen")
+    check("und die pruefung ist sauber", pruefe_herkunft(fertig, hf), [])
+    check("der tageswert bleibt der live gemessene 22.09.",
+          letzter_live(fertig, "btc")["d"], "2026-09-22")
+
+    # --- boersenschluss: kein zwischenstand unter heutigem datum ---
+    check("sommer, 20:10 utc: new york schliesst um 20:00, puffer laeuft noch",
+          boerse_zu(_dt.datetime(2026, 9, 25, 20, 10, tzinfo=UTC)), False)
+    check("sommer, 20:20 utc: schluss ist durch",
+          boerse_zu(_dt.datetime(2026, 9, 25, 20, 20, tzinfo=UTC)), True)
+    check("winter, 20:30 utc: new york handelt noch",
+          boerse_zu(_dt.datetime(2026, 12, 3, 20, 30, tzinfo=UTC)), False)
+    check("winter, 21:20 utc: schluss ist durch",
+          boerse_zu(_dt.datetime(2026, 12, 3, 21, 20, tzinfo=UTC)), True)
+
     if fails:
         print("selftest FEHLGESCHLAGEN")
         for f in fails:
@@ -705,30 +1343,78 @@ def _kraken_ticker_probe(data):
 def main(argv):
     if "--selftest" in argv:
         return run_selftest()
-    modus = "backfill" if "--backfill" in argv else "taeglich"
-    print("pulsehawk marktlogger, %s (zweite fassung, 29.08.2026)" % modus)
+    modus = "taeglich"
+    for m in ("backfill", "nachtragen", "herkunft"):
+        if "--" + m in argv:
+            modus = m
+    print("pulsehawk marktlogger, %s (dritte fassung, 25.09.2026)" % modus)
     print("laufzeitpunkt %s utc" % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
     print("twelvedata schluessel %s\n"
           % ("gesetzt, %d zeichen" % len(TD_KEY) if TD_KEY else "FEHLT"))
-    neu = run_backfill() if modus == "backfill" else run_daily()
-    if not neu:
-        print("\nkein einziger neuer wert. das ist bei dieser fassung kein "
-              "normalfall mehr, sondern ein fehler, der lauf wird rot.")
-        return 1
+
     alt = load_log()
-    rows = merge(alt, neu)
-    if rows == alt:
-        print("\nalle geholten werte standen schon im log, nichts zu schreiben.")
+    herkunft = load_herkunft()
+    if herkunft is None:
+        print("keine herkunftsdatei, baue sie einmalig aus der git-historie")
+        try:
+            herkunft = rekonstruiere_herkunft()
+            print("  %d tage mit herkunft rekonstruiert" % len(herkunft))
+        except Exception as exc:  # noqa: BLE001
+            print("  NICHT MOEGLICH: %s" % str(exc)[:120])
+            print("  weiter im altbetrieb, ohne herkunft und ohne pruefung")
+
+    meldungen = []
+    rows = alt
+    if modus in ("taeglich", "backfill"):
+        neu, h_neu = run_backfill() if modus == "backfill" else run_daily()
+        if not neu and modus == "taeglich":
+            print("\nkein einziger neuer wert. das ist bei dieser fassung kein "
+                  "normalfall mehr, sondern ein fehler, der lauf wird rot.")
+            return 1
+        rows, herkunft, m = mischen(rows, herkunft, neu, h_neu)
+        meldungen += m
+
+    if herkunft is not None and modus in ("taeglich", "nachtragen", "herkunft"):
+        tage = None
+        if modus == "nachtragen":
+            liste = [a for a in argv if not a.startswith("--")]
+            tage = sorted(t.strip() for a in liste for t in a.split(",") if t.strip()) or None
+        # erst nachtragen, was geht, dann den rest als luecke fuehren
+        n_rows, n_h, m = nachtragen(rows, herkunft, tage=tage)
+        meldungen += m
+        rows, herkunft, m = mischen(rows, herkunft, n_rows, n_h)
+        meldungen += m
+        rows, herkunft, m = mischen(rows, herkunft, [], luecken(rows, herkunft, today()))
+        meldungen += m
+
+    if meldungen:
+        print("")
+        for z in meldungen:
+            print(" " + z)
+
+    if herkunft is not None:
+        probleme = pruefe_herkunft(markieren(rows, herkunft), herkunft)
+        if probleme:
+            print("\nHERKUNFT UNVOLLSTAENDIG, nichts geschrieben:")
+            for z in probleme[:20]:
+                print("  - " + z)
+            return 1
+        rows = markieren(rows, herkunft)
+
+    if rows == alt and (herkunft is None or herkunft == load_herkunft()):
+        print("\nalle werte standen schon im log, nichts zu schreiben.")
         return 0
-    save_log(rows)
+    if herkunft is not None:
+        save_alles(rows, herkunft)
+    else:
+        save_log(rows)
     voll = [r for r in rows if all(r.get(k) is not None for k in ("gld", "spy", "btc", "eth"))]
     mit_dom = [r for r in rows if r.get("btc_dom") is not None]
-    mit_stab = [r for r in rows if r.get("stables") is not None]
+    nachg = [r for r in rows if r.get(MARKE)]
     print("\nlog hat jetzt %d tage, %s bis %s" % (len(rows), rows[0]["d"], rows[-1]["d"]))
     print("  davon %d tage mit allen vier kursen" % len(voll))
     print("  davon %d tage mit dominanz" % len(mit_dom))
-    print("  davon %d tage mit stablecoins, dem herzstueck von FOLLOW THE MONEY"
-          % len(mit_stab))
+    print("  davon %d tage mit nachgetragenen werten" % len(nachg))
     return 0
 
 

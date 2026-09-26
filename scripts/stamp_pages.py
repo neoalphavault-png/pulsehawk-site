@@ -71,7 +71,7 @@ sys.path.insert(0, HERE)
 # Die Vorrangregel steht genau einmal, dort. Bricht dieser Import, faellt
 # der Lauf laut aus, und das ist gewollt: lieber ein roter Stempellauf als
 # eine zweite Kopie der Regel, die leise auseinanderlaeuft.
-from market_log import reihe_mit_logvorrang  # noqa: E402
+from market_log import letzter_live, reihe_mit_logvorrang  # noqa: E402
 
 REPO = os.path.dirname(HERE)
 LOG = os.path.join(REPO, "data", "market-log.json")
@@ -454,12 +454,9 @@ def lauf_zyklus():
 # --- teil 2, die dominanzseite ---------------------------------------
 
 def neueste_dominanz(rows):
-    """letzte zeile mit einem dominanzwert. der backfill hat keine,
-    die kommt erst ab dem ersten taeglichen lauf ins log."""
-    for r in reversed(rows if isinstance(rows, list) else []):
-        if isinstance(r, dict) and isinstance(r.get("btc_dom"), (int, float)):
-            return r
-    return None
+    """letzte zeile mit einem LIVE gemessenen dominanzwert. dominanz wird
+    nie nachgetragen, die pruefung ist dieselbe wie beim schlusskurs."""
+    return letzter_live(rows if isinstance(rows, list) else [], "btc_dom")
 
 
 def lauf_dominanz():
@@ -596,10 +593,14 @@ def lauf_markt():
 # --- teil 5, der letzte schluss --------------------------------------
 
 def letzter_schluss(rows):
-    """juengste zeile mit einem btc-schluss. der marktlogger schreibt btc
-    auch am wochenende (coingecko/kraken laufen durch), gold und aktien
-    nicht. deshalb wird hier nur btc verlangt und nicht die dreiergruppe."""
-    return letzte(rows if isinstance(rows, list) else [], ("btc",))
+    """juengste zeile mit einem LIVE gemessenen btc-wert. der marktlogger
+    schreibt btc auch am wochenende (coingecko/kraken laufen durch), gold
+    und aktien nicht. deshalb wird hier nur btc verlangt.
+
+    Seit dem 25.09.2026 ueber market_log.letzter_live: ein nachgetragener
+    Wert ist nie der heutige. Dieselbe Funktion waehlen der DAY-N-Post und
+    die Karte, sonst haelt Sperre 2 den Post an."""
+    return letzter_live(rows if isinstance(rows, list) else [], "btc")
 
 
 def zahl(v):
@@ -1647,6 +1648,37 @@ def selbsttest():
     pruefe("bezugspunkt in der beschriftung", w["periodlabel"],
            "14 August 2026 to 21 August 2026")
     pruefe("enddatum", w["dend"], "21 August 2026")
+
+    # --- der 21.09. und das fenster vom 28.09. (auftrag b, 25.09.2026) ---
+    # boersentage vom 18. bis 28.09.; am montag, dem 21., fehlte btc.
+    def boersentag(d, btc=90000.0, marke=None):
+        z = {"d": d, "gld": 400.0, "spy": 700.0, "btc": btc}
+        if btc is None:
+            z.pop("btc")
+        if marke:
+            z["nachgetragen"] = marke
+        return z
+    vorher = [boersentag("2026-09-18"), boersentag("2026-09-21", btc=None),
+              boersentag("2026-09-22"), boersentag("2026-09-25"), boersentag("2026-09-28")]
+    pruefe("ohne btc am 21.09.: zehn tage, ehrlich beschriftet",
+           markt_werte(vorher)["periodlabel"], "18 September 2026 to 28 September 2026")
+    nachher = list(vorher)
+    nachher[1] = boersentag("2026-09-21", btc=86010.0, marke=["btc", "eth"])
+    pruefe("nach dem nachtrag vom 21.09.: wieder sieben tage",
+           markt_werte(nachher)["periodlabel"], "21 September 2026 to 28 September 2026")
+
+    # --- nachgetragenes ist nie der heutige schlusskurs ---
+    pruefe("der schlusskurs ueberspringt eine nachgetragene juengste zeile",
+           letzter_schluss([{"d": "2026-09-24", "btc": 84392.0},
+                            {"d": "2026-09-25", "btc": 85000.0, "nachgetragen": ["btc"]}])["d"],
+           "2026-09-24")
+    pruefe("die dominanz ebenso",
+           neueste_dominanz([{"d": "2026-09-24", "btc_dom": 58.6},
+                             {"d": "2026-09-25", "btc_dom": 59.0, "nachgetragen": ["btc_dom"]}])["d"],
+           "2026-09-24")
+    pruefe("eine marke fuer eth sperrt btc nicht",
+           letzter_schluss([{"d": "2026-09-25", "btc": 85000.0, "nachgetragen": ["eth"]}])["d"],
+           "2026-09-25")
     # stablecoins laufen sieben tage die woche, ihre spanne endet am 22.
     pruefe("stablecoins eigene spanne", w["stab7"], "plus $1.5B")
     # zyklisch 500 auf 510 bei unveraendert defensiv, also glatte zwei prozent

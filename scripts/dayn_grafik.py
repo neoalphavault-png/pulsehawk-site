@@ -173,7 +173,14 @@ def heute():
     return datetime.datetime.now(datetime.timezone.utc).date().isoformat()
 
 
-def zahlen(archivrows, logrows, bis=None):
+def _preis_zeile(jetzt, herkunft):
+    from market_log import messzeit_hhmm
+    uhr = messzeit_hhmm(herkunft, jetzt, "btc")
+    return ("last price %s, %s utc" % (lang(jetzt["d"]), uhr) if uhr
+            else "last price %s" % lang(jetzt["d"]))
+
+
+def zahlen(archivrows, logrows, bis=None, herkunft=None):
     """die vier zahlen und zwei daten der karte.
     (werte, None) oder (None, grund).
 
@@ -215,6 +222,8 @@ def zahlen(archivrows, logrows, bis=None):
         "preis_datum": lang(jetzt["d"]),
         "preis": dollar(jetzt["btc"]) + " USD",
         "zaehltag": lang(stichtag),
+        # letzter kurs mit uhrzeit nur, wenn sie gemessen ist (auftrag b)
+        "preis_zeile": _preis_zeile(jetzt, herkunft),
     }, None
 
 
@@ -269,6 +278,9 @@ def html(w, skala=1.0):
   .fuss .l { display:flex; align-items:center; gap:16px; }
   .fuss img { width:%(FI)dpx; }
   .fuss span { font-size:%(FF)dpx; color:#9BA3AB; letter-spacing:1px; }
+  /* zwei zeilen: zaehltag und letzter kurs, jede fuer sich einzeilig */
+  .fuss .zeilen span { display:block; line-height:1.25; white-space:nowrap;
+                       letter-spacing:0; }
   .fuss .adr { color:#49EACB; font-weight:800; letter-spacing:2px; }
 </style></head><body><div class="karte">
   <div class="marke"><img src="%(L)s" alt=""><b>PULSE<span>HAWK</span></b></div>
@@ -286,7 +298,7 @@ def html(w, skala=1.0):
     </div>
   </div>
   <div class="fuss">
-    <div class="l"><img src="%(L)s" alt=""><span>daily prices to %(zaehltag)s</span></div>
+    <div class="l"><img src="%(L)s" alt=""><div class="zeilen"><span class="z1">day count as of %(zaehltag)s</span><span class="z2">%(preis_zeile)s</span></div></div>
     <span class="adr">pulsehawk.io</span>
   </div>
 </div></body></html>""" % dict(w, B=BREITE, H=HOEHE, L=L, MI=92, FI=54, S=skala,
@@ -306,9 +318,10 @@ MESSSKRIPT = """<script>window.addEventListener('load',function(){
  function kasten(s){var e=document.querySelector(s); if(!e) return null;
    var r=e.getBoundingClientRect();
    return {oben:Math.round(r.top), unten:Math.round(r.bottom),
-           rechts:Math.round(r.right), hoch:Math.round(r.height),
+           links:Math.round(r.left), rechts:Math.round(r.right),
+           hoch:Math.round(r.height),
            ueber: e.scrollWidth > e.clientWidth + 1};}
- ['.karte','.marke','.mitte','.fuss','.fuss .l span','.fuss .adr',
+ ['.karte','.marke','.mitte','.fuss','.fuss .z1','.fuss .z2','.fuss .adr',
   '#g-tage-hoch','#g-tage-tief'].forEach(function(s){o[s]=kasten(s);});
  o.seite = {hoch: document.body.scrollHeight};
  document.title = JSON.stringify(o);});</script>"""
@@ -397,7 +410,15 @@ def selbsttest():
     pruefe("logo oben und unten", seite.count("data:image/png;base64,"), 2)
     pruefe("adresse in der fusszeile", "pulsehawk.io" in seite, True)
     pruefe("der zaehltag steht auf der karte",
-           "daily prices to 24 September 2026" in seite, True)
+           "day count as of 24 September 2026" in seite, True)
+    pruefe("der letzte kurs mit seinem tag, ohne herkunft ohne uhrzeit",
+           ">last price 23 September 2026<" in seite, True)
+    mit_uhr, _ = zahlen(arch, log, bis="2026-09-24",
+                        herkunft={"2026-09-23": {"btc": {"art": "momentaufnahme",
+                                                         "zeit": "2026-09-23T22:07:41Z",
+                                                         "zeit_aus": "quelle"}}})
+    pruefe("mit gemessener zeit steht sie dabei",
+           mit_uhr["preis_zeile"], "last price 23 September 2026, 22:07 utc")
     # die karte zaehlt, was man ihr sagt. das ist der ganze grund fuer 'bis'.
     frueher, _ = zahlen(arch, log, bis="2026-09-23")
     pruefe("ein anderer zaehltag gibt andere zahlen",
