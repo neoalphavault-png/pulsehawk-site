@@ -1,27 +1,27 @@
 {
- "date": "2026-09-25",
+ "date": "2026-09-26",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "VICR",
+  "name": "Vicor Corporation",
+  "sector": "Industrials",
+  "industry": "Electrical Components & Equipment",
   "indices": [
-   "sp500"
+   "sp400"
   ],
-  "mult": 7.5278,
-  "pct": 652.8,
-  "from_1000": 7528,
-  "d": "2026-09-24",
-  "close": 194.82,
-  "d_1y": "2025-09-24",
-  "close_1y": 25.88,
-  "low": 22.36,
-  "high": 194.82,
-  "drawdown_pct": -13.6,
+  "mult": 5.4077,
+  "pct": 440.8,
+  "from_1000": 5408,
+  "d": "2026-09-25",
+  "close": 281.96,
+  "d_1y": "2025-09-25",
+  "close_1y": 52.14,
+  "low": 48.46,
+  "high": 379.78,
+  "drawdown_pct": -7.1,
   "verified": {
    "source": "tiingo",
-   "mult": 7.5278,
-   "diff_pct": 0
+   "mult": 5.4083,
+   "diff_pct": 0.01
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 16.1,
-   "d": "2026-09-24",
-   "d_1y": "2025-09-24"
+   "pct": 17.2,
+   "d": "2026-09-25",
+   "d_1y": "2025-09-25"
   },
   "gold": {
    "pct": 14.1,
-   "d": "2026-09-24",
-   "d_1y": "2025-09-24"
+   "d": "2026-09-25",
+   "d_1y": "2025-09-25"
   }
  },
- "candidates_total": 73,
+ "candidates_total": 75,
  "top10": [
   {
    "ticker": "MRNA",
@@ -55,7 +55,7 @@
   },
   {
    "ticker": "VICR",
-   "mult": 5.2612
+   "mult": 5.4077
   },
   {
    "ticker": "MXL",
@@ -78,14 +78,23 @@
    "mult": 4.0497
   },
   {
-   "ticker": "AMD",
-   "mult": 3.9114
+   "ticker": "DOCN",
+   "mult": 3.9781
   },
   {
-   "ticker": "DOCN",
-   "mult": 3.8206
+   "ticker": "AMD",
+   "mult": 3.9114
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (7.35%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (2.69%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
