@@ -1,34 +1,34 @@
 {
- "date": "2026-09-26",
+ "date": "2026-09-27",
  "pick": {
-  "ticker": "VICR",
-  "name": "Vicor Corporation",
-  "sector": "Industrials",
-  "industry": "Electrical Components & Equipment",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
-   "sp400"
+   "sp500"
   ],
-  "mult": 5.4077,
-  "pct": 440.8,
-  "from_1000": 5408,
+  "mult": 8.0813,
+  "pct": 708.1,
+  "from_1000": 8081,
   "d": "2026-09-25",
-  "close": 281.96,
+  "close": 198.88,
   "d_1y": "2025-09-25",
-  "close_1y": 52.14,
-  "low": 48.46,
-  "high": 379.78,
-  "drawdown_pct": -7.1,
+  "close_1y": 24.61,
+  "low": 22.36,
+  "high": 198.88,
+  "drawdown_pct": -9.1,
   "verified": {
    "source": "tiingo",
-   "mult": 5.4083,
-   "diff_pct": 0.01
+   "mult": 8.0813,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 22,
+  "sp500_doubled": 25,
   "sp500_tripled": 10
  },
  "benchmarks": {
@@ -43,35 +43,31 @@
    "d_1y": "2025-09-25"
   }
  },
- "candidates_total": 75,
+ "candidates_total": 79,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 7.5278
+   "mult": 8.0813
   },
   {
    "ticker": "LITE",
-   "mult": 6.0821
+   "mult": 5.9182
+  },
+  {
+   "ticker": "MXL",
+   "mult": 5.8797
   },
   {
    "ticker": "VICR",
    "mult": 5.4077
   },
   {
-   "ticker": "MXL",
-   "mult": 5.101
+   "ticker": "DELL",
+   "mult": 4.2982
   },
   {
    "ticker": "WDC",
    "mult": 4.1053
-  },
-  {
-   "ticker": "INTC",
-   "mult": 4.0804
-  },
-  {
-   "ticker": "DELL",
-   "mult": 4.058
   },
   {
    "ticker": "STX",
@@ -83,18 +79,13 @@
   },
   {
    "ticker": "AMD",
-   "mult": 3.9114
-  }
- ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (7.35%)"
+   "mult": 3.9104
   },
   {
-   "ticker": "LITE",
-   "reason": "quellen weichen ab (2.69%)"
+   "ticker": "FORM",
+   "mult": 3.643
   }
  ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
