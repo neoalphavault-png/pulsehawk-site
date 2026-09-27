@@ -128,12 +128,15 @@ def tage(seit, bis):
     return (b - a).days
 
 
-def letzter_btc(rows):
-    """die juengste LIVE gemessene btc-zeile. dieselbe funktion wie auf den
-    seiten (market_log.letzter_live), sonst haelt sperre 2 den post an.
-    ein nachgetragener wert ist nie der tageswert (beschluss 25.09.2026)."""
-    from market_log import letzter_live
-    return letzter_live(rows, "btc")
+def letzter_btc(rows, heute):
+    """die juengste LIVE gemessene btc-zeile eines tages, der vorbei ist.
+    dieselbe auswahl wie auf den seiten (market_log.letzter_live nach
+    market_log.geschlossene), sonst haelt sperre 2 den post an.
+    ein nachgetragener wert ist nie der tageswert (beschluss 25.09.2026),
+    eine zeile von heute nie ein schluss (regel vom 27.09.2026). 'heute'
+    ist der tag des laufs, derselbe wie der zaehltag."""
+    from market_log import geschlossene, letzter_live
+    return letzter_live(geschlossene(rows, heute), "btc")
 
 
 def seite_lesen(html):
@@ -365,7 +368,7 @@ def seite_tageszahl(html):
 
 def bauen(rows, html, heute, max_age, xlog=None, herkunft=None):
     """Alles, was ohne Netz geprueft werden kann. Gibt (text, key, problem)."""
-    zeile = letzter_btc(rows)
+    zeile = letzter_btc(rows, heute)
     if not zeile:
         return None, None, "kein btc-schluss in data/market-log.json"
     alt = tage(zeile["d"], heute)
@@ -533,8 +536,24 @@ def selbsttest():
     pruefe("juengste btc-zeile",
            letzter_btc([{"d": "2026-09-14", "btc": 78150.0},
                         {"d": "2026-09-15", "btc": 75608.0},
-                        {"d": "2026-09-16", "gld": 1.0}])["d"], "2026-09-15")
-    pruefe("log ohne btc", letzter_btc([{"d": "2026-09-15", "gld": 1.0}]), None)
+                        {"d": "2026-09-16", "gld": 1.0}], "2026-09-16")["d"], "2026-09-15")
+    pruefe("log ohne btc", letzter_btc([{"d": "2026-09-15", "gld": 1.0}], "2026-09-16"), None)
+    # regel vom 27.09.2026: ein schluss mit datum D gilt erst nach D 24:00
+    # utc. der lauf vom 26.09. um 23:56:35 utc, mit dem stempel dieser nacht.
+    nacht = [{"d": "2026-09-25", "btc": 84039.0}, {"d": "2026-09-26", "btc": 84293.0}]
+    heute_nacht, _ = laufzeit(datetime.datetime(2026, 9, 26, 23, 56, 35,
+                                                tzinfo=datetime.timezone.utc))
+    pruefe("26.09. 23:56:35 utc: der schluss ist der vom 25.",
+           letzter_btc(nacht, heute_nacht)["d"], "2026-09-25")
+    pruefe("27.09. 00:00:00 utc: der vom 26.",
+           letzter_btc(nacht, laufzeit(datetime.datetime(
+               2026, 9, 27, 0, 0, 0, tzinfo=datetime.timezone.utc))[0])["d"], "2026-09-26")
+    pruefe("26.09. 23:56:35 utc: eine seite mit dem offenen 26. haelt sperre 2 an",
+           "widersprechen sich" in str(bauen(nacht, 'var LAST_CLOSE = 84293, LAST_DATE = "2026-09-26";',
+                                      heute_nacht, 3)[2]), True)
+    pruefe("26.09. 23:56:35 utc: mit dem 25. auf der seite kein einwand aus sperre 2",
+           "widersprechen sich" in str(bauen(nacht, 'var LAST_CLOSE = 84039, LAST_DATE = "2026-09-25";',
+                                      heute_nacht, 3)[2]), False)
 
     js = 'var LAST_CLOSE = 75608, LAST_DATE = "2026-09-15";'
     pruefe("seite gelesen", seite_lesen(js), (75608.0, "2026-09-15"))
@@ -862,12 +881,18 @@ def selbsttest():
     pruefe("die sperre haengt weiter am preistag", spaet[1], "dayn-2026-09-23")
     # zwei laeufe an zwei tagen mit demselben schluss zaehlen verschieden,
     # und genau das ist der punkt: der tag vergeht auch ohne neue kerze.
-    frueh = bauen([{"d": "2026-09-23", "btc": 84424.0}],
-                  'var LAST_CLOSE = 84424, LAST_DATE = "2026-09-23";',
-                  "2026-09-23", 3)
+    # bis zum 27.09.2026 lief der fruehe lauf hier am 23. selbst, mit dem
+    # schluss vom 23. - das ist der offene tag, den die regel jetzt sperrt.
+    naechster = bauen([{"d": "2026-09-23", "btc": 84424.0}],
+                      'var LAST_CLOSE = 84424, LAST_DATE = "2026-09-23";',
+                      "2026-09-25", 3)
     pruefe("derselbe schluss, ein tag spaeter, eine zahl hoeher",
-           (frueh[0].split("\n")[0], spaet[0].split("\n")[0]),
-           ("day 352.", "day 353."))
+           (spaet[0].split("\n")[0], naechster[0].split("\n")[0]),
+           ("day 353.", "day 354."))
+    pruefe("ein schluss vom zaehltag selbst geht nicht raus",
+           bauen([{"d": "2026-09-23", "btc": 84424.0}],
+                 'var LAST_CLOSE = 84424, LAST_DATE = "2026-09-23";',
+                 "2026-09-23", 3)[2], "kein btc-schluss in data/market-log.json")
 
     # --- sperre 5: post und seite zaehlen denselben tag ---
     pruefe("die seite wird auf ihren zaehler gelesen",
@@ -885,13 +910,16 @@ def selbsttest():
 
     # --- sperre 4: karte und text zaehlen denselben tag ---
     # das ist der fall, der einen widerspruch im selben tweet verhindert.
-    for tag in ("2026-09-16", "2026-09-23", "2026-09-24"):
-        txt, schluessel, _ = bauen([{"d": tag, "btc": 75608.0}],
-                                   'var LAST_CLOSE = 75608, LAST_DATE = "%s";' % tag,
+    # der preis ist vom vortag: ein schluss vom zaehltag selbst gilt seit
+    # der regel vom 27.09.2026 nicht mehr.
+    for tag, vortag in (("2026-09-16", "2026-09-15"), ("2026-09-23", "2026-09-22"),
+                        ("2026-09-24", "2026-09-23")):
+        txt, schluessel, _ = bauen([{"d": vortag, "btc": 75608.0}],
+                                   'var LAST_CLOSE = 75608, LAST_DATE = "%s";' % vortag,
                                    tag, 3)
         karte, _ = dayn_grafik.zahlen(
             [{"d": TOP_DATE, "btc": TOP}, {"d": "2026-06-30", "btc": 58534.28}],
-            [{"d": tag, "btc": 75608.0}], bis=tag)
+            [{"d": vortag, "btc": 75608.0}], bis=tag)
         pruefe("karte und text zaehlen gleich am %s" % tag,
                karte["tage_hoch"], txt.split("\n")[0][len("day "):-1])
     pruefe("der zaehltag steckt im sperrschluessel",

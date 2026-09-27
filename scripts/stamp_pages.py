@@ -71,7 +71,7 @@ sys.path.insert(0, HERE)
 # Die Vorrangregel steht genau einmal, dort. Bricht dieser Import, faellt
 # der Lauf laut aus, und das ist gewollt: lieber ein roter Stempellauf als
 # eine zweite Kopie der Regel, die leise auseinanderlaeuft.
-from market_log import letzter_live, reihe_mit_logvorrang  # noqa: E402
+from market_log import geschlossene, letzter_live, reihe_mit_logvorrang  # noqa: E402
 
 REPO = os.path.dirname(HERE)
 LOG = os.path.join(REPO, "data", "market-log.json")
@@ -298,8 +298,41 @@ SEKTOREN = ("xlk", "xly", "xlu", "xlp")
 
 # --- werkzeug --------------------------------------------------------
 
+_LAUFZEIT = []
+
+
+def laufzeit():
+    """EIN zeitpunkt fuer den ganzen lauf, beim ersten aufruf genommen.
+
+    Zaehltag und der Schnitt der Preisgruppe (preislog) kommen beide von
+    hier. Mit einem now() je Aufruf koennte ein Lauf ueber Mitternacht
+    UTC fuer den Zaehler schon den neuen Tag nehmen und fuer den Preis
+    noch den alten."""
+    if not _LAUFZEIT:
+        _LAUFZEIT.append(datetime.datetime.now(datetime.timezone.utc))
+    return _LAUFZEIT[0]
+
+
 def heute():
-    return datetime.datetime.now(datetime.timezone.utc).date()
+    return laufzeit().date()
+
+
+def preislog():
+    """das marktlog fuer die preisgruppe, nur mit tagen, die vorbei sind.
+
+    Regel vom 27.09.2026 (market_log.geschlossene): ein Schluss mit Datum
+    D gilt nur, wenn der Lauf nach D 24:00 UTC liegt, sonst gilt der letzte
+    geschlossene Tag. Die fuenf Seiten der Preisgruppe lesen Log und Archiv
+    nur hierueber und ueber preisarchiv(), damit keine Zeile von heute
+    durch eine Hintertuer hereinkommt."""
+    with open(LOG, "r", encoding="utf-8") as fh:
+        return geschlossene(json.load(fh), heute().isoformat())
+
+
+def preisarchiv():
+    """das archiv fuer die preisgruppe, mit demselben schnitt wie preislog."""
+    with open(ARCHIV, "r", encoding="utf-8") as fh:
+        return geschlossene(json.load(fh), heute().isoformat())
 
 
 def tage(startdatum, bis=None):
@@ -628,8 +661,7 @@ def lauf_schluss():
     if not os.path.exists(LOG):
         print("  FEHL %-30s data/market-log.json fehlt" % SCHLUSS_SEITE)
         return 1
-    with open(LOG, "r", encoding="utf-8") as fh:
-        rows = json.load(fh)
+    rows = preislog()
     zeile = letzter_schluss(rows)
     if not zeile:
         print("  FEHL %-30s kein btc-schluss im log" % SCHLUSS_SEITE)
@@ -639,8 +671,7 @@ def lauf_schluss():
     # kommt nur dazu, falls das archiv aelter ist als das tief.
     tief = None
     if os.path.exists(ARCHIV):
-        with open(ARCHIV, "r", encoding="utf-8") as fh:
-            tief = tief_nach(mit_rand(archiv_reihe(json.load(fh)), rows), HOCH_CLOSE)
+        tief = tief_nach(mit_rand(archiv_reihe(preisarchiv()), rows), HOCH_CLOSE)
 
     fehler = 0
     for datei in SCHLUSS_SEITEN:
@@ -815,10 +846,8 @@ def lauf_rueckgang():
     if not os.path.exists(LOG):
         print("  FEHL %-30s data/market-log.json fehlt" % DD_SEITE)
         return 1
-    with open(ARCHIV, "r", encoding="utf-8") as fh:
-        archivrows = json.load(fh)
-    with open(LOG, "r", encoding="utf-8") as fh:
-        logrows = json.load(fh)
+    archivrows = preisarchiv()
+    logrows = preislog()
     werte, grund = rueckgang_werte(archivrows, logrows)
     if werte is None:
         print("  FEHL %-30s %s" % (DD_SEITE, grund))
@@ -1021,10 +1050,8 @@ def lauf_bullrun():
     if not (os.path.exists(ARCHIV) and os.path.exists(LOG)):
         print("  FEHL %-30s archiv oder log fehlt" % BL_SEITE)
         return 1
-    with open(ARCHIV, "r", encoding="utf-8") as fh:
-        archivrows = json.load(fh)
-    with open(LOG, "r", encoding="utf-8") as fh:
-        logrows = json.load(fh)
+    archivrows = preisarchiv()
+    logrows = preislog()
     werte, grund = bullrun_werte(archivrows, logrows)
     if werte is None:
         print("  FEHL %-30s %s" % (BL_SEITE, grund))
@@ -1185,10 +1212,8 @@ def lauf_gold():
     if not (os.path.exists(ARCHIV) and os.path.exists(LOG)):
         print("  FEHL %-30s archiv oder log fehlt" % GOLD_SEITE)
         return 1
-    with open(ARCHIV, "r", encoding="utf-8") as fh:
-        archivrows = json.load(fh)
-    with open(LOG, "r", encoding="utf-8") as fh:
-        logrows = json.load(fh)
+    archivrows = preisarchiv()
+    logrows = preislog()
     werte, grund = gold_werte(archivrows, logrows)
     if werte is None:
         print("  FEHL %-30s %s" % (GOLD_SEITE, grund))
@@ -1485,10 +1510,8 @@ def lauf_whatif():
     if not (os.path.exists(ARCHIV) and os.path.exists(LOG)):
         print("  FEHL %-30s archiv oder log fehlt" % WI_SEITE)
         return 1
-    with open(ARCHIV, "r", encoding="utf-8") as fh:
-        archivrows = json.load(fh)
-    with open(LOG, "r", encoding="utf-8") as fh:
-        logrows = json.load(fh)
+    archivrows = preisarchiv()
+    logrows = preislog()
     w, grund = whatif_werte(archivrows, logrows)
     if w is None:
         print("  FEHL %-30s %s" % (WI_SEITE, grund))
@@ -2160,6 +2183,60 @@ def selbsttest():
     pruefe("zwei verschiedene heute halten den lauf an",
            stichtag_funde(zwei, lambda d: "egal"),
            ["a.html rechnet auf 2026-09-23", "b.html rechnet auf 2026-09-22"])
+
+    # --- ein schluss gilt erst nach D 24:00 utc (regel vom 27.09.2026) ---
+    # der lauf vom 26.09.2026 um 23:56:35 utc mit den echten daten: die
+    # vier bitcoin-seiten nahmen 84293 vom 26., gemessen um 22:31:50 utc,
+    # also vom laufenden tag. what-if stand auf dem 25., weil die boerse
+    # samstags zu hat. dazu der donnerstag davor, an dem die wache nichts
+    # merkte, weil unter der woche alle fuenf auf denselben offenen tag
+    # zeigten.
+    if os.path.exists(ARCHIV) and os.path.exists(LOG):
+        def preisgruppe(stempel, schneiden=True):
+            lauf = datetime.datetime.strptime(stempel, "%Y-%m-%dT%H:%M:%SZ").replace(
+                tzinfo=datetime.timezone.utc)
+            gemerkt = list(_LAUFZEIT)
+            _LAUFZEIT[:] = [lauf]
+            try:
+                a, l = preisarchiv(), preislog()
+                if not schneiden:   # so lief es bis zum 27.09.2026
+                    with open(ARCHIV, encoding="utf-8") as fh:
+                        a = json.load(fh)
+                    with open(LOG, encoding="utf-8") as fh:
+                        l = [r for r in json.load(fh) if r.get("d", "") <= stempel[:10]]
+                z = letzter_schluss(l)
+                g, _ = gold_werte(a, l)
+                w, _ = whatif_werte(a, l)
+            finally:
+                _LAUFZEIT[:] = gemerkt
+            tag = dict((s, z["d"]) for s in SCHLUSS_SEITEN)
+            tag[GOLD_SEITE] = g["b5tag"]
+            tag[WI_SEITE] = w["asof"]
+            return z, tag, w["text"]["asof"]
+
+        z, tag, wi_text = preisgruppe("2026-09-26T23:56:35Z")
+        pruefe("26.09. 23:56:35 utc: der schluss ist der vom 25.",
+               (z["d"], z["btc"]), ("2026-09-25", 84039.0))
+        pruefe("26.09. 23:56:35 utc: alle fuenf seiten auf dem 25.",
+               sorted(set(tag.values())), ["2026-09-25"])
+        pruefe("what-if nennt keinen bitcoin-preis vom laufenden tag",
+               wi_text, "25 September 2026 (bitcoin 25 September 2026)")
+        pruefe("26.09. 23:56:35 utc: die wache laesst den lauf durch",
+               stichtag_funde(tag, lambda d: "25 September 2026"), [])
+        _, alt_tag, _ = preisgruppe("2026-09-26T23:56:35Z", schneiden=False)
+        pruefe("ohne die regel: der offene 26. auf vier seiten (der fehler der nacht)",
+               sorted(set(alt_tag.values())), ["2026-09-25", "2026-09-26"])
+        z, tag, _ = preisgruppe("2026-09-27T00:00:00Z")
+        pruefe("27.09. 00:00:00 utc: der 26. ist vorbei",
+               (z["d"], z["btc"], tag[WI_SEITE]), ("2026-09-26", 84293.0, "2026-09-25"))
+        _, do_tag, _ = preisgruppe("2026-09-24T23:58:37Z", schneiden=False)
+        pruefe("ohne die regel, donnerstag 24.09. 23:58: offener tag, wache still",
+               (sorted(set(do_tag.values())),
+                stichtag_funde(do_tag, lambda d: "24 September 2026")),
+               (["2026-09-24"], []))
+        z, tag, _ = preisgruppe("2026-09-24T23:58:37Z")
+        pruefe("mit der regel, donnerstag 24.09. 23:58: der 23.",
+               (z["d"], sorted(set(tag.values()))), ("2026-09-23", ["2026-09-23"]))
     # gleicher tag, aber eine seite nennt ihn nicht: dann wurde sie nicht
     # gestempelt und zeigt noch gestern
     pruefe("stiller tag faellt auf",

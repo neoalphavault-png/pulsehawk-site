@@ -39,6 +39,7 @@ aufrufe:
 """
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -557,6 +558,28 @@ def letzter_live(rows, feld):
         if ist_live(r, feld) and isinstance(r.get("d"), str):
             return r
     return None
+
+
+def geschlossene(rows, heute):
+    """nur die zeilen von tagen, die zum laufzeitpunkt vorbei sind.
+
+    Regel vom 27.09.2026: ein Schluss mit Datum D gilt nur, wenn der Lauf
+    nach D 24:00 UTC liegt, sonst gilt der letzte geschlossene Tag. 'heute'
+    ist das UTC-Datum des Laufs ("JJJJ-MM-TT"), derselbe Tag, der auch
+    Zaehltag ist. Vorbei ist jeder Tag davor, heute nie.
+
+    Warum: am 26.09.2026 um 23:56:35 UTC stempelte day n "letzter schluss
+    84293 vom 2026-09-26". Der Wert war eine Momentaufnahme von 22:31:50
+    UTC, der Tag lief noch 23 Minuten. Crypto-Zeilen tragen das Datum ihrer
+    Messung (zeit[:10]), eine Zeile von heute ist also nie ein Schluss.
+
+    Ohne 'heute' gibt es keinen Rueckfall auf now(): wer filtert, muss den
+    Zeitpunkt seines Laufs mitgeben, damit Seite, Post und Karte gegen
+    denselben Tag schneiden."""
+    if not (isinstance(heute, str) and re.match(r"^\d{4}-\d{2}-\d{2}$", heute)):
+        raise ValueError("heute als JJJJ-MM-TT, nicht %r" % (heute,))
+    return [r for r in (rows if isinstance(rows, list) else [])
+            if isinstance(r, dict) and isinstance(r.get("d"), str) and r["d"] < heute]
 
 
 def messzeit_hhmm(herkunft, zeile, feld="btc"):
@@ -1200,6 +1223,34 @@ def run_selftest():
           letzter_live(nur_nach, "btc")["d"], "2026-09-22")
     check("ohne live-wert gibt es keinen tageswert",
           letzter_live([{"d": "2026-09-23", "btc": 4.0, MARKE: ["btc"]}], "btc"), None)
+
+    # --- ein schluss gilt erst nach D 24:00 utc (regel vom 27.09.2026) ---
+    # genau der lauf vom 26.09.2026: day n um 23:56:35 utc, der marktlogger
+    # hatte btc um 22:31:50 utc gemessen und die zeile auf den 26. datiert.
+    nacht = [{"d": "2026-09-24", "btc": 84392.0}, {"d": "2026-09-25", "btc": 84039.0},
+             {"d": "2026-09-26", "btc": 84293.0}]
+    def schluss_um(stempel):
+        lauf = _dt.datetime.strptime(stempel, "%Y-%m-%dT%H:%M:%SZ")
+        z = letzter_live(geschlossene(nacht, lauf.date().isoformat()), "btc")
+        return (z["d"], z["btc"]) if z else None
+    check("26.09. 23:56:35 utc: der 26. laeuft noch, es gilt der 25.",
+          schluss_um("2026-09-26T23:56:35Z"), ("2026-09-25", 84039.0))
+    check("26.09. 23:59:59 utc: immer noch der 25.",
+          schluss_um("2026-09-26T23:59:59Z"), ("2026-09-25", 84039.0))
+    check("27.09. 00:00:00 utc: der 26. ist vorbei",
+          schluss_um("2026-09-27T00:00:00Z"), ("2026-09-26", 84293.0))
+    check("27.09. 07:30 utc: der 26.",
+          schluss_um("2026-09-27T07:30:00Z"), ("2026-09-26", 84293.0))
+    check("nur eine zeile von heute: kein schluss",
+          letzter_live(geschlossene(nacht[2:], "2026-09-26"), "btc"), None)
+    check("die reihenfolge der zeilen bleibt",
+          [r["d"] for r in geschlossene(nacht, "2026-09-26")], ["2026-09-24", "2026-09-25"])
+    for kaputt in (None, "", "2026-09-26T23:56:35Z", 20260926):
+        try:
+            geschlossene(nacht, kaputt)
+            check("ohne laufdatum kein schnitt (%r)" % (kaputt,), "kein fehler", "ValueError")
+        except ValueError:
+            check("ohne laufdatum kein schnitt (%r)" % (kaputt,), "ValueError", "ValueError")
 
     # --- die pruefung vor dem speichern ---
     check("vollstaendige herkunft ist sauber", pruefe_herkunft(zeilen, hm), [])
