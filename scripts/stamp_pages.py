@@ -1463,7 +1463,11 @@ def whatif_werte(archivrows, logrows):
                   % (wi_usd(dbetrag), WI_LABEL[df], djahre, wi_usd(D["paid"]),
                      wi_usd(D["wert"]), D["wert"] / D["paid"])),
     }
-    return {"text": werte, "innen": innen, "asof": asof}, None
+    # btc_tag ist der juengste bitcoin-preis der seite, asof der juengste
+    # tag, an dem alle drei preise stehen. am wochenende ist asof der
+    # freitag, btc_tag der samstag oder sonntag - und die seite nennt beide.
+    return {"text": werte, "innen": innen, "asof": asof,
+            "btc_tag": reihen["btc"][-1][0]}, None
 
 
 RE_INNEN = {}
@@ -1510,7 +1514,15 @@ def lauf_whatif():
     if ko:
         print("  FEHL %-30s %s" % (WI_SEITE, "; ".join(ko)))
         return 1
-    STICHTAG[WI_SEITE] = w["asof"]
+    # In der Preisgruppe der Stichtagswache steht der juengste BITCOIN-Preis
+    # der Seite, wie bei den anderen Seiten auch. Bis zum 27.09.2026 stand
+    # hier asof, der juengste Tag mit Bitcoin, Gold UND Aktien. Das ist am
+    # Wochenende der Freitag, weil die Boerse zu hat; die Seite schreibt das
+    # selbst hin ("25 September 2026 (bitcoin 26 September 2026)"). Die
+    # Wache hielt das am ersten Samstag fuer zwei verschiedene heute und
+    # stoppte den Lauf. Der Dreier-Stand ist kein veralteter Preis, sondern
+    # der letzte gemeinsame Handelstag.
+    STICHTAG[WI_SEITE] = w["btc_tag"]
     return schreiben(pfad, alt, neu, WI_SEITE,
                      "%d zahlen, stand %s" % (treffer, w["asof"]))
 
@@ -2083,6 +2095,33 @@ def selbsttest():
     # javascript schiebt den 29. februar auf den 1. maerz, wenn das zieljahr
     # keinen hat. das muss hier genauso laufen.
     pruefe("schalttag wie in javascript", wi_jahre_zurueck("2024-02-29", 3), "2021-03-01")
+
+    # --- what-if am wochenende (27.09.2026) ---
+    # am samstag gibt es bitcoin, aber keine boerse. der dreier-stand der
+    # seite ist dann der freitag, ihr bitcoin-preis der samstag. in der
+    # preisgruppe der stichtagswache zaehlt der bitcoin-preis.
+    if os.path.exists(ARCHIV) and os.path.exists(LOG):
+        with open(ARCHIV, encoding="utf-8") as fh:
+            wa = json.load(fh)
+        with open(LOG, encoding="utf-8") as fh:
+            wl = [r for r in json.load(fh) if r.get("d", "") <= "2026-09-25"]
+        wl.append({"d": "2026-09-26", "btc": 84293.0})
+        ww, _ = whatif_werte(wa, wl)
+        pruefe("what-if am samstag: dreier-stand ist der freitag",
+               (ww["asof"], ww["btc_tag"]), ("2026-09-25", "2026-09-26"))
+        pruefe("die seite nennt beide tage",
+               ww["text"]["asof"], "25 September 2026 (bitcoin 26 September 2026)")
+        wochenende = {"bitcoin-top-to-bottom.html": "2026-09-26",
+                      "bitcoin-drawdown.html": "2026-09-26", WI_SEITE: ww["btc_tag"]}
+        pruefe("mit dem bitcoin-tag haelt die wache am samstag",
+               stichtag_funde(wochenende, lambda d: "26 September 2026"), [])
+        # so lief es am 26.09.2026 um 23:56 utc: der dreier-stand in der
+        # preisgruppe, die wache stoppte day n
+        pruefe("mit dem dreier-stand schlug sie an (der fehler vom 26.09.)",
+               len(stichtag_funde(dict(wochenende, **{WI_SEITE: ww["asof"]}),
+                                  lambda d: "egal")) > 0, True)
+        pruefe("unter der woche sind beide tage gleich",
+               (lambda w: w["asof"] == w["btc_tag"])(whatif_werte(wa, wl[:-1])[0]), True)
     pruefe("schalttag auf schaltjahr bleibt", wi_jahre_zurueck("2024-02-29", 4), "2020-02-29")
 
     # der 20.09. liegt VOR dem stichtag 2021-09-23 und darf nicht genommen
