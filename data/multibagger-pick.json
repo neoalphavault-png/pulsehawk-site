@@ -1,5 +1,5 @@
 {
- "date": "2026-09-27",
+ "date": "2026-09-28",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -27,8 +27,8 @@
   "wiki": null
  },
  "base_rate": {
-  "sp500_scanned": 499,
-  "sp500_doubled": 25,
+  "sp500_scanned": 498,
+  "sp500_doubled": 26,
   "sp500_tripled": 10
  },
  "benchmarks": {
@@ -67,11 +67,11 @@
   },
   {
    "ticker": "WDC",
-   "mult": 4.1053
+   "mult": 4.2609
   },
   {
    "ticker": "STX",
-   "mult": 4.0497
+   "mult": 4.1703
   },
   {
    "ticker": "DOCN",
