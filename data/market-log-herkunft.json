@@ -11191,28 +11191,82 @@
  },
  "2026-09-29": {
   "btc": {
-   "quelle": "coingecko",
+   "quelle": "kraken",
    "art": "momentaufnahme",
-   "zeit": "2026-09-29T00:16:00Z",
-   "zeit_aus": "quelle"
+   "zeit": "2026-09-29T23:34:35Z",
+   "zeit_aus": "abruf"
   },
   "btc_dom": {
    "quelle": "coingecko",
    "art": "momentaufnahme",
-   "zeit": "2026-09-29T00:14:16Z",
+   "zeit": "2026-09-29T23:26:27Z",
    "zeit_aus": "quelle"
   },
   "eth": {
-   "quelle": "coingecko",
+   "quelle": "kraken",
    "art": "momentaufnahme",
-   "zeit": "2026-09-29T00:15:50Z",
-   "zeit_aus": "quelle"
+   "zeit": "2026-09-29T23:34:35Z",
+   "zeit_aus": "abruf"
+  },
+  "eurusd": {
+   "quelle": "frankfurter",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "gld": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "spy": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "spy_vol": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "stables": {
+   "quelle": "defillama",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
   },
   "total_mcap": {
    "quelle": "coingecko",
    "art": "momentaufnahme",
-   "zeit": "2026-09-29T00:14:16Z",
+   "zeit": "2026-09-29T23:26:27Z",
    "zeit_aus": "quelle"
+  },
+  "xlk": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xlp": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xlu": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xly": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
   }
  }
 }
