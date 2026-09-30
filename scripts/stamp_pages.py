@@ -1233,11 +1233,39 @@ def kopf_funde(datei, html, werte):
     sondern ob der stempel ihn in diesem lauf gesetzt hat. hat er das,
     kontrolliert er ihn, und eine zweite kopie im kopf kontrolliert er
     nicht."""
-    kopf = nur_kopf(html)
+    # <style> faellt heraus: dort schreibt kein stempel hin, und css ist
+    # voller zahlen ("width:100%", "ellipse 120% 60%"). titel, meta und das
+    # json-ld im kopf bleiben geprueft.
+    kopf = RE_STIL.sub(" ", nur_kopf(html))
     frei = set(KOPF_AUSNAHMEN.get(datei, ()))
     return ["%s=%r steht auch im kopf" % (i, v)
             for i, v in sorted(werte.items())
-            if i not in frei and v and str(v) in kopf]
+            if i not in frei and v and steht_ganz_in(str(v), kopf)]
+
+
+RE_STIL = re.compile(r"<style\b[^>]*>.*?</style>", re.S | re.I)
+
+
+def steht_ganz_in(wert, text):
+    """steht der wert als ganzes stueck im text, nicht als teil einer
+    groesseren zahl oder eines wortes?
+
+    Bis zum 30.09.2026 war das ein Teilstring-Vergleich (wert in text).
+    Der Zaehler der Bullenseite stand am 28.09. auf 90 und am 30.09. auf
+    92, und die Wache fand die 90 in "1,990 percent" und "190px", die 92
+    in "692 percent". Kein Wert stand doppelt, trotzdem blieb day n rot.
+
+    Beginnt der Wert mit einer Ziffer, darf davor keine Ziffer, kein
+    Buchstabe und kein "1," oder "1." stehen. Endet er mit einer Ziffer,
+    darf danach keine Ziffer, kein Buchstabe und kein ",5" oder ".5"
+    stehen. Werte, die mit etwas anderem beginnen oder enden ("-53.1%",
+    "30 June 2026"), werden an dieser Seite wie bisher genau verglichen."""
+    muster = re.escape(wert)
+    if wert[:1].isdigit():
+        muster = r"(?<![0-9A-Za-z])(?<![0-9][.,])" + muster
+    if wert[-1:].isdigit():
+        muster += r"(?![0-9A-Za-z])(?![.,][0-9])"
+    return re.search(muster, text) is not None
 
 
 def stichtag_funde(eintraege, lies=None, nennen=None):
@@ -2143,6 +2171,51 @@ def selbsttest():
            ["blrange2='1,050 to 1,067' steht auch im kopf"])
     pruefe("leerer wert schlaegt nicht an",
            kopf_funde("x.html", "<head></head><body></body>", {"a": ""}), [])
+
+    # --- ganze zahlen statt teilstring (30.09.2026) ---
+    # die stellen aus dem echten kopf der bullenseite, an denen der alte
+    # vergleich 90 und 92 fand, obwohl der zaehler dort nicht steht
+    for stelle, n in (("11,109 percent, 1,990 percent", "90"), ("flex:1 1 190px;", "90"),
+                      ("and 692 percent from", "92"), ("--btc:#D95926;", "92"),
+                      ("1,092 days", "92"), ("92.5 percent", "92"), ("#92ABCD", "92")):
+        pruefe("%s ist nicht die zahl %s" % (stelle, n),
+               kopf_funde("x.html", "<head>%s</head><body></body>" % stelle, {"blnow": n}), [])
+    # was wirklich doppelt steht, faellt weiter auf
+    for stelle in ("day 92 since the low", "92 days", "(92)", "92%", "day 92.",
+                   '"92"', "92, and"):
+        pruefe("%r enthaelt die zahl 92" % stelle,
+               kopf_funde("x.html", "<head>%s</head><body></body>" % stelle, {"blnow": "92"}),
+               ["blnow='92' steht auch im kopf"])
+    pruefe("css im kopf zaehlt nicht",
+           kopf_funde("x.html", "<head><style>svg { width:100%; }</style></head><body></body>",
+                      {"blnow": "100"}), [])
+    pruefe("dieselbe zahl in der beschreibung schon",
+           kopf_funde("x.html", '<head><style>svg { width:100%; }</style>'
+                      '<meta name="description" content="up 100% in a year"></head><body></body>',
+                      {"blnow": "100"}), ["blnow='100' steht auch im kopf"])
+    pruefe("json-ld im kopf bleibt geprueft",
+           kopf_funde("x.html", '<head><script type="application/ld+json">{"text":"day 92"}'
+                      '</script></head><body></body>', {"blnow": "92"}),
+           ["blnow='92' steht auch im kopf"])
+    pruefe("tausender als ganzes", steht_ganz_in("1,990", "rose 1,990 percent"), True)
+    pruefe("aber nicht in einer laengeren zahl", steht_ganz_in("1,990", "11,990"), False)
+    pruefe("werte ohne ziffer am rand wie bisher",
+           (steht_ganz_in("-53.1%", "fiel -53.1% am"), steht_ganz_in("30 June 2026", "am 30 June 2026.")),
+           (True, True))
+    # der echte kopf der bullenseite mit den zaehlerstaenden, an denen die
+    # alte wache anschlug oder anschlagen wuerde
+    bl_pfad = os.path.join(REPO, BL_SEITE)
+    if os.path.exists(bl_pfad):
+        with open(bl_pfad, encoding="utf-8") as fh:
+            bl_html = fh.read()
+        for n in (90, 92, 93, 95, 99, 100, 109, 120, 124):
+            pruefe("bullenseite, zaehler %d: kein fund im echten kopf" % n,
+                   kopf_funde(BL_SEITE, bl_html, {"blnow": str(n), "r26days": str(n)}), [])
+        # und dieselbe seite mit einer echten kopie im kopf schlaegt an
+        doppelt = bl_html.replace("</head>", "<!-- day 92 since the low --></head>", 1)
+        pruefe("bullenseite mit echter kopie im kopf haelt an",
+               kopf_funde(BL_SEITE, doppelt, {"blnow": "92"}),
+               ["blnow='92' steht auch im kopf"])
     # jede ausnahme muss eine id sein, die es auch gibt, sonst schuetzt sie
     # nichts und niemand merkt es
     pruefe("keine ausnahme ohne seite",
