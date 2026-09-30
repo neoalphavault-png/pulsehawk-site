@@ -1,26 +1,26 @@
 {
- "date": "2026-09-29",
+ "date": "2026-09-30",
  "pick": {
-  "ticker": "LITE",
-  "name": "Lumentum",
-  "sector": "Information Technology",
-  "industry": "Communications Equipment",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
    "sp500"
   ],
-  "mult": 5.6669,
-  "pct": 466.7,
-  "from_1000": 5667,
-  "d": "2026-09-28",
-  "close": 921.32,
+  "mult": 8.0324,
+  "pct": 703.2,
+  "from_1000": 8032,
+  "d": "2026-09-29",
+  "close": 203.46,
   "d_1y": "2025-09-29",
-  "close_1y": 162.58,
-  "low": 149.61,
-  "high": 1053.09,
-  "drawdown_pct": -8.0,
+  "close_1y": 25.33,
+  "low": 22.36,
+  "high": 203.46,
+  "drawdown_pct": -11.7,
   "verified": {
    "source": "tiingo",
-   "mult": 5.6669,
+   "mult": 8.0324,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -29,25 +29,29 @@
  "base_rate": {
   "sp500_scanned": 499,
   "sp500_doubled": 24,
-  "sp500_tripled": 11
+  "sp500_tripled": 12
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 15.4,
-   "d": "2026-09-28",
+   "pct": 15.1,
+   "d": "2026-09-29",
    "d_1y": "2025-09-29"
   },
   "gold": {
-   "pct": 7.2,
-   "d": "2026-09-28",
+   "pct": 8.6,
+   "d": "2026-09-29",
    "d_1y": "2025-09-29"
   }
  },
- "candidates_total": 74,
+ "candidates_total": 70,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 8.0813
+   "mult": 8.0324
+  },
+  {
+   "ticker": "VICR",
+   "mult": 5.9983
   },
   {
    "ticker": "LITE",
@@ -58,24 +62,20 @@
    "mult": 5.6426
   },
   {
-   "ticker": "VICR",
-   "mult": 5.4077
-  },
-  {
-   "ticker": "WDC",
-   "mult": 4.2609
-  },
-  {
-   "ticker": "STX",
-   "mult": 4.1703
-  },
-  {
    "ticker": "DELL",
    "mult": 4.0585
   },
   {
+   "ticker": "STX",
+   "mult": 3.9864
+  },
+  {
+   "ticker": "WDC",
+   "mult": 3.8845
+  },
+  {
    "ticker": "DOCN",
-   "mult": 3.9781
+   "mult": 3.8117
   },
   {
    "ticker": "AMD",
@@ -86,11 +86,6 @@
    "mult": 3.613
   }
  ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (3.62%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
