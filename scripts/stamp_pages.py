@@ -71,7 +71,8 @@ sys.path.insert(0, HERE)
 # Die Vorrangregel steht genau einmal, dort. Bricht dieser Import, faellt
 # der Lauf laut aus, und das ist gewollt: lieber ein roter Stempellauf als
 # eine zweite Kopie der Regel, die leise auseinanderlaeuft.
-from market_log import geschlossene, letzter_live, reihe_mit_logvorrang  # noqa: E402
+from market_log import (bis_letztem_live, geschlossene, letzter_live,  # noqa: E402
+                        reihe_mit_logvorrang)
 
 REPO = os.path.dirname(HERE)
 LOG = os.path.join(REPO, "data", "market-log.json")
@@ -1464,6 +1465,10 @@ def whatif_werte(archivrows, logrows):
     ansicht der drei reiter."""
     reihen = dict((f, reihe_mit_logvorrang(f, archiv=archivrows, log=logrows))
                   for f in ("btc", "spy", "gld"))
+    # der juengste bitcoin-preis ist live gemessen, wie auf den vier
+    # bitcoin-seiten (letzter_schluss). sonst rechnet what-if auf einem
+    # nachgetragenen tag und die stichtagswache sieht zwei heute.
+    reihen["btc"] = bis_letztem_live(reihen["btc"], logrows, "btc")
     if not all(reihen.values()):
         return None, "btc, spy oder gld fehlt"
     asof = min(r[-1][0] for r in reihen.values())
@@ -2273,8 +2278,11 @@ def selbsttest():
             try:
                 a, l = preisarchiv(), preislog()
                 if not schneiden:   # so lief es bis zum 27.09.2026
+                    # archiv und log so, wie sie in jener nacht dastanden:
+                    # das archiv wird sonntags nachgezogen und kennt heute
+                    # tage, die es damals noch nicht gab.
                     with open(ARCHIV, encoding="utf-8") as fh:
-                        a = json.load(fh)
+                        a = [r for r in json.load(fh) if r.get("d", "") <= stempel[:10]]
                     with open(LOG, encoding="utf-8") as fh:
                         l = [r for r in json.load(fh) if r.get("d", "") <= stempel[:10]]
                 z = letzter_schluss(l)
@@ -2307,6 +2315,24 @@ def selbsttest():
                (sorted(set(do_tag.values())),
                 stichtag_funde(do_tag, lambda d: "24 September 2026")),
                (["2026-09-24"], []))
+        # 29.09.2026 01:14 utc: der logger fuer den 28. lief erst nach
+        # mitternacht, der 28. hat btc nur nachgetragen. vier seiten auf dem
+        # 27., what-if bis dahin auf dem nachgetragenen 28.
+        z, tag, wi_text = preisgruppe("2026-09-29T01:14:02Z")
+        pruefe("29.09. 01:14 utc: alle fuenf seiten auf dem letzten live-tag 27.",
+               (z["d"], sorted(set(tag.values()))), ("2026-09-27", ["2026-09-27"]))
+        pruefe("29.09. 01:14 utc: what-if nennt bitcoin vom 27.",
+               wi_text.endswith("(bitcoin 27 September 2026)"), True)
+        pruefe("29.09. 01:14 utc: die wache laesst den lauf durch",
+               stichtag_funde(tag, lambda d: "27 September 2026"), [])
+        gemerkt = list(_LAUFZEIT)
+        _LAUFZEIT[:] = [datetime.datetime(2026, 9, 29, 1, 14, 2, tzinfo=datetime.timezone.utc)]
+        try:
+            pruefe("ohne den rand-schnitt endete die what-if-reihe auf dem nachgetragenen 28.",
+                   reihe_mit_logvorrang("btc", archiv=preisarchiv(), log=preislog())[-1][0],
+                   "2026-09-28")
+        finally:
+            _LAUFZEIT[:] = gemerkt
         z, tag, _ = preisgruppe("2026-09-24T23:58:37Z")
         pruefe("mit der regel, donnerstag 24.09. 23:58: der 23.",
                (z["d"], sorted(set(tag.values()))), ("2026-09-23", ["2026-09-23"]))
