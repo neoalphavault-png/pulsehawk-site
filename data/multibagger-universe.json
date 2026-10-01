@@ -1,6 +1,6 @@
 {
- "date": "2026-09-20",
- "count": 1506,
+ "date": "2026-09-28",
+ "count": 1504,
  "rows": [
   {
    "ticker": "MMM",
@@ -673,6 +673,16 @@
    ]
   },
   {
+   "ticker": "BE",
+   "name": "Bloom Energy",
+   "wiki": null,
+   "sector": "Industrials",
+   "industry": "Electrical Components & Equipment",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
    "ticker": "BNY",
    "name": "BNY Mellon",
    "wiki": null,
@@ -758,16 +768,6 @@
    "wiki": null,
    "sector": "Consumer Staples",
    "industry": "Distillers & Vintners",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
-   "ticker": "BLDR",
-   "name": "Builders FirstSource",
-   "wiki": null,
-   "sector": "Industrials",
-   "industry": "Building Products",
    "indices": [
     "sp500"
    ]
@@ -1793,6 +1793,16 @@
    ]
   },
   {
+   "ticker": "P",
+   "name": "Everpure",
+   "wiki": null,
+   "sector": "Information Technology",
+   "industry": "Technology Hardware, Storage & Peripherals",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
    "ticker": "ES",
    "name": "Eversource Energy",
    "wiki": null,
@@ -2468,6 +2478,16 @@
    "wiki": null,
    "sector": "Industrials",
    "industry": "Industrial Machinery & Supplies & Components",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
+   "ticker": "ILMN",
+   "name": "Illumina, Inc.",
+   "wiki": null,
+   "sector": "Health Care",
+   "industry": "Life Sciences Tools & Services",
    "indices": [
     "sp500"
    ]
@@ -3168,16 +3188,6 @@
    "wiki": null,
    "sector": "Health Care",
    "industry": "Biotechnology",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
-   "ticker": "TAP",
-   "name": "Molson Coors Beverage Company",
-   "wiki": null,
-   "sector": "Consumer Staples",
-   "industry": "Brewers",
    "indices": [
     "sp500"
    ]
@@ -4443,16 +4453,6 @@
    ]
   },
   {
-   "ticker": "TTD",
-   "name": "Trade Desk (The)",
-   "wiki": null,
-   "sector": "Communication Services",
-   "industry": "Advertising",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
    "ticker": "TSCO",
    "name": "Tractor Supply",
    "wiki": null,
@@ -5118,6 +5118,16 @@
    "wiki": null,
    "sector": "Industrials",
    "industry": "Agricultural & Farm Machinery",
+   "indices": [
+    "sp400"
+   ]
+  },
+  {
+   "ticker": "AGNC",
+   "name": "AGNC Investment",
+   "wiki": null,
+   "sector": "Financials",
+   "industry": "Mortgage REITs",
    "indices": [
     "sp400"
    ]
@@ -5893,13 +5903,14 @@
    ]
   },
   {
-   "ticker": "CPRI",
-   "name": "Capri Holdings",
+   "ticker": "CORT",
+   "name": "Corcept Therapeutics",
    "wiki": null,
-   "sector": "Consumer Discretionary",
-   "industry": "Apparel, Accessories & Luxury Goods",
+   "sector": "Health Care",
+   "industry": "Pharmaceuticals",
    "indices": [
-    "sp400"
+    "sp400",
+    "sp600"
    ]
   },
   {
@@ -6160,6 +6171,17 @@
    "industry": "Construction & Engineering",
    "indices": [
     "sp400"
+   ]
+  },
+  {
+   "ticker": "EAT",
+   "name": "Brinker International",
+   "wiki": null,
+   "sector": "Consumer Discretionary",
+   "industry": "Restaurants",
+   "indices": [
+    "sp400",
+    "sp600"
    ]
   },
   {
@@ -6803,6 +6825,16 @@
    ]
   },
   {
+   "ticker": "HUBS",
+   "name": "HubSpot",
+   "wiki": null,
+   "sector": "Information Technology",
+   "industry": "Application Software",
+   "indices": [
+    "sp400"
+   ]
+  },
+  {
    "ticker": "HWC",
    "name": "Hancock Whitney",
    "wiki": null,
@@ -6858,16 +6890,6 @@
    "wiki": null,
    "sector": "Industrials",
    "industry": "Construction & Engineering",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
-   "ticker": "ILMN",
-   "name": "Illumina, Inc.",
-   "wiki": null,
-   "sector": "Health Care",
-   "industry": "Life Sciences Tools & Services",
    "indices": [
     "sp400"
    ]
@@ -7693,16 +7715,6 @@
    ]
   },
   {
-   "ticker": "P",
-   "name": "Everpure",
-   "wiki": null,
-   "sector": "Information Technology",
-   "industry": "Technology Hardware, Storage & Peripherals",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
    "ticker": "PAG",
    "name": "Penske Automotive Group",
    "wiki": null,
@@ -8118,16 +8130,6 @@
    "wiki": null,
    "sector": "Industrials",
    "industry": "Diversified Support Services",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
-   "ticker": "SAM",
-   "name": "Boston Beer Company",
-   "wiki": null,
-   "sector": "Consumer Staples",
-   "industry": "Brewers",
    "indices": [
     "sp400"
    ]
@@ -10263,16 +10265,6 @@
    ]
   },
   {
-   "ticker": "CORT",
-   "name": "Corcept Therapeutics Incorporated",
-   "wiki": null,
-   "sector": "Health Care",
-   "industry": "Pharmaceuticals",
-   "indices": [
-    "sp600"
-   ]
-  },
-  {
    "ticker": "COTY",
    "name": "Coty",
    "wiki": null,
@@ -10728,16 +10720,6 @@
    "wiki": null,
    "sector": "Industrials",
    "industry": "Trading Companies & Distributors",
-   "indices": [
-    "sp600"
-   ]
-  },
-  {
-   "ticker": "EAT",
-   "name": "Brinker International, Inc.",
-   "wiki": null,
-   "sector": "Consumer Discretionary",
-   "industry": "Restaurants",
    "indices": [
     "sp600"
    ]

@@ -1,99 +1,103 @@
 {
- "date": "2026-09-26",
+ "date": "2026-10-01",
  "pick": {
-  "ticker": "VICR",
-  "name": "Vicor Corporation",
-  "sector": "Industrials",
-  "industry": "Electrical Components & Equipment",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp400"
+   "sp600"
   ],
-  "mult": 5.4077,
-  "pct": 440.8,
-  "from_1000": 5408,
-  "d": "2026-09-25",
-  "close": 281.96,
-  "d_1y": "2025-09-25",
-  "close_1y": 52.14,
-  "low": 48.46,
-  "high": 379.78,
-  "drawdown_pct": -7.1,
+  "mult": 5.6163,
+  "pct": 461.6,
+  "from_1000": 5616,
+  "d": "2026-09-30",
+  "close": 90.31,
+  "d_1y": "2025-09-30",
+  "close_1y": 16.08,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": -18.8,
   "verified": {
    "source": "tiingo",
-   "mult": 5.4083,
-   "diff_pct": 0.01
+   "mult": 5.6163,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 22,
-  "sp500_tripled": 10
+  "sp500_doubled": 23,
+  "sp500_tripled": 12
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 17.2,
-   "d": "2026-09-25",
-   "d_1y": "2025-09-25"
+   "pct": 14.5,
+   "d": "2026-09-30",
+   "d_1y": "2025-09-30"
   },
   "gold": {
-   "pct": 14.1,
-   "d": "2026-09-25",
-   "d_1y": "2025-09-25"
+   "pct": 7.1,
+   "d": "2026-09-30",
+   "d_1y": "2025-09-30"
   }
  },
- "candidates_total": 75,
+ "candidates_total": 69,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 7.5278
-  },
-  {
-   "ticker": "LITE",
-   "mult": 6.0821
+   "mult": 8.0324
   },
   {
    "ticker": "VICR",
-   "mult": 5.4077
+   "mult": 5.9983
+  },
+  {
+   "ticker": "LITE",
+   "mult": 5.6669
   },
   {
    "ticker": "MXL",
-   "mult": 5.101
+   "mult": 5.6163
   },
   {
-   "ticker": "WDC",
-   "mult": 4.1053
-  },
-  {
-   "ticker": "INTC",
-   "mult": 4.0804
-  },
-  {
-   "ticker": "DELL",
-   "mult": 4.058
+   "ticker": "FORM",
+   "mult": 4.0997
   },
   {
    "ticker": "STX",
-   "mult": 4.0497
+   "mult": 3.9864
+  },
+  {
+   "ticker": "WDC",
+   "mult": 3.8845
   },
   {
    "ticker": "DOCN",
-   "mult": 3.9781
+   "mult": 3.8117
+  },
+  {
+   "ticker": "DELL",
+   "mult": 3.7945
   },
   {
    "ticker": "AMD",
-   "mult": 3.9114
+   "mult": 3.7812
   }
  ],
  "rejected": [
   {
    "ticker": "MRNA",
-   "reason": "quellen weichen ab (7.35%)"
+   "reason": "quellen weichen ab (7.18%)"
+  },
+  {
+   "ticker": "VICR",
+   "reason": "quellen weichen ab (3.12%)"
   },
   {
    "ticker": "LITE",
-   "reason": "quellen weichen ab (2.69%)"
+   "reason": "quellen weichen ab (5.34%)"
   }
  ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"

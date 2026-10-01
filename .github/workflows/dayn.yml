@@ -13,12 +13,18 @@ name: day n
 #      liest dieselbe Datei und bricht ab, wenn Seite und Log sich
 #      widersprechen.
 #
-# ZEITPUNKT. Der Marktlogger schreibt um 21:23 UTC. Der Seitenstempel laeuft
-# schon um 21:40. Dieser Lauf kommt um 21:52, also nach beiden, und bewusst
-# nicht zur vollen Stunde (GitHub verschiebt geplante Laeufe unter Last).
-# Er stempelt trotzdem selbst noch einmal: findet er nichts, committet er
-# nichts, und wenn der 21:40-Lauf ausgefallen ist, postet der Tag trotzdem
-# die richtige Zahl.
+# ZEITPUNKT: 07:30 UTC, seit dem 27.09.2026 (vorher 21:52). Der Zaehler
+# zaehlt bis zum Tag des Laufs. Um 21:52 kam der Lauf mit GitHubs
+# Verspaetung zwischen 23:35 und 00:18 an, also auf beiden Seiten von
+# Mitternacht: 4 von 11 Laeufen kippten in den Folgetag, und jedes Kippen
+# kostete einen Zaehltag oder liess ihn doppelt anfallen. Um 07:30 liegt
+# der Lauf mitten im Tag, und der Kurs ist immer der vom Vorabend.
+# Gerechnet gegen alle Laeufe des Marktloggers (20:00 UTC, gemessene
+# Verspaetung bis 8:06 h): 07:30 haette keinen Tag gekostet, 00:30 einen.
+# Morgens verspaetet GitHub staerker (Seitenstempel 04:17 startet 4:20 bis
+# 5:36 h spaeter); der Post kommt deshalb eher gegen Mittag UTC.
+# Er stempelt vor dem Post selbst noch einmal: findet er nichts, committet
+# er nichts.
 #
 # Dieselbe concurrency group wie der Seitenstempel. Zwei Commits innerhalb
 # weniger Sekunden bringen die Auslieferung von GitHub Pages durcheinander,
@@ -36,7 +42,7 @@ name: day n
 
 on:
   schedule:
-    - cron: "52 21 * * *"
+    - cron: "30 7 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
