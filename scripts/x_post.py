@@ -21,7 +21,7 @@ Selbstantwort, und die gibt es nur, wenn sie einen Link enthaelt.
   python3 scripts/x_post.py --from-nod data/number-of-day.json --image graphics/number-of-day.png
   python3 scripts/x_post.py --text "counting test, ignore" --image bild.png --delete-after
   python3 scripts/x_post.py --delete 1234567890
-  python3 scripts/x_post.py --selftest        # Signatur gegen den dokumentierten X-Testvektor
+  python3 scripts/x_post.py --selftest        # Signatur gegen einen erfundenen Testvektor (oauthlib-geprueft)
 
 Sperre: data/x-post-log.json merkt sich je --key die Post-ID. Gleicher Key
 noch einmal = nichts posten, Exit 0. Ist der Hauptpost drin, aber die
@@ -92,7 +92,10 @@ def creds_from_env():
     vals = [os.environ.get(n, "").strip() for n in ENV]
     missing = [n for n, v in zip(ENV, vals) if not v]
     if missing:
-        sys.exit("FEHLT: %s nicht gesetzt (Repo-Secrets, OAuth 1.0a Read and Write)" % ", ".join(missing))
+        # Nur die Namen, nie ein Wert. Die Werte liegen ausschliesslich in den
+        # GitHub Secrets und kommen ueber die Umgebung (env: im Workflow).
+        sys.exit("ABBRUCH: Umgebungsvariable fehlt: %s. Als GitHub Secret anlegen und im "
+                 "Workflow unter env: uebergeben. Nie in eine Datei schreiben." % ", ".join(missing))
     return {"key": vals[0], "secret": vals[1], "token": vals[2], "token_secret": vals[3]}
 
 
@@ -344,14 +347,20 @@ def run(args):
 
 
 def selftest():
-    # Dokumentierter Testvektor aus der X-Entwicklerdoku ("Creating a signature").
-    creds = {"key": "xvz1evFS4wEEPTGEFPHBog", "secret": "kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw",
-             "token": "370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb", "token_secret": "LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE"}
+    # Erfundener Testvektor, KEIN echter Schluessel (Ben, 02.10.2026: nie ein
+    # Schluessel in einer Datei im Repo, auch kein Beispielwert aus einer Doku).
+    # Die erwartete Signatur ist am 02.10.2026 unabhaengig mit oauthlib 3.2.2
+    # gerechnet. Dieselbe Rechnung hat den frueheren Doku-Vektor aus der
+    # X-Entwicklerdoku exakt reproduziert.
+    creds = {"key": "testkey-kaspapulse-nicht-echt",
+             "secret": "testsecret-kaspapulse-nicht-echt",
+             "token": "testtoken-kaspapulse-nicht-echt",
+             "token_secret": "testtokensecret-kaspapulse-nicht-echt"}
     hdr = oauth_header("POST", "https://api.twitter.com/1.1/statuses/update.json", creds,
-                       {"include_entities": "true", "status": "Hello Ladies + Gentlemen, a signed OAuth request!"},
-                       nonce="kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg", timestamp="1318622958")
-    want = 'oauth_signature="hCtSmYh%2BiHYCEqBWrE7C7hYmtUk%3D"'
-    assert want in hdr, hdr
+                       {"status": "kaspa pulse selbsttest, kein echter post"},
+                       nonce="selbsttestnonce", timestamp="1790000000")
+    want = 'oauth_signature="iIqJK7%2FLpauv9CoSv%2FSalrnONrE%3D"'
+    assert want in hdr, "oauth-signatur weicht vom testvektor ab"
     assert weighted_len("see kaspapulse.com/kaspa-weekly.html now") == len("see ") + 23 + len(" now")
     assert has_link("priced on kaspapulse.com.") and not has_link("one kas buys 47 sats.")
     assert has_link("https://x.com/abc") and has_link("www.example.org")
@@ -370,7 +379,7 @@ def selftest():
             pass
         else:
             raise AssertionError("haette abbrechen muessen: %r" % kaputt)
-    print("selftest ok: Signatur stimmt mit dem X-Testvektor ueberein, Link-Erkennung ok, "
+    print("selftest ok: Signatur stimmt mit dem erfundenen Testvektor ueberein, Link-Erkennung ok, "
           "Logeintrag voll und mit uebergebenem Zeitstempel")
 
 

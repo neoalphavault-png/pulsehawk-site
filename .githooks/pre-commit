@@ -1,0 +1,6 @@
+#!/bin/sh
+# Secret-Sperre vor jedem Commit (Ben, 02.10.2026). Einschalten mit
+#   git config core.hooksPath .githooks
+# Regel: Keine Schluessel, Tokens oder Secrets im Chat und nie in einer Datei
+# im Repo, nur in GitHub Secrets, gelesen aus der Umgebung.
+exec python3 "$(git rev-parse --show-toplevel)/scripts/secret_scan.py" --staged

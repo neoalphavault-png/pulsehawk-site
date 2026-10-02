@@ -61,6 +61,12 @@ jobs:
               echo "::error::$BRANCH aendert .github/workflows/. GITHUB_TOKEN darf das nicht pushen; Ben merged den Branch von Hand."
               exit 1
             fi
+            # Secret-Sperre (Ben, 02.10.2026): kein Merge, solange ein Commit
+            # des Branches einen Schluessel, Token oder ein Secret traegt.
+            if ! python3 scripts/secret_scan.py --bereich "main..origin/$BRANCH"; then
+              echo "::error::$BRANCH traegt einen Secret-Treffer (siehe oben, ohne Wert). Branch bleibt stehen, kein Merge."
+              exit 1
+            fi
             if git merge --ff-only "origin/$BRANCH"; then
               echo "fast-forward: $BRANCH -> main"
             else
