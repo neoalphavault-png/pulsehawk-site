@@ -1,0 +1,21 @@
+#!/bin/sh
+# Secret-Sperre vor jedem Push. Prueft jeden Commit, der neu zum Server geht,
+# und bricht den Push ab, sobald etwas gefunden ist. Werte werden nie gezeigt.
+top="$(git rev-parse --show-toplevel)"
+null=0000000000000000000000000000000000000000
+rc=0
+while read -r lref lsha rref rsha; do
+  [ "$lsha" = "$null" ] && continue           # branch wird geloescht
+  if [ "$rsha" = "$null" ]; then
+    commits=$(git rev-list "$lsha" --not --remotes)
+  else
+    commits=$(git rev-list "$rsha..$lsha")
+  fi
+  [ -z "$commits" ] && continue
+  for c in $commits; do
+    python3 "$top/scripts/secret_scan.py" --bereich "$c^!" >/tmp/secret-scan-$$ 2>&1 || { cat /tmp/secret-scan-$$; rc=1; }
+  done
+done
+rm -f /tmp/secret-scan-$$
+[ $rc -ne 0 ] && echo "secret-scan: push abgebrochen." >&2
+exit $rc

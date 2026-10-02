@@ -8,3 +8,14 @@ graphics/
 # laengerem versehentlich eingecheckt und bleibt es hier auch - das
 # auszutragen ist ein eigener handgriff und braucht Bens ja.
 __pycache__/
+
+# Secrets gehoeren nie ins Repo (Ben, 02.10.2026). Nur GitHub Secrets,
+# gelesen aus der Umgebung. scripts/secret_scan.py sperrt diese Namen auch.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials*.json
+token*.json
+client_secret*.json
