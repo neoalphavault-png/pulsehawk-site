@@ -1,26 +1,26 @@
 {
- "date": "2026-10-02",
+ "date": "2026-10-03",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 6.8457,
-  "pct": 584.6,
-  "from_1000": 6846,
-  "d": "2026-10-01",
-  "close": 188.94,
-  "d_1y": "2025-10-01",
-  "close_1y": 27.6,
-  "low": 22.36,
-  "high": 203.46,
-  "drawdown_pct": -19.0,
+  "mult": 6.5389,
+  "pct": 553.9,
+  "from_1000": 6539,
+  "d": "2026-10-02",
+  "close": 105.93,
+  "d_1y": "2025-10-02",
+  "close_1y": 16.2,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": -19.4,
   "verified": {
    "source": "tiingo",
-   "mult": 6.8457,
+   "mult": 6.5389,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -33,21 +33,25 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 14.3,
-   "d": "2026-10-01",
-   "d_1y": "2025-10-01"
+   "pct": 15.0,
+   "d": "2026-10-02",
+   "d_1y": "2025-10-02"
   },
   "gold": {
-   "pct": 7.5,
-   "d": "2026-10-01",
-   "d_1y": "2025-10-01"
+   "pct": 7.2,
+   "d": "2026-10-02",
+   "d_1y": "2025-10-02"
   }
  },
- "candidates_total": 70,
+ "candidates_total": 69,
  "top10": [
   {
    "ticker": "MRNA",
    "mult": 6.8457
+  },
+  {
+   "ticker": "MXL",
+   "mult": 6.5389
   },
   {
    "ticker": "VICR",
@@ -58,14 +62,6 @@
    "mult": 6.1014
   },
   {
-   "ticker": "MXL",
-   "mult": 5.6163
-  },
-  {
-   "ticker": "FORM",
-   "mult": 4.0997
-  },
-  {
    "ticker": "DOCN",
    "mult": 3.8974
   },
@@ -74,18 +70,27 @@
    "mult": 3.7945
   },
   {
+   "ticker": "FORM",
+   "mult": 3.7836
+  },
+  {
    "ticker": "AMD",
-   "mult": 3.7812
+   "mult": 3.7348
   },
   {
    "ticker": "STX",
    "mult": 3.6816
   },
   {
-   "ticker": "WDC",
-   "mult": 3.5421
+   "ticker": "COHU",
+   "mult": 3.6394
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (2.16%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
