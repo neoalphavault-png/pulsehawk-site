@@ -1,26 +1,26 @@
 {
- "date": "2026-10-03",
+ "date": "2026-10-04",
  "pick": {
-  "ticker": "MXL",
-  "name": "MaxLinear, Inc.",
-  "sector": "Information Technology",
-  "industry": "Semiconductors",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
-   "sp600"
+   "sp500"
   ],
-  "mult": 6.5389,
-  "pct": 553.9,
-  "from_1000": 6539,
+  "mult": 6.6976,
+  "pct": 569.8,
+  "from_1000": 6698,
   "d": "2026-10-02",
-  "close": 105.93,
+  "close": 190.01,
   "d_1y": "2025-10-02",
-  "close_1y": 16.2,
-  "low": 13.05,
-  "high": 128.03,
-  "drawdown_pct": -19.4,
+  "close_1y": 28.37,
+  "low": 22.36,
+  "high": 203.46,
+  "drawdown_pct": -21.2,
   "verified": {
    "source": "tiingo",
-   "mult": 6.5389,
+   "mult": 6.6976,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,8 +28,8 @@
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 24,
-  "sp500_tripled": 11
+  "sp500_doubled": 25,
+  "sp500_tripled": 12
  },
  "benchmarks": {
   "s&p 500": {
@@ -38,36 +38,32 @@
    "d_1y": "2025-10-02"
   },
   "gold": {
-   "pct": 7.2,
+   "pct": 7.1,
    "d": "2026-10-02",
    "d_1y": "2025-10-02"
   }
  },
- "candidates_total": 69,
+ "candidates_total": 73,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 6.8457
+   "mult": 6.6976
   },
   {
    "ticker": "MXL",
    "mult": 6.5389
   },
   {
+   "ticker": "LITE",
+   "mult": 6.3942
+  },
+  {
    "ticker": "VICR",
    "mult": 6.2582
   },
   {
-   "ticker": "LITE",
-   "mult": 6.1014
-  },
-  {
-   "ticker": "DOCN",
-   "mult": 3.8974
-  },
-  {
    "ticker": "DELL",
-   "mult": 3.7945
+   "mult": 3.8171
   },
   {
    "ticker": "FORM",
@@ -78,19 +74,18 @@
    "mult": 3.7348
   },
   {
-   "ticker": "STX",
-   "mult": 3.6816
-  },
-  {
    "ticker": "COHU",
    "mult": 3.6394
-  }
- ],
- "rejected": [
+  },
   {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (2.16%)"
+   "ticker": "DOCN",
+   "mult": 3.6184
+  },
+  {
+   "ticker": "VIAV",
+   "mult": 3.5012
   }
  ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
