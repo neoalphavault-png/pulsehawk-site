@@ -1,5 +1,5 @@
 {
- "date": "2026-10-04",
+ "date": "2026-10-05",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -59,7 +59,7 @@
   },
   {
    "ticker": "VICR",
-   "mult": 6.2582
+   "mult": 6.3196
   },
   {
    "ticker": "DELL",
@@ -70,8 +70,8 @@
    "mult": 3.7836
   },
   {
-   "ticker": "AMD",
-   "mult": 3.7348
+   "ticker": "VIAV",
+   "mult": 3.6883
   },
   {
    "ticker": "COHU",
@@ -82,8 +82,8 @@
    "mult": 3.6184
   },
   {
-   "ticker": "VIAV",
-   "mult": 3.5012
+   "ticker": "STX",
+   "mult": 3.3328
   }
  ],
  "rejected": [],
