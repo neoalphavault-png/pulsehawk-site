@@ -11572,5 +11572,109 @@
    "zeit": "2026-10-04T22:49:46Z",
    "zeit_aus": "quelle"
   }
+ },
+ "2026-10-05": {
+  "btc": {
+   "quelle": "coingecko market_chart, stundenreihe",
+   "art": "nachgetragen",
+   "zeit": "2026-10-05T23:00:00Z",
+   "zeit_aus": "quelle",
+   "eingetragen": "2026-10-06"
+  },
+  "btc_dom": {
+   "art": "luecke",
+   "grund": "keine quelle"
+  },
+  "eth": {
+   "quelle": "coingecko market_chart, stundenreihe",
+   "art": "nachgetragen",
+   "zeit": "2026-10-05T23:00:00Z",
+   "zeit_aus": "quelle",
+   "eingetragen": "2026-10-06"
+  },
+  "eurusd": {
+   "quelle": "frankfurter",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "gld": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "spy": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "spy_vol": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "stables": {
+   "quelle": "defillama",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "total_mcap": {
+   "art": "luecke",
+   "grund": "keine quelle"
+  },
+  "xlk": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xlp": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xlu": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xly": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  }
+ },
+ "2026-10-06": {
+  "btc": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-10-06T01:12:30Z",
+   "zeit_aus": "quelle"
+  },
+  "btc_dom": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-10-06T01:12:46Z",
+   "zeit_aus": "quelle"
+  },
+  "eth": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-10-06T01:12:20Z",
+   "zeit_aus": "quelle"
+  },
+  "total_mcap": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-10-06T01:12:46Z",
+   "zeit_aus": "quelle"
+  }
  }
 }
