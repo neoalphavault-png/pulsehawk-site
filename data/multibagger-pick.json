@@ -1,5 +1,5 @@
 {
- "date": "2026-10-05",
+ "date": "2026-10-06",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -8,19 +8,19 @@
   "indices": [
    "sp500"
   ],
-  "mult": 6.6976,
-  "pct": 569.8,
-  "from_1000": 6698,
-  "d": "2026-10-02",
-  "close": 190.01,
-  "d_1y": "2025-10-02",
-  "close_1y": 28.37,
+  "mult": 7.3787,
+  "pct": 637.9,
+  "from_1000": 7379,
+  "d": "2026-10-05",
+  "close": 203.21,
+  "d_1y": "2025-10-06",
+  "close_1y": 27.54,
   "low": 22.36,
   "high": 203.46,
-  "drawdown_pct": -21.2,
+  "drawdown_pct": -18.8,
   "verified": {
    "source": "tiingo",
-   "mult": 6.6976,
+   "mult": 7.3787,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,34 +28,34 @@
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 25,
+  "sp500_doubled": 26,
   "sp500_tripled": 12
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 15.0,
-   "d": "2026-10-02",
-   "d_1y": "2025-10-02"
+   "pct": 15.4,
+   "d": "2026-10-05",
+   "d_1y": "2025-10-06"
   },
   "gold": {
-   "pct": 7.1,
-   "d": "2026-10-02",
-   "d_1y": "2025-10-02"
+   "pct": 4.2,
+   "d": "2026-10-05",
+   "d_1y": "2025-10-06"
   }
  },
- "candidates_total": 73,
+ "candidates_total": 74,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 6.6976
+   "mult": 7.3787
+  },
+  {
+   "ticker": "LITE",
+   "mult": 6.7974
   },
   {
    "ticker": "MXL",
    "mult": 6.5389
-  },
-  {
-   "ticker": "LITE",
-   "mult": 6.3942
   },
   {
    "ticker": "VICR",
@@ -63,7 +63,7 @@
   },
   {
    "ticker": "DELL",
-   "mult": 3.8171
+   "mult": 3.789
   },
   {
    "ticker": "FORM",
@@ -74,16 +74,16 @@
    "mult": 3.6883
   },
   {
+   "ticker": "STX",
+   "mult": 3.6531
+  },
+  {
    "ticker": "COHU",
    "mult": 3.6394
   },
   {
    "ticker": "DOCN",
-   "mult": 3.6184
-  },
-  {
-   "ticker": "STX",
-   "mult": 3.3328
+   "mult": 3.5746
   }
  ],
  "rejected": [],
