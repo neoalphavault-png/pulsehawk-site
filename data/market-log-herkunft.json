@@ -11655,26 +11655,80 @@
   "btc": {
    "quelle": "coingecko",
    "art": "momentaufnahme",
-   "zeit": "2026-10-06T01:12:30Z",
+   "zeit": "2026-10-06T23:38:40Z",
    "zeit_aus": "quelle"
   },
   "btc_dom": {
    "quelle": "coingecko",
    "art": "momentaufnahme",
-   "zeit": "2026-10-06T01:12:46Z",
+   "zeit": "2026-10-06T23:35:24Z",
    "zeit_aus": "quelle"
   },
   "eth": {
    "quelle": "coingecko",
    "art": "momentaufnahme",
-   "zeit": "2026-10-06T01:12:20Z",
+   "zeit": "2026-10-06T23:38:30Z",
    "zeit_aus": "quelle"
+  },
+  "eurusd": {
+   "quelle": "frankfurter",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "gld": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "spy": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "spy_vol": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "stables": {
+   "quelle": "defillama",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
   },
   "total_mcap": {
    "quelle": "coingecko",
    "art": "momentaufnahme",
-   "zeit": "2026-10-06T01:12:46Z",
+   "zeit": "2026-10-06T23:35:24Z",
    "zeit_aus": "quelle"
+  },
+  "xlk": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xlp": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xlu": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xly": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
   }
  }
 }
