@@ -1,26 +1,26 @@
 {
- "date": "2026-10-06",
+ "date": "2026-10-07",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 7.3787,
-  "pct": 637.9,
-  "from_1000": 7379,
-  "d": "2026-10-05",
-  "close": 203.21,
+  "mult": 6.6162,
+  "pct": 561.6,
+  "from_1000": 6616,
+  "d": "2026-10-06",
+  "close": 109.3,
   "d_1y": "2025-10-06",
-  "close_1y": 27.54,
-  "low": 22.36,
-  "high": 203.46,
-  "drawdown_pct": -18.8,
+  "close_1y": 16.52,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": -21.0,
   "verified": {
    "source": "tiingo",
-   "mult": 7.3787,
+   "mult": 6.6162,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 15.4,
-   "d": "2026-10-05",
+   "pct": 16.0,
+   "d": "2026-10-06",
    "d_1y": "2025-10-06"
   },
   "gold": {
-   "pct": 4.2,
-   "d": "2026-10-05",
+   "pct": 4.9,
+   "d": "2026-10-06",
    "d_1y": "2025-10-06"
   }
  },
- "candidates_total": 74,
+ "candidates_total": 73,
  "top10": [
   {
    "ticker": "MRNA",
@@ -55,23 +55,19 @@
   },
   {
    "ticker": "MXL",
-   "mult": 6.5389
+   "mult": 6.6162
   },
   {
    "ticker": "VICR",
-   "mult": 6.3196
+   "mult": 5.9894
   },
   {
    "ticker": "DELL",
    "mult": 3.789
   },
   {
-   "ticker": "FORM",
-   "mult": 3.7836
-  },
-  {
    "ticker": "VIAV",
-   "mult": 3.6883
+   "mult": 3.7668
   },
   {
    "ticker": "STX",
@@ -79,13 +75,26 @@
   },
   {
    "ticker": "COHU",
-   "mult": 3.6394
+   "mult": 3.6206
   },
   {
    "ticker": "DOCN",
    "mult": 3.5746
+  },
+  {
+   "ticker": "WDC",
+   "mult": 3.5252
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (7.75%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (3.82%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
