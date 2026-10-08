@@ -11730,5 +11730,101 @@
    "zeit": null,
    "zeit_aus": "quelle-datum"
   }
+ },
+ "2026-10-07": {
+  "btc": {
+   "quelle": "coingecko market_chart, stundenreihe",
+   "art": "nachgetragen",
+   "zeit": "2026-10-07T23:00:00Z",
+   "zeit_aus": "quelle",
+   "eingetragen": "2026-10-08"
+  },
+  "btc_dom": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-10-07T23:58:25Z",
+   "zeit_aus": "quelle"
+  },
+  "eth": {
+   "quelle": "coingecko market_chart, stundenreihe",
+   "art": "nachgetragen",
+   "zeit": "2026-10-07T23:00:00Z",
+   "zeit_aus": "quelle",
+   "eingetragen": "2026-10-08"
+  },
+  "eurusd": {
+   "quelle": "frankfurter",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "gld": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "spy": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "spy_vol": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "stables": {
+   "quelle": "defillama",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "total_mcap": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-10-07T23:58:25Z",
+   "zeit_aus": "quelle"
+  },
+  "xlk": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xlp": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xlu": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "xly": {
+   "quelle": "twelve data",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  }
+ },
+ "2026-10-08": {
+  "btc": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-10-08T00:01:20Z",
+   "zeit_aus": "quelle"
+  },
+  "eth": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-10-08T00:01:20Z",
+   "zeit_aus": "quelle"
+  }
  }
 }
