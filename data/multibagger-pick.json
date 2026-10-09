@@ -1,26 +1,26 @@
 {
- "date": "2026-10-08",
+ "date": "2026-10-09",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 7.1865,
-  "pct": 618.6,
-  "from_1000": 7186,
-  "d": "2026-10-07",
-  "close": 196.48,
-  "d_1y": "2025-10-07",
-  "close_1y": 27.34,
-  "low": 22.36,
-  "high": 203.46,
-  "drawdown_pct": -18.2,
+  "mult": 5.7733,
+  "pct": 477.3,
+  "from_1000": 5773,
+  "d": "2026-10-08",
+  "close": 93.7,
+  "d_1y": "2025-10-08",
+  "close_1y": 16.23,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": -19.6,
   "verified": {
    "source": "tiingo",
-   "mult": 7.1865,
+   "mult": 5.7733,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -33,14 +33,14 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 16.2,
-   "d": "2026-10-07",
-   "d_1y": "2025-10-07"
+   "pct": 15.0,
+   "d": "2026-10-08",
+   "d_1y": "2025-10-08"
   },
   "gold": {
-   "pct": 2.6,
-   "d": "2026-10-07",
-   "d_1y": "2025-10-07"
+   "pct": 1.7,
+   "d": "2026-10-08",
+   "d_1y": "2025-10-08"
   }
  },
  "candidates_total": 72,
@@ -55,37 +55,46 @@
   },
   {
    "ticker": "MXL",
-   "mult": 6.6162
+   "mult": 5.7733
   },
   {
    "ticker": "VICR",
-   "mult": 5.9894
+   "mult": 5.0936
   },
   {
    "ticker": "DELL",
    "mult": 3.8375
   },
   {
-   "ticker": "VIAV",
-   "mult": 3.7668
-  },
-  {
-   "ticker": "COHU",
-   "mult": 3.6206
+   "ticker": "FORM",
+   "mult": 3.5907
   },
   {
    "ticker": "STX",
    "mult": 3.589
   },
   {
-   "ticker": "BE",
-   "mult": 3.3847
+   "ticker": "VIAV",
+   "mult": 3.4392
   },
   {
-   "ticker": "WDC",
-   "mult": 3.3805
+   "ticker": "COHU",
+   "mult": 3.4374
+  },
+  {
+   "ticker": "BE",
+   "mult": 3.3847
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (1.82%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (9.06%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
