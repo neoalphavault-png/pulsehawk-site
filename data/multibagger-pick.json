@@ -1,5 +1,5 @@
 {
- "date": "2026-10-10",
+ "date": "2026-10-11",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -43,7 +43,7 @@
    "d_1y": "2025-10-09"
   }
  },
- "candidates_total": 70,
+ "candidates_total": 69,
  "top10": [
   {
    "ticker": "MRNA",
@@ -59,7 +59,7 @@
   },
   {
    "ticker": "VICR",
-   "mult": 5.0936
+   "mult": 5.0564
   },
   {
    "ticker": "DELL",
@@ -67,23 +67,23 @@
   },
   {
    "ticker": "FORM",
-   "mult": 3.5907
+   "mult": 3.641
+  },
+  {
+   "ticker": "VIAV",
+   "mult": 3.5908
   },
   {
    "ticker": "STX",
    "mult": 3.5318
   },
   {
-   "ticker": "VIAV",
-   "mult": 3.4392
-  },
-  {
-   "ticker": "COHU",
-   "mult": 3.4374
-  },
-  {
    "ticker": "DOCN",
-   "mult": 3.3241
+   "mult": 3.4097
+  },
+  {
+   "ticker": "WDC",
+   "mult": 3.319
   }
  ],
  "rejected": [],
