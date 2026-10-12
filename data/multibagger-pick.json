@@ -1,26 +1,26 @@
 {
- "date": "2026-10-11",
+ "date": "2026-10-12",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 8.1729,
-  "pct": 717.3,
-  "from_1000": 8173,
+  "mult": 6.0251,
+  "pct": 502.5,
+  "from_1000": 6025,
   "d": "2026-10-09",
-  "close": 225.0,
+  "close": 96.16,
   "d_1y": "2025-10-09",
-  "close_1y": 27.53,
-  "low": 22.36,
-  "high": 225.0,
-  "drawdown_pct": -18.8,
+  "close_1y": 15.96,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": -18.2,
   "verified": {
    "source": "tiingo",
-   "mult": 8.1729,
+   "mult": 6.0251,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,8 +28,8 @@
  },
  "base_rate": {
   "sp500_scanned": 499,
-  "sp500_doubled": 26,
-  "sp500_tripled": 9
+  "sp500_doubled": 27,
+  "sp500_tripled": 8
  },
  "benchmarks": {
   "s&p 500": {
@@ -47,15 +47,15 @@
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 8.1729
+   "mult": 8.4159
   },
   {
    "ticker": "LITE",
-   "mult": 6.9063
+   "mult": 6.405
   },
   {
    "ticker": "MXL",
-   "mult": 5.7733
+   "mult": 6.0251
   },
   {
    "ticker": "VICR",
@@ -63,7 +63,7 @@
   },
   {
    "ticker": "DELL",
-   "mult": 3.758
+   "mult": 3.792
   },
   {
    "ticker": "FORM",
@@ -74,18 +74,27 @@
    "mult": 3.5908
   },
   {
+   "ticker": "PENG",
+   "mult": 3.461
+  },
+  {
    "ticker": "STX",
-   "mult": 3.5318
+   "mult": 3.4592
   },
   {
    "ticker": "DOCN",
    "mult": 3.4097
-  },
-  {
-   "ticker": "WDC",
-   "mult": 3.319
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (2.89%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (7.83%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
