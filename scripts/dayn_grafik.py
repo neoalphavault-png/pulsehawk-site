@@ -191,6 +191,13 @@ def zahlen(archivrows, logrows, bis=None, herkunft=None):
     Tweet raus und duerfen sich nicht widersprechen. Deshalb gibt der
     Post seinen Zaehltag hier hinein, statt dass die Karte selbst raet.
     Ohne 'bis' zaehlt die Karte bis heute, also wie die Seiten."""
+    # ein schluss gilt erst nach D 24:00 utc (market_log.geschlossene,
+    # regel vom 27.09.2026). geschnitten wird am zaehltag, demselben tag,
+    # den der post fuer seinen text nimmt.
+    stichtag = bis or heute()
+    from market_log import geschlossene
+    archivrows = geschlossene(archivrows, stichtag)
+    logrows = geschlossene(logrows, stichtag)
     reihe = archiv_reihe(archivrows)
     if not reihe:
         return None, "kein btc im archiv"
@@ -206,7 +213,6 @@ def zahlen(archivrows, logrows, bis=None, herkunft=None):
     jetzt = letzter_schluss(logrows)
     if not jetzt:
         return None, "kein btc-schluss im log"
-    stichtag = bis or heute()
     n_hoch = tage(HOCH_CLOSE, stichtag)
     n_tief = tage(tief[0], stichtag)
     if n_hoch <= 0 or n_tief <= 0:
@@ -420,10 +426,26 @@ def selbsttest():
     pruefe("mit gemessener zeit steht sie dabei",
            mit_uhr["preis_zeile"], "last price 23 September 2026, 22:07 utc")
     # die karte zaehlt, was man ihr sagt. das ist der ganze grund fuer 'bis'.
-    frueher, _ = zahlen(arch, log, bis="2026-09-23")
+    # am zaehltag 23.09. gilt der preis vom 22., der vom 23. laeuft noch
+    # (regel vom 27.09.2026). bis dahin stand hier nur die zeile vom 23.
+    frueher, _ = zahlen(arch, [{"d": "2026-09-22", "btc": 86174.0}] + log,
+                        bis="2026-09-23")
     pruefe("ein anderer zaehltag gibt andere zahlen",
-           (frueher["tage_hoch"], frueher["tage_tief"], frueher["zaehltag"]),
-           ("352", "85", "23 September 2026"))
+           (frueher["tage_hoch"], frueher["tage_tief"], frueher["zaehltag"],
+            frueher["preis_zeile"]),
+           ("352", "85", "23 September 2026", "last price 22 September 2026"))
+    pruefe("ein preis vom zaehltag selbst ist kein schluss",
+           zahlen(arch, log, bis="2026-09-23"), (None, "kein btc-schluss im log"))
+    # der lauf vom 26.09.2026 um 23:56:35 utc: zaehltag 26., auf der karte
+    # der preis vom 25., nicht die messung vom 26. um 22:31:50 utc
+    nacht, _ = zahlen(arch, [{"d": "2026-09-25", "btc": 84039.0},
+                             {"d": "2026-09-26", "btc": 84293.0}], bis="2026-09-26",
+                      herkunft={"2026-09-26": {"btc": {"art": "momentaufnahme",
+                                                       "zeit": "2026-09-26T22:31:50Z",
+                                                       "zeit_aus": "quelle"}}})
+    pruefe("26.09. 23:56:35 utc: die karte nennt den 25.",
+           (nacht["zaehltag"], nacht["preis_zeile"]),
+           ("26 September 2026", "last price 25 September 2026"))
     pruefe("format 4:5", (BREITE, HOEHE, round(HOEHE / BREITE, 4)),
            (1080, 1350, 1.25))
     pruefe("ein renderer ist da", os.access(chrome(), os.X_OK), True)
