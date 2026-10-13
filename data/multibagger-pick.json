@@ -1,27 +1,27 @@
 {
- "date": "2026-10-12",
+ "date": "2026-10-13",
  "pick": {
-  "ticker": "MXL",
-  "name": "MaxLinear, Inc.",
+  "ticker": "DELL",
+  "name": "Dell Technologies",
   "sector": "Information Technology",
-  "industry": "Semiconductors",
+  "industry": "Technology Hardware, Storage & Peripherals",
   "indices": [
-   "sp600"
+   "sp500"
   ],
-  "mult": 6.0251,
-  "pct": 502.5,
-  "from_1000": 6025,
-  "d": "2026-10-09",
-  "close": 96.16,
-  "d_1y": "2025-10-09",
-  "close_1y": 15.96,
-  "low": 13.05,
-  "high": 128.03,
-  "drawdown_pct": -18.2,
+  "mult": 3.792,
+  "pct": 279.2,
+  "from_1000": 3792,
+  "d": "2026-10-12",
+  "close": 581.69,
+  "d_1y": "2025-10-13",
+  "close_1y": 153.4,
+  "low": 111.07,
+  "high": 588.4,
+  "drawdown_pct": -27.6,
   "verified": {
    "source": "tiingo",
-   "mult": 6.0251,
-   "diff_pct": 0
+   "mult": 3.7598,
+   "diff_pct": 0.85
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 16.0,
-   "d": "2026-10-09",
-   "d_1y": "2025-10-09"
+   "pct": 17.3,
+   "d": "2026-10-12",
+   "d_1y": "2025-10-13"
   },
   "gold": {
-   "pct": 5.2,
-   "d": "2026-10-09",
-   "d_1y": "2025-10-09"
+   "pct": 1.1,
+   "d": "2026-10-12",
+   "d_1y": "2025-10-13"
   }
  },
- "candidates_total": 69,
+ "candidates_total": 72,
  "top10": [
   {
    "ticker": "MRNA",
@@ -59,19 +59,11 @@
   },
   {
    "ticker": "VICR",
-   "mult": 5.0564
+   "mult": 4.7517
   },
   {
    "ticker": "DELL",
    "mult": 3.792
-  },
-  {
-   "ticker": "FORM",
-   "mult": 3.641
-  },
-  {
-   "ticker": "VIAV",
-   "mult": 3.5908
   },
   {
    "ticker": "PENG",
@@ -83,17 +75,33 @@
   },
   {
    "ticker": "DOCN",
-   "mult": 3.4097
+   "mult": 3.3243
+  },
+  {
+   "ticker": "WDC",
+   "mult": 3.2554
+  },
+  {
+   "ticker": "VIAV",
+   "mult": 3.2153
   }
  ],
  "rejected": [
   {
    "ticker": "MRNA",
-   "reason": "quellen weichen ab (2.89%)"
+   "reason": "quellen weichen ab (5.02%)"
   },
   {
    "ticker": "LITE",
-   "reason": "quellen weichen ab (7.83%)"
+   "reason": "quellen weichen ab (3.21%)"
+  },
+  {
+   "ticker": "MXL",
+   "reason": "quellen weichen ab (6.28%)"
+  },
+  {
+   "ticker": "VICR",
+   "reason": "quellen weichen ab (5.06%)"
   }
  ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
