@@ -1,61 +1,61 @@
 {
- "date": "2026-10-13",
+ "date": "2026-10-14",
  "pick": {
-  "ticker": "DELL",
-  "name": "Dell Technologies",
-  "sector": "Information Technology",
-  "industry": "Technology Hardware, Storage & Peripherals",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
    "sp500"
   ],
-  "mult": 3.792,
-  "pct": 279.2,
-  "from_1000": 3792,
-  "d": "2026-10-12",
-  "close": 581.69,
+  "mult": 8.0871,
+  "pct": 708.7,
+  "from_1000": 8087,
+  "d": "2026-10-13",
+  "close": 216.25,
   "d_1y": "2025-10-13",
-  "close_1y": 153.4,
-  "low": 111.07,
-  "high": 588.4,
-  "drawdown_pct": -27.6,
+  "close_1y": 26.74,
+  "low": 22.36,
+  "high": 225.0,
+  "drawdown_pct": -16.4,
   "verified": {
    "source": "tiingo",
-   "mult": 3.7598,
-   "diff_pct": 0.85
+   "mult": 8.0871,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
-  "sp500_scanned": 499,
+  "sp500_scanned": 497,
   "sp500_doubled": 27,
   "sp500_tripled": 8
  },
  "benchmarks": {
   "s&p 500": {
    "pct": 17.3,
-   "d": "2026-10-12",
+   "d": "2026-10-13",
    "d_1y": "2025-10-13"
   },
   "gold": {
-   "pct": 1.1,
-   "d": "2026-10-12",
+   "pct": 1.0,
+   "d": "2026-10-13",
    "d_1y": "2025-10-13"
   }
  },
- "candidates_total": 72,
+ "candidates_total": 69,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 8.4159
+   "mult": 8.0871
   },
   {
    "ticker": "LITE",
-   "mult": 6.405
+   "mult": 6.1534
   },
   {
    "ticker": "MXL",
-   "mult": 6.0251
+   "mult": 5.6244
   },
   {
    "ticker": "VICR",
@@ -63,11 +63,11 @@
   },
   {
    "ticker": "DELL",
-   "mult": 3.792
+   "mult": 3.7319
   },
   {
    "ticker": "PENG",
-   "mult": 3.461
+   "mult": 3.5036
   },
   {
    "ticker": "STX",
@@ -86,23 +86,6 @@
    "mult": 3.2153
   }
  ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (5.02%)"
-  },
-  {
-   "ticker": "LITE",
-   "reason": "quellen weichen ab (3.21%)"
-  },
-  {
-   "ticker": "MXL",
-   "reason": "quellen weichen ab (6.28%)"
-  },
-  {
-   "ticker": "VICR",
-   "reason": "quellen weichen ab (5.06%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }

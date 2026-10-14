@@ -1,6 +1,6 @@
 {
- "date": "2026-10-06",
- "count": 1504,
+ "date": "2026-10-14",
+ "count": 1503,
  "rows": [
   {
    "ticker": "MMM",
@@ -1278,16 +1278,6 @@
    "wiki": null,
    "sector": "Financials",
    "industry": "Transaction & Payment Processing Services",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
-   "ticker": "CTVA",
-   "name": "Corteva",
-   "wiki": null,
-   "sector": "Materials",
-   "industry": "Fertilizers & Agricultural Chemicals",
    "indices": [
     "sp500"
    ]
@@ -3074,7 +3064,7 @@
   },
   {
    "ticker": "MCK",
-   "name": "McKesson Corporation",
+   "name": "McKesson",
    "wiki": null,
    "sector": "Health Care",
    "industry": "Health Care Distributors",
@@ -3578,16 +3568,6 @@
    "wiki": null,
    "sector": "Information Technology",
    "industry": "Systems Software",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
-   "ticker": "PSKY",
-   "name": "Paramount Skydance Corporation",
-   "wiki": null,
-   "sector": "Communication Services",
-   "industry": "Movies & Entertainment",
    "indices": [
     "sp500"
    ]
@@ -4123,6 +4103,16 @@
    ]
   },
   {
+   "ticker": "SKYD",
+   "name": "Skydance Corporation",
+   "wiki": null,
+   "sector": "Communication Services",
+   "industry": "Movies & Entertainment",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
    "ticker": "SWKS",
    "name": "Skyworks Solutions",
    "wiki": null,
@@ -4513,6 +4503,16 @@
    ]
   },
   {
+   "ticker": "TWLO",
+   "name": "Twilio",
+   "wiki": null,
+   "sector": "Information Technology",
+   "industry": "Systems Software",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
    "ticker": "TYL",
    "name": "Tyler Technologies",
    "wiki": null,
@@ -4783,6 +4783,16 @@
    ]
   },
   {
+   "ticker": "VYLR",
+   "name": "Vylor",
+   "wiki": null,
+   "sector": "Consumer Staples",
+   "industry": "Agricultural Products & Services",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
    "ticker": "WRB",
    "name": "W. R. Berkley Corporation",
    "wiki": null,
@@ -4828,16 +4838,6 @@
    "wiki": null,
    "sector": "Communication Services",
    "industry": "Movies & Entertainment",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
-   "ticker": "WBD",
-   "name": "Warner Bros. Discovery",
-   "wiki": null,
-   "sector": "Communication Services",
-   "industry": "Broadcasting",
    "indices": [
     "sp500"
    ]
@@ -5984,6 +5984,16 @@
    ]
   },
   {
+   "ticker": "CTVA",
+   "name": "Corteva",
+   "wiki": null,
+   "sector": "Materials",
+   "industry": "Fertilizers & Agricultural Chemicals",
+   "indices": [
+    "sp400"
+   ]
+  },
+  {
    "ticker": "CUBE",
    "name": "CubeSmart",
    "wiki": null,
@@ -6522,6 +6532,17 @@
    "industry": "Property & Casualty Insurance",
    "indices": [
     "sp400"
+   ]
+  },
+  {
+   "ticker": "FORM",
+   "name": "FormFactor, Inc.",
+   "wiki": null,
+   "sector": "Information Technology",
+   "industry": "Semiconductor Materials & Equipment",
+   "indices": [
+    "sp400",
+    "sp600"
    ]
   },
   {
@@ -7625,16 +7646,6 @@
    ]
   },
   {
-   "ticker": "OLN",
-   "name": "Olin Corporation",
-   "wiki": null,
-   "sector": "Materials",
-   "industry": "Diversified Chemicals",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
    "ticker": "ONB",
    "name": "Old National Bank",
    "wiki": null,
@@ -8600,16 +8611,6 @@
    "wiki": null,
    "sector": "Information Technology",
    "industry": "Electronic Manufacturing Services",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
-   "ticker": "TWLO",
-   "name": "Twilio",
-   "wiki": null,
-   "sector": "Information Technology",
-   "industry": "Systems Software",
    "indices": [
     "sp400"
    ]
@@ -11110,16 +11111,6 @@
    "wiki": null,
    "sector": "Materials",
    "industry": "Fertilizers & Agricultural Chemicals",
-   "indices": [
-    "sp600"
-   ]
-  },
-  {
-   "ticker": "FORM",
-   "name": "FormFactor, Inc.",
-   "wiki": null,
-   "sector": "Information Technology",
-   "industry": "Semiconductor Materials & Equipment",
    "indices": [
     "sp600"
    ]
