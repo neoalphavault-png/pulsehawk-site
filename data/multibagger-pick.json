@@ -1,49 +1,49 @@
 {
- "date": "2026-10-14",
+ "date": "2026-10-15",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "VICR",
+  "name": "Vicor Corporation",
+  "sector": "Industrials",
+  "industry": "Electrical Components & Equipment",
   "indices": [
-   "sp500"
+   "sp400"
   ],
-  "mult": 8.0871,
-  "pct": 708.7,
-  "from_1000": 8087,
-  "d": "2026-10-13",
-  "close": 216.25,
-  "d_1y": "2025-10-13",
-  "close_1y": 26.74,
-  "low": 22.36,
-  "high": 225.0,
-  "drawdown_pct": -16.4,
+  "mult": 4.5732,
+  "pct": 357.3,
+  "from_1000": 4573,
+  "d": "2026-10-14",
+  "close": 245.35,
+  "d_1y": "2025-10-14",
+  "close_1y": 53.65,
+  "low": 53.65,
+  "high": 379.78,
+  "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 8.0871,
+   "mult": 4.5732,
    "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
-  "sp500_scanned": 497,
+  "sp500_scanned": 498,
   "sp500_doubled": 27,
   "sp500_tripled": 8
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 17.3,
-   "d": "2026-10-13",
-   "d_1y": "2025-10-13"
+   "pct": 16.2,
+   "d": "2026-10-14",
+   "d_1y": "2025-10-14"
   },
   "gold": {
-   "pct": 1.0,
-   "d": "2026-10-13",
-   "d_1y": "2025-10-13"
+   "pct": -1.3,
+   "d": "2026-10-14",
+   "d_1y": "2025-10-14"
   }
  },
- "candidates_total": 69,
+ "candidates_total": 63,
  "top10": [
   {
    "ticker": "MRNA",
@@ -59,7 +59,7 @@
   },
   {
    "ticker": "VICR",
-   "mult": 4.7517
+   "mult": 4.5732
   },
   {
    "ticker": "DELL",
@@ -71,21 +71,34 @@
   },
   {
    "ticker": "STX",
-   "mult": 3.4592
-  },
-  {
-   "ticker": "DOCN",
-   "mult": 3.3243
+   "mult": 3.3716
   },
   {
    "ticker": "WDC",
-   "mult": 3.2554
+   "mult": 3.2184
   },
   {
-   "ticker": "VIAV",
-   "mult": 3.2153
+   "ticker": "VSTS",
+   "mult": 3.0974
+  },
+  {
+   "ticker": "VSXY",
+   "mult": 3.0564
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (6.60%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (7.09%)"
+  },
+  {
+   "ticker": "MXL",
+   "reason": "quellen weichen ab (16.98%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
