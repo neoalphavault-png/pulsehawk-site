@@ -1,0 +1,27 @@
+# PulseHawk
+
+> Independent blockchain measurement under load, across all chains. PulseHawk runs its own nodes, publishes an open method, dates every number and releases the raw data. A brand of Vizora Digital UG (haftungsbeschränkt), Düsseldorf, Germany. Kaspa coverage at https://kaspapulse.com.
+
+Services and prices (net, plus VAT where it applies, invoiced in euro, as of October 2026)
+- TPS verification, review 250 € ($290)
+- Launch measurement from 2,500 € ($2,900)
+- Upgrade monitoring, ongoing measurement from 1,500 € ($1,750) per month
+- Custom scope, on request
+
+## Pages
+
+- [Independent blockchain measurement under load](https://pulsehawk.io/): PulseHawk measures blockchains under load on its own nodes. Dated numbers, raw data and an open method for TPS claims, launches and upgrades.
+- [Independent TPS verification, claimed vs measured](https://pulsehawk.io/tps-verification): Independent TPS verification. We check a TPS claim against real network throughput on our own node and publish claimed vs measured with dated raw data.
+- [Testnet and mainnet launch measurement](https://pulsehawk.io/launch-measurement): Testnet stress test measurement and mainnet launch metrics. The first week after launch against the week before, counted on our own nodes, with raw data.
+- [Hard fork and network upgrade monitoring](https://pulsehawk.io/upgrade-monitoring): Hard fork monitoring on our own nodes. Block time, difficulty and orphaned blocks compared before and after a network upgrade, with dated raw data.
+- [How we measure](https://pulsehawk.io/method): Our open method. Block time distribution, stale block rate, propagation delay, confirmation time and fees, counted on our own nodes in dated windows.
+- [How we stay independent](https://pulsehawk.io/independence): Four rules for every PulseHawk measurement. The price never depends on the result, no client tokens held, results published as measured, links named.
+- [Network upgrade calendar](https://pulsehawk.io/upgrades): Network upgrade calendar with upcoming hard forks across chains. Testnet and mainnet dates, status and the official source for every single entry.
+- [Kaspa network measurements](https://pulsehawk.io/cases/kaspa): What we count on Kaspa, a network at 10 blocks per second. Fees against new issuance over 30 days, each number dated and sourced, with links to raw data.
+- [Request a measurement](https://pulsehawk.io/contact): Request an independent blockchain measurement. Tell us the network, what to measure, when and your budget range. The founder answers each request by email.
+- [Archive](https://pulsehawk.io/archive): PulseHawk market data pages from 2026. Bitcoin cycle counts, drawdown, dominance, gold and stocks. Still online and still updated by the same scripts.
+
+## Contact
+
+- hello@pulsehawk.io
+- https://x.com/pulsehawkio
