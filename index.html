@@ -2,161 +2,95 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PulseHawk — market data with receipts. no hype.</title>
-<meta name="description" content="PulseHawk is a market data feed built on one rule: every number comes with a receipt. Gold, stocks, crypto and on-chain flows, counted daily and checkable yourself. The weekly reading is live.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Independent blockchain measurement | PulseHawk</title>
+<meta name="description" content="PulseHawk measures blockchains under load on its own nodes. Dated numbers, raw data and an open method for TPS claims, launches and upgrades.">
+<meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://pulsehawk.io/">
-<link rel="icon" type="image/png" href="favicon.png">
-<meta property="og:title" content="PulseHawk — market data with receipts">
-<meta property="og:description" content="Cycle data, on-chain flows and market context you can verify yourself. No hype, no price targets. The weekly reading is live.">
-<meta property="og:url" content="https://pulsehawk.io/">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="preload" href="/assets/fonts/archivo-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="theme-color" content="#080B0F">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="PulseHawk">
+<meta property="og:title" content="Independent blockchain measurement under load">
+<meta property="og:description" content="PulseHawk measures blockchains under load on its own nodes. Dated numbers, raw data and an open method for TPS claims, launches and upgrades.">
+<meta property="og:url" content="https://pulsehawk.io/">
+<meta property="og:image" content="https://pulsehawk.io/og/home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@pulsehawkio">
+<script defer data-domain="pulsehawk.io" src="https://plausible.io/js/script.tagged-events.js"></script>
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "PulseHawk",
-  "url": "https://pulsehawk.io/",
-  "slogan": "market data. no hype.",
-  "description": "Market data feed covering market cycles, on-chain flows and whale movements, built on verifiable data.",
-  "sameAs": [
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Organization",
+   "@id": "https://pulsehawk.io/#org",
+   "name": "PulseHawk",
+   "url": "https://pulsehawk.io/",
+   "logo": "https://pulsehawk.io/hawk.png",
+   "email": "hello@pulsehawk.io",
+   "description": "PulseHawk is an independent measurement brand. It measures how blockchains behave under load, across all chains, on its own nodes, with an open method, dated numbers and raw data.",
+   "parentOrganization": {
+    "@type": "Organization",
+    "name": "Vizora Digital UG (haftungsbeschränkt)",
+    "address": {
+     "@type": "PostalAddress",
+     "streetAddress": "Marc-Chagall-Straße 54",
+     "postalCode": "40477",
+     "addressLocality": "Düsseldorf",
+     "addressCountry": "DE"
+    }
+   },
+   "sameAs": [
     "https://x.com/pulsehawkio",
-    "https://t.me/pulsehawk",
-    "https://www.youtube.com/@pulsehawkio"
-  ]
+    "https://kaspapulse.com"
+   ]
+  }
+ ]
 }
 </script>
-<style>
-  :root { --bg:#080B0F; --card:#0B0E12; --line:#1A1D21; --teal:#49EACB; --txt:#FFFFFF; --dim:#9BA3AB; --dimmer:#7A828C; }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--txt); font-family:'Helvetica Neue',Arial,sans-serif;
-         background-image:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(73,234,203,0.10), transparent 60%); }
-  .wrap { max-width:720px; margin:0 auto; padding:60px 20px 60px; }
-  .hero { text-align:center; padding:30px 0 46px; }
-  .hero img { width:150px; filter:drop-shadow(0 0 26px rgba(73,234,203,0.35)); }
-  .hero h1 { font-size:44px; letter-spacing:3px; font-weight:800; margin-top:24px; }
-  .hero h1 span { color:var(--teal); }
-  .hero .line { max-width:420px; margin:18px auto 0; }
-  .hero .claim { font-size:14px; letter-spacing:5px; color:var(--dimmer); text-transform:uppercase; margin-top:16px; }
-  .soon { display:inline-block; margin-top:22px; font-size:11px; letter-spacing:2px; color:var(--teal);
-          border:1px solid rgba(73,234,203,0.4); border-radius:999px; padding:6px 16px; text-transform:uppercase; font-weight:700;
-          background:rgba(73,234,203,0.07); }
-  h2 { font-size:22px; letter-spacing:-0.3px; margin:44px 0 12px; }
-  h2 span { color:var(--teal); }
-  p { font-size:15.5px; line-height:24px; color:var(--dim); margin-top:12px; }
-  p b { color:var(--txt); font-weight:600; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:22px 24px; margin-top:16px; }
-  .card .n { font-size:14px; font-weight:700; color:var(--teal); letter-spacing:1px; text-transform:uppercase; }
-  .card p { margin-top:8px; font-size:14.5px; }
-  .follow { text-align:center; margin-top:52px; padding:30px 22px; border:1px solid rgba(73,234,203,0.35);
-            border-radius:18px; background:linear-gradient(160deg, rgba(73,234,203,0.08), rgba(73,234,203,0.02)); }
-  .follow .t { font-size:19px; font-weight:700; }
-  .follow .s { font-size:13px; color:var(--dimmer); margin-top:6px; }
-  .btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
-  .btns a { display:inline-block; padding:11px 20px; border-radius:10px; text-decoration:none; font-size:14px; font-weight:700;
-            background:rgba(73,234,203,0.10); color:var(--teal); border:1px solid rgba(73,234,203,0.4); }
-  .btns a:hover { background:rgba(73,234,203,0.18); }
-  p a { color:var(--teal); text-decoration:none; border-bottom:1px solid rgba(73,234,203,0.45); }
-  p a:hover { border-bottom-color:var(--teal); }
-  .pages { margin-top:16px; }
-  .pages a { display:block; text-decoration:none; background:var(--card); border:1px solid var(--line);
-             border-radius:14px; padding:18px 20px; margin-top:10px; }
-  .pages a:hover { border-color:rgba(73,234,203,0.45); }
-  .pages .t { font-size:16px; font-weight:700; color:var(--teal); }
-  .pages .d { font-size:14px; color:var(--dim); margin-top:5px; line-height:21px; }
-  footer { border-top:1px solid var(--line); margin-top:60px; padding-top:18px; display:flex; justify-content:space-between;
-           flex-wrap:wrap; gap:8px; font-size:12px; color:var(--dimmer); }
-  footer a { color:var(--dim); text-decoration:none; }
-  .pnav { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:26px; }
-  .pnav a { font-size:13px; padding:8px 14px; border-radius:999px; text-decoration:none;
-            border:1px solid var(--line); color:var(--dim); }
-  .pnav a:hover { border-color:rgba(73,234,203,0.45); color:var(--teal); }
-  .pnav a.new { border-color:rgba(73,234,203,0.45); color:var(--teal); font-weight:700; }
-</style>
+<style>@font-face{font-family:Archivo;font-weight:800;font-style:normal;font-display:swap;src:url(/assets/fonts/archivo-latin-800-normal.woff2) format('woff2')}@font-face{font-family:'IBM Plex Sans';font-weight:400;font-style:normal;font-display:swap;src:url(/assets/fonts/ibm-plex-sans-latin-400-normal.woff2) format('woff2')}@font-face{font-family:'IBM Plex Sans';font-weight:600;font-style:normal;font-display:swap;src:url(/assets/fonts/ibm-plex-sans-latin-600-normal.woff2) format('woff2')}@font-face{font-family:'IBM Plex Mono';font-weight:400;font-style:normal;font-display:swap;src:url(/assets/fonts/ibm-plex-mono-latin-400-normal.woff2) format('woff2')}:root{--bg:#080B0F;--card:#0D1116;--line:#1C2228;--txt:#F2F5F4;--dim:#A9B7B4;--teal:#49EACB;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace}*{box-sizing:border-box;margin:0;padding:0}html{-webkit-text-size-adjust:100%}body{background:var(--bg);color:var(--txt);font:400 16px/1.6 'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif}a{color:var(--teal)}a:focus-visible,summary:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--teal);outline-offset:2px}.skip{position:absolute;left:-9999px}.skip:focus{left:16px;top:8px;background:var(--teal);color:#080B0F;padding:6px 10px;z-index:9}.wrap{max-width:860px;margin:0 auto;padding:0 20px}header.top{border-bottom:1px solid var(--line)}header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt);font:800 20px/1 Archivo,sans-serif;letter-spacing:.2px}.brand img{width:30px;height:32px}nav.main ul{list-style:none;display:flex;gap:4px 16px;flex-wrap:wrap}nav.main a{color:var(--dim);text-decoration:none;font-size:14px;padding:6px 0;display:inline-block}nav.main a:hover,nav.main a[aria-current]{color:var(--teal)}nav.main a.nc{color:var(--teal);font-weight:600}main{padding:44px 0 24px}.crumbs{font-size:13px;color:var(--dim);margin-bottom:18px}.crumbs a{color:var(--dim)}h1{font:800 clamp(30px,5.4vw,46px)/1.12 Archivo,sans-serif;letter-spacing:-.5px;max-width:20ch}.lead{font-size:18px;line-height:1.6;color:var(--txt);margin-top:18px;max-width:64ch}h2{font:800 23px/1.25 Archivo,sans-serif;margin:46px 0 14px;letter-spacing:-.2px}h3{font-size:16px;font-weight:600;color:var(--txt)}p{color:var(--dim);margin-top:12px;max-width:68ch}p b,li b{color:var(--txt);font-weight:600}.note,.src,.small{font-size:14px}.src{font-family:var(--mono);font-size:12.5px;color:var(--dim)}.chips{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.chips li{font:400 13px var(--mono);color:var(--teal);border:1px solid rgba(73,234,203,.35);border-radius:999px;padding:5px 12px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}.cards.two{grid-template-columns:repeat(2,1fr)}.cards.one{grid-template-columns:1fr}.card{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;text-decoration:none}.card:hover{border-color:rgba(73,234,203,.5)}.ct{font-weight:600;color:var(--txt);font-size:16px}.cd{color:var(--dim);font-size:14.5px;line-height:1.55;flex:1}.cp{font:400 13px var(--mono);color:var(--teal)}.btn{display:inline-block;background:var(--teal);color:#06110E;font-weight:600;text-decoration:none;border-radius:8px;padding:11px 18px;font-size:15px;border:1px solid var(--teal);cursor:pointer;font-family:inherit;margin:4px 8px 4px 0}.btn:hover{filter:brightness(1.08)}.btn.ghost{background:transparent;color:var(--teal)}.btn.off{opacity:.55;cursor:default}.cta{margin-top:22px}.steps,.list,.rules-list{margin:12px 0 0 22px;color:var(--dim)}.steps li,.list li,.rules-list li{margin-top:8px;max-width:68ch}.rules-list li{color:var(--txt);font-size:17px;padding-left:4px}.rules{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.rules>div,.price,.fit>div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}.rules p{font-size:14.5px;margin-top:6px}.price{border-color:rgba(73,234,203,.4)}.pl{font:400 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:1px}.pv{font:800 26px/1.2 Archivo,sans-serif;margin-top:6px}.price p{font-size:14px}.fit{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fit ul{margin:8px 0 0 18px;color:var(--dim);font-size:14.5px}.fit li{margin-top:6px}.faq details{border-top:1px solid var(--line);padding:12px 0}.faq details:last-child{border-bottom:1px solid var(--line)}.faq summary{cursor:pointer;list-style:none}.faq summary::-webkit-details-marker{display:none}.faq summary h3{display:inline;font-size:16px}.faq summary::after{content:"+";float:right;color:var(--teal);font-family:var(--mono)}.faq details[open] summary::after{content:"\2212"}.tablewrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;font-size:14px;min-width:720px}th{font:400 12px var(--mono);color:var(--dim);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.5px}td{padding:11px 12px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}td.c{color:var(--txt);font-weight:600}tr:last-child td{border-bottom:0}.form{display:grid;gap:6px;max-width:560px;margin-top:8px}.form label{font-size:14px;color:var(--txt);margin-top:10px;font-weight:600}.form input,.form select,.form textarea{background:var(--card);color:var(--txt);border:1px solid #2A333B;border-radius:8px;padding:11px 12px;font:inherit;width:100%}.form textarea{resize:vertical}.form ::placeholder{color:#7E8C89}.form .btn{justify-self:start;margin-top:16px}.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}.person{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;max-width:560px;color:var(--dim)}.person b{color:var(--txt)}address{font-style:normal;color:var(--dim);margin-top:10px}footer.foot{border-top:1px solid var(--line);margin-top:56px}footer.foot .wrap{display:flex;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;padding-top:20px;padding-bottom:36px;font-size:13.5px;color:var(--dim)}footer.foot a{color:var(--dim)}footer.foot a:hover{color:var(--teal)}@media (max-width:760px){.cards,.cards.two,.rules,.fit{grid-template-columns:1fr}nav.main{width:100%;overflow-x:auto}nav.main ul{flex-wrap:nowrap;white-space:nowrap;gap:16px;padding-bottom:4px}main{padding-top:30px}.lead{font-size:17px}}</style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hero">
-    <img src="hawk.png" alt="PulseHawk logo, a hawk with spread wings">
-    <h1>PULSE<span>HAWK</span></h1>
-    <svg class="line" width="420" height="30" viewBox="0 0 420 30"><polyline points="4,18 190,18 212,5 234,26 252,18 416,18" fill="none" stroke="#49EACB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/></svg>
-    <div class="claim">market data. no hype.</div>
-    <div><span class="soon">the feed has started</span></div>
-  </div>
-  <nav class="pnav" aria-label="data pages">
-    <a href="/what-if.html" class="new">what if</a>
-    <a href="/markets.html">markets</a>
-    <a href="/bitcoin-halving-to-top.html">halving to top</a>
-    <a href="/bitcoin-top-to-bottom.html">top to bottom</a>
-    <a href="/bitcoin-dominance.html">dominance</a>
-  </nav>
-  <h2>What PulseHawk <span>is</span></h2>
-  <p>PulseHawk is a market data feed built on one uncomfortable observation: most of what circulates as market information cannot be checked by the person reading it. Price targets nobody revisits, "whale alerts" without a wallet address, narratives that dissolve the moment you ask for the underlying number.</p>
-  <p>We publish the opposite. A feed where <b>every number comes with a receipt</b>, a source you can open, an address you can look up, a dataset you can download. On-chain flows, large wallet movements, supply data and the market context around them, published the moment they happen and archived so anyone can verify what we said and when we said it.</p>
-  <h2>The <span>rules</span> we publish by</h2>
-  <div class="card"><div class="n">receipts or it does not exist</div>
-    <p>A number without a source does not get published. Every alert links to the raw data behind it. If we counted something ourselves, we show how.</p></div>
-  <div class="card"><div class="n">movement, never motive</div>
-    <p>The chain shows that coins moved. It does not show why, and it does not show who. A deposit to an exchange is not proof of a sale, and we will never pretend otherwise. We report what happened, you decide what it means.</p></div>
-  <div class="card"><div class="n">no hype, no price targets</div>
-    <p>We do not predict prices, we do not shill assets and we do not do partnerships that would give us a reason to. A data feed is only worth following if it has nothing to sell you.</p></div>
-  <div class="card"><div class="n">the feed stays free</div>
-    <p>Alerts and core data will always be free to follow. That is not generosity, it is the model. A feed people rely on is the product.</p></div>
-  <h2>Where we <span>start</span></h2>
-  <p><b>The first format is live now.</b> Every Sunday we publish where the market stands inside the <a href="/bitcoin-halving-to-top.html">Bitcoin 4 year cycle</a>, counted in days from the halving to the cycle top, next to the three cycles before it. Two more formats follow over the coming weeks, and the cadence grows from there. Everything we publish is dated and archived, so it can be checked later.</p>
-  <p><b>It is not only Bitcoin.</b> We log gold, the S&amp;P 500, four stock market sectors, the supply of stablecoins and the euro dollar rate every single day, one row per calendar day, and the <a href="/markets.html">markets page</a> shows all of it side by side. Bitcoin is where the verification is easiest to demonstrate, not where the coverage stops.</p>
-  <p>Coverage begins where verification is strongest and attention is thinnest: on-chain data for proof-of-work and emerging networks that the big analytics platforms ignore. Whale wallet tracking, exchange flow analysis, supply and emission data, all monitored around the clock by automated systems and published as alerts, daily numbers and weekly readings. From there, coverage expands one market at a time, only when we can meet our own standard for it.</p>
-  <h2>Data <span>pages</span></h2>
-  <p>Every weekly format also gets a permanent page. The graphic goes out on the feed, the page keeps the numbers current and shows where each one came from.</p>
-  <div class="pages">
-    <a href="/bitcoin-halving-to-top.html">
-      <div class="t">The Bitcoin 4 year cycle, halving to top</div>
-      <div class="d">Four cycles charted, four halving dates, four top dates, counted from one source. With a live count of where the current cycle stands today.</div>
-    </a>
-    <a href="/bitcoin-top-to-bottom.html">
-      <div class="t">The Bitcoin cycle bottom, how long after the top</div>
-      <div class="d">406, 364 and 378 days in the three completed cycles, with the dates behind each one. And a live count of how far this cycle is past its top.</div>
-    </a>
-    <a href="/bitcoin-drawdown.html">
-      <div class="t">How far Bitcoin is below its all-time high</div>
-      <div class="d">The distance to the 6 October 2025 top, recounted every day, next to the deepest point of this cycle and the maximum drawdown of the three cycles before it. We count the drop, not the bottom.</div>
-    </a>
-    <a href="/bitcoin-bull-run-length.html">
-      <div class="t">How long Bitcoin bull runs last</div>
-      <div class="d">1,067, 1,059 and 1,050 days from the cycle low to the following top, with the dates behind each one. The rise turns out to be the steadier half of the cycle, and the page says why.</div>
-    </a>
-    <a href="/gold-in-bitcoin-bear-markets.html">
-      <div class="t">Does gold rise when Bitcoin falls?</div>
-      <div class="d">Three times Bitcoin lost more than three quarters of its value. Gold finished every one of those windows within a few percent of where it started, and the S&amp;P 500 moved nine times as far. With the two places where that story does not hold.</div>
-    </a>
-    <a href="/bitcoin-dominance.html">
-      <div class="t">Bitcoin dominance right now</div>
-      <div class="d">The current reading with the date it was taken, from a record we keep ourselves every day. And why the number can move without any money moving.</div>
-    </a>
-    <a href="/markets.html">
-      <div class="t">Gold vs stocks vs bitcoin</div>
-      <div class="d">Three markets over the same seven calendar days, because crypto trades seven days a week and stock markets trade five. With the one number on the page that is money rather than price.</div>
-    </a>
-    <a href="/what-if.html">
-      <div class="t">What if you had bought bitcoin, gold or the S&amp;P 500?</div>
-      <div class="d">One buy years ago, a monthly plan, or a coffee a day, counted from daily prices we keep since 2010. The dates and prices it used are printed under every number.</div>
-    </a>
-  </div>
-  <h2>Who is <span>building this</span></h2>
-  <p>PulseHawk is built by a small independent team in Germany, operated by Vizora Digital UG (haftungsbeschränkt). We come from the data side, not the marketing side. The tooling behind PulseHawk already runs in production today, tracking one of the largest single wallets in the proof-of-work space around the clock, and it has a simple track record: every claim it ever published can still be checked.</p>
-  <div class="follow">
-    <div class="t">Follow the feed</div>
-    <div class="s">every reading goes out here first</div>
-    <div class="btns">
-      <a href="https://x.com/pulsehawkio" target="_blank" rel="noopener">X</a>
-      <a href="https://t.me/pulsehawk" target="_blank" rel="noopener">Telegram</a>
-      <a href="https://www.youtube.com/@pulsehawkio" target="_blank" rel="noopener">YouTube</a>
-    </div>
-  </div>
-  <footer>
-    <div>© 2026 PulseHawk · Vizora Digital UG (haftungsbeschränkt)</div>
-    <div><a href="/impressum.html">legal notice</a> · <a href="/datenschutz.html">privacy</a></div>
-  </footer>
+<a class="skip" href="#inhalt">Skip to content</a>
+<header class="top"><div class="wrap"><a class="brand" href="/"><img src="/hawk.png" alt="" width="30" height="32">PulseHawk</a><nav class="main" aria-label="Main"><ul><li><a href="/tps-verification">TPS verification</a></li><li><a href="/launch-measurement">Launch measurement</a></li><li><a href="/upgrade-monitoring">Upgrade monitoring</a></li><li><a href="/upgrades">Upgrade calendar</a></li><li><a href="/method">Method</a></li><li><a href="/independence">Independence</a></li><li><a class="nc" href="/contact">Contact</a></li></ul></nav></div></header>
+<main id="inhalt"><div class="wrap">
+
+<h1>Independent blockchain measurement under load</h1>
+<p class="lead">PulseHawk measures how blockchains behave under load. We run our own nodes, count blocks, transactions and confirmation times inside a fixed window, and publish dated numbers with the raw data. The method is open. We work for foundations, core teams and grant committees across all chains, around launches and network upgrades.</p>
+<ul class="chips"><li>Own nodes</li><li>Open method</li><li>Dated numbers</li><li>Raw data</li></ul>
+<section><h2>What can we measure for you?</h2>
+<div class="cards">
+<a class="card" href="/tps-verification"><span class="ct">TPS verification</span><span class="cd">Claimed vs measured throughput, counted on our own node.</span><span class="cp">Review 250 € ($290)</span></a>
+<a class="card" href="/launch-measurement"><span class="ct">Launch measurement</span><span class="cd">The first week after a testnet or mainnet launch, set against the week before.</span><span class="cp">from 2,500 € ($2,900)</span></a>
+<a class="card" href="/upgrade-monitoring"><span class="ct">Upgrade monitoring</span><span class="cd">Block time, difficulty and orphaned blocks before and after a hard fork.</span><span class="cp">Ongoing from 1,500 € ($1,750) per month</span></a>
 </div>
+<p class="note">Custom scope, on request. Prices as of October 2026, net, plus VAT where it applies. Invoices in euro.</p>
+</section>
+<section><h2>Which networks have we measured?</h2>
+<div class="cards two">
+<a class="card" href="/upgrades#zcash-nu7-testnet"><span class="ct">Zcash NU7</span><span class="cd">Block times and difficulty on the Zcash testnet around Network Upgrade 7, measured on our own node. Results with CSV from 18 October 2026.</span><span class="cp">See the upgrade calendar</span></a>
+<a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
+</div>
+</section>
+<section><h2>For foundations and grant committees</h2>
+<p>Ongoing measurement of a network works best as a public good. When a grant funds it, every result and its raw data are published openly, for the whole ecosystem, with the same method and the same rules as paid work.</p>
+<p>A grant pays for the measurement, never for the result. The rules that make this hold are on our <a href="/independence">independence</a> page.</p>
+<p><a href="/upgrade-monitoring">How ongoing measurement works</a></p>
+</section>
+<section><h2>What does a blockchain performance measurement look like?</h2>
+<p>A short summary, the measurement window in UTC, charts, a table with median, p90 and p99, the method version and a CSV with every block we counted. Every number carries its date.</p>
+<p class="cta"><a href="/method#sample-report" class="btn plausible-event-name=Sample+Report">See a sample report</a></p>
+</section>
+<section><h2>How do we start?</h2>
+<p>Tell us the network, what you want measured and when. Ben, the founder, answers personally.</p>
+<p class="cta"><a href="/contact" class="btn ghost">Request a measurement</a> <a href="mailto:hello@pulsehawk.io" class="btn ghost">hello@pulsehawk.io</a></p>
+</section>
+</div></main>
+<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div><div><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/archive">Archive</a> · <a href="/contact">Contact</a></div></div></footer>
 </body>
 </html>
