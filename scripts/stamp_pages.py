@@ -1521,7 +1521,11 @@ def whatif_werte(archivrows, logrows):
                   % (wi_usd(dbetrag), WI_LABEL[df], djahre, wi_usd(D["paid"]),
                      wi_usd(D["wert"]), D["wert"] / D["paid"])),
     }
-    return {"text": werte, "innen": innen, "asof": asof}, None
+    # btc_tag ist der juengste bitcoin-preis der seite, asof der juengste
+    # tag, an dem alle drei preise stehen. am wochenende ist asof der
+    # freitag, btc_tag der samstag oder sonntag, und die seite nennt beide.
+    return {"text": werte, "innen": innen, "asof": asof,
+            "btc_tag": reihen["btc"][-1][0]}, None
 
 
 RE_INNEN = {}
@@ -1566,7 +1570,17 @@ def lauf_whatif():
     if ko:
         print("  FEHL %-30s %s" % (WI_SEITE, "; ".join(ko)))
         return 1
-    STICHTAG[WI_SEITE] = w["asof"]
+    # In der Preisgruppe der Stichtagswache steht der juengste BITCOIN-Preis
+    # der Seite, wie bei den anderen vier Seiten auch. Bis zum 16.10.2026
+    # stand hier asof, der juengste Tag mit Bitcoin, Gold UND Aktien. Das ist
+    # am Wochenende der Freitag, weil die Boerse zu hat; die Seite schreibt
+    # das selbst hin ("9 October 2026 (bitcoin 10 October 2026)"). Die Wache
+    # hielt das fuer zwei verschiedene heute und stoppte den Seitenstempel,
+    # zuerst am 26.09.2026, dann am 11. und 12.10.2026. Der Dreier-Stand ist
+    # kein veralteter Preis, sondern der letzte gemeinsame Handelstag.
+    # Urspruenglich PR #14 vom 27.09.2026, hier auf den Stand vom 16.10.
+    # gebracht, die Selbsttests rechnen den Fall vom 11.10. nach.
+    STICHTAG[WI_SEITE] = w["btc_tag"]
     return schreiben(pfad, alt, neu, WI_SEITE,
                      "%d zahlen, stand %s" % (treffer, w["asof"]))
 
@@ -2292,7 +2306,10 @@ def selbsttest():
                 _LAUFZEIT[:] = gemerkt
             tag = dict((s, z["d"]) for s in SCHLUSS_SEITEN)
             tag[GOLD_SEITE] = g["b5tag"]
-            tag[WI_SEITE] = w["asof"]
+            # die preisgruppe traegt fuer what-if den bitcoin-tag, wie
+            # lauf_whatif(); asof bleibt fuer die gegenprobe erreichbar
+            tag[WI_SEITE] = w["btc_tag"]
+            preisgruppe.asof = w["asof"]
             return z, tag, w["text"]["asof"]
 
         z, tag, wi_text = preisgruppe("2026-09-26T23:56:35Z")
@@ -2306,10 +2323,36 @@ def selbsttest():
                stichtag_funde(tag, lambda d: "25 September 2026"), [])
         _, alt_tag, _ = preisgruppe("2026-09-26T23:56:35Z", schneiden=False)
         pruefe("ohne die regel: der offene 26. auf vier seiten (der fehler der nacht)",
-               sorted(set(alt_tag.values())), ["2026-09-25", "2026-09-26"])
+               sorted(set(v for k, v in alt_tag.items() if k != WI_SEITE)), ["2026-09-26"])
         z, tag, _ = preisgruppe("2026-09-27T00:00:00Z")
         pruefe("27.09. 00:00:00 utc: der 26. ist vorbei",
-               (z["d"], z["btc"], tag[WI_SEITE]), ("2026-09-26", 84293.0, "2026-09-25"))
+               (z["d"], z["btc"], tag[WI_SEITE], preisgruppe.asof),
+               ("2026-09-26", 84293.0, "2026-09-26", "2026-09-25"))
+        pruefe("27.09. 00:00:00 utc: die wache laesst den samstag durch",
+               stichtag_funde(tag, lambda d: "26 September 2026"), [])
+
+        # --- what-if am wochenende, der fall vom 11.10.2026 ---
+        # seitenstempel rot am 11. und 12.10.2026: what-if rechnete auf den
+        # freitag 09.10., die vier anderen auf den bitcoin-tag. seit dem
+        # 13.10. gruen, weil dann wieder alle drei preise denselben tag
+        # haben. in der preisgruppe zaehlt der bitcoin-tag der seite.
+        for stempel, btc, lang_btc in (("2026-10-11T04:17:00Z", "2026-10-10", "10 October 2026"),
+                                       ("2026-10-11T21:40:00Z", "2026-10-10", "10 October 2026"),
+                                       ("2026-10-12T04:17:00Z", "2026-10-11", "11 October 2026")):
+            z, tag, wi_text = preisgruppe(stempel)
+            pruefe("%s: alle fuenf seiten auf dem bitcoin-tag %s" % (stempel, btc),
+                   sorted(set(tag.values())), [btc])
+            pruefe("%s: what-if nennt den freitag und den bitcoin-tag" % stempel,
+                   (preisgruppe.asof, wi_text),
+                   ("2026-10-09", "9 October 2026 (bitcoin %s)" % lang_btc))
+            pruefe("%s: die wache laesst den lauf durch" % stempel,
+                   stichtag_funde(tag, lambda d: lang_btc), [])
+            pruefe("%s: mit dem dreier-stand schlug sie an (der fehler)" % stempel,
+                   len(stichtag_funde(dict(tag, **{WI_SEITE: preisgruppe.asof}),
+                                      lambda d: "egal")) > 0, True)
+        z, tag, _ = preisgruppe("2026-10-13T04:17:00Z")
+        pruefe("13.10. 04:17 utc: unter der woche sind dreier-stand und bitcoin-tag gleich",
+               (len(set(tag.values())), tag[WI_SEITE] == preisgruppe.asof), (1, True))
         _, do_tag, _ = preisgruppe("2026-09-24T23:58:37Z", schneiden=False)
         pruefe("ohne die regel, donnerstag 24.09. 23:58: offener tag, wache still",
                (sorted(set(do_tag.values())),
