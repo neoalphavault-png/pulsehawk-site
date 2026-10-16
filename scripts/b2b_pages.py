@@ -275,7 +275,7 @@ def seiten():
 <section><h2>Which networks have we measured?</h2>
 <div class="cards two">
 <a class="card" href="/upgrades#zcash-nu7-testnet"><span class="ct">Zcash NU7</span><span class="cd">Block times and difficulty on the Zcash testnet around Network Upgrade 7, measured on our own node. Results with CSV from 18 October 2026.</span><span class="cp">See the upgrade calendar</span></a>
-<a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network at 10 blocks per second, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
+<a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
 </div>
 </section>
 <section><h2>For foundations and grant committees</h2>
@@ -654,24 +654,27 @@ def seiten():
     S.append(dict(
         datei="cases/kaspa.html", pfad="/cases/kaspa", og="kaspa",
         title="Kaspa network measurements | PulseHawk",
-        desc=("What we count on Kaspa, a network at 10 blocks per second. Fees against new "
-              "issuance over 30 days, each number dated and sourced, with links to raw data."),
+        desc=("Kaspa block rate and fees against new issuance, every number dated and marked "
+              "as our own measurement or as a series we take over, with links to raw data."),
         h1="Kaspa network measurements",
         lead=("Kaspa is the network we have followed longest, every day since August 2026, "
-              "through our media brand Kaspa Pulse at kaspapulse.com. This page collects what "
-              "we count on Kaspa, each number with its date and its source."),
+              "through our media brand Kaspa Pulse at kaspapulse.com. Every number on this page "
+              "carries its date and is marked either measured, from our own nodes, or source, "
+              "a series we take over and name."),
         body="""
 <section><h2>How fast does Kaspa produce blocks?</h2>
 <p>Kaspa runs at 10 blocks per second since the Crescendo upgrade in 2025. At that rate a block time distribution is counted in tenths of a second, and the longest gap matters more than the median.</p>
-<p class="src">Source %s, checked 16 October 2026.</p>
+<p class="src">Source %s, protocol block rate, checked 16 October 2026.</p>
 </section>
 <section><h2>How do fees compare with new issuance?</h2>
-<p>In the 30 days from 12 September to 11 October 2026, Kaspa transactions paid 68,493 KAS in fees. In the same 30 days the emission schedule created 55,848,455 new KAS, about 815 times the fees.</p>
-<p class="src">Source Kaspa Pulse daily log of 12 October 2026, %s, fees as counted by Kaspalytics, new coins from the emission schedule.</p>
+<p>In the 30 days from 12 September to 11 October 2026, Kaspalytics counted 68,493 KAS in transaction fees. In the same 30 days the emission schedule created 55,848,455 new KAS, about 815 times the fees.</p>
+<p class="src">Source Kaspalytics for the fees, a series taken over in the Kaspa Pulse daily log of 12 October 2026, %s. New coins from the emission schedule, arithmetic, not a count.</p>
 </section>
-<!-- OFFEN FUER BEN: Testnet-Sturm 11.10.2026. Keine Quelle im Bestand gefunden
-     (weder pulsehawk-site noch kaspa-pulse). Erst mit Messdatei oder Link einsetzen,
-     als eigene section mit der Frage "What happened on the Kaspa testnet on 11 October 2026?" -->
+<!-- PLATZ FUER DEN TESTNET-STURM 11.10.2026, bewusst leer (Ben, 16.10.2026).
+     Nur mit Quelle: Zaehlbericht vom 11.10., 07:30 bis 12:29 UTC, zwei eigene Knoten,
+     auf kaspa-pulse messung/tn10-zaehler. Stand 16.10.2026 liegt dort kein Bericht,
+     nur Zaehler und Fenster. Dann als section "What happened on the Kaspa testnet on
+     11 October 2026?", jede Zahl mit "measured" und dem Bericht als Quelle. -->
 <section><h2>Where can I follow Kaspa?</h2>
 <p>Daily numbers, the weekly reading and the cheat sheet are on %s. PulseHawk measures Kaspa under the same %s as every other network.</p>
 </section>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kaspa network measurements | PulseHawk</title>
-<meta name="description" content="What we count on Kaspa, a network at 10 blocks per second. Fees against new issuance over 30 days, each number dated and sourced, with links to raw data.">
+<meta name="description" content="Kaspa block rate and fees against new issuance, every number dated and marked as our own measurement or as a series we take over, with links to raw data.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://pulsehawk.io/cases/kaspa">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PulseHawk">
 <meta property="og:title" content="Kaspa network measurements">
-<meta property="og:description" content="What we count on Kaspa, a network at 10 blocks per second. Fees against new issuance over 30 days, each number dated and sourced, with links to raw data.">
+<meta property="og:description" content="Kaspa block rate and fees against new issuance, every number dated and marked as our own measurement or as a series we take over, with links to raw data.">
 <meta property="og:url" content="https://pulsehawk.io/cases/kaspa">
 <meta property="og:image" content="https://pulsehawk.io/og/kaspa.png">
 <meta property="og:image:width" content="1200">
@@ -53,7 +53,7 @@
   {
    "@type": "Article",
    "headline": "Kaspa network measurements",
-   "description": "What we count on Kaspa, a network at 10 blocks per second. Fees against new issuance over 30 days, each number dated and sourced, with links to raw data.",
+   "description": "Kaspa block rate and fees against new issuance, every number dated and marked as our own measurement or as a series we take over, with links to raw data.",
    "url": "https://pulsehawk.io/cases/kaspa",
    "datePublished": "2026-10-16",
    "dateModified": "2026-10-16",
@@ -115,18 +115,20 @@
 <main id="inhalt"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Kaspa</span></nav>
 <h1>Kaspa network measurements</h1>
-<p class="lead">Kaspa is the network we have followed longest, every day since August 2026, through our media brand Kaspa Pulse at kaspapulse.com. This page collects what we count on Kaspa, each number with its date and its source.</p>
+<p class="lead">Kaspa is the network we have followed longest, every day since August 2026, through our media brand Kaspa Pulse at kaspapulse.com. Every number on this page carries its date and is marked either measured, from our own nodes, or source, a series we take over and name.</p>
 <section><h2>How fast does Kaspa produce blocks?</h2>
 <p>Kaspa runs at 10 blocks per second since the Crescendo upgrade in 2025. At that rate a block time distribution is counted in tenths of a second, and the longest gap matters more than the median.</p>
-<p class="src">Source <a href="https://kaspapulse.com/kaspa-hashrate.html" rel="noopener">kaspapulse.com, Kaspa hashrate page</a>, checked 16 October 2026.</p>
+<p class="src">Source <a href="https://kaspapulse.com/kaspa-hashrate.html" rel="noopener">kaspapulse.com, Kaspa hashrate page</a>, protocol block rate, checked 16 October 2026.</p>
 </section>
 <section><h2>How do fees compare with new issuance?</h2>
-<p>In the 30 days from 12 September to 11 October 2026, Kaspa transactions paid 68,493 KAS in fees. In the same 30 days the emission schedule created 55,848,455 new KAS, about 815 times the fees.</p>
-<p class="src">Source Kaspa Pulse daily log of 12 October 2026, <a href="https://github.com/neoalphavault-png/kaspa-pulse/blob/main/data/tagesgrafik-log.json" rel="noopener">raw data</a>, fees as counted by Kaspalytics, new coins from the emission schedule.</p>
+<p>In the 30 days from 12 September to 11 October 2026, Kaspalytics counted 68,493 KAS in transaction fees. In the same 30 days the emission schedule created 55,848,455 new KAS, about 815 times the fees.</p>
+<p class="src">Source Kaspalytics for the fees, a series taken over in the Kaspa Pulse daily log of 12 October 2026, <a href="https://github.com/neoalphavault-png/kaspa-pulse/blob/main/data/tagesgrafik-log.json" rel="noopener">raw data</a>. New coins from the emission schedule, arithmetic, not a count.</p>
 </section>
-<!-- OFFEN FUER BEN: Testnet-Sturm 11.10.2026. Keine Quelle im Bestand gefunden
-     (weder pulsehawk-site noch kaspa-pulse). Erst mit Messdatei oder Link einsetzen,
-     als eigene section mit der Frage "What happened on the Kaspa testnet on 11 October 2026?" -->
+<!-- PLATZ FUER DEN TESTNET-STURM 11.10.2026, bewusst leer (Ben, 16.10.2026).
+     Nur mit Quelle: Zaehlbericht vom 11.10., 07:30 bis 12:29 UTC, zwei eigene Knoten,
+     auf kaspa-pulse messung/tn10-zaehler. Stand 16.10.2026 liegt dort kein Bericht,
+     nur Zaehler und Fenster. Dann als section "What happened on the Kaspa testnet on
+     11 October 2026?", jede Zahl mit "measured" und dem Bericht als Quelle. -->
 <section><h2>Where can I follow Kaspa?</h2>
 <p>Daily numbers, the weekly reading and the cheat sheet are on <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a>. PulseHawk measures Kaspa under the same <a href="/independence">rules</a> as every other network.</p>
 </section>

@@ -17,7 +17,7 @@ Services and prices (net, plus VAT where it applies, invoiced in euro, as of Oct
 - [How we measure](https://pulsehawk.io/method): Our open method. Block time distribution, stale block rate, propagation delay, confirmation time and fees, counted on our own nodes in dated windows.
 - [How we stay independent](https://pulsehawk.io/independence): Four rules for every PulseHawk measurement. The price never depends on the result, no client tokens held, results published as measured, links named.
 - [Network upgrade calendar](https://pulsehawk.io/upgrades): Network upgrade calendar with upcoming hard forks across chains. Testnet and mainnet dates, status and the official source for every single entry.
-- [Kaspa network measurements](https://pulsehawk.io/cases/kaspa): What we count on Kaspa, a network at 10 blocks per second. Fees against new issuance over 30 days, each number dated and sourced, with links to raw data.
+- [Kaspa network measurements](https://pulsehawk.io/cases/kaspa): Kaspa block rate and fees against new issuance, every number dated and marked as our own measurement or as a series we take over, with links to raw data.
 - [Request a measurement](https://pulsehawk.io/contact): Request an independent blockchain measurement. Tell us the network, what to measure, when and your budget range. The founder answers each request by email.
 - [Archive](https://pulsehawk.io/archive): PulseHawk market data pages from 2026. Bitcoin cycle counts, drawdown, dominance, gold and stocks. Still online and still updated by the same scripts.
 
