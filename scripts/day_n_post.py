@@ -63,6 +63,11 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 LOG = os.path.join(REPO, "data", "market-log.json")
+# Der Schalter fuer den taeglichen Post (Ben, 16.10.2026). Eine Datei und
+# kein Loeschen: pausiert wird mit einem Wert, der im Verlauf steht und
+# sich zurueckdrehen laesst, nicht damit, dass jemand den Aufruf aus dem
+# Workflow nimmt und spaeter raten muss, wie er dort wieder hineinkommt.
+SCHALTER = os.path.join(REPO, "data", "dayn-schalter.json")
 SEITE = os.path.join(REPO, "bitcoin-top-to-bottom.html")
 XLOG = os.path.join(REPO, "data", "x-post-log.json")
 
@@ -453,6 +458,32 @@ def laufzeit(jetzt=None):
             jetzt.isoformat(timespec="seconds").replace("+00:00", "Z"))
 
 
+def schalter(pfad=None):
+    """(posten, grund) aus data/dayn-schalter.json.
+
+    OHNE DATEI WIRD GEPOSTET. Der Normalfall braucht keine Datei, und ein
+    fehlender Schalter darf den Post nicht still anhalten - sonst haengt
+    die Automatik an etwas, das niemand sieht. Nur ein ausdrueckliches
+    "posten": false haelt an, und dann steht der Grund dabei.
+
+    Eine kaputte Datei zaehlt wie eine Pause und nicht wie ein Freibrief:
+    wer am Schalter etwas verschreibt, will eher anhalten als posten."""
+    try:
+        with open(pfad or SCHALTER, encoding="utf-8") as fh:
+            d = json.load(fh)
+    except OSError:
+        return True, ""
+    except ValueError as exc:
+        return False, "schalterdatei ist kein gueltiges json (%s)" % exc
+    if not isinstance(d, dict):
+        return False, "schalterdatei enthaelt kein objekt"
+    if d.get("posten") is True:
+        return True, ""
+    grund = str(d.get("grund") or "ohne grund")
+    seit = str(d.get("seit") or "ohne datum")
+    return False, "%s, seit %s" % (grund, seit)
+
+
 def post_befehl(t, key, stempel):
     """der aufruf von x_post.py. herausgezogen, damit ein test sieht, dass
     der zeitstempel wirklich mitgeht."""
@@ -473,6 +504,18 @@ def main(argv=None):
 
     if a.selftest:
         return selbsttest()
+
+    # Der Schalter steht vor allem anderen. Ein pausierter Lauf soll nicht
+    # erst die Karte bauen und dann doch nichts tun; --dry-run zeigt
+    # weiterhin, was rausginge.
+    posten, grund = schalter()
+    if a.post and not posten:
+        print("pausiert, es wird nicht gepostet: %s" % grund)
+        print("wieder an: data/dayn-schalter.json, posten auf true setzen")
+        return 0
+    if not posten:
+        print("HINWEIS: der post ist pausiert (%s). --dry-run zeigt trotzdem,"
+              " was rausginge.\n" % grund)
 
     with open(LOG, encoding="utf-8") as fh:
         rows = json.load(fh)
@@ -938,6 +981,53 @@ def selbsttest():
     # die gesamtzahl kommt aus der fallliste, nicht aus dem kopf des
     # letzten, der einen fall ergaenzt hat. sie stand schon einmal auf
     # 22, waehrend 34 faelle liefen.
+    # Der Schalter fuer den taeglichen Post
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        fehlt = os.path.join(tmp, "gibt-es-nicht.json")
+        pruefe("ohne schalterdatei wird gepostet", schalter(fehlt), (True, ""))
+
+        an = os.path.join(tmp, "an.json")
+        with open(an, "w", encoding="utf-8") as fh:
+            json.dump({"posten": True}, fh)
+        pruefe("posten true postet", schalter(an), (True, ""))
+
+        aus = os.path.join(tmp, "aus.json")
+        with open(aus, "w", encoding="utf-8") as fh:
+            json.dump({"posten": False, "grund": "pulsehawk.io neu",
+                       "seit": "2026-10-17"}, fh)
+        pruefe("posten false haelt an, mit grund und datum",
+               schalter(aus), (False, "pulsehawk.io neu, seit 2026-10-17"))
+
+        ohne = os.path.join(tmp, "ohne.json")
+        with open(ohne, "w", encoding="utf-8") as fh:
+            json.dump({"posten": False}, fh)
+        pruefe("ohne grund steht wenigstens, dass keiner da ist",
+               schalter(ohne), (False, "ohne grund, seit ohne datum"))
+
+        # alles, was nicht ausdruecklich true ist, haelt an
+        for wert in ("true", 1, None, "ja"):
+            w = os.path.join(tmp, "w.json")
+            with open(w, "w", encoding="utf-8") as fh:
+                json.dump({"posten": wert}, fh)
+            pruefe("posten %r ist kein true und haelt an" % (wert,),
+                   schalter(w)[0], False)
+
+        kaputt = os.path.join(tmp, "kaputt.json")
+        with open(kaputt, "w", encoding="utf-8") as fh:
+            fh.write("{")
+        pruefe("eine kaputte datei haelt an, statt zu posten",
+               schalter(kaputt)[0], False)
+
+        liste = os.path.join(tmp, "liste.json")
+        with open(liste, "w", encoding="utf-8") as fh:
+            json.dump(["posten"], fh)
+        pruefe("eine liste statt eines objekts haelt an",
+               schalter(liste), (False, "schalterdatei enthaelt kein objekt"))
+
+    # und der echte schalter im repo, so wie er jetzt steht
+    pruefe("der schalter im repo ist lesbar", isinstance(schalter()[0], bool), True)
+
     print("%d von %d faellen falsch" % (schlecht, gezaehlt))
     return 1 if schlecht else 0
 
