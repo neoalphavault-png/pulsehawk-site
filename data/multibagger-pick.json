@@ -1,26 +1,26 @@
 {
- "date": "2026-10-15",
+ "date": "2026-10-16",
  "pick": {
-  "ticker": "VICR",
-  "name": "Vicor Corporation",
-  "sector": "Industrials",
-  "industry": "Electrical Components & Equipment",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp400"
+   "sp600"
   ],
-  "mult": 4.5732,
-  "pct": 357.3,
-  "from_1000": 4573,
-  "d": "2026-10-14",
-  "close": 245.35,
-  "d_1y": "2025-10-14",
-  "close_1y": 53.65,
-  "low": 53.65,
-  "high": 379.78,
-  "drawdown_pct": 0.0,
+  "mult": 4.4931,
+  "pct": 349.3,
+  "from_1000": 4493,
+  "d": "2026-10-15",
+  "close": 78.18,
+  "d_1y": "2025-10-15",
+  "close_1y": 17.4,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": -25.0,
   "verified": {
    "source": "tiingo",
-   "mult": 4.5732,
+   "mult": 4.4931,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,22 +28,22 @@
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 27,
+  "sp500_doubled": 26,
   "sp500_tripled": 8
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 16.2,
-   "d": "2026-10-14",
-   "d_1y": "2025-10-14"
+   "pct": 16.0,
+   "d": "2026-10-15",
+   "d_1y": "2025-10-15"
   },
   "gold": {
-   "pct": -1.3,
-   "d": "2026-10-14",
-   "d_1y": "2025-10-14"
+   "pct": -1.2,
+   "d": "2026-10-15",
+   "d_1y": "2025-10-15"
   }
  },
- "candidates_total": 63,
+ "candidates_total": 58,
  "top10": [
   {
    "ticker": "MRNA",
@@ -54,20 +54,12 @@
    "mult": 6.1534
   },
   {
-   "ticker": "MXL",
-   "mult": 5.6244
-  },
-  {
    "ticker": "VICR",
    "mult": 4.5732
   },
   {
-   "ticker": "DELL",
-   "mult": 3.7319
-  },
-  {
-   "ticker": "PENG",
-   "mult": 3.5036
+   "ticker": "MXL",
+   "mult": 4.4931
   },
   {
    "ticker": "STX",
@@ -78,26 +70,34 @@
    "mult": 3.2184
   },
   {
-   "ticker": "VSTS",
-   "mult": 3.0974
+   "ticker": "DELL",
+   "mult": 3.08
   },
   {
-   "ticker": "VSXY",
-   "mult": 3.0564
+   "ticker": "PBF",
+   "mult": 3.0466
+  },
+  {
+   "ticker": "VSTS",
+   "mult": 3.0189
+  },
+  {
+   "ticker": "VIAV",
+   "mult": 3.0164
   }
  ],
  "rejected": [
   {
    "ticker": "MRNA",
-   "reason": "quellen weichen ab (6.60%)"
+   "reason": "quellen weichen ab (5.50%)"
   },
   {
    "ticker": "LITE",
-   "reason": "quellen weichen ab (7.09%)"
+   "reason": "quellen weichen ab (9.75%)"
   },
   {
-   "ticker": "MXL",
-   "reason": "quellen weichen ab (16.98%)"
+   "ticker": "VICR",
+   "reason": "quellen weichen ab (16.09%)"
   }
  ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
