@@ -697,10 +697,15 @@ def seiten():
          "No. The range helps us suggest a scope, and not sure yet is a fine answer."),
     ]
     if BREVO_FORM_URL:
+        # mit Brevo zaehlt der Tracker das Absenden ueber die Klasse, einmal,
+        # ohne das Formular anzuhalten; der Browser schickt es selbst ab
         form_open = ('<form class="form plausible-event-name=Contact+Form" method="post" action="%s">'
                      % E(BREVO_FORM_URL, quote=True))
     else:
-        form_open = ('<form class="form plausible-event-name=Contact+Form" method="post" '
+        # ohne Brevo traegt das Formular KEINE Klasse: MAILTO_JS haelt das
+        # Absenden an, meldet "Contact Form" selbst und oeffnet das
+        # Mailprogramm. Klasse und eigener Aufruf zusammen zaehlten doppelt.
+        form_open = ('<form class="form" method="post" '
                      'enctype="text/plain" action="mailto:%s?subject=Measurement%%20request" '
                      'data-mailto="%s">' % (E(KONTAKT_MAIL), E(KONTAKT_MAIL)))
     budgets = ["Under 1,000 €", "1,000 to 2,500 €", "2,500 to 5,000 €",
@@ -803,8 +808,8 @@ MAILTO_JS = """
 (function(){var f=document.querySelector('form[data-mailto]');if(!f)return;
 f.addEventListener('submit',function(e){e.preventDefault();if(!f.reportValidity())return;
 var g=function(n){var x=f.elements[n];return x?x.value:'';};
-var b='Network '+g('NETWORK')+'\\nWhat to measure '+g('SCOPE')+'\\nWhen '+g('TIMING')+'\\nBudget '+g('BUDGET')+'\\nEmail '+g('EMAIL');
 if(window.plausible)window.plausible('Contact Form');
+var b='Network '+g('NETWORK')+'\\nWhat to measure '+g('SCOPE')+'\\nWhen '+g('TIMING')+'\\nBudget '+g('BUDGET')+'\\nEmail '+g('EMAIL');
 location.href='mailto:'+f.getAttribute('data-mailto')+'?subject='+encodeURIComponent('Measurement request')+'&body='+encodeURIComponent(b);});})();
 </script>"""
 
@@ -842,7 +847,7 @@ DATENSCHUTZ = """
 </section>
 <section><h2>3. Analytics with Plausible, without cookies</h2>
 <p>We count visits with Plausible Analytics, a service of Plausible Insights OÜ, Västriku tn 2, 50403 Tartu, Estonia. Plausible runs on servers in the EU, sets no cookies and stores no personal data. Your IP address is only used to form a daily changing anonymous identifier and is not stored. No data is shared with third parties or used for advertising, and visitors cannot be identified or followed across websites.</p>
-<p>We count page views and a few events, a click on See a sample report, a download of a PDF or CSV file and a sent contact form. Legal basis is Art. 6 (1)(f) GDPR, our legitimate interest in knowing which pages are used. More in the <a href="https://plausible.io/data-policy" rel="noopener">Plausible data policy</a>.</p>
+<p>We count page views and a few events, a click on See a sample report, a download of a PDF or CSV file, a sent contact form and a click on a link to another website. Legal basis is Art. 6 (1)(f) GDPR, our legitimate interest in knowing which pages are used. More in the <a href="https://plausible.io/data-policy" rel="noopener">Plausible data policy</a>.</p>
 </section>
 <section><h2>4. Contact form and email</h2>
 <p>If you send the contact form or write to us, we process your email address and what you tell us about your project, only to answer your request. When the form is sent through Brevo, a service of Brevo GmbH, Köpenicker Straße 126, 10179 Berlin, Germany, your entries are transmitted to and stored by Brevo on our behalf. Without Brevo, the form opens your own email program and nothing is sent until you send that email.</p>
@@ -953,8 +958,21 @@ nav.main{width:100%;overflow-x:auto}nav.main ul{flex-wrap:nowrap;white-space:now
 main{padding-top:30px}.lead{font-size:17px}}
 """
 
-PLAUSIBLE = ('<script defer data-domain="pulsehawk.io" '
-             'src="https://plausible.io/js/script.tagged-events.js"></script>')
+# Snippet von Plausible fuer pulsehawk.io, genau so wie ausgegeben (Ben,
+# 17.10.2026). Es bleiben die vier eigenen Ereignisse, die automatische
+# Formular- und Downloaderfassung in Plausible bleibt aus (Ben), sonst
+# zaehlte doppelt:
+#   Sample Report  Klasse plausible-event-name=Sample+Report am Knopf
+#   PDF Download   Klasse am Download-Link auf /zcash-nu7
+#   CSV Download   Klasse am Download-Link auf /zcash-nu7
+#   Contact Form   mit Brevo die Klasse am <form>, ohne Brevo MAILTO_JS
+# Der Tracker wertet die Klassen immer aus, auch ohne Schalter im Dashboard.
+PLAUSIBLE = """<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-XESlUIPQAsUi8GQsRqS55.js"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>"""
 
 
 def fuss():
