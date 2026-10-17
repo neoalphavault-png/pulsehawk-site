@@ -616,10 +616,10 @@ def seiten():
     csv = os.path.exists(os.path.join(REPO, ZCASH_CSV))
     dl = []
     dl.append(a("/" + ZCASH_PDF, "Download the sample report (PDF)",
-                "btn") if pdf
+                "btn plausible-event-name=PDF+Download") if pdf
               else '<span class="btn off">Sample report (PDF) from 18 October 2026</span>')
     dl.append(a("/" + ZCASH_CSV, "Download block times (CSV)",
-                "btn ghost") if csv
+                "btn ghost plausible-event-name=CSV+Download") if csv
               else '<span class="btn ghost off">Block times (CSV) from 18 October 2026</span>')
     platz = "<p>Result follows on 18 October 2026, 12:00 Berlin time.</p>"
     S.append(dict(
@@ -697,9 +697,14 @@ def seiten():
          "No. The range helps us suggest a scope, and not sure yet is a fine answer."),
     ]
     if BREVO_FORM_URL:
-        form_open = ('<form class="form" method="post" action="%s">'
+        # mit Brevo zaehlt der Tracker das Absenden ueber die Klasse, einmal,
+        # ohne das Formular anzuhalten; der Browser schickt es selbst ab
+        form_open = ('<form class="form plausible-event-name=Contact+Form" method="post" action="%s">'
                      % E(BREVO_FORM_URL, quote=True))
     else:
+        # ohne Brevo traegt das Formular KEINE Klasse: MAILTO_JS haelt das
+        # Absenden an, meldet "Contact Form" selbst und oeffnet das
+        # Mailprogramm. Klasse und eigener Aufruf zusammen zaehlten doppelt.
         form_open = ('<form class="form" method="post" '
                      'enctype="text/plain" action="mailto:%s?subject=Measurement%%20request" '
                      'data-mailto="%s">' % (E(KONTAKT_MAIL), E(KONTAKT_MAIL)))
@@ -803,6 +808,7 @@ MAILTO_JS = """
 (function(){var f=document.querySelector('form[data-mailto]');if(!f)return;
 f.addEventListener('submit',function(e){e.preventDefault();if(!f.reportValidity())return;
 var g=function(n){var x=f.elements[n];return x?x.value:'';};
+if(window.plausible)window.plausible('Contact Form');
 var b='Network '+g('NETWORK')+'\\nWhat to measure '+g('SCOPE')+'\\nWhen '+g('TIMING')+'\\nBudget '+g('BUDGET')+'\\nEmail '+g('EMAIL');
 location.href='mailto:'+f.getAttribute('data-mailto')+'?subject='+encodeURIComponent('Measurement request')+'&body='+encodeURIComponent(b);});})();
 </script>"""
@@ -953,9 +959,14 @@ main{padding-top:30px}.lead{font-size:17px}}
 """
 
 # Snippet von Plausible fuer pulsehawk.io, genau so wie ausgegeben (Ben,
-# 17.10.2026). Downloads, Formulare und ausgehende Links schaltet Ben in
-# Plausible selbst ein. Eigenes Ereignis ist nur "Sample Report", ueber die
-# Klasse plausible-event-name=Sample+Report am Knopf.
+# 17.10.2026). Es bleiben die vier eigenen Ereignisse, die automatische
+# Formular- und Downloaderfassung in Plausible bleibt aus (Ben), sonst
+# zaehlte doppelt:
+#   Sample Report  Klasse plausible-event-name=Sample+Report am Knopf
+#   PDF Download   Klasse am Download-Link auf /zcash-nu7
+#   CSV Download   Klasse am Download-Link auf /zcash-nu7
+#   Contact Form   mit Brevo die Klasse am <form>, ohne Brevo MAILTO_JS
+# Der Tracker wertet die Klassen immer aus, auch ohne Schalter im Dashboard.
 PLAUSIBLE = """<!-- Privacy-friendly analytics by Plausible -->
 <script async src="https://plausible.io/js/pa-XESlUIPQAsUi8GQsRqS55.js"></script>
 <script>

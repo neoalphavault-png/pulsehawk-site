@@ -133,6 +133,7 @@
 (function(){var f=document.querySelector('form[data-mailto]');if(!f)return;
 f.addEventListener('submit',function(e){e.preventDefault();if(!f.reportValidity())return;
 var g=function(n){var x=f.elements[n];return x?x.value:'';};
+if(window.plausible)window.plausible('Contact Form');
 var b='Network '+g('NETWORK')+'\nWhat to measure '+g('SCOPE')+'\nWhen '+g('TIMING')+'\nBudget '+g('BUDGET')+'\nEmail '+g('EMAIL');
 location.href='mailto:'+f.getAttribute('data-mailto')+'?subject='+encodeURIComponent('Measurement request')+'&body='+encodeURIComponent(b);});})();
 </script>
