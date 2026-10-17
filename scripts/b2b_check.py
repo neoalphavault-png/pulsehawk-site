@@ -178,7 +178,7 @@ def pruefe(datei):
         lokal = os.path.join(REPO, og.replace("https://pulsehawk.io/", ""))
         if not os.path.exists(lokal):
             f.append("og-bild fehlt auf platte %s" % og)
-    if 'data-domain="pulsehawk.io"' not in roh:
+    if "plausible.io/js/pa-" not in roh or "plausible.init()" not in roh:
         f.append("plausible fehlt")
     if re.search(r"(?<![\d.])(\d{1,3}\.){3}\d{1,3}(?![\d.])", re.sub(r"<script type=\"application/ld\+json\">.*?</script>", "", roh, flags=re.S)):
         f.append("ip-adresse im quelltext")
