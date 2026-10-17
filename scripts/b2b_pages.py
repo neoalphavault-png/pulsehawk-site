@@ -747,7 +747,7 @@ def seiten():
 <button type="submit" class="btn">Send request</button>
 <p class="small">We use your details only to answer this request. See %s.</p>
 </form>
-<div id="f-ok" class="okmsg" role="status" tabindex="-1" hidden><b>Thank you.</b> Your request has arrived, and Ben answers by email.</div>
+<div id="f-ok" class="okmsg" role="status" tabindex="-1" hidden><b>Thank you.</b> Your request has arrived. We reply from %s within one business day.</div>
 <p id="f-err" class="errmsg" role="alert" hidden>Your request did not go through. Please try again or write to %s.</p>
 </section>
 <section><h2>Who answers?</h2>
@@ -755,7 +755,7 @@ def seiten():
 </section>
 %s
 """ % (form_open, "".join('<option>%s</option>' % b for b in budgets),
-       a("/datenschutz.html", "privacy"), a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)),
+       a("/datenschutz.html", "privacy"), E(KONTAKT_MAIL), a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)),
        a("https://x.com/gokugalax", "x.com/gokugalax"),
        a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)), faq_html(c_faq)),
         faqs=c_faq,
