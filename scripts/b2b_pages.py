@@ -44,7 +44,14 @@ REPO = os.path.dirname(HERE)
 SITE = "https://pulsehawk.io"
 
 KONTAKT_MAIL = os.environ.get("KONTAKT_MAIL", "").strip() or "hello@pulsehawk.io"
-BREVO_FORM_URL = os.environ.get("BREVO_FORM_URL", "").strip()
+# Brevo-Formular "PulseHawk contact", Liste PulseHawk Leads (#17), ohne
+# Double-Opt-in (Ben, 17.10.2026). Die Action-URL ist kein Geheimnis, sie
+# steht ohnehin im HTML. Aus der Umgebung ueberschreibbar, leer heisst mailto.
+BREVO_FORM_URL_STANDARD = ("https://f926321f.sibforms.com/serve/MUIFAI2n0BTv1Y0_sa6l9ABLD6Y1dsCFy3mVr"
+                           "IG6it6dG89b7R1QbENQtPLV1j5zwZa-zaKNhZi1nqHeLl_nC_FvellYmKM4RklEV1XtOLrN48X"
+                           "bnZxFrXUhsv9zxPutHnBtu3sJfDYZnDbxdJjJMgrpNR-P32bYQrf6xGZbkVf3Ja8jNJQgGKj25"
+                           "csrXcVwNA1Lhv1rfZTpzEd52Q==")
+BREVO_FORM_URL = os.environ.get("BREVO_FORM_URL", BREVO_FORM_URL_STANDARD).strip()
 
 ZCASH_OFFEN = True             # seit 18.10.2026, Endzahlen von Ben
 ZCASH_PDF = "reports/zcash-nu7-sample-report.pdf"
@@ -291,13 +298,13 @@ def seiten():
 %s
 </section>
 <section><h2>How do we start?</h2>
-<p>Tell us the network, what you want measured and when. Ben, the founder, answers personally.</p>
+<p>Tell us the network, what you want measured and when. We reply from %s within one business day.</p>
 <p class="cta">%s %s</p>
 </section>
 """ % (preis_text("review"), preis_text("launch"), preis_text("ongoing"), PREIS_STAND,
        a("/independence", "independence"),
        a("/upgrade-monitoring", "How ongoing measurement works"),
-       sample_button(), contact_button(),
+       sample_button(), E(KONTAKT_MAIL), contact_button(),
        a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL), "btn ghost")),
         faqs=[],
         schema=[],
@@ -776,15 +783,17 @@ def seiten():
     # 10 contact
     c_faq = [
         ("What happens after I send the form?",
-         "Ben reads every request and answers by email, with questions or a written offer."),
+         "We reply from hello@pulsehawk.io within one business day, with questions or a written offer."),
         ("Do I need a fixed budget?",
          "No. The range helps us suggest a scope, and not sure yet is a fine answer."),
     ]
     if BREVO_FORM_URL:
-        # mit Brevo zaehlt der Tracker das Absenden ueber die Klasse, einmal,
-        # ohne das Formular anzuhalten; der Browser schickt es selbst ab
-        form_open = ('<form class="form plausible-event-name=Contact+Form" method="post" action="%s">'
-                     % E(BREVO_FORM_URL, quote=True))
+        # mit Brevo zaehlt der Tracker das Absenden ueber die Klasse, genau
+        # einmal. BREVO_JS schickt das Formular per fetch und zeigt die
+        # Erfolgsmeldung hier auf der Seite, statt auf eine Brevo-Seite zu
+        # wechseln. Es meldet selbst kein Ereignis, sonst zaehlte es doppelt.
+        form_open = ('<form id="kontakt" class="form plausible-event-name=Contact+Form" method="post" '
+                     'action="%s" data-brevo>' % E(BREVO_FORM_URL, quote=True))
     else:
         # ohne Brevo traegt das Formular KEINE Klasse: MAILTO_JS haelt das
         # Absenden an, meldet "Contact Form" selbst und oeffnet das
@@ -797,8 +806,8 @@ def seiten():
     S.append(dict(
         datei="contact.html", pfad="/contact", og="contact",
         title="Request a measurement | PulseHawk",
-        desc=("Request an independent blockchain measurement. Tell us the network, what to "
-              "measure, when and your budget range. The founder answers each request by email."),
+        desc=("Request an independent blockchain measurement. Tell us network, scope, timing "
+              "and budget. We reply to each request by email within one business day."),
         h1="Request a measurement",
         lead=("Four questions and your email. Tell us which network, what you want measured "
               "and when, and we answer with questions or an offer. You can also write to %s."
@@ -807,32 +816,35 @@ def seiten():
 <section><h2>What should we measure?</h2>
 %s
 <label for="f-network">Network</label>
-<input id="f-network" name="NETWORK" type="text" required autocomplete="off" placeholder="Zcash testnet, Kaspa mainnet">
+<input id="f-network" name="NETWORK" type="text" maxlength="200" required autocomplete="off" placeholder="Zcash testnet, Kaspa mainnet">
 <label for="f-scope">What to measure</label>
-<textarea id="f-scope" name="SCOPE" rows="4" required placeholder="A TPS claim, a launch week, an upcoming hard fork"></textarea>
+<textarea id="f-scope" name="SCOPE" rows="4" maxlength="200" required placeholder="A TPS claim, a launch week, an upcoming hard fork"></textarea>
 <label for="f-when">When</label>
-<input id="f-when" name="TIMING" type="text" required placeholder="Launch on 3 December 2026">
+<input id="f-when" name="TIMING" type="text" maxlength="200" required placeholder="Launch on 3 December 2026">
 <label for="f-budget">Budget range</label>
 <select id="f-budget" name="BUDGET" required><option value="">Choose a range</option>%s</select>
 <label for="f-email">Your email</label>
 <input id="f-email" name="EMAIL" type="email" required autocomplete="email">
 <input type="text" name="email_address_check" value="" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
 <input type="hidden" name="locale" value="en">
+<input type="hidden" name="html_type" value="simple">
 <button type="submit" class="btn">Send request</button>
 <p class="small">We use your details only to answer this request. See %s.</p>
 </form>
+<div id="f-ok" class="okmsg" role="status" tabindex="-1" hidden><b>Thank you.</b> Your request has arrived. We reply from %s within one business day.</div>
+<p id="f-err" class="errmsg" role="alert" hidden>Your request did not go through. Please try again or write to %s.</p>
 </section>
-<section><h2>Who answers?</h2>
+<section><h2>Who is your contact?</h2>
 <div class="person"><img src="/hawk.png" alt="" width="48" height="51" loading="lazy"><div><b>Your contact</b><br>Ben, founder<br>%s · %s</div></div>
 </section>
 %s
 """ % (form_open, "".join('<option>%s</option>' % b for b in budgets),
-       a("/datenschutz.html", "privacy"),
+       a("/datenschutz.html", "privacy"), E(KONTAKT_MAIL), a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)),
        a("https://x.com/gokugalax", "x.com/gokugalax"),
        a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)), faq_html(c_faq)),
         faqs=c_faq,
         schema=[],
-        script=MAILTO_JS if not BREVO_FORM_URL else "",
+        script=BREVO_JS if BREVO_FORM_URL else MAILTO_JS,
     ))
 
     # 11 archive
@@ -897,6 +909,23 @@ var b='Network '+g('NETWORK')+'\\nWhat to measure '+g('SCOPE')+'\\nWhen '+g('TIM
 location.href='mailto:'+f.getAttribute('data-mailto')+'?subject='+encodeURIComponent('Measurement request')+'&body='+encodeURIComponent(b);});})();
 </script>"""
 
+# Brevo per fetch an die Action-URL mit isAjax=1, wie Brevos eigenes
+# Formularskript. Erfolg, wenn die Antwort lesbar ist und nicht
+# success false meldet. Bei einem Fehler bleibt das Formular stehen und
+# nennt die Mailadresse; es wird nie ein zweites Mal von selbst geschickt,
+# damit kein Kontakt doppelt ankommt. Ohne fetch schickt der Browser das
+# Formular klassisch ab (dann mit Brevos eigener Seite).
+BREVO_JS = """
+<script>
+(function(){var f=document.querySelector('form[data-brevo]');if(!f||!window.fetch||!window.URLSearchParams)return;
+var ok=document.getElementById('f-ok'),err=document.getElementById('f-err'),btn=f.querySelector('button[type=submit]');
+f.addEventListener('submit',function(e){e.preventDefault();if(btn.disabled)return;btn.disabled=true;err.hidden=true;
+var u=f.action+(f.action.indexOf('?')<0?'?':'&')+'isAjax=1';
+fetch(u,{method:'POST',body:new URLSearchParams(new FormData(f)),mode:'cors',credentials:'omit'})
+.then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t)}catch(x){}if(!r.ok||(j&&j.success===false))throw new Error('brevo');});})
+.then(function(){f.hidden=true;ok.hidden=false;ok.focus();},function(){err.hidden=false;btn.disabled=false;});});})();
+</script>"""
+
 IMPRESSUM = """
 <section><h2>Site operator</h2>
 <address><b>Vizora Digital UG (haftungsbeschränkt)</b><br>Marc-Chagall-Straße 54<br>40477 Düsseldorf<br>Germany</address>
@@ -934,7 +963,7 @@ DATENSCHUTZ = """
 <p>We count page views and a few events, a click on See a sample report, a download of a PDF or CSV file, a sent contact form and a click on a link to another website. Legal basis is Art. 6 (1)(f) GDPR, our legitimate interest in knowing which pages are used. More in the <a href="https://plausible.io/data-policy" rel="noopener">Plausible data policy</a>.</p>
 </section>
 <section><h2>4. Contact form and email</h2>
-<p>If you send the contact form or write to us, we process your email address and what you tell us about your project, only to answer your request. When the form is sent through Brevo, a service of Brevo GmbH, Köpenicker Straße 126, 10179 Berlin, Germany, your entries are transmitted to and stored by Brevo on our behalf. Without Brevo, the form opens your own email program and nothing is sent until you send that email.</p>
+<p>If you send the contact form or write to us, we process your email address and what you tell us about your project, only to answer your request. The contact form is sent through Brevo, a service of Brevo GmbH, Köpenicker Straße 126, 10179 Berlin, Germany, which transmits and stores your entries on our behalf in our contact list.</p>
 <p>Legal basis is Art. 6 (1)(b) GDPR, steps prior to entering into a contract, and Art. 6 (1)(f) GDPR. We delete the data when the request is closed and no retention duty applies. More in the <a href="https://www.brevo.com/legal/privacypolicy/" rel="noopener">Brevo privacy policy</a>.</p>
 </section>
 <section><h2>5. Fonts</h2>
@@ -967,6 +996,7 @@ CSS = """
 @font-face{font-family:'IBM Plex Mono';font-weight:400;font-style:normal;font-display:swap;src:url(/assets/fonts/ibm-plex-mono-latin-400-normal.woff2) format('woff2')}
 :root{--bg:#080B0F;--card:#0D1116;--line:#1C2228;--txt:#F2F5F4;--dim:#A9B7B4;--teal:#49EACB;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace}
 *{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--txt);font:400 16px/1.6 'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
 a{color:var(--teal)}
@@ -1032,6 +1062,8 @@ table.nums{min-width:0}
 .form textarea{resize:vertical}.form ::placeholder{color:#7E8C89}
 .form .btn{justify-self:start;margin-top:16px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.okmsg{background:var(--card);border:1px solid rgba(73,234,203,.5);border-radius:12px;padding:16px 18px;max-width:560px;color:var(--dim);margin-top:8px}.okmsg b{color:var(--teal)}
+.errmsg{color:#FFB4A8;font-size:14.5px}
 .person{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;max-width:560px;color:var(--dim)}
 .person b{color:var(--txt)}
 address{font-style:normal;color:var(--dim);margin-top:10px}
