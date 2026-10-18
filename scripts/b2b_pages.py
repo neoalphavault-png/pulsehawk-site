@@ -277,7 +277,7 @@ def seiten():
 </section>
 <section><h2>Which networks have we measured?</h2>
 <div class="cards two">
-<a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7</span><span class="cd">49,203 testnet blocks after Network Upgrade 7, measured on our own node up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
+<a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7 on testnet</span><span class="cd">49,203 testnet blocks after Network Upgrade 7, measured on our own node up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
 <a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
 </div>
 </section>
@@ -649,12 +649,12 @@ def seiten():
     ]
     S.append(dict(
         datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-18",
-        title="Zcash NU7 block times, measured | PulseHawk",
-        desc=("Zcash NU7 block time on the testnet, measured on our own node. Mean 23.68 s "
-              "against 25 s over 49,203 blocks, with p90, p99, longest gap and orphan rate."),
-        h1="Zcash NU7 block times, measured",
-        lead=("Yes, Zcash NU7 runs close to 25 second blocks. Over the 49,203 testnet blocks "
-              "since activation the mean interval was 23.68 s against the 25 s target, and the "
+        title="Zcash NU7 on testnet, block times measured | PulseHawk",
+        desc=("Zcash testnet after NU7, block times measured on our own node. Mean 23.68 s "
+              "against 25 s over 49,203 testnet blocks, p90, p99, longest gap, orphan rate."),
+        h1="Zcash NU7 on testnet, block times measured",
+        lead=("Yes, the Zcash testnet after NU7 runs close to 25 second blocks. Over the 49,203 "
+              "testnet blocks since activation the mean interval was 23.68 s against the 25 s target, and the "
               "spread stayed close to an ideal 25 s chain, apart from one gap of 451 s. Measured "
               "on our own node up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes "
               "matching two Zebra peers."),
@@ -683,7 +683,7 @@ def seiten():
 %s
 </section>
 <section><h2>How long do confirmations take?</h2>
-<p>30 blocks at 25 s cover the same 750 s on average as 10 blocks at 75 s. Measured, 30 blocks spanned a median of 730 s and 1,187 s at p99. An ideal 25 s chain gives 1,105 s at p99, an ideal 75 s chain needs 1,409 s at p99 for 10 blocks.</p>
+<p>Thirty blocks at 25 s spanned a median of 730 s and a p99 of 1,187 s. For perfect 25 s blocks the p99 would be about 1,105 s, so the measured value sits above that, partly because of the hashrate jumps (1,154 s without the windows around them), and still well below the 1,409 s for ten blocks at 75 s.</p>
 %s
 </section>
 <section><h2>How many blocks were orphaned?</h2>
