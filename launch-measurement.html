@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Testnet and mainnet launch measurement | PulseHawk</title>
-<meta name="description" content="Testnet stress test measurement and mainnet launch metrics. The first week after launch against the week before, counted on our own nodes, with raw data.">
+<meta name="description" content="Testnet stress test measurement and mainnet launch metrics. The first week after launch against the week before, from our own measurement, with raw data.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://pulsehawk.io/launch-measurement">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PulseHawk">
 <meta property="og:title" content="Testnet and mainnet launch measurement">
-<meta property="og:description" content="Testnet stress test measurement and mainnet launch metrics. The first week after launch against the week before, counted on our own nodes, with raw data.">
+<meta property="og:description" content="Testnet stress test measurement and mainnet launch metrics. The first week after launch against the week before, from our own measurement, with raw data.">
 <meta property="og:url" content="https://pulsehawk.io/launch-measurement">
 <meta property="og:image" content="https://pulsehawk.io/og/launch-measurement.png">
 <meta property="og:image:width" content="1200">
@@ -38,7 +38,7 @@
    "url": "https://pulsehawk.io/",
    "logo": "https://pulsehawk.io/hawk.png",
    "email": "hello@pulsehawk.io",
-   "description": "PulseHawk is an independent measurement brand. It measures how blockchains behave under load, across all chains, on its own nodes, with an open method, dated numbers and raw data.",
+   "description": "PulseHawk is an independent measurement brand. It measures how blockchains behave under load, across all chains, with its own nodes or header clients, an open method, dated numbers and raw data.",
    "parentOrganization": {
     "@type": "Organization",
     "name": "Vizora Digital UG (haftungsbeschränkt)",
@@ -60,7 +60,7 @@
    "name": "Launch measurement",
    "serviceType": "Launch measurement",
    "url": "https://pulsehawk.io/launch-measurement",
-   "description": "The first week after a testnet or mainnet launch against the week before, counted on our own nodes.",
+   "description": "The first week after a testnet or mainnet launch against the week before, from our own measurement.",
    "provider": {
     "@id": "https://pulsehawk.io/#org"
    },
@@ -88,7 +88,7 @@
      "name": "Can you measure our testnet stress test?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Yes. We watch the stress test from our own nodes and count what reaches the network. The load comes from your test, our part is the count."
+      "text": "Yes. We watch the stress test with our own nodes or header clients and count what reaches the network. The load comes from your test, our part is the count."
      }
     },
     {
@@ -96,7 +96,7 @@
      "name": "How early should we book?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Two weeks before launch is enough for most networks. That leaves time to sync our nodes and record the week before."
+      "text": "Two weeks before launch is enough for most networks. That leaves time to set up our measurement and record the week before."
      }
     },
     {
@@ -137,12 +137,12 @@
 <main id="inhalt"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Testnet and mainnet launch measurement</span></nav>
 <h1>Testnet and mainnet launch measurement</h1>
-<p class="lead">The first week after a launch shows how a network holds up under real load. We measure that week on our own nodes and set it against the week before, so your mainnet launch metrics come with a baseline.</p>
+<p class="lead">The first week after a launch shows how a network holds up under real load. We measure that week ourselves and set it against the week before, so your mainnet launch metrics come with a baseline.</p>
 <section><h2>What happens in the launch week?</h2>
-<ol class="steps"><li><b>Before.</b> Our nodes run from the week before launch and record a baseline.</li><li><b>Launch.</b> We count through the first week after launch, block by block.</li><li><b>After.</b> You get a before and after report with charts, the CSV and the method version.</li><li><b>Publication.</b> Results are published as measured, after you have seen them.</li></ol>
+<ol class="steps"><li><b>Before.</b> Our measurement runs from the week before launch and records a baseline.</li><li><b>Launch.</b> We count through the first week after launch, block by block.</li><li><b>After.</b> You get a before and after report with charts, the CSV and the method version.</li><li><b>Publication.</b> Results are published as measured, after you have seen them.</li></ol>
 </section>
 <section><h2>What do we count?</h2>
-<p>Blocks per second and per minute, the block time distribution, transactions per minute, confirmation time, fees, stale and orphaned blocks and the delay between our nodes. The full list is in our <a href="/method">method</a>.</p>
+<p>Blocks per second and per minute, the block time distribution, transactions per minute, confirmation time, fees, stale and orphaned blocks and the propagation delay. The full list is in our <a href="/method">method</a>.</p>
 <p>For a new chain the week before is the last testnet week. For a testnet stress test measurement it is the quiet week before the test.</p>
 </section>
 <section><h2>What does it cost?</h2>
@@ -151,7 +151,7 @@
 <section><h2>Is it the right fit?</h2>
 <div class="fit"><div><h3>Best for</h3><ul><li>Core teams launching a testnet or mainnet</li><li>Foundations that fund a launch and want an outside count</li><li>Teams planning a public testnet stress test</li></ul></div><div><h3>Not for</h3><ul><li>Teams that need a code or security review</li><li>A count that has to stay private for good</li><li>Questions about price or market</li></ul></div></div>
 </section>
-<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>Can you measure our testnet stress test?</h3></summary><p>Yes. We watch the stress test from our own nodes and count what reaches the network. The load comes from your test, our part is the count.</p></details><details><summary><h3>How early should we book?</h3></summary><p>Two weeks before launch is enough for most networks. That leaves time to sync our nodes and record the week before.</p></details><details><summary><h3>What if the launch date moves?</h3></summary><p>The measurement moves with it. The price stays the same as long as the scope does.</p></details></section>
+<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>Can you measure our testnet stress test?</h3></summary><p>Yes. We watch the stress test with our own nodes or header clients and count what reaches the network. The load comes from your test, our part is the count.</p></details><details><summary><h3>How early should we book?</h3></summary><p>Two weeks before launch is enough for most networks. That leaves time to set up our measurement and record the week before.</p></details><details><summary><h3>What if the launch date moves?</h3></summary><p>The measurement moves with it. The price stays the same as long as the scope does.</p></details></section>
 <p class="cta"><p class="cta"><a href="/zcash-nu7" class="btn plausible-event-name=Sample+Report">See a sample report</a></p> <a href="/contact" class="btn ghost">Request a measurement</a></p>
 </div></main>
 <footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div><div><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/archive">Archive</a> · <a href="/contact">Contact</a></div></div></footer>

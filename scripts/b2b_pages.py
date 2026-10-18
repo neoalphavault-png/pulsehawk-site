@@ -114,8 +114,8 @@ ORG = {
     "logo": SITE + "/hawk.png",
     "email": KONTAKT_MAIL,
     "description": ("PulseHawk is an independent measurement brand. It measures "
-                    "how blockchains behave under load, across all chains, on its "
-                    "own nodes, with an open method, dated numbers and raw data."),
+                    "how blockchains behave under load, across all chains, with its own nodes "
+                    "or header clients, an open method, dated numbers and raw data."),
     "parentOrganization": {
         "@type": "Organization",
         "name": "Vizora Digital UG (haftungsbeschränkt)",
@@ -257,19 +257,19 @@ def seiten():
     S.append(dict(
         datei="index.html", pfad="/", og="home", lastmod="2026-10-18",
         title="Independent blockchain measurement | PulseHawk",
-        desc=("PulseHawk measures blockchains under load on its own nodes. Dated "
-              "numbers, raw data and an open method for TPS claims, launches and upgrades."),
+        desc=("PulseHawk does its own blockchain measurement under load, with own nodes or "
+              "header clients. Dated numbers, raw data and an open method for upgrades."),
         h1="Independent blockchain measurement under load",
-        lead=("PulseHawk measures how blockchains behave under load. We run our own "
-              "nodes, count blocks, transactions and confirmation times inside a fixed "
-              "window, and publish dated numbers with the raw data. The method is open. "
-              "We work for foundations, core teams and grant committees across all "
-              "chains, around launches and network upgrades."),
+        lead=("PulseHawk measures how blockchains behave under load. We measure ourselves, "
+              "with our own nodes or our own header clients, never from third party "
+              "dashboards. We count blocks, transactions and confirmation times in a fixed "
+              "window and publish dated numbers, raw data and an open method, for "
+              "foundations, core teams and grant committees across all chains."),
         body="""
-<ul class="chips"><li>Own nodes</li><li>Open method</li><li>Dated numbers</li><li>Raw data</li></ul>
+<ul class="chips"><li>Own measurement</li><li>Open method</li><li>Dated numbers</li><li>Raw data</li></ul>
 <section><h2>What can we measure for you?</h2>
 <div class="cards">
-<a class="card" href="/tps-verification"><span class="ct">TPS verification</span><span class="cd">Claimed vs measured throughput, counted on our own node.</span><span class="cp">Review %s</span></a>
+<a class="card" href="/tps-verification"><span class="ct">TPS verification</span><span class="cd">Claimed vs measured throughput, from our own measurement.</span><span class="cp">Review %s</span></a>
 <a class="card" href="/launch-measurement"><span class="ct">Launch measurement</span><span class="cd">The first week after a testnet or mainnet launch, set against the week before.</span><span class="cp">%s</span></a>
 <a class="card" href="/upgrade-monitoring"><span class="ct">Upgrade monitoring</span><span class="cd">Block time, difficulty and orphaned blocks before and after a hard fork.</span><span class="cp">Ongoing %s</span></a>
 </div>
@@ -309,8 +309,8 @@ def seiten():
          "A claim often comes from a lab test with simple transfers on a few nodes close "
          "together. A public network carries mixed transactions over real distances. Both "
          "numbers can be honest, they just describe different conditions. We show both and name the conditions."),
-        ("Can you verify a TPS claim on a network you have no node on yet?",
-         "Yes. We set up our own node for the job. The time it needs to sync is part of the agreed window."),
+        ("Can you verify a TPS claim on a network that is new to you?",
+         "Yes. We set up our own node or header client for the job. The setup time is part of the agreed window."),
         ("Will the result be published?",
          "Yes. Results are published as measured. You see them before publication and can correct facts, not findings."),
     ]
@@ -318,10 +318,10 @@ def seiten():
         datei="tps-verification.html", pfad="/tps-verification", og="tps-verification",
         title="TPS verification, claimed vs measured | PulseHawk",
         desc=("Independent TPS verification. We check a TPS claim against real network "
-              "throughput on our own node and publish claimed vs measured with dated raw data."),
+              "throughput in our own measurement and publish claimed vs measured, dated."),
         h1="Independent TPS verification, claimed vs measured",
         lead=("A TPS claim is a number from a test. We verify the TPS claim against what "
-              "the network does on our own node, inside a dated window, and set real TPS vs "
+              "the network does in our own measurement, inside a dated window, and set real TPS vs "
               "claimed TPS side by side with the raw data."),
         body="""
 <section><h2>How does a TPS verification work?</h2>
@@ -339,7 +339,7 @@ def seiten():
 """ % (schritte([
             ("The claim.", "You send the TPS number and where it was published, a paper, a dashboard or a post."),
             ("The conditions.", "We write down what stands behind the claim, transaction type and size, number of nodes, network and date."),
-            ("The measurement.", "We count on our own node over an agreed window in UTC. Transactions per minute, blocks per second and confirmation time."),
+            ("The measurement.", "We count ourselves, with our own node or header client, over an agreed window in UTC. Transactions per minute, blocks per second and confirmation time."),
             ("The note.", "You get a dated note with claimed and measured numbers next to each other, plus the CSV."),
         ]), preis_block("review"),
             box(["Teams that want to check their own TPS number before they publish it",
@@ -351,16 +351,16 @@ def seiten():
             faq_html(tps_faq), sample_button(), contact_button()),
         faqs=tps_faq,
         schema=[service_schema("TPS verification", "/tps-verification",
-                               "Claimed vs measured TPS, counted on our own node, with dated raw data.", "review")],
+                               "Claimed vs measured TPS from our own measurement, with dated raw data.", "review")],
     ))
 
     # 3 launch
     launch_faq = [
         ("Can you measure our testnet stress test?",
-         "Yes. We watch the stress test from our own nodes and count what reaches the "
+         "Yes. We watch the stress test with our own nodes or header clients and count what reaches the "
          "network. The load comes from your test, our part is the count."),
         ("How early should we book?",
-         "Two weeks before launch is enough for most networks. That leaves time to sync our nodes and record the week before."),
+         "Two weeks before launch is enough for most networks. That leaves time to set up our measurement and record the week before."),
         ("What if the launch date moves?",
          "The measurement moves with it. The price stays the same as long as the scope does."),
     ]
@@ -368,17 +368,17 @@ def seiten():
         datei="launch-measurement.html", pfad="/launch-measurement", og="launch-measurement",
         title="Testnet and mainnet launch measurement | PulseHawk",
         desc=("Testnet stress test measurement and mainnet launch metrics. The first week "
-              "after launch against the week before, counted on our own nodes, with raw data."),
+              "after launch against the week before, from our own measurement, with raw data."),
         h1="Testnet and mainnet launch measurement",
         lead=("The first week after a launch shows how a network holds up under real "
-              "load. We measure that week on our own nodes and set it against the week "
+              "load. We measure that week ourselves and set it against the week "
               "before, so your mainnet launch metrics come with a baseline."),
         body="""
 <section><h2>What happens in the launch week?</h2>
 %s
 </section>
 <section><h2>What do we count?</h2>
-<p>Blocks per second and per minute, the block time distribution, transactions per minute, confirmation time, fees, stale and orphaned blocks and the delay between our nodes. The full list is in our %s.</p>
+<p>Blocks per second and per minute, the block time distribution, transactions per minute, confirmation time, fees, stale and orphaned blocks and the propagation delay. The full list is in our %s.</p>
 <p>For a new chain the week before is the last testnet week. For a testnet stress test measurement it is the quiet week before the test.</p>
 </section>
 <section><h2>What does it cost?</h2>
@@ -390,7 +390,7 @@ def seiten():
 %s
 <p class="cta">%s %s</p>
 """ % (schritte([
-            ("Before.", "Our nodes run from the week before launch and record a baseline."),
+            ("Before.", "Our measurement runs from the week before launch and records a baseline."),
             ("Launch.", "We count through the first week after launch, block by block."),
             ("After.", "You get a before and after report with charts, the CSV and the method version."),
             ("Publication.", "Results are published as measured, after you have seen them."),
@@ -404,7 +404,7 @@ def seiten():
             faq_html(launch_faq), sample_button(), contact_button()),
         faqs=launch_faq,
         schema=[service_schema("Launch measurement", "/launch-measurement",
-                               "The first week after a testnet or mainnet launch against the week before, counted on our own nodes.", "launch")],
+                               "The first week after a testnet or mainnet launch against the week before, from our own measurement.", "launch")],
     ))
 
     # 4 upgrade
@@ -419,19 +419,19 @@ def seiten():
     S.append(dict(
         datei="upgrade-monitoring.html", pfad="/upgrade-monitoring", og="upgrade-monitoring",
         title="Hard fork and network upgrade monitoring | PulseHawk",
-        desc=("Hard fork monitoring on our own nodes. Block time, difficulty and orphaned "
+        desc=("Hard fork monitoring from our own measurement. Block time, difficulty and orphaned "
               "blocks compared before and after a network upgrade, with dated raw data."),
         h1="Hard fork and network upgrade monitoring",
         lead=("A hard fork changes the rules a network runs on. Hard fork monitoring "
               "shows whether the change did what it set out to do. We measure block time, "
-              "difficulty and orphaned blocks on our own nodes, before and after the upgrade."),
+              "difficulty and orphaned blocks ourselves, before and after the upgrade."),
         body="""
 <section><h2>What do we compare before and after the upgrade?</h2>
 <ul class="list">
 <li><b>Block time.</b> The distribution with median, p90, p99 and the longest gap between two blocks.</li>
 <li><b>Difficulty.</b> How fast it follows a change in hashrate.</li>
 <li><b>Stale and orphaned blocks.</b> How many valid blocks did not make the main chain.</li>
-<li><b>Propagation.</b> The delay until a block reaches all of our nodes.</li>
+<li><b>Propagation.</b> The delay until a block reaches all of our measurement points.</li>
 <li><b>Load.</b> Transactions per minute and fees.</li>
 </ul>
 <p>Every network upgrade before and after comparison uses two windows of the same length, both in UTC.</p>
@@ -448,7 +448,7 @@ def seiten():
 %s
 <p class="cta">%s %s</p>
 """ % (schritte([
-            ("Baseline.", "Our nodes run weeks before activation and record the old rules."),
+            ("Baseline.", "Our measurement runs weeks before activation and records the old rules."),
             ("Activation.", "We follow the upgrade height block by block, on testnet and mainnet."),
             ("Monthly report.", "Each month you get a dated report with charts and the CSV."),
             ("Publication.", "Results are published as measured, after you have seen them."),
@@ -462,17 +462,17 @@ def seiten():
             faq_html(upg_faq), sample_button(), contact_button()),
         faqs=upg_faq,
         schema=[service_schema("Upgrade monitoring", "/upgrade-monitoring",
-                               "Block time, difficulty and orphaned blocks before and after a hard fork, counted on our own nodes.", "ongoing")],
+                               "Block time, difficulty and orphaned blocks before and after a hard fork, from our own measurement.", "ongoing")],
     ))
 
     # 5 method
     m_faq = [
         ("What is a stale block rate?",
          "The share of valid blocks that did not end up in the main chain, in % of all "
-         "blocks our nodes saw in the window. If it rises after an upgrade, blocks reach parts of the network too late."),
+         "blocks we saw in the window. If it rises after an upgrade, blocks reach parts of the network too late."),
         ("How do you measure propagation delay?",
-         "Each of our nodes records when a block first arrives. The gap between the first "
-         "and the last node is the propagation delay for that block. We report median and p90 for the window."),
+         "Each of our measurement points records when a block first arrives. The gap between "
+         "the first and the last point is the propagation delay for that block. We report median and p90 for the window."),
         ("Can we repeat your measurement?",
          "Yes. The method is on this page and the raw data is in the CSV. Two people with the same window should get the same numbers."),
     ]
@@ -480,14 +480,14 @@ def seiten():
         datei="method.html", pfad="/method", og="method", lastmod="2026-10-18",
         title="How we measure blockchains | PulseHawk",
         desc=("Our open method. Block time distribution, stale block rate, propagation "
-              "delay, confirmation time and fees, counted on our own nodes in dated windows."),
+              "delay, confirmation time and fees, from our own measurement in dated windows."),
         h1="How we measure",
-        lead=("Every number we publish comes from our own nodes, inside a stated window, "
+        lead=("Every number we publish comes from our own measurement, inside a stated window, "
               "with a method anyone can repeat. This page lists what we count, the rules we "
               "publish by and what falls outside our work. %s." % METHODE),
         body="""
 <section><h2>Where do the numbers come from?</h2>
-<p>From full nodes we run ourselves, on every network we measure, in more than one place. We do not publish their addresses, hostnames or locations, so nobody can tune a network around our measurement.</p>
+<p>We measure ourselves, from full nodes we run or from our own header clients connected directly to network peers. Each report says which. We do not publish their addresses, hostnames or locations, so nobody can tune a network around our measurement.</p>
 <p>Third party explorers serve as a cross check, never as the source of a published number.</p>
 </section>
 <section><h2>What is a measurement window?</h2>
@@ -501,7 +501,7 @@ def seiten():
 <li><b>Confirmation and acceptance time.</b> From first sight of a transaction to its first block, and to the depth the network counts as final.</li>
 <li><b>Fees.</b> Per transaction and per block.</li>
 <li><b>Stale and orphaned blocks.</b> The stale block rate in %% of all blocks seen.</li>
-<li><b>Propagation delay.</b> The gap between the first and the last of our nodes to see a block.</li>
+<li><b>Propagation delay.</b> The gap between the first and the last of our measurement points to see a block.</li>
 <li><b>Difficulty adjustment.</b> How fast difficulty follows a change in hashrate.</li>
 </ul>
 </section>
@@ -681,7 +681,7 @@ def seiten():
 %s
 </section>
 <section><h2>How fast does difficulty follow hashrate?</h2>
-<p>We found 6 jumps in hashrate of 2x or more. Difficulty caught up after a median of 960 blocks, about 2.7 hours as measured, and after 1,839 blocks at most.</p>
+<p>We found 6 jumps in hashrate of 2x or more. Difficulty caught up after a median of 960 blocks, or a median of about 2.7 hours when measured in time, and after 1,839 blocks at most.</p>
 %s
 </section>
 <section><h2>How long do confirmations take?</h2>
@@ -743,7 +743,7 @@ def seiten():
         h1="Kaspa network measurements",
         lead=("Kaspa is the network we have followed longest, every day since August 2026, "
               "through our media brand Kaspa Pulse at kaspapulse.com. Every number on this page "
-              "carries its date and is marked either measured, from our own nodes, or source, "
+              "carries its date and is marked either measured, by us, or source, "
               "a series we take over and name."),
         body="""
 <section><h2>How fast does Kaspa produce blocks?</h2>
@@ -1204,7 +1204,7 @@ Sitemap: https://pulsehawk.io/sitemap.xml
 def llms(S):
     teile = ["# PulseHawk", "",
              "> Independent blockchain measurement under load, across all chains. "
-             "PulseHawk runs its own nodes, publishes an open method, dates every number "
+             "PulseHawk does its own measurement with its own nodes or header clients, publishes an open method, dates every number "
              "and releases the raw data. A brand of Vizora Digital UG (haftungsbeschränkt), "
              "Düsseldorf, Germany. Kaspa coverage at https://kaspapulse.com.", "",
              "Services and prices (net, plus VAT where it applies, invoiced in euro, as of October 2026)",
@@ -1243,7 +1243,7 @@ body{{width:1200px;height:630px;overflow:hidden;background:#080B0F;background-im
 .t{{font:800 66px/1.08 Archivo;color:#F2F5F4;max-width:1000px;letter-spacing:-1px}}
 .s{{font:400 24px 'IBM Plex Mono';color:#49EACB}}
 </style></head><body><div class="o"><div class="b"><img src="{repo}/hawk.png">PulseHawk</div>
-<div class="t">{h1}</div><div class="s">own nodes · open method · dated numbers · raw data</div></div></body></html>
+<div class="t">{h1}</div><div class="s">own measurement · open method · dated numbers · raw data</div></div></body></html>
 """.format(css=CSS.replace("url(/assets", "url(%s/assets" % REPO), repo=REPO, h1=seite["h1"])
 
 
