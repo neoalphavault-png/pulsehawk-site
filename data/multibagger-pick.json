@@ -1,5 +1,5 @@
 {
- "date": "2026-10-17",
+ "date": "2026-10-18",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -28,8 +28,8 @@
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 25,
-  "sp500_tripled": 5
+  "sp500_doubled": 22,
+  "sp500_tripled": 4
  },
  "benchmarks": {
   "s&p 500": {
@@ -43,7 +43,7 @@
    "d_1y": "2025-10-16"
   }
  },
- "candidates_total": 56,
+ "candidates_total": 51,
  "top10": [
   {
    "ticker": "MRNA",
@@ -55,7 +55,7 @@
   },
   {
    "ticker": "MXL",
-   "mult": 4.4931
+   "mult": 4.0824
   },
   {
    "ticker": "VICR",
@@ -63,27 +63,27 @@
   },
   {
    "ticker": "DELL",
-   "mult": 3.08
-  },
-  {
-   "ticker": "VSTS",
-   "mult": 3.0189
-  },
-  {
-   "ticker": "RNG",
-   "mult": 2.9963
-  },
-  {
-   "ticker": "VSXY",
-   "mult": 2.9789
+   "mult": 2.9853
   },
   {
    "ticker": "PBF",
    "mult": 2.9708
   },
   {
+   "ticker": "VSXY",
+   "mult": 2.893
+  },
+  {
+   "ticker": "VSTS",
+   "mult": 2.8857
+  },
+  {
    "ticker": "ILMN",
    "mult": 2.881
+  },
+  {
+   "ticker": "VLO",
+   "mult": 2.8436
   }
  ],
  "rejected": [],
