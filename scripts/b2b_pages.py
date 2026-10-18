@@ -298,13 +298,13 @@ def seiten():
 %s
 </section>
 <section><h2>How do we start?</h2>
-<p>Tell us the network, what you want measured and when. Ben, the founder, answers personally.</p>
+<p>Tell us the network, what you want measured and when. We reply from %s within one business day.</p>
 <p class="cta">%s %s</p>
 </section>
 """ % (preis_text("review"), preis_text("launch"), preis_text("ongoing"), PREIS_STAND,
        a("/independence", "independence"),
        a("/upgrade-monitoring", "How ongoing measurement works"),
-       sample_button(), contact_button(),
+       sample_button(), E(KONTAKT_MAIL), contact_button(),
        a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL), "btn ghost")),
         faqs=[],
         schema=[],
@@ -783,7 +783,7 @@ def seiten():
     # 10 contact
     c_faq = [
         ("What happens after I send the form?",
-         "Ben reads every request and answers by email, with questions or a written offer."),
+         "We reply from hello@pulsehawk.io within one business day, with questions or a written offer."),
         ("Do I need a fixed budget?",
          "No. The range helps us suggest a scope, and not sure yet is a fine answer."),
     ]
@@ -806,8 +806,8 @@ def seiten():
     S.append(dict(
         datei="contact.html", pfad="/contact", og="contact",
         title="Request a measurement | PulseHawk",
-        desc=("Request an independent blockchain measurement. Tell us the network, what to "
-              "measure, when and your budget range. The founder answers each request by email."),
+        desc=("Request an independent blockchain measurement. Tell us network, scope, timing "
+              "and budget. We reply to each request by email within one business day."),
         h1="Request a measurement",
         lead=("Four questions and your email. Tell us which network, what you want measured "
               "and when, and we answer with questions or an offer. You can also write to %s."
@@ -834,7 +834,7 @@ def seiten():
 <div id="f-ok" class="okmsg" role="status" tabindex="-1" hidden><b>Thank you.</b> Your request has arrived. We reply from %s within one business day.</div>
 <p id="f-err" class="errmsg" role="alert" hidden>Your request did not go through. Please try again or write to %s.</p>
 </section>
-<section><h2>Who answers?</h2>
+<section><h2>Who is your contact?</h2>
 <div class="person"><img src="/hawk.png" alt="" width="48" height="51" loading="lazy"><div><b>Your contact</b><br>Ben, founder<br>%s · %s</div></div>
 </section>
 %s
