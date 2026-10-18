@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How we measure blockchains | PulseHawk</title>
-<meta name="description" content="Our open method. Block time distribution, stale block rate, propagation delay, confirmation time and fees, counted on our own nodes in dated windows.">
+<meta name="description" content="Our open method. Block time distribution, stale block rate, propagation delay, confirmation time and fees, from our own measurement in dated windows.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://pulsehawk.io/method">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PulseHawk">
 <meta property="og:title" content="How we measure">
-<meta property="og:description" content="Our open method. Block time distribution, stale block rate, propagation delay, confirmation time and fees, counted on our own nodes in dated windows.">
+<meta property="og:description" content="Our open method. Block time distribution, stale block rate, propagation delay, confirmation time and fees, from our own measurement in dated windows.">
 <meta property="og:url" content="https://pulsehawk.io/method">
 <meta property="og:image" content="https://pulsehawk.io/og/method.png">
 <meta property="og:image:width" content="1200">
@@ -38,7 +38,7 @@
    "url": "https://pulsehawk.io/",
    "logo": "https://pulsehawk.io/hawk.png",
    "email": "hello@pulsehawk.io",
-   "description": "PulseHawk is an independent measurement brand. It measures how blockchains behave under load, across all chains, on its own nodes, with an open method, dated numbers and raw data.",
+   "description": "PulseHawk is an independent measurement brand. It measures how blockchains behave under load, across all chains, with its own nodes or header clients, an open method, dated numbers and raw data.",
    "parentOrganization": {
     "@type": "Organization",
     "name": "Vizora Digital UG (haftungsbeschränkt)",
@@ -63,7 +63,7 @@
      "name": "What is a stale block rate?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "The share of valid blocks that did not end up in the main chain, in % of all blocks our nodes saw in the window. If it rises after an upgrade, blocks reach parts of the network too late."
+      "text": "The share of valid blocks that did not end up in the main chain, in % of all blocks we saw in the window. If it rises after an upgrade, blocks reach parts of the network too late."
      }
     },
     {
@@ -71,7 +71,7 @@
      "name": "How do you measure propagation delay?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Each of our nodes records when a block first arrives. The gap between the first and the last node is the propagation delay for that block. We report median and p90 for the window."
+      "text": "Each of our measurement points records when a block first arrives. The gap between the first and the last point is the propagation delay for that block. We report median and p90 for the window."
      }
     },
     {
@@ -112,9 +112,9 @@
 <main id="inhalt"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">How we measure</span></nav>
 <h1>How we measure</h1>
-<p class="lead">Every number we publish comes from our own nodes, inside a stated window, with a method anyone can repeat. This page lists what we count, the rules we publish by and what falls outside our work. Method version 1, 16 October 2026.</p>
+<p class="lead">Every number we publish comes from our own measurement, inside a stated window, with a method anyone can repeat. This page lists what we count, the rules we publish by and what falls outside our work. Method version 1, 16 October 2026.</p>
 <section><h2>Where do the numbers come from?</h2>
-<p>From full nodes we run ourselves, on every network we measure, in more than one place. We do not publish their addresses, hostnames or locations, so nobody can tune a network around our measurement.</p>
+<p>We measure ourselves, from full nodes we run or from our own header clients connected directly to network peers. Each report says which. We do not publish their addresses, hostnames or locations, so nobody can tune a network around our measurement.</p>
 <p>Third party explorers serve as a cross check, never as the source of a published number.</p>
 </section>
 <section><h2>What is a measurement window?</h2>
@@ -128,7 +128,7 @@
 <li><b>Confirmation and acceptance time.</b> From first sight of a transaction to its first block, and to the depth the network counts as final.</li>
 <li><b>Fees.</b> Per transaction and per block.</li>
 <li><b>Stale and orphaned blocks.</b> The stale block rate in % of all blocks seen.</li>
-<li><b>Propagation delay.</b> The gap between the first and the last of our nodes to see a block.</li>
+<li><b>Propagation delay.</b> The gap between the first and the last of our measurement points to see a block.</li>
 <li><b>Difficulty adjustment.</b> How fast difficulty follows a change in hashrate.</li>
 </ul>
 </section>
@@ -153,7 +153,7 @@
 <section><h2>What do we not do?</h2>
 <p>We do not review or audit code. We do not audit security. We make no statements about prices. We do not run validators or mine for clients, and we never publish node IPs or hostnames.</p>
 </section>
-<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>What is a stale block rate?</h3></summary><p>The share of valid blocks that did not end up in the main chain, in % of all blocks our nodes saw in the window. If it rises after an upgrade, blocks reach parts of the network too late.</p></details><details><summary><h3>How do you measure propagation delay?</h3></summary><p>Each of our nodes records when a block first arrives. The gap between the first and the last node is the propagation delay for that block. We report median and p90 for the window.</p></details><details><summary><h3>Can we repeat your measurement?</h3></summary><p>Yes. The method is on this page and the raw data is in the CSV. Two people with the same window should get the same numbers.</p></details></section>
+<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>What is a stale block rate?</h3></summary><p>The share of valid blocks that did not end up in the main chain, in % of all blocks we saw in the window. If it rises after an upgrade, blocks reach parts of the network too late.</p></details><details><summary><h3>How do you measure propagation delay?</h3></summary><p>Each of our measurement points records when a block first arrives. The gap between the first and the last point is the propagation delay for that block. We report median and p90 for the window.</p></details><details><summary><h3>Can we repeat your measurement?</h3></summary><p>Yes. The method is on this page and the raw data is in the CSV. Two people with the same window should get the same numbers.</p></details></section>
 <p class="cta"><a href="/contact" class="btn ghost">Request a measurement</a></p>
 </div></main>
 <footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div><div><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/archive">Archive</a> · <a href="/contact">Contact</a></div></div></footer>
