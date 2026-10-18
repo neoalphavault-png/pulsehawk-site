@@ -681,7 +681,7 @@ def seiten():
 %s
 </section>
 <section><h2>How fast does difficulty follow hashrate?</h2>
-<p>We found 6 jumps in hashrate of 2x or more. Difficulty caught up after a median of 960 blocks, or a median of about 2.7 hours when measured in time, and after 1,839 blocks at most.</p>
+<p>We found 6 hashrate jumps of 2x or more, and 5 of them caught up. The other one was followed by the next jump 200 blocks later, before it could catch up. For those five the difficulty came within ±15 %% of the new level after a median of 960 blocks, or about 2.7 hours when measured in time, and the longest catch-up took 1,839 blocks.</p>
 %s
 </section>
 <section><h2>How long do confirmations take?</h2>
