@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TPS verification, claimed vs measured | PulseHawk</title>
-<meta name="description" content="Independent TPS verification. We check a TPS claim against real network throughput on our own node and publish claimed vs measured with dated raw data.">
+<meta name="description" content="Independent TPS verification. We check a TPS claim against real network throughput in our own measurement and publish claimed vs measured, dated.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://pulsehawk.io/tps-verification">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PulseHawk">
 <meta property="og:title" content="Independent TPS verification, claimed vs measured">
-<meta property="og:description" content="Independent TPS verification. We check a TPS claim against real network throughput on our own node and publish claimed vs measured with dated raw data.">
+<meta property="og:description" content="Independent TPS verification. We check a TPS claim against real network throughput in our own measurement and publish claimed vs measured, dated.">
 <meta property="og:url" content="https://pulsehawk.io/tps-verification">
 <meta property="og:image" content="https://pulsehawk.io/og/tps-verification.png">
 <meta property="og:image:width" content="1200">
@@ -38,7 +38,7 @@
    "url": "https://pulsehawk.io/",
    "logo": "https://pulsehawk.io/hawk.png",
    "email": "hello@pulsehawk.io",
-   "description": "PulseHawk is an independent measurement brand. It measures how blockchains behave under load, across all chains, on its own nodes, with an open method, dated numbers and raw data.",
+   "description": "PulseHawk is an independent measurement brand. It measures how blockchains behave under load, across all chains, with its own nodes or header clients, an open method, dated numbers and raw data.",
    "parentOrganization": {
     "@type": "Organization",
     "name": "Vizora Digital UG (haftungsbeschränkt)",
@@ -60,7 +60,7 @@
    "name": "TPS verification",
    "serviceType": "TPS verification",
    "url": "https://pulsehawk.io/tps-verification",
-   "description": "Claimed vs measured TPS, counted on our own node, with dated raw data.",
+   "description": "Claimed vs measured TPS from our own measurement, with dated raw data.",
    "provider": {
     "@id": "https://pulsehawk.io/#org"
    },
@@ -93,10 +93,10 @@
     },
     {
      "@type": "Question",
-     "name": "Can you verify a TPS claim on a network you have no node on yet?",
+     "name": "Can you verify a TPS claim on a network that is new to you?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Yes. We set up our own node for the job. The time it needs to sync is part of the agreed window."
+      "text": "Yes. We set up our own node or header client for the job. The setup time is part of the agreed window."
      }
     },
     {
@@ -137,9 +137,9 @@
 <main id="inhalt"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Independent TPS verification, claimed vs measured</span></nav>
 <h1>Independent TPS verification, claimed vs measured</h1>
-<p class="lead">A TPS claim is a number from a test. We verify the TPS claim against what the network does on our own node, inside a dated window, and set real TPS vs claimed TPS side by side with the raw data.</p>
+<p class="lead">A TPS claim is a number from a test. We verify the TPS claim against what the network does in our own measurement, inside a dated window, and set real TPS vs claimed TPS side by side with the raw data.</p>
 <section><h2>How does a TPS verification work?</h2>
-<ol class="steps"><li><b>The claim.</b> You send the TPS number and where it was published, a paper, a dashboard or a post.</li><li><b>The conditions.</b> We write down what stands behind the claim, transaction type and size, number of nodes, network and date.</li><li><b>The measurement.</b> We count on our own node over an agreed window in UTC. Transactions per minute, blocks per second and confirmation time.</li><li><b>The note.</b> You get a dated note with claimed and measured numbers next to each other, plus the CSV.</li></ol>
+<ol class="steps"><li><b>The claim.</b> You send the TPS number and where it was published, a paper, a dashboard or a post.</li><li><b>The conditions.</b> We write down what stands behind the claim, transaction type and size, number of nodes, network and date.</li><li><b>The measurement.</b> We count ourselves, with our own node or header client, over an agreed window in UTC. Transactions per minute, blocks per second and confirmation time.</li><li><b>The note.</b> You get a dated note with claimed and measured numbers next to each other, plus the CSV.</li></ol>
 </section>
 <section><h2>What does it cost?</h2>
 <div class="price"><div class="pl">Review</div><div class="pv">250 € ($290)</div><p>Prices as of October 2026, net, plus VAT where it applies. Invoices in euro. </p></div>
@@ -148,7 +148,7 @@
 <section><h2>Is it the right fit?</h2>
 <div class="fit"><div><h3>Best for</h3><ul><li>Teams that want to check their own TPS number before they publish it</li><li>Foundations and grant committees that need a neutral view of a claim</li><li>Exchanges and integrators that plan capacity</li></ul></div><div><h3>Not for</h3><ul><li>Teams that need their code reviewed</li><li>Anyone who needs a number before the network runs</li><li>Questions about price or market</li></ul></div></div>
 </section>
-<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>Why is measured TPS usually lower than claimed TPS?</h3></summary><p>A claim often comes from a lab test with simple transfers on a few nodes close together. A public network carries mixed transactions over real distances. Both numbers can be honest, they just describe different conditions. We show both and name the conditions.</p></details><details><summary><h3>Can you verify a TPS claim on a network you have no node on yet?</h3></summary><p>Yes. We set up our own node for the job. The time it needs to sync is part of the agreed window.</p></details><details><summary><h3>Will the result be published?</h3></summary><p>Yes. Results are published as measured. You see them before publication and can correct facts, not findings.</p></details></section>
+<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>Why is measured TPS usually lower than claimed TPS?</h3></summary><p>A claim often comes from a lab test with simple transfers on a few nodes close together. A public network carries mixed transactions over real distances. Both numbers can be honest, they just describe different conditions. We show both and name the conditions.</p></details><details><summary><h3>Can you verify a TPS claim on a network that is new to you?</h3></summary><p>Yes. We set up our own node or header client for the job. The setup time is part of the agreed window.</p></details><details><summary><h3>Will the result be published?</h3></summary><p>Yes. Results are published as measured. You see them before publication and can correct facts, not findings.</p></details></section>
 <p class="cta"><p class="cta"><a href="/zcash-nu7" class="btn plausible-event-name=Sample+Report">See a sample report</a></p> <a href="/contact" class="btn ghost">Request a measurement</a></p>
 </div></main>
 <footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div><div><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/archive">Archive</a> · <a href="/contact">Contact</a></div></div></footer>
