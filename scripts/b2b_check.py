@@ -34,6 +34,14 @@ SUPERLATIV = ("best-in-class", "leading", "world-class", "unmatched", "revolutio
 NICHT_TUN = re.compile(r"\bwe (do not|don't|never|make no)\b", re.I)
 NICHT_TUN_ERLAUBT = ("method.html", "independence.html")
 
+# Saetze beginnen nicht mit einer Ziffer (Ben, 18.10.2026). Geprueft wird
+# Fliesstext: Absaetze, Listen, Ueberschriften, FAQ-Fragen und Kartentexte.
+# Tabellenzellen, Chips und Quellenzeilen sind keine Saetze.
+SATZ_BLOECKE = ("p", "li", "h1", "h2", "h3", "summary")
+SATZ_KLASSEN = ("cd", "lead")
+SATZ_AUSNAHMEN = ("src", "note")
+RE_SATZ = re.compile(r"(?<=[.!?])\s+")
+
 
 class Text(HTMLParser):
     def __init__(self):
@@ -49,6 +57,8 @@ class Text(HTMLParser):
         self._ld = False
         self._title = False
         self.attrtext = []
+        self.bloecke = []        # fliesstext je block, fuer die ziffernregel
+        self._block = []         # stapel offener bloecke: (tag, sammelt)
 
     def handle_starttag(self, tag, attrs):
         d = dict(attrs)
@@ -65,6 +75,10 @@ class Text(HTMLParser):
                 self.attrtext.append(d["placeholder"])
             return
         self.stapel.append(tag)
+        klassen = (d.get("class") or "").split()
+        if tag in SATZ_BLOECKE or any(k in SATZ_KLASSEN for k in klassen):
+            sammelt = not any(k in SATZ_AUSNAHMEN for k in klassen)
+            self._block.append((tag, sammelt, []))
         if tag == "h1":
             self.h1 += 1
         if tag == "h2":
@@ -78,6 +92,11 @@ class Text(HTMLParser):
             self.attrtext.append(d["placeholder"])
 
     def handle_endtag(self, tag):
+        if self._block and self._block[-1][0] == tag:
+            _, sammelt, teile = self._block.pop()
+            text = re.sub(r"\s+", " ", "".join(teile)).strip()
+            if sammelt and text:
+                self.bloecke.append(text)
         if tag in self.stapel:
             while self.stapel and self.stapel.pop() != tag:
                 pass
@@ -95,6 +114,8 @@ class Text(HTMLParser):
             return
         if any(t in ("script", "style", "head") for t in self.stapel):
             return
+        if self._block:
+            self._block[-1][2].append(data)
         if data.strip():
             self.teile.append(data)
             self.abschnitte[-1].append(data)
@@ -153,6 +174,14 @@ def pruefe(datei):
     sichtbar = " ".join(p.teile + p.attrtext)
     sichtbar = re.sub(r"\s+", " ", sichtbar)
     f += funde_text(sichtbar, datei)
+    for block in p.bloecke:
+        # abkuerzungen beenden keinen satz ("Art. 6 (1)(f) GDPR"), und eine
+        # nummerierte ueberschrift ("1. Controller") ist kein satz
+        block = re.sub(r"\b(Art|No|Jr|St|e\.g|i\.e)\. ", lambda m: m.group(1) + ".\u2060", block)
+        block = re.sub(r"^\d+\.\s", "", block)
+        for satz in RE_SATZ.split(block):
+            if satz[:1].isdigit():
+                f.append("satz beginnt mit ziffer '%s'" % satz[:60])
     # meta description und og-texte gelten als sichtbar
     desc = p.meta.get("description", "")
     f += ["description, " + x for x in funde_text(desc, datei)]
