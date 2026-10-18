@@ -53,7 +53,7 @@ BREVO_FORM_URL_STANDARD = ("https://f926321f.sibforms.com/serve/MUIFAI2n0BTv1Y0_
                            "csrXcVwNA1Lhv1rfZTpzEd52Q==")
 BREVO_FORM_URL = os.environ.get("BREVO_FORM_URL", BREVO_FORM_URL_STANDARD).strip()
 
-ZCASH_OFFEN = False
+ZCASH_OFFEN = True             # seit 18.10.2026, Endzahlen von Ben
 ZCASH_PDF = "reports/zcash-nu7-sample-report.pdf"
 ZCASH_CSV = "reports/zcash-nu7-block-times.csv"
 # bis Sonntag zeigt "See a sample report" auf den Aufbau eines Berichts
@@ -104,10 +104,13 @@ NAV = [
     ("/tps-verification", "TPS verification"),
     ("/launch-measurement", "Launch measurement"),
     ("/upgrade-monitoring", "Upgrade monitoring"),
-    ("/upgrades", "Upgrade calendar"),
+    ("/upgrades", "Calendar"),
     ("/method", "Method"),
     ("/independence", "Independence"),
 ]
+# die zcash-fallseite kommt mit ZCASH_OFFEN in die leiste (Ben, 16.10.2026)
+if ZCASH_OFFEN:
+    NAV.insert(4, ("/zcash-nu7", "Zcash NU7"))
 
 ORG_ID = SITE + "/#org"
 ORG = {
@@ -259,7 +262,7 @@ def seiten():
 
     # 1 startseite
     S.append(dict(
-        datei="index.html", pfad="/", og="home",
+        datei="index.html", pfad="/", og="home", lastmod="2026-10-18",
         title="Independent blockchain measurement | PulseHawk",
         desc=("PulseHawk measures blockchains under load on its own nodes. Dated "
               "numbers, raw data and an open method for TPS claims, launches and upgrades."),
@@ -281,7 +284,7 @@ def seiten():
 </section>
 <section><h2>Which networks have we measured?</h2>
 <div class="cards two">
-<a class="card" href="/upgrades#zcash-nu7-testnet"><span class="ct">Zcash NU7</span><span class="cd">Block times and difficulty on the Zcash testnet around Network Upgrade 7, measured on our own node. Results with CSV from 18 October 2026.</span><span class="cp">See the upgrade calendar</span></a>
+<a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7 on testnet</span><span class="cd">49,203 testnet blocks after Network Upgrade 7, measured on our own node up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
 <a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
 </div>
 </section>
@@ -481,7 +484,7 @@ def seiten():
          "Yes. The method is on this page and the raw data is in the CSV. Two people with the same window should get the same numbers."),
     ]
     S.append(dict(
-        datei="method.html", pfad="/method", og="method",
+        datei="method.html", pfad="/method", og="method", lastmod="2026-10-18",
         title="How we measure blockchains | PulseHawk",
         desc=("Our open method. Block time distribution, stale block rate, propagation "
               "delay, confirmation time and fees, counted on our own nodes in dated windows."),
@@ -591,7 +594,7 @@ def seiten():
          "When a source changes. The date each entry was checked is part of the data, and the page shows when it last changed."),
     ]
     S.append(dict(
-        datei="upgrades.html", pfad="/upgrades", og="upgrades",
+        datei="upgrades.html", pfad="/upgrades", og="upgrades", lastmod="2026-10-18",
         title="Network upgrade calendar | PulseHawk",
         desc=("Network upgrade calendar with upcoming hard forks across chains. Testnet and "
               "mainnet dates, status and the official source for every single entry."),
@@ -618,36 +621,112 @@ def seiten():
         schema=["ARTICLE:2026-10-16:%s" % up_stand],
     ))
 
-    # 8 zcash nu7, geruest bis sonntag
+    # 8 zcash nu7, endzahlen vom 18.10.2026 (Ben). Alle Zahlen sind eigene
+    # Messung; "expected" ist eine ideale Kette mit 25 s Mittel (Exponential-
+    # verteilung): Median 25 ln2, p90 25 ln10, p99 25 ln100, ueber 75 s e^-3,
+    # ueber 150 s e^-6, laengste Luecke etwa 25 (ln n + 0,577).
     pdf = os.path.exists(os.path.join(REPO, ZCASH_PDF))
     csv = os.path.exists(os.path.join(REPO, ZCASH_CSV))
     dl = []
-    dl.append(a("/" + ZCASH_PDF, "Download the sample report (PDF)",
-                "btn plausible-event-name=PDF+Download") if pdf
-              else '<span class="btn off">Sample report (PDF) from 18 October 2026</span>')
-    dl.append(a("/" + ZCASH_CSV, "Download block times (CSV)",
-                "btn ghost plausible-event-name=CSV+Download") if csv
-              else '<span class="btn ghost off">Block times (CSV) from 18 October 2026</span>')
-    platz = "<p>Result follows on 18 October 2026, 12:00 Berlin time.</p>"
+    if pdf:
+        dl.append(a("/" + ZCASH_PDF, "Download the sample report (PDF)",
+                    "btn plausible-event-name=PDF+Download"))
+    if csv:
+        dl.append(a("/" + ZCASH_CSV, "Download block intervals (CSV)",
+                    "btn ghost plausible-event-name=CSV+Download"))
+    # ohne dateien keine leeren knoepfe; der abschnitt erscheint, sobald
+    # eine der beiden dateien unter reports/ liegt
+    downloads = ('<section><h2>Where is the raw data?</h2><p>The full report and every '
+                 'block interval in the window, measured on our own node.</p>'
+                 '<p class="cta">%s</p></section>' % " ".join(dl)) if dl else ""
+    quelle = ('<p class="src">Measured on our own node, Zcash NU7 testnet, blocks 4,465,026 '
+              'to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>')
+    z_faq = [
+        ("Is the Zcash NU7 testnet producing 25 second blocks?",
+         "Yes, close to it. Up to 18 October 2026, 06:00 UTC the mean block interval was "
+         "23.68 s over 49,203 blocks, and median, p90 and p99 sat a few seconds below an "
+         "ideal 25 s chain."),
+        ("Do shorter blocks mean more orphaned blocks?",
+         "In our listener window on 17 October 2026, 14:51 to 20:21 UTC, 5 of 780 announced "
+         "blocks did not land in the chain, 0.64%, each at depth 1."),
+        ("How many confirmations match the old 10 at 75 s?",
+         "30 blocks at 25 s take the same 750 s on average. Measured, they spanned a median "
+         "of 730 s and 1,187 s at p99, below the 1,409 s an ideal 75 s chain needs at p99 "
+         "for 10 blocks."),
+    ]
     S.append(dict(
-        datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7",
-        title="Zcash NU7 block times, measured | PulseHawk",
-        desc=("Zcash NU7 block time measured on the NU7 testnet with our own node. Does "
-              "Zcash reach 25 second blocks? Median, p90, longest gap and raw data as CSV."),
-        h1="Zcash NU7 block times, measured",
-        lead=("We measure block times on the Zcash NU7 testnet with our own node. "
-              "Results publish on 18 October 2026, 12:00 Berlin time, with the "
-              "sample report and the raw data."),
+        datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-18",
+        title="Zcash NU7 on testnet, block times measured | PulseHawk",
+        desc=("Zcash testnet after NU7, block times measured on our own node. Mean 23.68 s "
+              "against 25 s over 49,203 testnet blocks, p90, p99, longest gap, orphan rate."),
+        h1="Zcash NU7 on testnet, block times measured",
+        lead=("Yes, the Zcash testnet after NU7 runs close to 25 second blocks. Over the 49,203 "
+              "testnet blocks since activation the mean interval was 23.68 s against the 25 s target, and the "
+              "spread stayed close to an ideal 25 s chain, apart from one gap of 451 s. Measured "
+              "on our own node up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes "
+              "matching two Zebra peers."),
         body="""
-<!-- GERUEST BIS SONNTAG 18.10.2026: keine zahlen vor sonntag. -->
-<section><h2>Does NU7 hit 25 second blocks?</h2>%s</section>
-<section><h2>How often is a block slower than the old 75 s target?</h2>%s</section>
-<section><h2>How fast does difficulty follow hashrate?</h2>%s</section>
-<section><h2>How we measured</h2>%s<p>Method in %s.</p></section>
-<section><h2>Downloads</h2><p class="cta">%s</p></section>
-""" % (platz, platz, platz, platz, a("/method", "How we measure"), " ".join(dl)),
-        faqs=[],
-        schema=[],
+<section><h2>Does NU7 hit 25 second blocks?</h2>
+<p>Yes. The mean interval was 23.68 s, so blocks came about 5%% faster than the target. The median of 17.0 s is what a 25 s chain should show, because most blocks arrive early and a few arrive late.</p>
+<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Measured</th><th scope="col">Expected at 25 s</th></tr></thead><tbody>
+<tr><td class="c">Mean</td><td>23.68 s</td><td>25 s</td></tr>
+<tr><td class="c">Median</td><td>17.0 s</td><td>17.3 s</td></tr>
+<tr><td class="c">p90</td><td>52 s</td><td>57.6 s</td></tr>
+<tr><td class="c">p99</td><td>109 s</td><td>115.1 s</td></tr>
+<tr><td class="c">Over 75 s</td><td>3.59%%</td><td>4.98%%</td></tr>
+<tr><td class="c">Over 150 s</td><td>0.203%%</td><td>0.248%%</td></tr>
+<tr><td class="c">Longest gap</td><td>451 s</td><td>about 284 s</td></tr>
+</tbody></table></div>
+<p class="note">Expected means an ideal chain with a 25 s mean, where intervals follow an exponential distribution.</p>
+%s
+</section>
+<section><h2>How often is a block slower than the old 75 s target?</h2>
+<p>In 3.59%% of intervals, against 4.98%% for an ideal 25 s chain. Before NU7 the target itself was 75 s. Gaps over 150 s came in 0.203%% of intervals, against 0.248%% expected.</p>
+<p>The longest gap was 451 s, longer than the roughly 284 s an ideal chain would show over the same number of blocks. No block timestamp went backwards.</p>
+%s
+</section>
+<section><h2>How fast does difficulty follow hashrate?</h2>
+<p>We found 6 jumps in hashrate of 2x or more. Difficulty caught up after a median of 960 blocks, about 6.7 hours at 25 s, and after 1,839 blocks at most.</p>
+%s
+</section>
+<section><h2>How long do confirmations take?</h2>
+<p>Thirty blocks at 25 s spanned a median of 730 s and a p99 of 1,187 s. For perfect 25 s blocks the p99 would be about 1,105 s, so the measured value sits above that, partly because of the hashrate jumps (1,154 s without the windows around them), and still well below the 1,409 s for ten blocks at 75 s.</p>
+%s
+</section>
+<section><h2>How many blocks were orphaned?</h2>
+<p>From 17 October 2026, 14:51 to 20:21 UTC we listened to every announced block. 5 of 780 did not land in the chain, 0.64%%, and each of them at depth 1.</p>
+<p class="src">Measured on our own node, Zcash NU7 testnet, listener window 17 October 2026, 14:51 to 20:21 UTC.</p>
+</section>
+<section><h2>How we measured</h2>
+<p>Our own node followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so the chain we measured had no fork.</p>
+<p>Intervals come from consecutive block timestamps. Method in %s, version 1.</p>
+</section>
+%s
+%s
+<p class="cta">%s</p>
+""" % (quelle, quelle, quelle, quelle, a("/method", "How we measure"), downloads,
+       faq_html(z_faq), contact_button("Request a measurement for your upgrade")),
+        faqs=z_faq,
+        schema=["ARTICLE:2026-10-18:2026-10-18", {
+            "@type": "Dataset",
+            "name": "Zcash NU7 testnet block intervals",
+            "description": ("Block intervals on the Zcash testnet from the NU7 activation at "
+                            "block 4,465,026 to block 4,514,228, 49,203 blocks, measured on "
+                            "a PulseHawk node, snapshot 18 October 2026 06.00 UTC. Mean, "
+                            "median, p90, p99, share over 75 s and 150 s, longest gap, "
+                            "difficulty response and orphaned blocks."),
+            "url": SITE + "/zcash-nu7",
+            "creator": {"@id": ORG_ID},
+            "isAccessibleForFree": True,
+            "datePublished": "2026-10-18",
+            "temporalCoverage": "../2026-10-18T06:00:00Z",
+            "measurementTechnique": "Own full node, block timestamps of consecutive blocks, hashes checked against two Zebra peers",
+            "variableMeasured": ["block interval", "difficulty", "orphaned blocks"],
+            "keywords": ["zcash nu7 block time", "zcash 25 second blocks", "nu7 testnet"],
+            # die CSV erst, wenn sie unter reports/ liegt
+            **({"distribution": {"@type": "DataDownload", "encodingFormat": "text/csv",
+                                 "contentUrl": SITE + "/" + ZCASH_CSV}} if csv else {}),
+        }],
         noindex=not ZCASH_OFFEN,
     ))
 
@@ -971,6 +1050,7 @@ table{border-collapse:collapse;width:100%;font-size:14px;min-width:720px}
 th{font:400 12px var(--mono);color:var(--dim);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.5px}
 td{padding:11px 12px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}
 td.c{color:var(--txt);font-weight:600}tr:last-child td{border-bottom:0}
+table.nums{min-width:0}
 .form{display:grid;gap:6px;max-width:560px;margin-top:8px}
 .form label{font-size:14px;color:var(--txt);margin-top:10px;font-weight:600}
 .form input,.form select,.form textarea{background:var(--card);color:var(--txt);border:1px solid #2A333B;border-radius:8px;padding:11px 12px;font:inherit;width:100%}
