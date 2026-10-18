@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zcash NU7 on testnet, block times measured | PulseHawk</title>
-<meta name="description" content="Zcash testnet after NU7, block times measured on our own node. Mean 23.68 s against 25 s over 49,203 testnet blocks, p90, p99, longest gap, orphan rate.">
+<meta name="description" content="Zcash testnet after NU7, block times measured independently from testnet headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://pulsehawk.io/zcash-nu7">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -14,7 +14,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PulseHawk">
 <meta property="og:title" content="Zcash NU7 on testnet, block times measured">
-<meta property="og:description" content="Zcash testnet after NU7, block times measured on our own node. Mean 23.68 s against 25 s over 49,203 testnet blocks, p90, p99, longest gap, orphan rate.">
+<meta property="og:description" content="Zcash testnet after NU7, block times measured independently from testnet headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap.">
 <meta property="og:url" content="https://pulsehawk.io/zcash-nu7">
 <meta property="og:image" content="https://pulsehawk.io/og/zcash-nu7.png">
 <meta property="og:image:width" content="1200">
@@ -58,7 +58,7 @@
   {
    "@type": "Article",
    "headline": "Zcash NU7 on testnet, block times measured",
-   "description": "Zcash testnet after NU7, block times measured on our own node. Mean 23.68 s against 25 s over 49,203 testnet blocks, p90, p99, longest gap, orphan rate.",
+   "description": "Zcash testnet after NU7, block times measured independently from testnet headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap.",
    "url": "https://pulsehawk.io/zcash-nu7",
    "datePublished": "2026-10-18",
    "dateModified": "2026-10-18",
@@ -74,7 +74,7 @@
   {
    "@type": "Dataset",
    "name": "Zcash NU7 testnet block intervals",
-   "description": "Block intervals on the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, 49,203 blocks, measured on a PulseHawk node, snapshot 18 October 2026 06.00 UTC. Mean, median, p90, p99, share over 75 s and 150 s, longest gap, difficulty response and orphaned blocks.",
+   "description": "Block intervals on the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, 49,203 blocks, measured by PulseHawk from testnet block headers, snapshot 18 October 2026 06.00 UTC. Mean, median, p90, p99, share over 75 s and 150 s, longest gap, difficulty response and orphaned blocks.",
    "url": "https://pulsehawk.io/zcash-nu7",
    "creator": {
     "@id": "https://pulsehawk.io/#org"
@@ -82,7 +82,7 @@
    "isAccessibleForFree": true,
    "datePublished": "2026-10-18",
    "temporalCoverage": "../2026-10-18T06:00:00Z",
-   "measurementTechnique": "Own full node, block timestamps of consecutive blocks, hashes checked against two Zebra peers",
+   "measurementTechnique": "Own header client fetching headers directly from testnet peers over P2P, hash linkage and proof of work checked, timestamps of consecutive blocks, 500 hashes compared with two Zebra peers",
    "variableMeasured": [
     "block interval",
     "difficulty",
@@ -151,7 +151,7 @@
 <main id="inhalt"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Zcash NU7 on testnet, block times measured</span></nav>
 <h1>Zcash NU7 on testnet, block times measured</h1>
-<p class="lead">Yes, the Zcash testnet after NU7 runs close to 25 second blocks. Over the 49,203 testnet blocks since activation the mean interval was 23.68 s against the 25 s target, and the spread stayed close to an ideal 25 s chain, apart from one gap of 451 s. Measured on our own node up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes matching two Zebra peers.</p>
+<p class="lead">Yes, the Zcash testnet after NU7 runs close to 25 second blocks. Over the 49,203 testnet blocks since activation the mean interval was 23.68 s against the 25 s target, and the spread stayed close to an ideal 25 s chain, apart from one gap of 451 s. Measured independently up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes matching two Zebra peers.</p>
 <section><h2>Does NU7 hit 25 second blocks on testnet?</h2>
 <p>Yes. The mean interval was 23.68 s, so blocks came about 5% faster than the target. The median of 17.0 s is what a 25 s chain should show, because most blocks arrive early and a few arrive late.</p>
 <div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Measured</th><th scope="col">Expected at 25 s</th></tr></thead><tbody>
@@ -164,27 +164,27 @@
 <tr><td class="c">Longest gap</td><td>451 s</td><td>about 284 s</td></tr>
 </tbody></table></div>
 <p class="note">Expected means an ideal chain with a 25 s mean, where intervals follow an exponential distribution.</p>
-<p class="src">Measured on our own node, Zcash NU7 testnet, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
+<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
 </section>
 <section><h2>How often is a block slower than the old 75 s target?</h2>
 <p>In 3.59% of intervals, against 4.98% for an ideal 25 s chain. Before NU7 the target itself was 75 s. Gaps over 150 s came in 0.203% of intervals, against 0.248% expected.</p>
 <p>The longest gap was 451 s, longer than the roughly 284 s an ideal chain would show over the same number of blocks. No block timestamp went backwards.</p>
-<p class="src">Measured on our own node, Zcash NU7 testnet, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
+<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
 </section>
 <section><h2>How fast does difficulty follow hashrate?</h2>
-<p>We found 6 jumps in hashrate of 2x or more. Difficulty caught up after a median of 960 blocks, about 6.7 hours at 25 s, and after 1,839 blocks at most.</p>
-<p class="src">Measured on our own node, Zcash NU7 testnet, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
+<p>We found 6 jumps in hashrate of 2x or more. Difficulty caught up after a median of 960 blocks, about 2.7 hours as measured, and after 1,839 blocks at most.</p>
+<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
 </section>
 <section><h2>How long do confirmations take?</h2>
 <p>Thirty blocks at 25 s spanned a median of 730 s and a p99 of 1,187 s. For perfect 25 s blocks the p99 would be about 1,105 s, so the measured value sits above that, partly because of the hashrate jumps (1,154 s without the windows around them), and still well below the 1,409 s for ten blocks at 75 s.</p>
-<p class="src">Measured on our own node, Zcash NU7 testnet, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
+<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
 </section>
 <section><h2>How many blocks were orphaned?</h2>
 <p>From 17 October 2026, 14:51 to 20:21 UTC our listener recorded every block announced to it. Five of the 780 did not land in the chain, 0.64%, and each of them at depth 1.</p>
-<p class="src">Measured on our own node, Zcash NU7 testnet, listener window 17 October 2026, 14:51 to 20:21 UTC.</p>
+<p class="src">Our own listener, Zcash NU7 testnet, window 17 October 2026, 14:51 to 20:21 UTC.</p>
 </section>
 <section><h2>How we measured</h2>
-<p>Our own node followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
+<p>Our own header client followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC, fetching headers directly from testnet peers and checking hash linkage and proof of work. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
 <p>Intervals come from consecutive block timestamps. Method in <a href="/method">How we measure</a>, version 1.</p>
 </section>
 

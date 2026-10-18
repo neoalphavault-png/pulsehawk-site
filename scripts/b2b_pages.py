@@ -277,7 +277,7 @@ def seiten():
 </section>
 <section><h2>Which networks have we measured?</h2>
 <div class="cards two">
-<a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7 on testnet</span><span class="cd">Network Upgrade 7 on the Zcash testnet, measured on our own node over 49,203 blocks up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
+<a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7 on testnet</span><span class="cd">Network Upgrade 7 on the Zcash testnet, measured independently over 49,203 blocks up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
 <a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
 </div>
 </section>
@@ -598,7 +598,7 @@ def seiten():
         body="""
 <section><h2>Which upgrades are coming?</h2>
 %s
-<p class="note">%d entries, checked on %s. Measured by us means our own nodes run through that upgrade and a case page follows.</p>
+<p class="note">%d entries, checked on %s. Measured by us means we measured that upgrade ourselves and a case page follows.</p>
 </section>
 <section><h2>How does an upgrade get on this calendar?</h2>
 <p>Only with a source from the project itself, a specification, release notes or an official announcement. Each source was checked on the date stated above, and a changed date replaces the old one on the same row.</p>
@@ -630,10 +630,12 @@ def seiten():
     # ohne dateien keine leeren knoepfe; der abschnitt erscheint, sobald
     # eine der beiden dateien unter reports/ liegt
     downloads = ('<section><h2>Where is the raw data?</h2><p>The full report and every '
-                 'block interval in the window, measured on our own node.</p>'
+                 'block interval in the window, from our own measurement.</p>'
                  '<p class="cta">%s</p></section>' % " ".join(dl)) if dl else ""
-    quelle = ('<p class="src">Measured on our own node, Zcash NU7 testnet, blocks 4,465,026 '
-              'to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>')
+    # wir betreiben keinen zcash-knoten: ein eigener header-client holt die
+    # header per p2p (getheaders) direkt bei testnet-peers (Ben, 18.10.2026)
+    quelle = ('<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet '
+              'peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>')
     z_faq = [
         ("Is the Zcash NU7 testnet producing 25 second blocks?",
          "Yes, close to it. Up to 18 October 2026, 06:00 UTC the mean block interval was "
@@ -650,13 +652,13 @@ def seiten():
     S.append(dict(
         datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-18",
         title="Zcash NU7 on testnet, block times measured | PulseHawk",
-        desc=("Zcash testnet after NU7, block times measured on our own node. Mean 23.68 s "
-              "against 25 s over 49,203 testnet blocks, p90, p99, longest gap, orphan rate."),
+        desc=("Zcash testnet after NU7, block times measured independently from testnet "
+              "headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap."),
         h1="Zcash NU7 on testnet, block times measured",
         lead=("Yes, the Zcash testnet after NU7 runs close to 25 second blocks. Over the 49,203 "
               "testnet blocks since activation the mean interval was 23.68 s against the 25 s target, and the "
               "spread stayed close to an ideal 25 s chain, apart from one gap of 451 s. Measured "
-              "on our own node up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes "
+              "independently up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes "
               "matching two Zebra peers."),
         body="""
 <section><h2>Does NU7 hit 25 second blocks on testnet?</h2>
@@ -679,7 +681,7 @@ def seiten():
 %s
 </section>
 <section><h2>How fast does difficulty follow hashrate?</h2>
-<p>We found 6 jumps in hashrate of 2x or more. Difficulty caught up after a median of 960 blocks, about 6.7 hours at 25 s, and after 1,839 blocks at most.</p>
+<p>We found 6 jumps in hashrate of 2x or more. Difficulty caught up after a median of 960 blocks, about 2.7 hours as measured, and after 1,839 blocks at most.</p>
 %s
 </section>
 <section><h2>How long do confirmations take?</h2>
@@ -688,10 +690,10 @@ def seiten():
 </section>
 <section><h2>How many blocks were orphaned?</h2>
 <p>From 17 October 2026, 14:51 to 20:21 UTC our listener recorded every block announced to it. Five of the 780 did not land in the chain, 0.64%%, and each of them at depth 1.</p>
-<p class="src">Measured on our own node, Zcash NU7 testnet, listener window 17 October 2026, 14:51 to 20:21 UTC.</p>
+<p class="src">Our own listener, Zcash NU7 testnet, window 17 October 2026, 14:51 to 20:21 UTC.</p>
 </section>
 <section><h2>How we measured</h2>
-<p>Our own node followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
+<p>Our own header client followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC, fetching headers directly from testnet peers and checking hash linkage and proof of work. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
 <p>Intervals come from consecutive block timestamps. Method in %s, version 1.</p>
 </section>
 %s
@@ -704,8 +706,8 @@ def seiten():
             "@type": "Dataset",
             "name": "Zcash NU7 testnet block intervals",
             "description": ("Block intervals on the Zcash testnet from the NU7 activation at "
-                            "block 4,465,026 to block 4,514,228, 49,203 blocks, measured on "
-                            "a PulseHawk node, snapshot 18 October 2026 06.00 UTC. Mean, "
+                            "block 4,465,026 to block 4,514,228, 49,203 blocks, measured by "
+                            "PulseHawk from testnet block headers, snapshot 18 October 2026 06.00 UTC. Mean, "
                             "median, p90, p99, share over 75 s and 150 s, longest gap, "
                             "difficulty response and orphaned blocks."),
             "url": SITE + "/zcash-nu7",
@@ -713,7 +715,10 @@ def seiten():
             "isAccessibleForFree": True,
             "datePublished": "2026-10-18",
             "temporalCoverage": "../2026-10-18T06:00:00Z",
-            "measurementTechnique": "Own full node, block timestamps of consecutive blocks, hashes checked against two Zebra peers",
+            "measurementTechnique": ("Own header client fetching headers directly from testnet "
+                                     "peers over P2P, hash linkage and proof of work checked, "
+                                     "timestamps of consecutive blocks, 500 hashes compared "
+                                     "with two Zebra peers"),
             "variableMeasured": ["block interval", "difficulty", "orphaned blocks"],
             "keywords": ["zcash nu7 block time", "zcash 25 second blocks", "nu7 testnet"],
             # die CSV erst, wenn sie unter reports/ liegt
