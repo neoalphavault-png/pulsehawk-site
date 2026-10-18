@@ -277,7 +277,7 @@ def seiten():
 </section>
 <section><h2>Which networks have we measured?</h2>
 <div class="cards two">
-<a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7 on testnet</span><span class="cd">49,203 testnet blocks after Network Upgrade 7, measured on our own node up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
+<a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7 on testnet</span><span class="cd">Network Upgrade 7 on the Zcash testnet, measured on our own node over 49,203 blocks up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
 <a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
 </div>
 </section>
@@ -643,9 +643,9 @@ def seiten():
          "In our listener window on 17 October 2026, 14:51 to 20:21 UTC, 5 of 780 announced "
          "blocks did not land in the chain, 0.64%, each at depth 1."),
         ("How many confirmations match the old 10 at 75 s?",
-         "30 blocks at 25 s take the same 750 s on average. Measured, they spanned a median "
-         "of 730 s and 1,187 s at p99, below the 1,409 s an ideal 75 s chain needs at p99 "
-         "for 10 blocks."),
+         "Thirty blocks at 25 s take the same 750 s on average as ten blocks at 75 s. Measured, "
+         "they spanned a median of 730 s and a p99 of 1,187 s, well below the 1,409 s for ten "
+         "blocks at 75 s."),
     ]
     S.append(dict(
         datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-18",
@@ -659,7 +659,7 @@ def seiten():
               "on our own node up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes "
               "matching two Zebra peers."),
         body="""
-<section><h2>Does NU7 hit 25 second blocks?</h2>
+<section><h2>Does NU7 hit 25 second blocks on testnet?</h2>
 <p>Yes. The mean interval was 23.68 s, so blocks came about 5%% faster than the target. The median of 17.0 s is what a 25 s chain should show, because most blocks arrive early and a few arrive late.</p>
 <div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Measured</th><th scope="col">Expected at 25 s</th></tr></thead><tbody>
 <tr><td class="c">Mean</td><td>23.68 s</td><td>25 s</td></tr>
@@ -687,11 +687,11 @@ def seiten():
 %s
 </section>
 <section><h2>How many blocks were orphaned?</h2>
-<p>From 17 October 2026, 14:51 to 20:21 UTC we listened to every announced block. 5 of 780 did not land in the chain, 0.64%%, and each of them at depth 1.</p>
+<p>From 17 October 2026, 14:51 to 20:21 UTC our listener recorded every block announced to it. Five of the 780 did not land in the chain, 0.64%%, and each of them at depth 1.</p>
 <p class="src">Measured on our own node, Zcash NU7 testnet, listener window 17 October 2026, 14:51 to 20:21 UTC.</p>
 </section>
 <section><h2>How we measured</h2>
-<p>Our own node followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so the chain we measured had no fork.</p>
+<p>Our own node followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
 <p>Intervals come from consecutive block timestamps. Method in %s, version 1.</p>
 </section>
 %s

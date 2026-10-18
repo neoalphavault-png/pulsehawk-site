@@ -118,7 +118,7 @@
      "name": "How many confirmations match the old 10 at 75 s?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "30 blocks at 25 s take the same 750 s on average. Measured, they spanned a median of 730 s and 1,187 s at p99, below the 1,409 s an ideal 75 s chain needs at p99 for 10 blocks."
+      "text": "Thirty blocks at 25 s take the same 750 s on average as ten blocks at 75 s. Measured, they spanned a median of 730 s and a p99 of 1,187 s, well below the 1,409 s for ten blocks at 75 s."
      }
     }
    ]
@@ -152,7 +152,7 @@
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Zcash NU7 on testnet, block times measured</span></nav>
 <h1>Zcash NU7 on testnet, block times measured</h1>
 <p class="lead">Yes, the Zcash testnet after NU7 runs close to 25 second blocks. Over the 49,203 testnet blocks since activation the mean interval was 23.68 s against the 25 s target, and the spread stayed close to an ideal 25 s chain, apart from one gap of 451 s. Measured on our own node up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes matching two Zebra peers.</p>
-<section><h2>Does NU7 hit 25 second blocks?</h2>
+<section><h2>Does NU7 hit 25 second blocks on testnet?</h2>
 <p>Yes. The mean interval was 23.68 s, so blocks came about 5% faster than the target. The median of 17.0 s is what a 25 s chain should show, because most blocks arrive early and a few arrive late.</p>
 <div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Measured</th><th scope="col">Expected at 25 s</th></tr></thead><tbody>
 <tr><td class="c">Mean</td><td>23.68 s</td><td>25 s</td></tr>
@@ -180,15 +180,15 @@
 <p class="src">Measured on our own node, Zcash NU7 testnet, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
 </section>
 <section><h2>How many blocks were orphaned?</h2>
-<p>From 17 October 2026, 14:51 to 20:21 UTC we listened to every announced block. 5 of 780 did not land in the chain, 0.64%, and each of them at depth 1.</p>
+<p>From 17 October 2026, 14:51 to 20:21 UTC our listener recorded every block announced to it. Five of the 780 did not land in the chain, 0.64%, and each of them at depth 1.</p>
 <p class="src">Measured on our own node, Zcash NU7 testnet, listener window 17 October 2026, 14:51 to 20:21 UTC.</p>
 </section>
 <section><h2>How we measured</h2>
-<p>Our own node followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so the chain we measured had no fork.</p>
+<p>Our own node followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
 <p>Intervals come from consecutive block timestamps. Method in <a href="/method">How we measure</a>, version 1.</p>
 </section>
 
-<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>Is the Zcash NU7 testnet producing 25 second blocks?</h3></summary><p>Yes, close to it. Up to 18 October 2026, 06:00 UTC the mean block interval was 23.68 s over 49,203 blocks, and median, p90 and p99 sat a few seconds below an ideal 25 s chain.</p></details><details><summary><h3>Do shorter blocks mean more orphaned blocks?</h3></summary><p>In our listener window on 17 October 2026, 14:51 to 20:21 UTC, 5 of 780 announced blocks did not land in the chain, 0.64%, each at depth 1.</p></details><details><summary><h3>How many confirmations match the old 10 at 75 s?</h3></summary><p>30 blocks at 25 s take the same 750 s on average. Measured, they spanned a median of 730 s and 1,187 s at p99, below the 1,409 s an ideal 75 s chain needs at p99 for 10 blocks.</p></details></section>
+<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>Is the Zcash NU7 testnet producing 25 second blocks?</h3></summary><p>Yes, close to it. Up to 18 October 2026, 06:00 UTC the mean block interval was 23.68 s over 49,203 blocks, and median, p90 and p99 sat a few seconds below an ideal 25 s chain.</p></details><details><summary><h3>Do shorter blocks mean more orphaned blocks?</h3></summary><p>In our listener window on 17 October 2026, 14:51 to 20:21 UTC, 5 of 780 announced blocks did not land in the chain, 0.64%, each at depth 1.</p></details><details><summary><h3>How many confirmations match the old 10 at 75 s?</h3></summary><p>Thirty blocks at 25 s take the same 750 s on average as ten blocks at 75 s. Measured, they spanned a median of 730 s and a p99 of 1,187 s, well below the 1,409 s for ten blocks at 75 s.</p></details></section>
 <p class="cta"><a href="/contact" class="btn ghost">Request a measurement for your upgrade</a></p>
 </div></main>
 <footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div><div><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/archive">Archive</a> · <a href="/contact">Contact</a></div></div></footer>
