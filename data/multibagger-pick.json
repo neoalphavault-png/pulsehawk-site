@@ -1,26 +1,26 @@
 {
- "date": "2026-10-19",
+ "date": "2026-10-20",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 8.0328,
-  "pct": 703.3,
-  "from_1000": 8033,
-  "d": "2026-10-16",
-  "close": 218.01,
-  "d_1y": "2025-10-16",
-  "close_1y": 27.14,
-  "low": 22.36,
-  "high": 236.5,
-  "drawdown_pct": -17.6,
+  "mult": 4.3713,
+  "pct": 337.1,
+  "from_1000": 4371,
+  "d": "2026-10-19",
+  "close": 77.11,
+  "d_1y": "2025-10-20",
+  "close_1y": 17.64,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": -26.0,
   "verified": {
    "source": "tiingo",
-   "mult": 8.0328,
+   "mult": 4.3713,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,22 +28,22 @@
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 22,
+  "sp500_doubled": 23,
   "sp500_tripled": 4
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 15.5,
-   "d": "2026-10-16",
-   "d_1y": "2025-10-16"
+   "pct": 14.2,
+   "d": "2026-10-19",
+   "d_1y": "2025-10-20"
   },
   "gold": {
-   "pct": -3.6,
-   "d": "2026-10-16",
-   "d_1y": "2025-10-16"
+   "pct": -5.8,
+   "d": "2026-10-19",
+   "d_1y": "2025-10-20"
   }
  },
- "candidates_total": 51,
+ "candidates_total": 52,
  "top10": [
   {
    "ticker": "MRNA",
@@ -55,7 +55,7 @@
   },
   {
    "ticker": "MXL",
-   "mult": 4.0824
+   "mult": 4.3713
   },
   {
    "ticker": "VICR",
@@ -70,22 +70,31 @@
    "mult": 2.9708
   },
   {
-   "ticker": "VSXY",
-   "mult": 2.893
+   "ticker": "VSTS",
+   "mult": 2.9139
   },
   {
-   "ticker": "VSTS",
-   "mult": 2.8857
+   "ticker": "RNG",
+   "mult": 2.863
+  },
+  {
+   "ticker": "VSXY",
+   "mult": 2.8547
   },
   {
    "ticker": "VLO",
    "mult": 2.8436
-  },
-  {
-   "ticker": "STX",
-   "mult": 2.8271
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (3.69%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (2.66%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
