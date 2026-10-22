@@ -1,0 +1,7 @@
+# GitHub Pages baut diese Seite mit Jekyll. Markdown-Dateien wuerden sonst
+# als eigene Seiten auf pulsehawk.io ausgeliefert. Die Berichte und die
+# Hinweise fuer Claude sind fuer GitHub gedacht, nicht fuer die Website
+# (Ben, 22.10.2026). Alles andere bleibt, wie es war.
+exclude:
+  - berichte
+  - CLAUDE.md
