@@ -1,5 +1,5 @@
 {
- "date": "2026-10-14",
+ "date": "2026-10-22",
  "count": 1503,
  "rows": [
   {
@@ -3924,7 +3924,7 @@
   },
   {
    "ticker": "RMD",
-   "name": "ResMed|",
+   "name": "ResMed",
    "wiki": null,
    "sector": "Health Care",
    "industry": "Health Care Equipment",
@@ -6098,7 +6098,7 @@
    "name": "Dick's Sporting Goods",
    "wiki": null,
    "sector": "Consumer Discretionary",
-   "industry": "Specialty Stores",
+   "industry": "Other Specialty Retail",
    "indices": [
     "sp400"
    ]
@@ -6459,7 +6459,7 @@
    "name": "Five Below",
    "wiki": null,
    "sector": "Consumer Discretionary",
-   "industry": "Specialty Stores",
+   "industry": "Other Specialty Retail",
    "indices": [
     "sp400"
    ]
@@ -9570,7 +9570,7 @@
    "name": "Academy Sports + Outdoors",
    "wiki": null,
    "sector": "Consumer Discretionary",
-   "industry": "Specialty Stores",
+   "industry": "Other Specialty Retail",
    "indices": [
     "sp600"
    ]
@@ -10940,7 +10940,7 @@
    "name": "National Vision Holdings",
    "wiki": null,
    "sector": "Consumer Discretionary",
-   "industry": "Specialty Stores",
+   "industry": "Other Specialty Retail",
    "indices": [
     "sp600"
    ]
@@ -11600,7 +11600,7 @@
    "name": "MarineMax, Inc.",
    "wiki": null,
    "sector": "Consumer Discretionary",
-   "industry": "Specialty Stores",
+   "industry": "Other Specialty Retail",
    "indices": [
     "sp600"
    ]
@@ -13770,7 +13770,7 @@
    "name": "Sally Beauty Holdings, Inc.",
    "wiki": null,
    "sector": "Consumer Discretionary",
-   "industry": "Specialty Stores",
+   "industry": "Other Specialty Retail",
    "indices": [
     "sp600"
    ]
@@ -13920,7 +13920,7 @@
    "name": "Signet Jewelers",
    "wiki": null,
    "sector": "Consumer Discretionary",
-   "industry": "Specialty Stores",
+   "industry": "Other Specialty Retail",
    "indices": [
     "sp600"
    ]

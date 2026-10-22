@@ -61,7 +61,7 @@
    "description": "Zcash testnet after NU7, block times measured independently from testnet headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap.",
    "url": "https://pulsehawk.io/zcash-nu7",
    "datePublished": "2026-10-18",
-   "dateModified": "2026-10-20",
+   "dateModified": "2026-10-22",
    "inLanguage": "en",
    "author": {
     "@id": "https://pulsehawk.io/#org"
@@ -80,13 +80,9 @@
     "@id": "https://pulsehawk.io/#org"
    },
    "isAccessibleForFree": true,
+   "license": "https://creativecommons.org/licenses/by/4.0/",
    "datePublished": "2026-10-18",
    "temporalCoverage": "../2026-10-18T06:00:00Z",
-   "distribution": {
-    "@type": "DataDownload",
-    "encodingFormat": "text/csv",
-    "contentUrl": "https://pulsehawk.io/data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv"
-   },
    "measurementTechnique": "Own header client fetching headers directly from testnet peers over P2P, hash linkage and proof of work checked, timestamps of consecutive blocks, 500 hashes compared with two Zebra peers",
    "variableMeasured": [
     "block interval",
@@ -97,7 +93,12 @@
     "zcash nu7 block time",
     "zcash 25 second blocks",
     "nu7 testnet"
-   ]
+   ],
+   "distribution": {
+    "@type": "DataDownload",
+    "encodingFormat": "text/csv",
+    "contentUrl": "https://pulsehawk.io/data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv"
+   }
   },
   {
    "@type": "FAQPage",
@@ -192,7 +193,6 @@
 <p>Our own header client followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC, fetching headers directly from testnet peers and checking hash linkage and proof of work. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
 <p>Intervals come from consecutive block timestamps. Method in <a href="/method">How we measure</a>, version 1.</p>
 </section>
-
 <section id="download"><h2>Download the raw intervals</h2>
 <p>The file comes from our own header client, which fetched every block header directly from testnet peers over P2P, checked the hash linkage and the proof of work against nBits, and compared 500 hashes with two further Zebra peers. It does not check block contents or Equihash solutions, and it does not come from nodes of our own.</p>
 <ul class="list">
@@ -200,7 +200,8 @@
 <li><b>timestamp</b> is the block header timestamp in Unix seconds, which count in UTC.</li>
 <li><b>interval_s</b> is that timestamp minus the timestamp of the parent block, in seconds. It stays empty for 4,465,026, because the first counted interval is that of 4,465,027.</li>
 </ul>
-<p class="cta"><a class="btn" href="/data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv" download>Download CSV, 49,203 blocks, about 1 MB</a></p>
+<p class="cta"><a class="btn plausible-event-name=CSV+Download" href="/data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv" download>Download CSV, 49,203 blocks, about 1 MB</a></p>
+<p class="small">Data from PulseHawk, licensed CC BY 4.0. Cite as PulseHawk (2026), Zcash NU7 testnet block intervals, cut-off 18 October 2026.</p>
 <p class="src" style="overflow-wrap:anywhere">Our own measurement, Zcash NU7 testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC. SHA-256 c1cda3d79a470f5a8e508ebb8ba633dd4f3499eec79b5ecbba96b446dea603b6.</p>
 </section>
 <section class="faq"><h2>Questions we get asked</h2><details><summary><h3>Is the Zcash NU7 testnet producing 25 second blocks?</h3></summary><p>Yes, close to it. Up to 18 October 2026, 06:00 UTC the mean block interval was 23.68 s over 49,203 blocks, and median, p90 and p99 sat a few seconds below an ideal 25 s chain.</p></details><details><summary><h3>Do shorter blocks mean more orphaned blocks?</h3></summary><p>In our listener window on 17 October 2026, 14:51 to 20:21 UTC, 5 of 780 announced blocks did not land in the chain, 0.64%, each at depth 1.</p></details><details><summary><h3>How many confirmations match the old 10 at 75 s?</h3></summary><p>Thirty blocks at 25 s take the same 750 s on average as ten blocks at 75 s. Measured, they spanned a median of 730 s and a p99 of 1,187 s, well below the 1,409 s for ten blocks at 75 s.</p></details></section>

@@ -55,7 +55,10 @@ BREVO_FORM_URL = os.environ.get("BREVO_FORM_URL", BREVO_FORM_URL_STANDARD).strip
 
 ZCASH_OFFEN = True             # seit 18.10.2026, Endzahlen von Ben
 ZCASH_PDF = "reports/zcash-nu7-sample-report.pdf"
-ZCASH_CSV = "reports/zcash-nu7-block-times.csv"
+# seit #29 (20.10.2026): die CSV liegt unter data/, byte-gleich mit
+# kaspa-pulse messung/zcash-nu7, Commit e08fdd3. keine zweite unter reports/.
+ZCASH_CSV = "data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv"
+ZCASH_CSV_SHA256 = "c1cda3d79a470f5a8e508ebb8ba633dd4f3499eec79b5ecbba96b446dea603b6"
 # bis Sonntag zeigt "See a sample report" auf den Aufbau eines Berichts
 SAMPLE_URL = "/zcash-nu7" if ZCASH_OFFEN else "/method#sample-report"
 
@@ -649,20 +652,36 @@ def seiten():
     # ueber 150 s e^-6, laengste Luecke etwa 25 (ln n + 0,577).
     pdf = os.path.exists(os.path.join(REPO, ZCASH_PDF))
     csv = os.path.exists(os.path.join(REPO, ZCASH_CSV))
-    dl = []
-    if pdf:
-        dl.append(a("/" + ZCASH_PDF, "Download the sample report (PDF)",
-                    "btn plausible-event-name=PDF+Download"))
+    # Abschnitt aus #29, hier im Generator, damit ein Neubau ihn nicht loescht.
+    # Darunter die Lizenzzeile (Ben, 22.10.2026). Die CSV selbst bleibt reine
+    # Daten mit einer Spaltenzeile, ohne Kopftext.
+    dl_teile = []
     if csv:
-        dl.append(a("/" + ZCASH_CSV, "Download block intervals (CSV)",
-                    "btn ghost plausible-event-name=CSV+Download"))
-    # ohne dateien keine leeren knoepfe; der abschnitt erscheint, sobald
-    # eine der beiden dateien unter reports/ liegt
-    downloads = ('<section><h2>Where is the raw data?</h2><p>The full report and every '
-                 'block interval in the window, from our own measurement.</p>'
-                 '<p class="cta">%s</p></section>' % " ".join(dl)) if dl else ""
-    # wir betreiben keinen zcash-knoten: ein eigener header-client holt die
-    # header per p2p (getheaders) direkt bei testnet-peers (Ben, 18.10.2026)
+        dl_teile.append(
+            '<p>The file comes from our own header client, which fetched every block header '
+            'directly from testnet peers over P2P, checked the hash linkage and the proof of '
+            'work against nBits, and compared 500 hashes with two further Zebra peers. It does '
+            'not check block contents or Equihash solutions, and it does not come from nodes '
+            'of our own.</p>\n<ul class="list">\n'
+            '<li><b>height</b> is the block height on the Zcash testnet, from 4,465,026 to '
+            '4,514,228.</li>\n'
+            '<li><b>timestamp</b> is the block header timestamp in Unix seconds, which count '
+            'in UTC.</li>\n'
+            '<li><b>interval_s</b> is that timestamp minus the timestamp of the parent block, '
+            'in seconds. It stays empty for 4,465,026, because the first counted interval is '
+            'that of 4,465,027.</li>\n</ul>\n'
+            '<p class="cta"><a class="btn plausible-event-name=CSV+Download" href="/%s" '
+            'download>Download CSV, 49,203 blocks, about 1 MB</a></p>\n'
+            '<p class="small">Data from PulseHawk, licensed CC BY 4.0. Cite as PulseHawk '
+            '(2026), Zcash NU7 testnet block intervals, cut-off 18 October 2026.</p>\n'
+            '<p class="src" style="overflow-wrap:anywhere">Our own measurement, Zcash NU7 '
+            'testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 '
+            'October 2026, 06:00 UTC. SHA-256 %s.</p>' % (ZCASH_CSV, ZCASH_CSV_SHA256))
+    if pdf:
+        dl_teile.append('<p class="cta">%s</p>' % a("/" + ZCASH_PDF, "Download the sample report (PDF)",
+                                                   "btn plausible-event-name=PDF+Download"))
+    downloads = ('<section id="download"><h2>Download the raw intervals</h2>\n%s\n</section>'
+                 % "\n".join(dl_teile)) if dl_teile else ""
     quelle = ('<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet '
               'peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>')
     z_faq = [
@@ -679,7 +698,7 @@ def seiten():
          "blocks at 75 s."),
     ]
     S.append(dict(
-        datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-18",
+        datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-22",
         title="Zcash NU7 on testnet, block times measured | PulseHawk",
         desc=("Zcash testnet after NU7, block times measured independently from testnet "
               "headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap."),
@@ -731,7 +750,7 @@ def seiten():
 """ % (quelle, quelle, quelle, quelle, a("/method", "How we measure"), downloads,
        faq_html(z_faq), contact_button("Request a measurement for your upgrade")),
         faqs=z_faq,
-        schema=["ARTICLE:2026-10-18:2026-10-18", {
+        schema=["ARTICLE:2026-10-18:2026-10-22", {
             "@type": "Dataset",
             "name": "Zcash NU7 testnet block intervals",
             "description": ("Block intervals on the Zcash testnet from the NU7 activation at "
@@ -742,6 +761,7 @@ def seiten():
             "url": SITE + "/zcash-nu7",
             "creator": {"@id": ORG_ID},
             "isAccessibleForFree": True,
+            "license": "https://creativecommons.org/licenses/by/4.0/",
             "datePublished": "2026-10-18",
             "temporalCoverage": "../2026-10-18T06:00:00Z",
             "measurementTechnique": ("Own header client fetching headers directly from testnet "
