@@ -1,5 +1,5 @@
 {
- "date": "2026-10-21",
+ "date": "2026-10-22",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -20,8 +20,8 @@
   "drawdown_pct": -17.9,
   "verified": {
    "source": "tiingo",
-   "mult": 8.8869,
-   "diff_pct": 0
+   "mult": 8.9418,
+   "diff_pct": 0.62
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 14.6,
-   "d": "2026-10-20",
-   "d_1y": "2025-10-20"
+   "pct": 15.2,
+   "d": "2026-10-21",
+   "d_1y": "2025-10-21"
   },
   "gold": {
-   "pct": -6.3,
-   "d": "2026-10-20",
-   "d_1y": "2025-10-20"
+   "pct": 0.4,
+   "d": "2026-10-21",
+   "d_1y": "2025-10-21"
   }
  },
- "candidates_total": 50,
+ "candidates_total": 51,
  "top10": [
   {
    "ticker": "MRNA",
@@ -55,11 +55,11 @@
   },
   {
    "ticker": "MXL",
-   "mult": 4.3713
+   "mult": 4.2507
   },
   {
    "ticker": "VICR",
-   "mult": 3.1669
+   "mult": 3.2435
   },
   {
    "ticker": "STX",
@@ -75,15 +75,15 @@
   },
   {
    "ticker": "VSTS",
-   "mult": 2.9139
-  },
-  {
-   "ticker": "RNG",
-   "mult": 2.863
+   "mult": 2.9425
   },
   {
    "ticker": "VSXY",
-   "mult": 2.8547
+   "mult": 2.8419
+  },
+  {
+   "ticker": "RNG",
+   "mult": 2.8187
   }
  ],
  "rejected": [],
