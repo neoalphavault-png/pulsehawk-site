@@ -258,6 +258,26 @@ def kalender_tabelle(eintraege):
 
 # --- die seiten ----------------------------------------------------------
 
+# Bitcoin Cash Tempnet (Ben, 22.10.2026). Die Zahlen stammen aus der eigenen
+# Zaehlung, kaspa-pulse messung/bch-tempnet, data/bch/tempnet-2026-10-21.json
+# (Stand 0712804): bloecke 7572, median 43.0 s, erwartet 41.6 s, erster Block
+# 2026-10-15 12:56:56 UTC, Stichtag 2026-10-21 10:00 UTC. Die Startseite baut
+# nicht aus diesen Daten, deshalb stehen sie hier mit Quelle.
+BCH_FALL = "cases/bitcoin-cash.html"
+
+
+def bch_karte():
+    text = ("The testnet for 1 minute blocks, counted from our own header client since "
+            "activation on 15 October 2026. Up to 21 October, 7,572 blocks with a median "
+            "gap of 43 s against 41.6 s expected.")
+    # Link nur, wenn es die Fallseite gibt
+    if os.path.exists(os.path.join(REPO, BCH_FALL)):
+        return ('<a class="card" href="/cases/bitcoin-cash"><span class="ct">Bitcoin Cash Tempnet</span>'
+                '<span class="cd">%s</span><span class="cp">Read the Bitcoin Cash case</span></a>' % text)
+    return ('<div class="card"><span class="ct">Bitcoin Cash Tempnet</span>'
+            '<span class="cd">%s</span></div>' % text)
+
+
 def seiten():
     S = []
     up_meta, up = lies_upgrades()
@@ -265,7 +285,7 @@ def seiten():
 
     # 1 startseite
     S.append(dict(
-        datei="index.html", pfad="/", og="home", lastmod="2026-10-18",
+        datei="index.html", pfad="/", og="home", lastmod="2026-10-22",
         title="Independent blockchain measurement | PulseHawk",
         desc=("PulseHawk does its own blockchain measurement under load, with own nodes or "
               "header clients. Dated numbers, raw data and an open method for upgrades."),
@@ -286,9 +306,10 @@ def seiten():
 <p class="note">Custom scope, on request. %s</p>
 </section>
 <section><h2>Which networks have we measured?</h2>
-<div class="cards two">
+<div class="cards">
 <a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7 on testnet</span><span class="cd">Network Upgrade 7 on the Zcash testnet, measured independently over 49,203 blocks up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
 <a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
+%s
 </div>
 </section>
 <section><h2>For foundations and grant committees</h2>
@@ -305,6 +326,7 @@ def seiten():
 <p class="cta">%s %s</p>
 </section>
 """ % (preis_text("review"), preis_text("launch"), preis_text("ongoing"), PREIS_STAND,
+       bch_karte(),
        a("/independence", "independence"),
        a("/upgrade-monitoring", "How ongoing measurement works"),
        sample_button(), E(KONTAKT_MAIL), contact_button(),
