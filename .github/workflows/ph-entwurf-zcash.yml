@@ -1,0 +1,121 @@
+# ph-entwurf-zcash.yml - Post-Entwurf fuer @pulsehawkio nach jeder Zcash-CSV.
+#
+# Ben, 22.10.2026: nach jeder neuen oder geaenderten CSV unter data/zcash-nu7/
+# ein Entwurf mit Grafik in den privaten Discord-Kanal. Kein Posten auf X. Das
+# Secret DISCORD_WEBHOOK_PH_DRAFTS kommt nur in die Umgebung des einen Schritts,
+# der sendet; die Adresse wird nie gedruckt.
+#
+# Ausloeser:
+# - push auf main mit einer CSV unter data/zcash-nu7/ (Merge von Hand).
+# - workflow_run nach "automerge claude": Pushes, die der Automerge mit
+#   GITHUB_TOKEN macht, loesen keinen push-Lauf aus. Hier wird nur gesendet,
+#   wenn eine CSV nach dem Start des Automerge-Laufs auf main geschrieben wurde.
+# - push auf ph/discord-entwurf (Testlauf vor dem Merge) und workflow_dispatch:
+#   immer senden, die juengste CSV oder die aus der Eingabe.
+#
+# Die Regelpruefung des Texts laeuft vor dem Senden; bei Verstoss bricht der
+# Lauf ab und nichts geht raus.
+name: ph entwurf zcash
+
+on:
+  push:
+    branches: ["main", "ph/discord-entwurf"]
+    paths:
+      - "data/zcash-nu7/*.csv"
+      - "scripts/ph/**"
+      - ".github/workflows/ph-entwurf-zcash.yml"
+  workflow_run:
+    workflows: ["automerge claude"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      csv:
+        description: "Dateiname unter data/zcash-nu7/ (leer = juengste CSV)"
+        required: false
+        default: ""
+      layout:
+        description: "auto, verteilung oder verlauf"
+        required: false
+        default: "auto"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ph-entwurf-zcash
+  cancel-in-progress: false
+
+jobs:
+  entwurf:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install --quiet matplotlib pillow
+
+      - name: selbsttest regeln
+        run: python3 scripts/ph/ph_entwurf.py --selbsttest
+
+      - name: welche csv
+        id: stand
+        env:
+          EREIGNIS: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          VORHER: ${{ github.event.before }}
+          NACHHER: ${{ github.sha }}
+          LAUF_START: ${{ github.event.workflow_run.created_at }}
+          EINGABE: ${{ inputs.csv }}
+          LAYOUT: ${{ inputs.layout }}
+        run: |
+          set -eu
+          case "${LAYOUT:-auto}" in auto|verteilung|verlauf) ;; *) echo "layout unklar"; exit 1;; esac
+          CSV=""
+          if [ "$EREIGNIS" = "push" ] && [ "$REF" = "refs/heads/main" ]; then
+            # nur CSVs, die dieser Push hinzufuegt oder aendert
+            if git cat-file -e "$VORHER^{commit}" 2>/dev/null; then
+              CSV=$(git diff --name-only --diff-filter=AM "$VORHER" "$NACHHER" -- 'data/zcash-nu7/*.csv' | sort | tail -1)
+            fi
+          elif [ "$EREIGNIS" = "workflow_run" ]; then
+            for f in $(ls data/zcash-nu7/*.csv 2>/dev/null | sort); do
+              T=$(git log -1 --format=%cI -- "$f")
+              if python3 -c 'import sys;from datetime import datetime as d;sys.exit(0 if d.fromisoformat(sys.argv[1])>=d.fromisoformat(sys.argv[2].replace("Z","+00:00")) else 1)' "$T" "$LAUF_START"; then CSV="$f"; fi
+            done
+          elif [ -n "${EINGABE:-}" ]; then
+            case "$EINGABE" in *[!A-Za-z0-9._-]*) echo "dateiname unklar"; exit 1;; esac
+            CSV="data/zcash-nu7/$EINGABE"
+          else
+            CSV=$(ls data/zcash-nu7/*.csv | sort | tail -1)
+          fi
+          if [ -z "$CSV" ] || [ ! -f "$CSV" ]; then
+            echo "keine neue csv, nichts zu senden"
+            echo "senden=nein" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "csv $CSV"
+          { echo "senden=ja"; echo "csv=$CSV"; echo "layout=${LAYOUT:-auto}"; } >> "$GITHUB_OUTPUT"
+
+      - name: entwurf bauen und senden
+        if: steps.stand.outputs.senden == 'ja'
+        env:
+          DISCORD_WEBHOOK_PH_DRAFTS: ${{ secrets.DISCORD_WEBHOOK_PH_DRAFTS }}
+          CSV: ${{ steps.stand.outputs.csv }}
+          LAYOUT: ${{ steps.stand.outputs.layout }}
+        run: |
+          set -eu
+          python3 scripts/ph/ph_entwurf.py zcash --csv "$CSV" --layout "$LAYOUT" --aus entwurf --senden
+          { echo "## Entwurf fuer @pulsehawkio"; echo '```'; cat entwurf/text.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.stand.outputs.senden == 'ja'
+        with:
+          name: ph-entwurf-zcash
+          path: entwurf/
+          retention-days: 30
