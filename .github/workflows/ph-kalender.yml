@@ -1,0 +1,60 @@
+name: ph kalender entwurf
+
+# Montags ein X-Entwurf aus dem Upgrade-Kalender (Ben, 22.10.2026).
+# Baut Posttext, Antwort und Grafik aus data/upgrades.json, Eintraege der
+# naechsten 14 Tage, und schickt sie an einen privaten Discord-Kanal.
+# Es wird NICHT auf X gepostet; Ben prueft den Entwurf und postet selbst.
+# Ohne Eintrag in 14 Tagen kommt eine kurze Meldung statt eines Entwurfs.
+#
+# Die Webhook-URL steht nur im Secret DISCORD_WEBHOOK_PH_DRAFTS und wird
+# aus der Umgebung gelesen, nie ausgegeben.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"     # montag, 06:00 utc
+  workflow_dispatch:
+    inputs:
+      heute:
+        description: "Stichtag YYYY-MM-DD, leer heisst heute"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ph-kalender
+  cancel-in-progress: false
+
+jobs:
+  entwurf:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Ohne Renderer keine Grafik. Das scheitert an einem benannten Schritt.
+      - name: renderer pruefen
+        run: |
+          python3 -c "import sys; sys.path.insert(0,'scripts'); \
+            import dayn_grafik; print('renderer:', dayn_grafik.chrome())"
+
+      # Bricht ab, wenn eine Textregel nicht greift oder ein Text ueber 280
+      # Zeichen kaeme. Dann geht auch kein Entwurf raus.
+      - name: selbsttest
+        run: python3 scripts/ph_kalender_post.py --selbsttest
+
+      - name: entwurf bauen und an discord
+        env:
+          DISCORD_WEBHOOK_PH_DRAFTS: ${{ secrets.DISCORD_WEBHOOK_PH_DRAFTS }}
+          STICHTAG: ${{ inputs.heute }}
+        run: |
+          if [ -n "$STICHTAG" ]; then
+            python3 scripts/ph_kalender_post.py --discord --heute "$STICHTAG"
+          else
+            python3 scripts/ph_kalender_post.py --discord
+          fi
