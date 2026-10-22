@@ -105,7 +105,23 @@ def selbsttest():
     }
     for name, t in schlecht.items():
         assert regel_pruefen(t), f"selbsttest: {name} wurde nicht erkannt"
-    print(f"selbsttest regeln: ok ({len(schlecht)} verstoesse erkannt, gutes beispiel sauber)")
+    # jede Art der Deutungszeile muss die Regeln halten, auch mit Wertung
+    import random
+    zufall = random.Random(2027)
+    t, rows = 1_760_000_000, []
+    for h in range(1, 30_000):
+        t += int(zufall.expovariate(1 / 60)) + 1
+        rows.append((h, t, rows and t - rows[-1][1] or 60))
+    for art in DEUTUNGEN:
+        for faktor in (1, 4):
+            r2 = [(h, z, a * faktor) for h, z, a in rows]
+            gewaehlt, satz = deutung(r2, 60.0, 600.0, "60 s", rows[-1][1], art)
+            assert gewaehlt == art, f"selbsttest: deutung {art} nicht gewaehlt"
+            zeilen = gut.split("\n")
+            zeilen[2] = satz
+            assert regel_pruefen("\n".join(zeilen)) == [], f"selbsttest: deutung {art} {satz!r}"
+    print(f"selbsttest regeln: ok ({len(schlecht)} verstoesse erkannt, gutes beispiel sauber, "
+          f"{len(DEUTUNGEN)} deutungen sauber)")
 
 
 # ------------------------------------------------------------------ hilfen
@@ -133,12 +149,76 @@ def layout_waehlen(wunsch, ende_ts):
     return "verteilung" if woche % 2 == 0 else "verlauf"
 
 
-def deutung(gemessen, erwartet, kette):
-    r = gemessen / erwartet
-    if abs(r - 1) <= 0.05:
-        return f"that is close to what an ideal {kette} chain shows."
-    return (f"blocks came faster than an ideal {kette} chain would." if r < 1
-            else f"blocks came slower than an ideal {kette} chain would.")
+# Deutungszeile (Ben, 22.10.2026): nicht jede Woche gleich, sondern im Wechsel
+# eine konkrete Beobachtung aus den Daten. Hoechstens eine Wertung, und nur wenn
+# die Zahl sie traegt (Faktor 1,5 oder mehr gegen die ideale Kette).
+DEUTUNGEN = ("vorwoche", "luecke", "alt_ziel", "p90")
+
+
+def wertung(r):
+    if r >= 1.5:
+        return "well above"
+    if r <= 1 / 1.5:
+        return "well below"
+    return None
+
+
+def dauer(s):
+    if s < 120:
+        return f"{s} s"
+    m = round(s / 60)
+    if m < 60:
+        return f"{m} min"
+    return f"{m // 60} h" + (f" {m % 60} min" if m % 60 else "")
+
+
+def prozent(x):
+    return f"{x:.1f} %" if x >= 1 else f"{x:.2g} %" if x >= 0.001 else "under 0.001 %"
+
+
+def deutung(rows, ziel_s, alt_ziel_s, kette, ende_ts, wunsch="auto", ohne_vorwoche=False, versatz=0):
+    """rows (hoehe, zeit, abstand_zum_vorgaenger). Liefert (art, satz).
+    ohne_vorwoche, wenn die Wertzeile schon gegen den Lauf der Vorwoche vergleicht.
+    Auswahl nach ISO-Woche des Fensterendes plus versatz je Kette, damit BCH und
+    Zcash in derselben Woche nicht dieselbe Art zeigen."""
+    ab = [a for _, _, a in rows]
+    moeglich = []
+    # Vorwoche aus denselben Daten: die letzten 7 Tage gegen die 7 davor
+    w2 = [a for _, t, a in rows if ende_ts - 7 * 86400 < t <= ende_ts]
+    w1 = [a for _, t, a in rows if ende_ts - 14 * 86400 < t <= ende_ts - 7 * 86400]
+    if not ohne_vorwoche and rows[0][1] <= ende_ts - 13 * 86400 and len(w1) >= 100 and len(w2) >= 100:
+        moeglich.append("vorwoche")
+    moeglich += ["luecke", "alt_ziel", "p90"]
+    if wunsch in DEUTUNGEN and wunsch in moeglich:
+        art = wunsch
+    else:
+        woche = datetime.fromtimestamp(ende_ts, timezone.utc).isocalendar()[1]
+        art = moeglich[(woche + versatz) % len(moeglich)]
+    if art == "vorwoche":
+        m1, m2 = statistics.median(w1), statistics.median(w2)
+        if m1 == m2:
+            return art, f"over the last seven days the median held at {zahl(m2, 1)} s, as in the seven days before."
+        return art, (f"over the last seven days the median {'rose' if m2 > m1 else 'fell'} to {zahl(m2, 1)} s, "
+                     f"from {zahl(m1, 1)} s in the seven days before.")
+    if art == "luecke":
+        h, t, a = max(rows, key=lambda r: r[2])
+        d = datetime.fromtimestamp(t, timezone.utc)
+        return art, (f"the longest gap was {dauer(a)}, before block {zahl(h)} on "
+                     f"{d.day} {d.strftime('%b').lower()} at {d:%H:%M} utc.")
+    if art == "alt_ziel":
+        anteil = 100 * sum(1 for a in ab if a > alt_ziel_s) / len(ab)
+        ideal = 100 * math.exp(-alt_ziel_s / ziel_s)
+        w = wertung(anteil / ideal) if ideal > 0 else None
+        satz = f"the share of intervals longer than the old {zahl(alt_ziel_s)} s target was {prozent(anteil)}"
+        if w:
+            return art, f"{satz}, {w} the {prozent(ideal)} of an ideal {kette} chain."
+        return art, f"{satz}, against {prozent(ideal)} for an ideal {kette} chain."
+    p90, ideal = quantil(ab, 0.9), ziel_s * math.log(10)
+    w = wertung(p90 / ideal)
+    satz = f"the 90th percentile of intervals is {zahl(p90)} s"
+    if w:
+        return art, f"{satz}, {w} the {zahl(ideal)} s of an ideal {kette} chain."
+    return art, f"{satz}, against {zahl(ideal)} s for an ideal {kette} chain."
 
 
 # ------------------------------------------------------------------ grafik
@@ -244,35 +324,30 @@ def bch(args):
     vor = json.load(open(frueher[-1])) if frueher else None
     med = float(A["median"])
     if vor:
-        v = float(vor["abstaende"]["median"])
         wert = (f"we counted a median block interval of {zahl(med, 1)} s over {zahl(B['bloecke'])} blocks, "
-                f"against {zahl(v, 1)} s in our count a week earlier.")
-        d = deutung(med, E["median"], "60 s")
+                f"against {zahl(float(vor['abstaende']['median']), 1)} s in our run a week earlier.")
     else:
         wert = (f"we counted a median block interval of {zahl(med, 1)} s over {zahl(B['bloecke'])} blocks, "
                 f"against {zahl(E['median'], 1)} s expected for an ideal 60 s chain.")
-        d = deutung(med, E["median"], "60 s")
-    von = int(datetime.strptime(B["von_zeit_utc"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
     bis = int(datetime.strptime(B["bis_zeit_utc"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
+    with gzip.open(args.koepfe, "rt") as f:
+        zt = {int(z["hoehe"]): int(z["zeit"]) for z in csv.DictReader(f)}
+    rows = [(h, zt[h], zt[h] - zt[h - 1]) for h in range(B["von_hoehe"] + 1, B["bis_hoehe"] + 1)]
+    art, d = deutung(rows, 60.0, 600.0, "60 s", bis, args.deutung, ohne_vorwoche=bool(vor))
     text = "\n".join([
         "bch tempnet 2027 with one minute blocks.", wert, d,
-        f"window {zeit(von)} to {zeit(bis)} utc, blocks {zahl(B['von_hoehe'])} to {zahl(B['bis_hoehe'])}.",
+        f"window {zeit(zt[B['von_hoehe']])} to {zeit(bis)} utc, blocks {zahl(B['von_hoehe'])} to {zahl(B['bis_hoehe'])}.",
         "method on pulsehawk.io"])
     layout = layout_waehlen(args.layout, bis)
     if layout == "verteilung":
-        with gzip.open(args.koepfe, "rt") as f:
-            zt = {int(z["hoehe"]): int(z["zeit"]) for z in csv.DictReader(f)}
-        ab = [zt[h] - zt[h - 1] for h in range(B["von_hoehe"] + 1, B["bis_hoehe"] + 1)]
+        ab = [a for _, _, a in rows]
         zeichne = zeichne_verteilung(ab, 60.0, "60 s")
         titel, unter = "BCH tempnet, block intervals", f"{zahl(len(ab))} intervals counted against an ideal 60 s chain"
     else:
-        with gzip.open(args.koepfe, "rt") as f:
-            zt = {int(z["hoehe"]): int(z["zeit"]) for z in csv.DictReader(f)}
-        paare = [(zt[h], zt[h] - zt[h - 1]) for h in range(B["von_hoehe"] + 1, B["bis_hoehe"] + 1)]
-        tm = tagesmediane(paare)
+        tm = tagesmediane([(t, a) for _, t, a in rows])
         zeichne = zeichne_verlauf(*tm, 60.0, "60 s")
         titel, unter = "BCH tempnet, median interval per day", "days in utc from the fork block" + weg_satz(tm[3])
-    return text, layout, titel, unter, zeichne, {"quelle": "bch", "stichtag": stichtag}
+    return text, layout, titel, unter, zeichne, {"quelle": "bch", "stichtag": stichtag, "deutung": art}
 
 
 def zcash(args):
@@ -284,11 +359,12 @@ def zcash(args):
     med = statistics.median(ab)
     erw = 25 * math.log(2)
     von, bis = rows[0][1], rows[-1][1]
+    art, d = deutung([r for r in rows if r[2] is not None], 25.0, 75.0, "25 s", bis, args.deutung, versatz=1)
     text = "\n".join([
         "zcash nu7 testnet with 25 s blocks.",
         f"we counted a median block interval of {zahl(med, 1)} s over {zahl(len(rows))} blocks, "
         f"against {zahl(erw, 1)} s expected for an ideal 25 s chain.",
-        deutung(med, erw, "25 s"),
+        d,
         f"window {zeit(von)} to {zeit(bis)} utc, blocks {zahl(rows[0][0])} to {zahl(rows[-1][0])}.",
         "method on pulsehawk.io"])
     layout = layout_waehlen(args.layout, bis)
@@ -299,7 +375,7 @@ def zcash(args):
         tm = tagesmediane([(t, a) for h, t, a in rows if a is not None])
         zeichne = zeichne_verlauf(*tm, 25.0, "25 s")
         titel, unter = "Zcash NU7 testnet, median interval per day", "days in utc from the nu7 activation" + weg_satz(tm[3])
-    return text, layout, titel, unter, zeichne, {"quelle": "zcash", "csv": os.path.basename(args.csv)}
+    return text, layout, titel, unter, zeichne, {"quelle": "zcash", "csv": os.path.basename(args.csv), "deutung": art}
 
 
 def senden(aus, text, meta):
@@ -346,6 +422,7 @@ def main():
         p = sub.add_parser(name)
         p.add_argument("--aus", required=True, help="Ausgabeverzeichnis")
         p.add_argument("--layout", default="auto", choices=["auto", "verteilung", "verlauf"])
+        p.add_argument("--deutung", default="auto", choices=("auto",) + DEUTUNGEN)
         p.add_argument("--senden", action="store_true", help="an DISCORD_WEBHOOK_PH_DRAFTS schicken")
         if name == "bch":
             p.add_argument("--json", required=True)
