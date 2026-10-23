@@ -308,14 +308,24 @@ def zeichne_verlauf(tage, mediane, anzahl, _weg, ziel_s, kette):
     def z(ax):
         ax.bar(range(len(tage)), mediane, color=FARBE["teal"], alpha=0.85, label="counted median per utc day")
         ax.axhline(ideal, color=FARBE["zweit"], linewidth=3, label=f"median of an ideal {kette} chain")
-        ax.set_xticks(range(len(tage)))
-        if len(tage) > 8:  # sonst laufen die Beschriftungen ineinander
+        if len(tage) > 16:
+            # Mainnet 23.10.2026: 34 Tage, Beschriftungen liefen ineinander. Nur
+            # jeder k-te Tag, die Blockzahl einmal als typischer Wert je Tag.
+            k = math.ceil(len(tage) / 12)
+            ax.set_xticks(range(0, len(tage), k))
+            ax.set_xticklabels(tage[::k], fontsize=12)
+            ax.set_xlabel(f"utc day, typically {statistics.median(anzahl):,.0f} blocks counted per day", fontsize=13)
+        elif len(tage) > 8:  # sonst laufen die Beschriftungen ineinander
+            ax.set_xticks(range(len(tage)))
             ax.set_xticklabels([f"{t}\n{n:,}" for t, n in zip(tage, anzahl)], fontsize=11)
             ax.set_xlabel("utc day and blocks counted that day", fontsize=13)
         else:
+            ax.set_xticks(range(len(tage)))
             ax.set_xticklabels([f"{t}\n{n:,} blocks" for t, n in zip(tage, anzahl)], fontsize=12)
         ax.set_ylabel("seconds", fontsize=15)
-        ax.legend(fontsize=14, loc="upper right")
+        # Platz ueber den Balken, damit die Legende nichts verdeckt
+        ax.set_ylim(0, max(max(mediane), ideal) * 1.35)
+        ax.legend(fontsize=14, loc="upper right", ncol=2)
     return z
 
 
