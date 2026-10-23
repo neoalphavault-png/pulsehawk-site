@@ -1,0 +1,15 @@
+{
+ "hinweis": "Oeffentliche Zitate unserer Zaehlungen, fuer die Startseite (neueste 3) und /independence (alle). Nur was oeffentlich steht, kein Lob ergaenzen, keine Logos. quote hoechstens 8 Woerter woertlich. our_page leer, wenn es keine eigene Seite zur Messung gibt. Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "entries": [
+  {
+   "date": "2026-10-22",
+   "source_name": "BCH-1",
+   "source_handle": "@bch_1_official",
+   "url": "https://x.com/bch_1_official/status/2113377832479121574",
+   "network": "Bitcoin Cash tempnet (CHIP-2025-03 Faster Blocks)",
+   "what_they_used": "our count of 7,572 tempnet block headers, median interval 43 s against the 41.6 s the CHIP predicted",
+   "quote": "PulseHawk, an outside measurement firm",
+   "our_page": ""
+  }
+ ]
+}

@@ -217,6 +217,65 @@ def article_schema(seite, published, modified):
 
 # --- kalender ------------------------------------------------------------
 
+# --- zitate, "who cites our numbers?" (Ben, 23.10.2026) --------------------
+# Fremde, oeffentliche Zitate unserer Zaehlungen aus data/citations.json. Die
+# Liste waechst ohne Code: Eintrag ergaenzen, b2b_pages.py laufen lassen.
+# Nur Text, keine Logos fremder Konten, kein Lob ueber uns ergaenzen.
+ZITAT_FELDER = ("date", "source_name", "source_handle", "url", "network",
+                "what_they_used", "quote", "our_page")
+ZITAT_SATZ = ("Other teams use our counts in their own work. We list each public "
+              "citation with its date.")
+
+
+def lies_zitate():
+    """eintraege, neueste zuerst. bricht laut ab, wenn ein eintrag nicht passt,
+    statt eine halbe karte zu bauen."""
+    pfad = os.path.join(REPO, "data", "citations.json")
+    if not os.path.exists(pfad):
+        return []
+    with open(pfad, encoding="utf-8") as fh:
+        eintraege = json.load(fh)["entries"]
+    for e in eintraege:
+        fehlt = [k for k in ZITAT_FELDER if k not in e]
+        if fehlt:
+            raise SystemExit("citations.json, eintrag %r ohne %s" % (e.get("source_name"), fehlt))
+        datetime.date.fromisoformat(e["date"])            # wirft bei falschem datum
+        if not e["url"].startswith("https://"):
+            raise SystemExit("citations.json, url ohne https bei %r" % e["source_name"])
+        if len(e["quote"].split()) > 8:
+            raise SystemExit("citations.json, zitat ueber 8 woerter bei %r" % e["source_name"])
+        if e["our_page"] and not e["our_page"].startswith("/"):
+            raise SystemExit("citations.json, our_page muss eine eigene seite sein (/...)")
+    return sorted(eintraege, key=lambda e: e["date"], reverse=True)
+
+
+def zitat_karte(e):
+    # fremde links in einem neuen tab
+    links = [a(e["url"], "Read their article").replace(' rel="noopener"',
+                                                        ' target="_blank" rel="noopener"')]
+    if e["our_page"]:
+        links.append(a(e["our_page"], "Our measurement"))
+    satz = e["what_they_used"].strip().rstrip(".")
+    # nur vorhandene klassen, damit die css der uebrigen seiten gleich bleibt
+    return ('<div class="card"><span class="ct">%s, %s</span>'
+            '<span class="src">%s · %s</span>'
+            '<span class="cd">They used %s.<br><i>\u201c%s\u201d</i></span>'
+            '<span class="cp">%s</span></div>'
+            % (E(e["source_name"]), lang(e["date"]), E(e["source_handle"]), E(e["network"]),
+               E(satz), E(e["quote"]), " · ".join(links)))
+
+
+def zitat_abschnitt(eintraege, hoechstens=None, sid=""):
+    if not eintraege:
+        return ""
+    zeige = eintraege[:hoechstens] if hoechstens else eintraege
+    mehr = ""
+    if hoechstens and len(eintraege) > hoechstens:
+        mehr = '<p class="note">%s</p>' % a("/independence#cited-by", "All %d citations" % len(eintraege))
+    return ('<section%s><h2>Who cites our numbers?</h2>\n<p>%s</p>\n<div class="cards">%s</div>\n%s</section>'
+            % (' id="%s"' % sid if sid else "", ZITAT_SATZ, "".join(zitat_karte(x) for x in zeige), mehr))
+
+
 def lies_upgrades():
     pfad = os.path.join(REPO, "data", "upgrades.json")
     with open(pfad, encoding="utf-8") as fh:
@@ -285,7 +344,7 @@ def seiten():
 
     # 1 startseite
     S.append(dict(
-        datei="index.html", pfad="/", og="home", lastmod="2026-10-22",
+        datei="index.html", pfad="/", og="home", lastmod="2026-10-23",
         title="Independent blockchain measurement | PulseHawk",
         desc=("PulseHawk does its own blockchain measurement under load, with own nodes or "
               "header clients. Dated numbers, raw data and an open method for upgrades."),
@@ -312,6 +371,7 @@ def seiten():
 %s
 </div>
 </section>
+%s
 <section><h2>For foundations and grant committees</h2>
 <p>Ongoing measurement of a network works best as a public good. When a grant funds it, every result and its raw data are published openly, for the whole ecosystem, with the same method and the same rules as paid work.</p>
 <p>A grant pays for the measurement, never for the result. The rules that make this hold are on our %s page.</p>
@@ -326,7 +386,7 @@ def seiten():
 <p class="cta">%s %s</p>
 </section>
 """ % (preis_text("review"), preis_text("launch"), preis_text("ongoing"), PREIS_STAND,
-       bch_karte(),
+       bch_karte(), zitat_abschnitt(lies_zitate(), hoechstens=3),
        a("/independence", "independence"),
        a("/upgrade-monitoring", "How ongoing measurement works"),
        sample_button(), E(KONTAKT_MAIL), contact_button(),
@@ -579,7 +639,7 @@ def seiten():
          "Every published number comes with its window, its method version and the raw data, so anyone can count again."),
     ]
     S.append(dict(
-        datei="independence.html", pfad="/independence", og="independence",
+        datei="independence.html", pfad="/independence", og="independence", lastmod="2026-10-23",
         title="Our independence rules | PulseHawk",
         desc=("Four rules for every PulseHawk measurement. The price never depends on the "
               "result, no client tokens held, results published as measured, links named."),
@@ -605,8 +665,10 @@ def seiten():
 <p>We do not hold a client's token, we do not change findings after a client has seen them, and we do not sell placement in our calendar or on our case pages.</p>
 </section>
 %s
+%s
 <p class="cta">%s</p>
-""" % (a("https://kaspapulse.com", "kaspapulse.com"), faq_html(i_faq), contact_button()),
+""" % (a("https://kaspapulse.com", "kaspapulse.com"),
+       zitat_abschnitt(lies_zitate(), sid="cited-by"), faq_html(i_faq), contact_button()),
         faqs=i_faq,
         schema=[],
     ))
