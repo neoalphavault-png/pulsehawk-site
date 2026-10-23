@@ -15,7 +15,8 @@ Grafik 1600 x 900 mit Fuss "Data from PulseHawk", im Wechsel zwei Layouts
 Textregeln (Abbruch bei Verstoss, vor jedem Senden geprueft): alles klein,
 keine Gedankenstriche, Doppelpunkte (ausser in Uhrzeiten), Pfeile, Hashtags,
 Emojis, keine Echtzeitwoerter, keine Preise, "counted" genau einmal und nur
-im Satz mit unserem gezaehlten Wert.
+im Satz mit unserem gezaehlten Wert, "computed" statt "expected" fuer Werte
+aus der Zielzeit (Ben, 23.10.2026).
 
 Dieselbe Datei liegt in kaspa-pulse (scripts/ph/) und pulsehawk-site
 (scripts/ph/). Wer eine aendert, aendert beide.
@@ -74,6 +75,8 @@ def regel_pruefen(text, wert_zeile_index=1):
     treffer = [i for i, z in enumerate(zeilen) if re.search(r"(?<![a-z])counted(?![a-z])", z)]
     if len(treffer) != 1 or treffer[0] != wert_zeile_index:
         fehler.append("'counted' nicht genau einmal im satz mit unserem gezaehlten wert")
+    if re.search(r"(?<![a-z])expect(ed|ation)?(?![a-z])", woerter):
+        fehler.append("'expected' statt 'computed' fuer werte aus der zielzeit")
     if "method on pulsehawk.io" not in text:
         fehler.append("hinweis 'method on pulsehawk.io' fehlt")
     if "utc" not in text:
@@ -83,7 +86,7 @@ def regel_pruefen(text, wert_zeile_index=1):
 
 def selbsttest():
     gut = ("bch tempnet 2027 with one minute blocks.\n"
-           "we counted a median block interval of 43.0 s over 7,572 blocks, against 41.6 s expected.\n"
+           "we counted a median block interval of 43.0 s over 7,572 blocks, against 41.6 s computed.\n"
            "that is close to what an ideal 60 s chain shows.\n"
            "window 15 oct 2026, 12:56 to 21 oct 2026, 09:59 utc, blocks 327,989 to 335,560.\n"
            "method on pulsehawk.io")
@@ -102,6 +105,7 @@ def selbsttest():
         "counted zweimal": gut.replace("that is close", "counted, that is close"),
         "counted fehlt": gut.replace("we counted", "we saw"),
         "ohne methode": gut.replace("method on pulsehawk.io", "more soon"),
+        "expected": gut.replace("computed", "expected"),
     }
     for name, t in schlecht.items():
         assert regel_pruefen(t), f"selbsttest: {name} wurde nicht erkannt"
@@ -176,7 +180,8 @@ def prozent(x):
     return f"{x:.1f} %" if x >= 1 else f"{x:.2g} %" if x >= 0.001 else "under 0.001 %"
 
 
-def deutung(rows, ziel_s, alt_ziel_s, kette, ende_ts, wunsch="auto", ohne_vorwoche=False, versatz=0):
+def deutung(rows, ziel_s, alt_ziel_s, kette, ende_ts, wunsch="auto", ohne_vorwoche=False, versatz=0,
+            schwelle_text=None):
     """rows (hoehe, zeit, abstand_zum_vorgaenger). Liefert (art, satz).
     ohne_vorwoche, wenn die Wertzeile schon gegen den Lauf der Vorwoche vergleicht.
     Auswahl nach ISO-Woche des Fensterendes plus versatz je Kette, damit BCH und
@@ -209,16 +214,17 @@ def deutung(rows, ziel_s, alt_ziel_s, kette, ende_ts, wunsch="auto", ohne_vorwoc
         anteil = 100 * sum(1 for a in ab if a > alt_ziel_s) / len(ab)
         ideal = 100 * math.exp(-alt_ziel_s / ziel_s)
         w = wertung(anteil / ideal) if ideal > 0 else None
-        satz = f"the share of intervals longer than the old {zahl(alt_ziel_s)} s target was {prozent(anteil)}"
+        name = schwelle_text or f"the old {zahl(alt_ziel_s)} s target"
+        satz = f"the share of intervals longer than {name} was {prozent(anteil)}"
         if w:
-            return art, f"{satz}, {w} the {prozent(ideal)} of an ideal {kette} chain."
-        return art, f"{satz}, against {prozent(ideal)} for an ideal {kette} chain."
+            return art, f"{satz}, {w} the {prozent(ideal)} computed for an ideal {kette} chain."
+        return art, f"{satz}, against {prozent(ideal)} computed for an ideal {kette} chain."
     p90, ideal = quantil(ab, 0.9), ziel_s * math.log(10)
     w = wertung(p90 / ideal)
     satz = f"the 90th percentile of intervals is {zahl(p90)} s"
     if w:
-        return art, f"{satz}, {w} the {zahl(ideal)} s of an ideal {kette} chain."
-    return art, f"{satz}, against {zahl(ideal)} s for an ideal {kette} chain."
+        return art, f"{satz}, {w} the {zahl(ideal)} s computed for an ideal {kette} chain."
+    return art, f"{satz}, against {zahl(ideal)} s computed for an ideal {kette} chain."
 
 
 # ------------------------------------------------------------------ grafik
@@ -328,7 +334,7 @@ def bch(args):
                 f"against {zahl(float(vor['abstaende']['median']), 1)} s in our run a week earlier.")
     else:
         wert = (f"we counted a median block interval of {zahl(med, 1)} s over {zahl(B['bloecke'])} blocks, "
-                f"against {zahl(E['median'], 1)} s expected for an ideal 60 s chain.")
+                f"against {zahl(E['median'], 1)} s computed for an ideal 60 s chain.")
     bis = int(datetime.strptime(B["bis_zeit_utc"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
     with gzip.open(args.koepfe, "rt") as f:
         zt = {int(z["hoehe"]): int(z["zeit"]) for z in csv.DictReader(f)}
@@ -363,7 +369,7 @@ def zcash(args):
     text = "\n".join([
         "zcash nu7 testnet with 25 s blocks.",
         f"we counted a median block interval of {zahl(med, 1)} s over {zahl(len(rows))} blocks, "
-        f"against {zahl(erw, 1)} s expected for an ideal 25 s chain.",
+        f"against {zahl(erw, 1)} s computed for an ideal 25 s chain.",
         d,
         f"window {zeit(von)} to {zeit(bis)} utc, blocks {zahl(rows[0][0])} to {zahl(rows[-1][0])}.",
         "method on pulsehawk.io"])
@@ -376,6 +382,76 @@ def zcash(args):
         zeichne = zeichne_verlauf(*tm, 25.0, "25 s")
         titel, unter = "Zcash NU7 testnet, median interval per day", "days in utc from the nu7 activation" + weg_satz(tm[3])
     return text, layout, titel, unter, zeichne, {"quelle": "zcash", "csv": os.path.basename(args.csv), "deutung": art}
+
+
+def ts_aus(text):
+    return int(datetime.strptime(text, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
+
+
+def zcash_mainnet(args):
+    """Stand aus scripts/zcash/mainnet_auswertung.py. Vor NU7 gegen 75 s mit der
+    Vorhersage fuer die Aktivierungshoehe, ab NU7 gegen 25 s mit dem Einpendeln."""
+    st = json.load(open(args.stand))
+    nu7 = st["nu7_hoehe"]
+    with gzip.open(args.koepfe, "rt") as f:
+        zt = {int(z["hoehe"]): int(z["zeit"]) for z in csv.DictReader(f)}
+    spitze = max(zt)
+    nach_nu7 = spitze > nu7 + 100
+    if nach_nu7:
+        rows = [(h, zt[h], zt[h] - zt[h - 1]) for h in range(nu7 + 1, spitze + 1)]
+        T, kette, schwelle, schwelle_text = 25.0, "25 s", 75.0, None
+        kopf = "zcash mainnet with nu7 and 25 s blocks."
+    else:
+        rows = [(h, zt[h], zt[h] - zt[h - 1]) for h in sorted(zt) if h - 1 in zt and h < nu7]
+        T, kette, schwelle, schwelle_text = 75.0, "75 s", 225.0, "225 s, three times the target"
+        kopf = "zcash mainnet ahead of nu7 with 75 s blocks."
+    ab = [a for _, _, a in rows]
+    med = statistics.median(ab)
+    von, bis = rows[0][1], rows[-1][1]
+    # Vorwoche: juengster frueherer Stand derselben Phase, mindestens 5 Tage alt
+    vor = None
+    for pf in sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(args.stand)), "stand-20*.json")), reverse=True):
+        if os.path.abspath(pf) == os.path.abspath(args.stand):
+            continue
+        alt = json.load(open(pf))
+        teil = alt.get("nach_nu7" if nach_nu7 else "vor_nu7")
+        if teil and ts_aus(alt["bereich"]["bis_utc"]) <= bis - 5 * 86400:
+            vor = teil["gezaehlt"]["median_s"]
+            break
+    if vor is not None:
+        vergleich = f"against {zahl(vor, 1)} s in our run a week earlier."
+    else:
+        vergleich = f"against {zahl(T * math.log(2), 1)} s computed for an ideal {kette} chain."
+    wert = f"we counted a median block interval of {zahl(med, 1)} s over {zahl(len(rows))} blocks, {vergleich}"
+    art, d = deutung(rows, T, schwelle, kette, bis, args.deutung, ohne_vorwoche=vor is not None,
+                     versatz=2, schwelle_text=schwelle_text)
+    zeilen = [kopf, wert, d]
+    v, e = st.get("vorhersage"), st.get("einpendeln")
+    if not nach_nu7 and v and "median_utc" in v:
+        zeilen.append(f"at the pace of the last {v['tempo_fenster_tage']} days block {zahl(nu7)} arrives around "
+                      f"{zeit(ts_aus(v['median_utc']))} utc, in a 90 % band from {zeit(ts_aus(v['band_5_utc']))} "
+                      f"to {zeit(ts_aus(v['band_95_utc']))}.")
+    elif nach_nu7 and e:
+        if e.get("eingependelt_ab_block"):
+            zeilen.append(f"block times settled near 25 s after {zahl(e['bloecke_bis_eingependelt'])} blocks, "
+                          f"about {zahl(e['stunden_bis_eingependelt'], 1)} hours after the first nu7 block.")
+        else:
+            zeilen.append(f"block times had not settled near 25 s within the first {zahl(e['bloecke_nach_nu7'])} blocks.")
+    zeilen += [f"window {zeit(von)} to {zeit(bis)} utc, blocks {zahl(rows[0][0])} to {zahl(rows[-1][0])}.",
+               "method on pulsehawk.io"]
+    text = "\n".join(zeilen)
+    layout = layout_waehlen(args.layout, bis)
+    name = "Zcash mainnet with NU7" if nach_nu7 else "Zcash mainnet ahead of NU7"
+    if layout == "verteilung":
+        zeichne = zeichne_verteilung(ab, T, kette)
+        titel, unter = f"{name}, block intervals", f"{zahl(len(ab))} intervals counted against an ideal {kette} chain"
+    else:
+        tm = tagesmediane([(t, a) for _, t, a in rows])
+        zeichne = zeichne_verlauf(*tm, T, kette)
+        titel = f"{name}, median interval per day"
+        unter = ("days in utc from the nu7 activation" if nach_nu7 else "days in utc") + weg_satz(tm[3])
+    return text, layout, titel, unter, zeichne, {"quelle": "zcash-mainnet", "phase": "nach_nu7" if nach_nu7 else "vor_nu7",
+                                                 "stand": os.path.basename(args.stand), "deutung": art}
 
 
 def senden(aus, text, meta):
@@ -418,7 +494,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--selbsttest", action="store_true")
     sub = ap.add_subparsers(dest="quelle")
-    for name in ("bch", "zcash"):
+    for name in ("bch", "zcash", "zcash-mainnet"):
         p = sub.add_parser(name)
         p.add_argument("--aus", required=True, help="Ausgabeverzeichnis")
         p.add_argument("--layout", default="auto", choices=["auto", "verteilung", "verlauf"])
@@ -427,13 +503,16 @@ def main():
         if name == "bch":
             p.add_argument("--json", required=True)
             p.add_argument("--koepfe", required=True)
+        elif name == "zcash-mainnet":
+            p.add_argument("--stand", required=True, help="stand-JJJJ-MM-TT.json aus mainnet_auswertung.py")
+            p.add_argument("--koepfe", required=True)
         else:
             p.add_argument("--csv", required=True)
     args = ap.parse_args()
     selbsttest()
     if args.selbsttest or not args.quelle:
         return
-    text, layout, titel, unter, zeichne, meta = (bch if args.quelle == "bch" else zcash)(args)
+    text, layout, titel, unter, zeichne, meta = {"bch": bch, "zcash": zcash, "zcash-mainnet": zcash_mainnet}[args.quelle](args)
     fehler = regel_pruefen(text)
     if fehler:
         print("regelverstoss, kein entwurf:", "; ".join(fehler), file=sys.stderr)
