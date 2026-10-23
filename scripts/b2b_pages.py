@@ -266,13 +266,17 @@ def zitat_karte(e):
                                                         ' target="_blank" rel="noopener"')]
     if e["our_page"]:
         links.append(a(e["our_page"], "Our measurement"))
+    # what_they_used beginnt mit einem verb ("used ...", "linked ..."), die
+    # karte setzt "They" davor
     satz = e["what_they_used"].strip().rstrip(".")
+    # ohne handle (etwa ein forum) steht nur das netzwerk in der zeile
+    herkunft = " · ".join(E(x) for x in (e["source_handle"], e["network"]) if x)
     # nur vorhandene klassen, damit die css der uebrigen seiten gleich bleibt
     return ('<div class="card"><span class="ct">%s, %s</span>'
-            '<span class="src">%s · %s</span>'
-            '<span class="cd">They used %s.<br><i>\u201c%s\u201d</i></span>'
+            '<span class="src">%s</span>'
+            '<span class="cd">They %s.<br><i>\u201c%s\u201d</i></span>'
             '<span class="cp">%s</span></div>'
-            % (E(e["source_name"]), lang(e["date"]), E(e["source_handle"]), E(e["network"]),
+            % (E(e["source_name"]), lang(e["date"]), herkunft,
                E(satz), E(e["quote"]), " · ".join(links)))
 
 

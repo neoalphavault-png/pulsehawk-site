@@ -1,5 +1,5 @@
 {
- "hinweis": "Oeffentliche Zitate unserer Zaehlungen, fuer die Startseite (neueste 3) und /independence (alle). Nur was oeffentlich steht, kein Lob ergaenzen, keine Logos. quote hoechstens 8 Woerter woertlich. our_page ist eine eigene Seite oder ein Anker (/#bch-median), leer, wenn es keine gibt. type ist article, forum, video, podcast oder post und bestimmt den Linktext. tagged ist true, wenn die Quelle @pulsehawkio markiert hat, sonst false. Ab 3 Eintraegen erscheint der Zaehler. Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "hinweis": "Oeffentliche Zitate unserer Zaehlungen, fuer die Startseite (neueste 3) und /independence (alle). Nur was oeffentlich steht, kein Lob ergaenzen, keine Logos. quote hoechstens 8 Woerter woertlich, ohne Anfuehrungszeichen, nicht korrigieren. what_they_used beginnt mit einem Verb (used, linked), die Karte setzt They davor. source_handle darf leer sein. our_page ist eine eigene Seite oder ein Anker (/#bch-median), leer, wenn es keine gibt. type ist article, forum, video, podcast oder post und bestimmt den Linktext. tagged ist true, wenn die Quelle @pulsehawkio markiert hat, sonst false. Ab 3 Eintraegen erscheint der Zaehler. Nach dem Aendern: python3 scripts/b2b_pages.py",
  "entries": [
   {
    "date": "2026-10-22",
@@ -7,11 +7,23 @@
    "source_handle": "@bch_1_official",
    "url": "https://x.com/bch_1_official/status/2113377832479121574",
    "network": "Bitcoin Cash tempnet (CHIP-2025-03 Faster Blocks)",
-   "what_they_used": "our count of 7,572 tempnet block headers, median interval 43 s against the 41.6 s the CHIP predicted",
+   "what_they_used": "used our count of 7,572 tempnet block headers, median interval 43 s against the 41.6 s the CHIP predicted",
    "quote": "PulseHawk, an outside measurement firm",
    "our_page": "/#bch-median",
    "type": "post",
    "tagged": false
+  },
+  {
+   "date": "2026-10-22",
+   "source_name": "bitcoincashautist (owner of CHIP-2025-03 Faster Blocks)",
+   "source_handle": "",
+   "url": "https://bitcoincashresearch.org/t/tempnet-2027-chipnet-upgrade-pre-upgrade-testing/2173/12",
+   "network": "Zcash NU7 testnet, cited in the Bitcoin Cash tempnet thread",
+   "what_they_used": "linked our Zcash NU7 listener result, 5 of 780 announced blocks did not land in the chain (0.64%)",
+   "quote": "TIL such a service exist",
+   "type": "forum",
+   "tagged": false,
+   "our_page": "/zcash-nu7"
   }
  ]
 }
