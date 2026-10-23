@@ -1,5 +1,5 @@
 {
- "hinweis": "Oeffentliche Zitate unserer Zaehlungen, fuer die Startseite (neueste 3) und /independence (alle). Nur was oeffentlich steht, kein Lob ergaenzen, keine Logos. quote hoechstens 8 Woerter woertlich. our_page leer, wenn es keine eigene Seite zur Messung gibt. Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "hinweis": "Oeffentliche Zitate unserer Zaehlungen, fuer die Startseite (neueste 3) und /independence (alle). Nur was oeffentlich steht, kein Lob ergaenzen, keine Logos. quote hoechstens 8 Woerter woertlich. our_page ist eine eigene Seite oder ein Anker (/#bch-median), leer, wenn es keine gibt. type ist article, forum, video, podcast oder post und bestimmt den Linktext. tagged ist true, wenn die Quelle @pulsehawkio markiert hat, sonst false. Ab 3 Eintraegen erscheint der Zaehler. Nach dem Aendern: python3 scripts/b2b_pages.py",
  "entries": [
   {
    "date": "2026-10-22",
@@ -9,7 +9,9 @@
    "network": "Bitcoin Cash tempnet (CHIP-2025-03 Faster Blocks)",
    "what_they_used": "our count of 7,572 tempnet block headers, median interval 43 s against the 41.6 s the CHIP predicted",
    "quote": "PulseHawk, an outside measurement firm",
-   "our_page": ""
+   "our_page": "/#bch-median",
+   "type": "post",
+   "tagged": false
   }
  ]
 }

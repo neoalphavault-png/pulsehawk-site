@@ -222,9 +222,15 @@ def article_schema(seite, published, modified):
 # Liste waechst ohne Code: Eintrag ergaenzen, b2b_pages.py laufen lassen.
 # Nur Text, keine Logos fremder Konten, kein Lob ueber uns ergaenzen.
 ZITAT_FELDER = ("date", "source_name", "source_handle", "url", "network",
-                "what_they_used", "quote", "our_page")
+                "what_they_used", "quote", "our_page", "type", "tagged")
 ZITAT_SATZ = ("Other teams use our counts in their own work. We list each public "
               "citation with its date.")
+# type bestimmt den Linktext der Karte (Ergaenzung Ben, 23.10.2026)
+ZITAT_TYPEN = {"article": "Read their article", "forum": "Read their forum post",
+               "video": "Watch their video", "podcast": "Hear their podcast",
+               "post": "Read their post"}
+# Zaehler ueber dem Abschnitt erst ab so vielen Eintraegen (Ben, 23.10.2026)
+ZITAT_ZAEHLER_AB = 3
 
 
 def lies_zitate():
@@ -246,12 +252,17 @@ def lies_zitate():
             raise SystemExit("citations.json, zitat ueber 8 woerter bei %r" % e["source_name"])
         if e["our_page"] and not e["our_page"].startswith("/"):
             raise SystemExit("citations.json, our_page muss eine eigene seite sein (/...)")
+        if e["type"] not in ZITAT_TYPEN:
+            raise SystemExit("citations.json, type %r bei %r, erlaubt %s"
+                             % (e["type"], e["source_name"], ", ".join(ZITAT_TYPEN)))
+        if not isinstance(e["tagged"], bool):
+            raise SystemExit("citations.json, tagged muss true oder false sein bei %r" % e["source_name"])
     return sorted(eintraege, key=lambda e: e["date"], reverse=True)
 
 
 def zitat_karte(e):
     # fremde links in einem neuen tab
-    links = [a(e["url"], "Read their article").replace(' rel="noopener"',
+    links = [a(e["url"], ZITAT_TYPEN[e["type"]]).replace(' rel="noopener"',
                                                         ' target="_blank" rel="noopener"')]
     if e["our_page"]:
         links.append(a(e["our_page"], "Our measurement"))
@@ -272,8 +283,41 @@ def zitat_abschnitt(eintraege, hoechstens=None, sid=""):
     mehr = ""
     if hoechstens and len(eintraege) > hoechstens:
         mehr = '<p class="note">%s</p>' % a("/independence#cited-by", "All %d citations" % len(eintraege))
-    return ('<section%s><h2>Who cites our numbers?</h2>\n<p>%s</p>\n<div class="cards">%s</div>\n%s</section>'
-            % (' id="%s"' % sid if sid else "", ZITAT_SATZ, "".join(zitat_karte(x) for x in zeige), mehr))
+    # zaehler ueber der ueberschrift, erst ab ZITAT_ZAEHLER_AB eintraegen;
+    # "since" ist der monat des aeltesten eintrags
+    zaehler = ""
+    if len(eintraege) >= ZITAT_ZAEHLER_AB:
+        erster = datetime.date.fromisoformat(min(x["date"] for x in eintraege))
+        zaehler = '<p class="kick">Cited %d times since %s %d</p>\n' % (
+            len(eintraege), MONATE[erster.month - 1], erster.year)
+    return ('<section%s>%s<h2>Who cites our numbers?</h2>\n<p>%s</p>\n<div class="cards">%s</div>\n%s</section>'
+            % (' id="%s"' % sid if sid else "", zaehler, ZITAT_SATZ,
+               "".join(zitat_karte(x) for x in zeige), mehr))
+
+
+# --- "how to cite" (Ergaenzung Ben, 23.10.2026) ----------------------------
+# Ein fertiger Zitiersatz unter der Hauptzahl jeder Messseite, mit Knopf
+# "copy". Der Satz zeigt auf einen festen Anker an der Zahl. "counted" nur
+# fuer eigene Zaehlungen (Textregel), die Methodenseite sagt "published".
+# Kuenftige Fallseiten rufen zitier_kasten() genauso auf.
+ZITIER_EINLADUNG = "Using our numbers? Tag @pulsehawkio and we add you to %s."
+
+
+def zitier_satz(name, datum, ziel, verb="counted"):
+    """ziel ist pfad mit anker, etwa "/zcash-nu7#mean"."""
+    return "PulseHawk (@pulsehawkio), %s, %s %s, pulsehawk.io%s" % (name, verb, lang(datum), ziel)
+
+
+def zitier_kasten(kid, name, datum, ziel, verb="counted", csv=""):
+    """kid ist eine auf der seite eindeutige id, csv ein fertiger satz mit link."""
+    return ('<div class="cite"><p class="ch">How to cite</p>'
+            '<div class="cr"><code id="%s">%s</code>'
+            '<button type="button" class="cb" data-copy="%s">copy</button>'
+            '<span class="vh" aria-live="polite"></span></div>%s'
+            '<p class="small">%s</p></div>'
+            % (kid, E(zitier_satz(name, datum, ziel, verb)), kid,
+               '<p class="small">%s</p>' % csv if csv else "",
+               ZITIER_EINLADUNG % a("/independence#cited-by", "the list")))
 
 
 def lies_upgrades():
@@ -329,12 +373,16 @@ def bch_karte():
     text = ("The testnet for 1 minute blocks, counted from our own header client since "
             "activation on 15 October 2026. Up to 21 October, 7,572 blocks with a median "
             "gap of 43 s against 41.6 s expected.")
+    # ohne fallseite steht der zitiersatz in der karte, anker #bch-median.
+    # eine CSV zur tempnet-zaehlung liegt nicht in diesem repo.
+    kasten = zitier_kasten("cite-bch", "Bitcoin Cash tempnet block intervals",
+                           "2026-10-21", "/#bch-median")
     # Link nur, wenn es die Fallseite gibt
     if os.path.exists(os.path.join(REPO, BCH_FALL)):
         return ('<a class="card" href="/cases/bitcoin-cash"><span class="ct">Bitcoin Cash Tempnet</span>'
                 '<span class="cd">%s</span><span class="cp">Read the Bitcoin Cash case</span></a>' % text)
-    return ('<div class="card"><span class="ct">Bitcoin Cash Tempnet</span>'
-            '<span class="cd">%s</span></div>' % text)
+    return ('<div class="card wide" id="bch-median"><span class="ct">Bitcoin Cash Tempnet</span>'
+            '<span class="cd">%s</span>%s</div>' % (text, kasten))
 
 
 def seiten():
@@ -569,15 +617,17 @@ def seiten():
          "Yes. The method is on this page and the raw data is in the CSV. Two people with the same window should get the same numbers."),
     ]
     S.append(dict(
-        datei="method.html", pfad="/method", og="method", lastmod="2026-10-18",
+        datei="method.html", pfad="/method", og="method", lastmod="2026-10-23",
         title="How we measure blockchains | PulseHawk",
         desc=("Our open method. Block time distribution, stale block rate, propagation "
               "delay, confirmation time and fees, from our own measurement in dated windows."),
         h1="How we measure",
         lead=("Every number we publish comes from our own measurement, inside a stated window, "
               "with a method anyone can repeat. This page lists what we count, the rules we "
-              "publish by and what falls outside our work. %s." % METHODE),
+              "publish by and what falls outside our work. "
+              '<span id="version">%s</span>.' % METHODE),
         body="""
+%s
 <section><h2>Where do the numbers come from?</h2>
 <p>We measure ourselves, from full nodes we run or from our own header clients connected directly to network peers. Each report says which. We do not publish their addresses, hostnames or locations, so nobody can tune a network around our measurement.</p>
 <p>Third party explorers serve as a cross check, never as the source of a published number.</p>
@@ -620,7 +670,9 @@ def seiten():
 </section>
 %s
 <p class="cta">%s</p>
-""" % ("The first public sample report, Zcash NU7 on testnet, follows on 18 October 2026, 12:00 Berlin time."
+""" % (zitier_kasten("cite-method", "measurement method version 1", "2026-10-16",
+                     "/method#version", verb="published"),
+       "The first public sample report, Zcash NU7 on testnet, follows on 18 October 2026, 12:00 Berlin time."
        if not ZCASH_OFFEN else
        "The first public sample report is %s, published on 18 October 2026." % a("/zcash-nu7", "Zcash NU7 on testnet"),
        faq_html(m_faq), contact_button()),
@@ -744,6 +796,10 @@ def seiten():
                                                    "btn plausible-event-name=PDF+Download"))
     downloads = ('<section id="download"><h2>Download the raw intervals</h2>\n%s\n</section>'
                  % "\n".join(dl_teile)) if dl_teile else ""
+    # CSV-zeile im zitierkasten, mit derselben klasse wie der download-knopf,
+    # damit Plausible sie als CSV Download zaehlt
+    z_csv = ('<a class="plausible-event-name=CSV+Download" href="/%s" download>Download the CSV</a>, '
+             '49,203 blocks up to 18 October 2026, licensed CC BY 4.0.' % ZCASH_CSV) if csv else ""
     quelle = ('<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet '
               'peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>')
     z_faq = [
@@ -760,7 +816,7 @@ def seiten():
          "blocks at 75 s."),
     ]
     S.append(dict(
-        datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-22",
+        datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-23",
         title="Zcash NU7 on testnet, block times measured | PulseHawk",
         desc=("Zcash testnet after NU7, block times measured independently from testnet "
               "headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap."),
@@ -774,31 +830,32 @@ def seiten():
 <section><h2>Does NU7 hit 25 second blocks on testnet?</h2>
 <p>Yes. The mean interval was 23.68 s, so blocks came about 5%% faster than the target. The median of 17.0 s is what a 25 s chain should show, because most blocks arrive early and a few arrive late.</p>
 <div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Measured</th><th scope="col">Expected at 25 s</th></tr></thead><tbody>
-<tr><td class="c">Mean</td><td>23.68 s</td><td>25 s</td></tr>
-<tr><td class="c">Median</td><td>17.0 s</td><td>17.3 s</td></tr>
-<tr><td class="c">p90</td><td>52 s</td><td>57.6 s</td></tr>
-<tr><td class="c">p99</td><td>109 s</td><td>115.1 s</td></tr>
-<tr><td class="c">Over 75 s</td><td>3.59%%</td><td>4.98%%</td></tr>
-<tr><td class="c">Over 150 s</td><td>0.203%%</td><td>0.248%%</td></tr>
-<tr><td class="c">Longest gap</td><td>451 s</td><td>about 284 s</td></tr>
+<tr id="mean"><td class="c">Mean</td><td>23.68 s</td><td>25 s</td></tr>
+<tr id="median"><td class="c">Median</td><td>17.0 s</td><td>17.3 s</td></tr>
+<tr id="p90"><td class="c">p90</td><td>52 s</td><td>57.6 s</td></tr>
+<tr id="p99"><td class="c">p99</td><td>109 s</td><td>115.1 s</td></tr>
+<tr id="over-75s"><td class="c">Over 75 s</td><td>3.59%%</td><td>4.98%%</td></tr>
+<tr id="over-150s"><td class="c">Over 150 s</td><td>0.203%%</td><td>0.248%%</td></tr>
+<tr id="longest-gap"><td class="c">Longest gap</td><td>451 s</td><td>about 284 s</td></tr>
 </tbody></table></div>
 <p class="note">Expected means an ideal chain with a 25 s mean, where intervals follow an exponential distribution.</p>
 %s
+%s
 </section>
-<section><h2>How often is a block slower than the old 75 s target?</h2>
+<section id="slow-blocks"><h2>How often is a block slower than the old 75 s target?</h2>
 <p>In 3.59%% of intervals, against 4.98%% for an ideal 25 s chain. Before NU7 the target itself was 75 s. Gaps over 150 s came in 0.203%% of intervals, against 0.248%% expected.</p>
 <p>The longest gap was 451 s, longer than the roughly 284 s an ideal chain would show over the same number of blocks. No block timestamp went backwards.</p>
 %s
 </section>
-<section><h2>How fast does difficulty follow hashrate?</h2>
+<section id="difficulty"><h2>How fast does difficulty follow hashrate?</h2>
 <p>We found 6 hashrate jumps of 2x or more, and 5 of them caught up. The other one was followed by the next jump 200 blocks later, before it could catch up. For those five the difficulty came within ±15 %% of the new level after a median of 960 blocks, or about 2.7 hours when measured in time, and the longest catch-up took 1,839 blocks.</p>
 %s
 </section>
-<section><h2>How long do confirmations take?</h2>
+<section id="confirmations"><h2>How long do confirmations take?</h2>
 <p>Thirty blocks at 25 s spanned a median of 730 s and a p99 of 1,187 s. For perfect 25 s blocks the p99 would be about 1,105 s, so the measured value sits above that, partly because of the hashrate jumps (1,154 s without the windows around them), and still well below the 1,409 s for ten blocks at 75 s.</p>
 %s
 </section>
-<section><h2>How many blocks were orphaned?</h2>
+<section id="orphaned"><h2>How many blocks were orphaned?</h2>
 <p>From 17 October 2026, 14:51 to 20:21 UTC our listener recorded every block announced to it. Five of the 780 did not land in the chain, 0.64%%, and each of them at depth 1.</p>
 <p class="src">Our own listener, Zcash NU7 testnet, window 17 October 2026, 14:51 to 20:21 UTC.</p>
 </section>
@@ -809,10 +866,12 @@ def seiten():
 %s
 %s
 <p class="cta">%s</p>
-""" % (quelle, quelle, quelle, quelle, a("/method", "How we measure"), downloads,
+""" % (quelle, zitier_kasten("cite-zcash", "Zcash NU7 testnet block intervals", "2026-10-18",
+                            "/zcash-nu7#mean", csv=z_csv),
+       quelle, quelle, quelle, a("/method", "How we measure"), downloads,
        faq_html(z_faq), contact_button("Request a measurement for your upgrade")),
         faqs=z_faq,
-        schema=["ARTICLE:2026-10-18:2026-10-22", {
+        schema=["ARTICLE:2026-10-18:2026-10-23", {
             "@type": "Dataset",
             "name": "Zcash NU7 testnet block intervals",
             "description": ("Block intervals on the Zcash testnet from the NU7 activation at "
@@ -1030,6 +1089,19 @@ fetch(u,{method:'POST',body:new URLSearchParams(new FormData(f)),mode:'cors',cre
 .then(function(){f.hidden=true;ok.hidden=false;ok.focus();},function(){err.hidden=false;btn.disabled=false;});});})();
 </script>"""
 
+# Knopf "copy" im zitierkasten. Erst die Clipboard-API (Chrome, Safari ab
+# 13.1, im Klick selbst aufgerufen), sonst ein unsichtbares Textfeld mit
+# execCommand. Klappt beides nicht, bleibt der Satz markiert zum Kopieren.
+KOPIER_JS = """
+<script>
+(function(){var bs=document.querySelectorAll('button[data-copy]');
+function zeig(b,ok){var s=b.parentNode.querySelector('.vh');b.textContent=ok?'copied':'copy';if(s)s.textContent=ok?'Copied to clipboard':'';if(ok)setTimeout(function(){zeig(b,false)},2000)}
+function mark(c){var r=document.createRange();r.selectNodeContents(c);var g=window.getSelection();g.removeAllRanges();g.addRange(r)}
+function alt(t,b,c){var x=document.createElement('textarea'),ok=false;x.value=t;x.setAttribute('readonly','');x.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(x);x.select();x.setSelectionRange(0,t.length);try{ok=document.execCommand('copy')}catch(e){}document.body.removeChild(x);b.focus();if(ok)zeig(b,true);else mark(c)}
+for(var i=0;i<bs.length;i++)bs[i].addEventListener('click',function(){var b=this,c=document.getElementById(b.getAttribute('data-copy')),t=c.textContent;
+if(navigator.clipboard&&navigator.clipboard.writeText&&window.isSecureContext){navigator.clipboard.writeText(t).then(function(){zeig(b,true)},function(){alt(t,b,c)})}else alt(t,b,c)})})();
+</script>"""
+
 IMPRESSUM = """
 <section><h2>Site operator</h2>
 <address><b>Vizora Digital UG (haftungsbeschränkt)</b><br>Marc-Chagall-Straße 54<br>40477 Düsseldorf<br>Germany</address>
@@ -1174,6 +1246,18 @@ address{font-style:normal;color:var(--dim);margin-top:10px}
 footer.foot{border-top:1px solid var(--line);margin-top:56px}
 footer.foot .wrap{display:flex;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;padding-top:20px;padding-bottom:36px;font-size:13.5px;color:var(--dim)}
 footer.foot a{color:var(--dim)}footer.foot a:hover{color:var(--teal)}
+.cite{background:var(--card);border:1px solid rgba(73,234,203,.4);border-radius:12px;padding:14px 16px;margin-top:16px;max-width:68ch}
+.card .cite{margin-top:4px;background:var(--bg)}.card.wide{grid-column:1/-1}
+.cite .ch{margin:0;font:400 12px var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.cr{display:flex;gap:12px;align-items:flex-start;margin-top:8px}
+.cr code{flex:1;font:400 14px/1.5 var(--mono);color:var(--txt);overflow-wrap:anywhere}
+.cb{flex:none;background:transparent;color:var(--teal);border:1px solid var(--teal);border-radius:6px;padding:4px 12px;min-height:32px;font:400 13px var(--mono);cursor:pointer}
+.cb:hover{background:rgba(73,234,203,.1)}
+.cite .small{margin-top:8px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.kick{margin-top:46px;font:400 13px var(--mono);color:var(--teal)}.kick+h2{margin-top:6px}
+[id]{scroll-margin-top:16px}
+tr:target td{background:rgba(73,234,203,.08)}.card:target{border-color:var(--teal)}
 @media (max-width:760px){.cards,.cards.two,.rules,.fit{grid-template-columns:1fr}
 nav.main{width:100%;overflow-x:auto}nav.main ul{flex-wrap:nowrap;white-space:nowrap;gap:16px;padding-bottom:4px}
 main{padding-top:30px}.lead{font-size:17px}}
@@ -1292,7 +1376,8 @@ def render(seite):
            can=can, og=og, ogtitle=E(seite["h1"], quote=True), plausible=PLAUSIBLE,
            ld=ld, css=re.sub(r"\n", "", CSS), kopf=kopfleiste(seite["pfad"]),
            crumbs=cr_html, h1=seite["h1"], lead=seite["lead"], body=seite["body"].strip(),
-           fuss=fuss(), script=seite.get("script", ""))
+           fuss=fuss(), script=seite.get("script", "") + (
+               KOPIER_JS if "data-copy=" in seite["body"] + seite["lead"] else ""))
 
 
 # --- sitemap, robots, llms ----------------------------------------------
