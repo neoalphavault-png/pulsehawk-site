@@ -38,9 +38,57 @@ NICHT_TUN_ERLAUBT = ("method.html", "independence.html")
 # Fliesstext: Absaetze, Listen, Ueberschriften, FAQ-Fragen und Kartentexte.
 # Tabellenzellen, Chips und Quellenzeilen sind keine Saetze.
 SATZ_BLOECKE = ("p", "li", "h1", "h2", "h3", "summary")
-SATZ_KLASSEN = ("cd", "lead")
+SATZ_KLASSEN = ("cd", "lead", "cr")
 SATZ_AUSNAHMEN = ("src", "note")
 RE_SATZ = re.compile(r"(?<=[.!?])\s+")
+
+# Zitierkasten "How to cite" (Ben, 23.10.2026). Der Satz hat genau diese
+# Form, sein Anker steht auf der Zielseite, der Knopf kopiert genau diesen
+# Satz, und darunter steht der Einladungssatz.
+RE_ZITIER = re.compile(r"PulseHawk \(@pulsehawkio\), [^,]+, (counted|published) "
+                       r"\d{1,2} (January|February|March|April|May|June|July|August|"
+                       r"September|October|November|December) \d{4}, "
+                       r"pulsehawk\.io(/[a-z0-9/-]*)#([a-z0-9-]+)$")
+EINLADUNG = "Using our numbers? Tag @pulsehawkio and we add you to the list."
+
+
+def ziel_datei(pfad):
+    pfad = pfad.strip("/")
+    return "index.html" if not pfad else pfad + ".html"
+
+
+def funde_zitierkasten(roh):
+    f = []
+    ids = re.findall(r'\sid="([^"]+)"', roh)
+    doppelt = sorted({i for i in ids if ids.count(i) > 1})
+    if doppelt:
+        f.append("id doppelt %s" % ", ".join(doppelt))
+    kaesten = re.findall(r'<div class="cite">(.*?)</p></div>', roh, re.S)
+    if roh.count('<div class="cite">') != len(kaesten):
+        f.append("zitierkasten unvollstaendig")
+    for k in kaesten:
+        m = re.search(r'<code id="([^"]+)">([^<]*)</code><button type="button" class="cb" '
+                      r'data-copy="([^"]+)">copy</button>', k)
+        if not m or m.group(1) != m.group(3):
+            f.append("zitierkasten ohne passenden knopf copy")
+            continue
+        satz = html.unescape(m.group(2))
+        z = RE_ZITIER.match(satz)
+        if not z:
+            f.append("zitiersatz passt nicht zur form '%s'" % satz)
+            continue
+        ziel = os.path.join(REPO, ziel_datei(z.group(3)))
+        if not os.path.exists(ziel):
+            f.append("zitiersatz zeigt auf fehlende seite '%s'" % z.group(3))
+        else:
+            with open(ziel, encoding="utf-8") as fh:
+                if ' id="%s"' % z.group(4) not in fh.read():
+                    f.append("anker #%s fehlt auf %s" % (z.group(4), z.group(3)))
+        if EINLADUNG not in re.sub(r"<[^>]+>", "", k):
+            f.append("einladungssatz fehlt im zitierkasten")
+    if kaesten and "data-copy" in roh and "navigator.clipboard" not in roh:
+        f.append("kopier-skript fehlt")
+    return f
 
 
 class Text(HTMLParser):
@@ -182,6 +230,7 @@ def pruefe(datei):
         for satz in RE_SATZ.split(block):
             if satz[:1].isdigit():
                 f.append("satz beginnt mit ziffer '%s'" % satz[:60])
+    f += funde_zitierkasten(roh)
     # meta description und og-texte gelten als sichtbar
     desc = p.meta.get("description", "")
     f += ["description, " + x for x in funde_text(desc, datei)]
