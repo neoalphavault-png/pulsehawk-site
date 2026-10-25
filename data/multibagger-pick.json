@@ -1,5 +1,5 @@
 {
- "date": "2026-10-24",
+ "date": "2026-10-25",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -8,20 +8,20 @@
   "indices": [
    "sp500"
   ],
-  "mult": 7.5467,
-  "pct": 654.7,
-  "from_1000": 7547,
-  "d": "2026-10-22",
-  "close": 202.63,
-  "d_1y": "2025-10-22",
-  "close_1y": 26.85,
+  "mult": 7.6229,
+  "pct": 662.3,
+  "from_1000": 7623,
+  "d": "2026-10-23",
+  "close": 200.1,
+  "d_1y": "2025-10-23",
+  "close_1y": 26.25,
   "low": 22.36,
   "high": 245.81,
-  "drawdown_pct": -16.7,
+  "drawdown_pct": -14.8,
   "verified": {
    "source": "tiingo",
    "mult": 7.6229,
-   "diff_pct": 1.01
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
@@ -29,7 +29,7 @@
  "base_rate": {
   "sp500_scanned": 498,
   "sp500_doubled": 20,
-  "sp500_tripled": 5
+  "sp500_tripled": 4
  },
  "benchmarks": {
   "s&p 500": {
@@ -43,15 +43,15 @@
    "d_1y": "2025-10-23"
   }
  },
- "candidates_total": 44,
+ "candidates_total": 45,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 7.5467
+   "mult": 7.6229
   },
   {
    "ticker": "LITE",
-   "mult": 4.7611
+   "mult": 4.4877
   },
   {
    "ticker": "MXL",
@@ -59,31 +59,31 @@
   },
   {
    "ticker": "DELL",
-   "mult": 3.0171
-  },
-  {
-   "ticker": "STX",
-   "mult": 2.986
+   "mult": 2.9595
   },
   {
    "ticker": "VSTS",
-   "mult": 2.9425
-  },
-  {
-   "ticker": "WDC",
-   "mult": 2.9401
+   "mult": 2.8752
   },
   {
    "ticker": "RNG",
    "mult": 2.8617
   },
   {
-   "ticker": "VSXY",
-   "mult": 2.8419
+   "ticker": "STX",
+   "mult": 2.7847
   },
   {
-   "ticker": "ILMN",
-   "mult": 2.7707
+   "ticker": "VSXY",
+   "mult": 2.774
+  },
+  {
+   "ticker": "MRVL",
+   "mult": 2.7608
+  },
+  {
+   "ticker": "WDC",
+   "mult": 2.7336
   }
  ],
  "rejected": [],
