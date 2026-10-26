@@ -10,7 +10,7 @@ Services and prices (net, plus VAT where it applies, invoiced in euro, as of Oct
 
 ## Pages
 
-- [Independent blockchain measurement under load](https://pulsehawk.io/): PulseHawk does its own blockchain measurement under load, with own nodes or header clients. Dated numbers, raw data and an open method for upgrades.
+- [Blockchains, measured under load](https://pulsehawk.io/): PulseHawk does its own blockchain measurement under load, with own nodes or header clients. Dated numbers, raw data and an open method for upgrades.
 - [Independent TPS verification, claimed vs measured](https://pulsehawk.io/tps-verification): Independent TPS verification. We check a TPS claim against real network throughput in our own measurement and publish claimed vs measured, dated.
 - [Testnet and mainnet launch measurement](https://pulsehawk.io/launch-measurement): Testnet stress test measurement and mainnet launch metrics. The first week after launch against the week before, from our own measurement, with raw data.
 - [Hard fork and network upgrade monitoring](https://pulsehawk.io/upgrade-monitoring): Hard fork monitoring from our own measurement. Block time, difficulty and orphaned blocks compared before and after a network upgrade, with dated raw data.
