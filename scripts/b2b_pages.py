@@ -380,20 +380,245 @@ def kalender_tabelle(eintraege):
 BCH_FALL = "cases/bitcoin-cash.html"
 
 
-def bch_karte():
+# --- startseite nach dem design-skill (Ben, 26.10.2026) ---------------------
+# Richtung "One motif" aus .claude/skills/design-taste-frontend. Das Motiv
+# ist ein Blockabstand als senkrechter Balken, genommen aus unserer eigenen
+# Zcash-Zaehlung (CSV im Repo). Marke bleibt: Farben, Schriften, Falke. Die
+# CSS und das Skript gelten nur fuer die Startseite (Klasse "home" am body),
+# die uebrigen Seiten bleiben, wie sie sind.
+
+PULS_FENSTER = 288      # bloecke im hero, um die laengste luecke der zaehlung
+
+
+def puls_daten():
+    """fenster aus der zcash-csv um die laengste luecke. liefert dict mit
+    hoehe des ersten blocks, zeitstempeln und abstaenden."""
+    import csv
+    pfad = os.path.join(REPO, ZCASH_CSV)
+    with open(pfad, encoding="utf-8") as fh:
+        reihen = [(int(r["height"]), int(r["timestamp"]), int(r["interval_s"]))
+                  for r in csv.DictReader(fh) if r["interval_s"]]
+    i_max = max(range(len(reihen)), key=lambda i: reihen[i][2])
+    start = max(0, i_max - PULS_FENSTER * 2 // 3)
+    fenster = reihen[start:start + PULS_FENSTER]
+    return {"bloecke": len(reihen) + 1, "fenster": fenster, "i_max": i_max - start}
+
+
+def utc_text(ts):
+    d = datetime.datetime.fromtimestamp(ts, datetime.timezone.utc)
+    return "%s, %02d:%02d UTC" % (lang(d.date().isoformat()), d.hour, d.minute)
+
+
+def puls_satz(h, iv, ts):
+    return "Block %s, %d s after its parent by timestamp, %s." % (betrag(h), iv, utc_text(ts))
+
+
+def puls_figur():
+    """hero: die echten abstaende als balken, wurzel-skala, mit regler."""
+    d = puls_daten()
+    f = d["fenster"]
+    hoch = 300.0
+    groesst = max(iv for _, _, iv in f)
+
+    def y(iv):
+        return hoch - (iv / groesst) ** 0.5 * (hoch - 8)
+
+    pfad = "".join("M%d %.1fV300h3V%.1fZ" % (i * 4, y(iv), y(iv)) for i, (_, _, iv) in enumerate(f))
+    h0, _, _ = f[0]
+    hm, tsm, ivm = f[d["i_max"]]
+    ziel = y(25)
+    daten = json.dumps([[iv, ts] for _, ts, iv in f], separators=(",", ":"))
+    return ("""<figure class="puls" data-ui>
+<h2 class="ph">Zcash testnet, block by block</h2>
+<svg viewBox="0 0 %(w)d 300" preserveAspectRatio="none" role="img" aria-labelledby="puls-cap">
+<path class="pz" d="M0 %(ziel).1fH%(w)d"/><path class="pb" d="%(pfad)s"/>
+<rect class="pm" x="0" y="0" width="3" height="300" style="transform:translateX(%(xm)dpx)"/></svg>
+<div class="pa"><span>Bar height, seconds since the block before</span><span>Dashed line, 25 s target</span></div>
+<label class="pr" for="puls-r">Pick a block in the trace</label>
+<input id="puls-r" type="range" min="0" max="%(n)d" value="%(im)d" aria-describedby="puls-o">
+<output id="puls-o" for="puls-r">%(satz)s</output>
+<figcaption id="puls-cap">Zcash testnet after NU7, %(anz)d consecutive blocks from %(h0)s, measured by us. The tallest bar is the longest gap of our whole count of %(bl)s blocks, %(ivm)d s at block %(hm)s on %(dm)s. The line marks the 25 s target.</figcaption>
+<script type="application/json" id="puls-d">{"h0":%(h0j)d,"d":%(daten)s}</script>
+</figure>""" % {"w": len(f) * 4, "ziel": ziel, "pfad": pfad, "xm": d["i_max"] * 4, "n": len(f) - 1,
+                  "im": d["i_max"], "satz": E(puls_satz(hm, ivm, tsm)), "anz": len(f), "h0": betrag(h0),
+                  "bl": betrag(d["bloecke"]), "ivm": ivm, "hm": betrag(hm),
+                  "dm": lang(datetime.datetime.fromtimestamp(tsm, datetime.timezone.utc).date().isoformat()),
+                  "h0j": h0, "daten": daten})
+
+
+def zcash_fragment():
+    zeilen = [("Mean", "23.68 s", "25 s"), ("Median", "17.0 s", "17.3 s"), ("p90", "52 s", "57.6 s"),
+              ("p99", "109 s", "115.1 s"), ("Longest gap", "451 s", "about 284 s")]
+    return ('<div class="frag" data-ui><table class="ft"><thead><tr><th scope="col">Block interval</th>'
+            '<th scope="col">Measured</th><th scope="col">Ideal 25 s chain</th></tr></thead><tbody>%s</tbody></table>'
+            '<p class="fs">Our count of 49,203 blocks, up to 18 October 2026, 06:00 UTC</p></div>'
+            % "".join('<tr><th scope="row">%s</th><td>%s</td><td>%s</td></tr>' % z for z in zeilen))
+
+
+def bch_fragment():
+    # zahlen wie in der bch-karte, eigene zaehlung bis 21.10.2026
+    return ('<div class="frag" data-ui><p class="fh">Median gap between blocks</p>'
+            '<div class="fb"><span class="fbl">Measured</span><span class="fbb" style="width:100%%"></span><span class="fbv">43 s</span></div>'
+            '<div class="fb"><span class="fbl">Expected</span><span class="fbb e" style="width:%.1f%%"></span><span class="fbv">41.6 s</span></div>'
+            '<p class="fs">Our count of 7,572 blocks, 15 to 21 October 2026</p></div>' % (41.6 / 43 * 100))
+
+
+def csv_fragment():
+    pfad = os.path.join(REPO, ZCASH_CSV)
+    with open(pfad, encoding="utf-8") as fh:
+        kopf = [next(fh).rstrip("\n") for _ in range(6)]
+    return ('<div class="frag csv" data-ui><pre><code>%s\n…</code></pre>'
+            '<p class="fs">Raw data, 49,203 rows up to 18 October 2026, SHA-256 %s…</p>'
+            '<p class="fs"><a class="plausible-event-name=CSV+Download" href="/%s" download>Download the CSV</a>, about 1 MB, licensed CC BY 4.0.</p></div>'
+            % ("\n".join(E(z) for z in kopf), ZCASH_CSV_SHA256[:16], ZCASH_CSV))
+
+
+def bch_kachel():
     text = ("The testnet for 1 minute blocks, counted from our own header client since "
             "activation on 15 October 2026. Up to 21 October, 7,572 blocks with a median "
             "gap of 43 s against 41.6 s expected.")
-    # ohne fallseite steht der zitiersatz in der karte, anker #bch-median.
-    # eine CSV zur tempnet-zaehlung liegt nicht in diesem repo.
+    fall = (' %s' % a("/cases/bitcoin-cash", "Read the Bitcoin Cash case")
+            if os.path.exists(os.path.join(REPO, BCH_FALL)) else "")
     kasten = zitier_kasten("cite-bch", "Bitcoin Cash tempnet block intervals",
                            "2026-10-21", "/#bch-median")
-    # Link nur, wenn es die Fallseite gibt
-    if os.path.exists(os.path.join(REPO, BCH_FALL)):
-        return ('<a class="card" href="/cases/bitcoin-cash"><span class="ct">Bitcoin Cash Tempnet</span>'
-                '<span class="cd">%s</span><span class="cp">Read the Bitcoin Cash case</span></a>' % text)
-    return ('<div class="card wide" id="bch-median"><span class="ct">Bitcoin Cash Tempnet</span>'
-            '<span class="cd">%s</span>%s</div>' % (text, kasten))
+    return ('<div class="tile w2" id="bch-median"><h3>Bitcoin Cash tempnet</h3><p>%s%s</p>%s%s</div>'
+            % (text, fall, bch_fragment(), kasten))
+
+
+def zitat_zeilen(eintraege, hoechstens=3):
+    """startseite, zitate als zeilen, das zitat in satzgroesse links."""
+    if not eintraege:
+        return ""
+    zeige = eintraege[:hoechstens]
+    zaehler = ""
+    if len(eintraege) >= ZITAT_ZAEHLER_AB:
+        erster = datetime.date.fromisoformat(min(x["date"] for x in eintraege))
+        zaehler = '<p class="kick">Cited %d times since %s %d</p>\n' % (
+            len(eintraege), MONATE[erster.month - 1], erster.year)
+    zeilen = []
+    for e in zeige:
+        links = [a(e["url"], ZITAT_TYPEN[e["type"]]).replace(' rel="noopener"', ' target="_blank" rel="noopener"')]
+        if e["our_page"]:
+            links.append(a(e["our_page"], "Our measurement"))
+        herkunft = " · ".join(E(x) for x in (e["source_handle"], e["network"]) if x)
+        zeilen.append('<div class="zr"><blockquote><p>“%s”</p></blockquote><div class="zm">'
+                      '<p><b>%s</b>, %s</p><p>%s</p><p>They %s.</p><p>%s</p></div></div>'
+                      % (E(e["quote"]), E(e["source_name"]), lang(e["date"]), herkunft,
+                         E(e["what_they_used"].strip().rstrip(".")), " · ".join(links)))
+    mehr = ""
+    if len(eintraege) > hoechstens:
+        mehr = '<p>%s</p>' % a("/independence#cited-by", "All %d citations" % len(eintraege))
+    return ('<section class="zit">%s<h2>Who cites our numbers?</h2>\n<p class="sub">%s</p>\n%s\n%s</section>'
+            % (zaehler, ZITAT_SATZ, "\n".join(zeilen), mehr))
+
+
+def leistungen():
+    reihen = [("/tps-verification", "TPS verification", "Claimed vs measured throughput, from our own measurement.", "Review " + preis_text("review")),
+              ("/launch-measurement", "Launch measurement", "The first week after a testnet or mainnet launch, set against the week before.", preis_text("launch").capitalize()),
+              ("/upgrade-monitoring", "Upgrade monitoring", "Block time, difficulty and orphaned blocks before and after a hard fork.", "Ongoing " + preis_text("ongoing"))]
+    return "\n".join('<a class="lr" href="%s"><h3 class="ln">%s</h3><span class="ld">%s</span><span class="lp">%s</span></a>'
+                     % r for r in reihen)
+
+
+HOME_CSS = """
+.home{--xl:clamp(34px,7.4vw,112px);--l:clamp(30px,3.6vw,52px);--m:clamp(22px,2.1vw,30px);--s:15px}
+.home .wrap{max-width:1312px;padding:0 clamp(20px,3vw,48px)}
+.home header.top{border-bottom:0}.home nav.main a{font-size:var(--s)}
+.home footer.foot{border-top:0;background:var(--card);margin-top:0}.home footer.foot .wrap{font-size:var(--s)}
+.home main{padding:clamp(24px,4vw,56px) 0 0}
+.home main>.wrap{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:clamp(24px,4vw,64px)}
+.home main>.wrap>*{grid-column:1/-1}
+.home main>.wrap>.lead{grid-column:1}.home main>.wrap>.hero-acts{grid-column:2;align-self:end;justify-content:flex-end}
+.home p,.home li{font-size:18px;color:var(--txt)}
+.home h1{font-size:var(--xl);line-height:.98;letter-spacing:-.035em;max-width:none;text-wrap:balance}
+.home .lead{font-size:20px;line-height:1.5;max-width:48ch;margin-top:clamp(20px,2.2vw,32px)}
+.home h2{font-size:var(--l);line-height:1.04;letter-spacing:-.025em;margin:0 0 20px}
+.home h3{font:800 var(--m)/1.15 Archivo,sans-serif;letter-spacing:-.02em;color:var(--txt);margin:0}
+.home section{padding-top:clamp(88px,10vw,168px)}
+.home .sub{color:var(--dim);max-width:52ch;margin-top:0}
+.home .small,.home .fs{font-size:var(--s);color:var(--dim)}
+.home a.btn,.home button{border-radius:0}
+.home .btn{font-size:var(--s);padding:14px 22px;transition:transform .15s ease,background-color .15s ease,color .15s ease}
+.home .btn:active{transform:scale(.97)}
+.home .btn.ghost:hover{background:var(--teal);color:#06110E;filter:none}
+.home .acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}.home .acts .btn{margin:0}
+.puls{margin:clamp(36px,4vw,56px) 0 0;position:relative}
+.puls .ph{font:600 var(--s) 'IBM Plex Sans',sans-serif;letter-spacing:0;color:var(--dim);margin:0 0 12px}
+.puls svg{display:block;width:100%;height:clamp(160px,28vh,300px)}
+.puls .pb{fill:var(--teal);transform-origin:50% 100%;animation:steigen .7s cubic-bezier(.2,.7,.2,1) both}
+.puls .pz{stroke:var(--dim);stroke-width:1;stroke-dasharray:4 6;vector-effect:non-scaling-stroke;fill:none}
+.puls .pm{fill:var(--txt);transition:transform .12s ease-out}
+.puls .pa{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 24px;font-size:var(--s);color:var(--dim);margin-top:8px}
+.puls .pr{display:block;font-size:var(--s);color:var(--dim);margin-top:20px}
+.puls input{width:100%;height:44px;accent-color:var(--teal);margin:4px 0;cursor:pointer}
+.puls output{display:block;font-size:18px;color:var(--txt);font-variant-numeric:tabular-nums;min-height:3.2em}
+.puls figcaption{font-size:var(--s);color:var(--dim);margin-top:8px;max-width:80ch}
+@keyframes steigen{from{transform:scaleY(.02)}to{transform:none}}
+.lst{margin-top:12px}
+.lr{display:grid;grid-template-columns:4fr 6fr 3fr;gap:8px 32px;align-items:baseline;text-decoration:none;color:var(--txt);padding:22px 20px;margin:0 -20px;transition:background-color .2s ease}
+.lr+.lr{margin-top:6px}
+.lr:hover,.lr:focus-visible{background:var(--card)}
+.lr .ln{padding-left:18px;position:relative}
+.lr .ln:before{content:"";position:absolute;left:0;bottom:.15em;width:6px;height:.8em;background:var(--teal)}
+.ld{font-size:18px;color:var(--dim)}.lp{font-size:18px;text-align:right;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{background:var(--card);padding:clamp(20px,2.4vw,32px);display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
+.tile.w2{grid-column:span 2}.tile.acc{background:var(--teal)}
+.tile.acc h2{color:#06110E;margin:0}.tile.acc p{color:#06110E}
+.tile .big{font:800 var(--l)/1 Archivo,sans-serif;letter-spacing:-.03em;color:var(--txt);margin-top:4px}
+.tile .big+.small{margin-top:-8px}
+.tile p{margin:0}
+.frag{background:var(--bg);border:1px solid var(--line);padding:18px 20px;min-height:200px;font-variant-numeric:tabular-nums}
+.ft{min-width:0;font-size:15px}.ft th,.ft td{padding:7px 8px;color:var(--txt);text-align:right;font:inherit;text-transform:none;letter-spacing:0}
+.ft th[scope=row],.ft thead th:first-child{text-align:left;color:var(--dim)}.ft thead th{color:var(--dim);border-bottom:1px solid var(--line)}
+.ft td{border-bottom:1px solid var(--line)}.ft tr:last-child td,.ft tr:last-child th{border-bottom:0}
+.frag .fh{font-size:15px;color:var(--dim)}
+.fb{display:grid;grid-template-columns:5.5em 1fr 3.5em;gap:10px;align-items:center;margin-top:14px;font-size:15px}
+.fbb{display:block;height:28px;background:var(--teal)}.fbb.e{background:var(--dim)}.fbv{text-align:right}
+.frag pre{margin:0;overflow:hidden}.frag code{font:400 14px/1.6 var(--mono);color:var(--txt)}
+.home .cite{background:var(--bg);border:0;margin-top:0;max-width:none}
+.home .cite .ch{text-transform:none;letter-spacing:0;font:600 var(--s) 'IBM Plex Sans',sans-serif;color:var(--txt)}
+.home .cite .cb{font:600 var(--s) 'IBM Plex Sans',sans-serif;border-radius:0;min-height:40px}
+.home .cite code{font-size:var(--s)}.home .cite .small{font-size:var(--s)}
+.zit .zr{display:grid;grid-template-columns:7fr 5fr;gap:16px 48px;padding:32px 0}
+.zit .zr+.zr{padding-top:8px}
+.zit blockquote p{font:800 var(--m)/1.15 Archivo,sans-serif;letter-spacing:-.02em;color:var(--txt);margin:0;max-width:24ch}
+.zit .zm p{margin:0 0 6px;font-size:var(--s);color:var(--dim)}.zit .zm p:first-child{color:var(--txt)}
+.home .kick{font:600 18px 'IBM Plex Sans',sans-serif;color:var(--teal);margin:0 0 10px}
+.panel{background:var(--card);display:grid;grid-template-columns:5fr 6fr;gap:clamp(24px,4vw,64px);padding:clamp(24px,4vw,56px);align-items:start}
+.panel h2{margin-top:0}
+.stmt{display:grid;grid-template-columns:6fr 6fr;gap:24px clamp(24px,4vw,64px);align-items:start}
+.stmt .gross{font:800 var(--m)/1.2 Archivo,sans-serif;letter-spacing:-.02em;color:var(--txt);margin-top:0;max-width:24ch}
+.ende{display:grid;grid-template-columns:7fr 5fr;gap:24px clamp(24px,4vw,64px);align-items:end;padding-bottom:clamp(88px,10vw,168px)}
+.ende h2{font-size:var(--xl);margin:0}
+.mo .home main section>*,.mo .home .tile{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.mo .home main section.in>*,.mo .home section.in .tile{opacity:1;transform:none}
+.mo .home section.in>*:nth-child(2),.mo .home section.in .tile:nth-child(2){transition-delay:.07s}
+.mo .home section.in>*:nth-child(3),.mo .home section.in .tile:nth-child(3){transition-delay:.14s}
+.mo .home section.in>*:nth-child(4),.mo .home section.in .tile:nth-child(4){transition-delay:.21s}
+.mo .home section.in>*:nth-child(n+5),.mo .home section.in .tile:nth-child(n+5){transition-delay:.28s}
+.mo .home .tiles{opacity:1!important;transform:none!important}
+@media (prefers-reduced-motion:reduce){.puls .pb{animation:none}.home *{transition:none!important}}
+@media (max-width:900px){.home main>.wrap{grid-template-columns:1fr}.home main>.wrap>.hero-acts{grid-column:1;justify-content:flex-start}
+.tiles{grid-template-columns:1fr 1fr}.lr{grid-template-columns:1fr;gap:6px}.lp{text-align:left}
+.panel,.stmt,.ende,.zit .zr{grid-template-columns:1fr}}
+@media (max-width:600px){.tiles{grid-template-columns:1fr}.tile.w2{grid-column:auto}.home p,.home li{font-size:17px}
+.home header.top .wrap{padding-top:10px;padding-bottom:10px}}
+"""
+
+# regler im hero und die eintritte der abschnitte. ohne skript bleibt alles
+# sichtbar und der regler zeigt die laengste luecke (vom server gesetzt).
+HOME_JS = """
+<script>
+(function(){var r=document.getElementById('puls-r'),o=document.getElementById('puls-o'),m=document.querySelector('.puls .pm'),j=document.getElementById('puls-d');
+if(r&&o&&m&&j){var D=JSON.parse(j.textContent),M=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var z=function(n){return String(n).replace(/\\B(?=(\\d{3})+(?!\\d))/g,',')},p=function(n){return n<10?'0'+n:n};
+var s=function(){var i=+r.value,e=D.d[i],t=new Date(e[1]*1000),x='Block '+z(D.h0+i)+', '+e[0]+' s after its parent by timestamp, '+t.getUTCDate()+' '+M[t.getUTCMonth()]+' '+t.getUTCFullYear()+', '+p(t.getUTCHours())+':'+p(t.getUTCMinutes())+' UTC.';
+o.textContent=x;r.setAttribute('aria-valuetext',x);m.style.transform='translateX('+(i*4)+'px)';};r.addEventListener('input',s);}
+var d=document.documentElement;if(location.hash||!('IntersectionObserver' in window)||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px'});
+var ss=document.querySelectorAll('.home main section');d.classList.add('mo');for(var k=0;k<ss.length;k++)io.observe(ss[k]);})();
+</script>"""
 
 
 def seiten():
@@ -401,57 +626,62 @@ def seiten():
     up_meta, up = lies_upgrades()
     up_stand = max([e.get("checked", STAND) for e in up] + [up_meta.get("updated", STAND)])
 
-    # 1 startseite
+    # 1 startseite, nach dem design-skill (Ben, 26.10.2026). Gleiche Aussagen,
+    # Preise und Zahlen wie vorher, neu angeordnet. CSS und Skript nur hier.
     S.append(dict(
-        datei="index.html", pfad="/", og="home", lastmod="2026-10-23",
+        datei="index.html", pfad="/", og="home", lastmod="2026-10-26",
         title="Independent blockchain measurement | PulseHawk",
         desc=("PulseHawk does its own blockchain measurement under load, with own nodes or "
               "header clients. Dated numbers, raw data and an open method for upgrades."),
-        h1="Independent blockchain measurement under load",
-        lead=("PulseHawk measures how blockchains behave under load. We measure ourselves, "
-              "with our own nodes or our own header clients, never from third party "
-              "dashboards. We count blocks, transactions and confirmation times in a fixed "
-              "window and publish dated numbers, raw data and an open method, for "
-              "foundations, core teams and grant committees across all chains."),
+        h1="Blockchains, measured under load",
+        lead=("Independent measurement for foundations, core teams and grant committees. "
+              "We count blocks, transactions and confirmation times ourselves, and publish "
+              "dated numbers with raw data."),
         body="""
-<ul class="chips"><li>Own measurement</li><li>Open method</li><li>Dated numbers</li><li>Raw data</li></ul>
+<p class="acts hero-acts">%s %s</p>
+%s
 <section><h2>What can we measure for you?</h2>
-<div class="cards">
-<a class="card" href="/tps-verification"><span class="ct">TPS verification</span><span class="cd">Claimed vs measured throughput, from our own measurement.</span><span class="cp">Review %s</span></a>
-<a class="card" href="/launch-measurement"><span class="ct">Launch measurement</span><span class="cd">The first week after a testnet or mainnet launch, set against the week before.</span><span class="cp">%s</span></a>
-<a class="card" href="/upgrade-monitoring"><span class="ct">Upgrade monitoring</span><span class="cd">Block time, difficulty and orphaned blocks before and after a hard fork.</span><span class="cp">Ongoing %s</span></a>
-</div>
-<p class="note">Custom scope, on request. %s</p>
+<p class="sub">We measure ourselves, with our own nodes or our own header clients, never from third party dashboards.</p>
+<div class="lst">%s</div>
+<p class="small">Custom scope, on request. %s</p>
 </section>
-<section><h2>Which networks have we measured?</h2>
-<div class="cards">
-<a class="card" href="/zcash-nu7"><span class="ct">Zcash NU7 on testnet</span><span class="cd">Network Upgrade 7 on the Zcash testnet, measured independently over 49,203 blocks up to 18 October 2026. Mean block interval 23.68 s against a 25 s target.</span><span class="cp">Read the Zcash NU7 case</span></a>
-<a class="card" href="/cases/kaspa"><span class="ct">Kaspa</span><span class="cd">A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</span><span class="cp">Read the Kaspa case</span></a>
+<section><div class="tiles">
+<div class="tile w2 acc"><h2>Which networks have we measured?</h2><p>We publish dated numbers, raw data and an open method.</p></div>
+<div class="tile w2"><h3>Kaspa</h3><p>A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</p><p>%s</p></div>
+<div class="tile w2"><h3>Zcash NU7 on testnet</h3><div class="big">23.68 s</div><p class="small">Mean block interval, against a 25 s target</p><p>Network Upgrade 7 on the Zcash testnet, measured independently over 49,203 blocks up to 18 October 2026.</p>%s<p>%s</p></div>
 %s
-</div>
-</section>
+</div></section>
 %s
-<section><h2>For foundations and grant committees</h2>
-<p>Ongoing measurement of a network works best as a public good. When a grant funds it, every result and its raw data are published openly, for the whole ecosystem, with the same method and the same rules as paid work.</p>
-<p>A grant pays for the measurement, never for the result. The rules that make this hold are on our %s page.</p>
-<p>%s</p>
-</section>
-<section><h2>What does a blockchain performance measurement look like?</h2>
+<section><div class="panel"><div><h2>What is in a report?</h2>
 <p>A short summary, the measurement window in UTC, charts, a table with median, p90 and p99, the method version and a CSV with every block we counted. Every number carries its date.</p>
-%s
-</section>
-<section><h2>How do we start?</h2>
+<p class="acts">%s</p></div>
+%s</div></section>
+<section><div class="stmt"><h2>For foundations and grant committees</h2><div>
+<p class="gross">A grant pays for the measurement, never for the result.</p>
+<p>Ongoing measurement of a network works best as a public good. When a grant funds it, every result and its raw data are published openly, for the whole ecosystem, with the same method and the same rules as paid work.</p>
+<p>The rules that make this hold are on our %s page. %s.</p>
+</div></div></section>
+<section class="ende"><h2>How do we start?</h2><div>
 <p>Tell us the network, what you want measured and when. We reply from %s within one business day.</p>
-<p class="cta">%s %s</p>
-</section>
-""" % (preis_text("review"), preis_text("launch"), preis_text("ongoing"), PREIS_STAND,
-       bch_karte(), zitat_abschnitt(lies_zitate(), hoechstens=3),
+<p class="acts">%s %s</p>
+</div></section>
+""" % (a("/contact", "Request a measurement", "btn"),
+       a(SAMPLE_URL, "See a sample report", "btn ghost plausible-event-name=Sample+Report"),
+       puls_figur(),
+       leistungen(), PREIS_STAND,
+       a("/cases/kaspa", "Read the Kaspa case"),
+       zcash_fragment(), a("/zcash-nu7", "Read the Zcash NU7 case"),
+       bch_kachel(),
+       zitat_zeilen(lies_zitate(), hoechstens=3),
+       a(SAMPLE_URL, "See a sample report", "btn ghost plausible-event-name=Sample+Report"),
+       csv_fragment(),
        a("/independence", "independence"),
        a("/upgrade-monitoring", "How ongoing measurement works"),
-       sample_button(), E(KONTAKT_MAIL), contact_button(),
+       E(KONTAKT_MAIL), a("/contact", "Request a measurement", "btn"),
        a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL), "btn ghost")),
         faqs=[],
         schema=[],
+        css=HOME_CSS, bodyclass="home", script=HOME_JS,
     ))
 
     # 2 tps
@@ -1369,9 +1599,9 @@ def render(seite):
 <script type="application/ld+json">
 {ld}
 </script>
-<style>{css}</style>
+<style>{css}{css2}</style>
 </head>
-<body>
+<body{bk}>
 <a class="skip" href="#inhalt">Skip to content</a>
 {kopf}
 <main id="inhalt"><div class="wrap">
@@ -1385,7 +1615,8 @@ def render(seite):
 </html>
 """.format(title=E(seite["title"]), desc=E(seite["desc"], quote=True), robots=robots,
            can=can, og=og, ogtitle=E(seite["h1"], quote=True), plausible=PLAUSIBLE,
-           ld=ld, css=re.sub(r"\n", "", CSS), kopf=kopfleiste(seite["pfad"]),
+           ld=ld, css=re.sub(r"\n", "", CSS), css2=re.sub(r"\n", "", seite.get("css", "")),
+           bk=' class="%s"' % seite["bodyclass"] if seite.get("bodyclass") else "", kopf=kopfleiste(seite["pfad"]),
            crumbs=cr_html, h1=seite["h1"], lead=seite["lead"], body=seite["body"].strip(),
            fuss=fuss(), script=seite.get("script", "") + (
                KOPIER_JS if "data-copy=" in seite["body"] + seite["lead"] else ""))
@@ -1472,7 +1703,7 @@ def og_html(seite):
 body{{width:1200px;height:630px;overflow:hidden;background:#080B0F;background-image:radial-gradient(ellipse 80% 70% at 85% 10%,rgba(73,234,203,.16),transparent 60%)}}
 .o{{padding:72px 80px;height:630px;display:flex;flex-direction:column;justify-content:space-between}}
 .b{{display:flex;align-items:center;gap:18px;font:800 38px Archivo}} .b img{{width:64px;height:68px}}
-.t{{font:800 66px/1.08 Archivo;color:#F2F5F4;max-width:1000px;letter-spacing:-1px}}
+.t{{font:800 66px/1.08 Archivo;color:#F2F5F4;max-width:1000px;letter-spacing:-1px;text-wrap:balance}}
 .s{{font:400 24px 'IBM Plex Mono';color:#49EACB}}
 </style></head><body><div class="o"><div class="b"><img src="{repo}/hawk.png">PulseHawk</div>
 <div class="t">{h1}</div><div class="s">own measurement · open method · dated numbers · raw data</div></div></body></html>
