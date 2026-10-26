@@ -68,7 +68,7 @@ Das ist `ph-kalender.yml` per workflow_dispatch mit `heute=2026-10-26`. Es geht 
 3. **Testnetz im Namen:** Die Tabelle schreibt bei Ethereum zweimal nur "testnet", für Sepolia und für Hoodi. Soll die Spalte den Namen des Testnetzes zeigen, also "Hoodi testnet" oder "Chapel testnet"?
 4. **Prüfdatum:** Die übrigen Einträge (Monero, Avalanche, Solana, Zcash testnet, Sepolia) habe ich nicht neu geprüft, sie behalten `checked` 2026-10-16. Unter der Tabelle steht aber "checked on 26 October 2026", denn die Seite nennt das jüngste Prüfdatum. Soll der Satz stattdessen "last checked" heißen?
 5. **`@BNBCHAIN`:** Ist das das offizielle X-Konto?
-6. **Zakura in der Notiz:** Die Notiz nennt jetzt "per Zakura". Auf keiner Seite wird sie angezeigt, weder auf `/upgrades` noch im X-Entwurf. Sie steht aber in `data/upgrades.json`, und das Repo ist öffentlich. Am 17.10. hattest du gesagt, das Zakura-Detail gehört nicht auf die Seite. Ich habe die Notiz wörtlich übernommen. Passt das so?
+6. **Zakura in der Notiz:** Die Notiz nennt jetzt "per Zakura". Auf keiner Seite wird sie angezeigt, weder auf `/upgrades` noch im X-Entwurf. Sie steht aber in `data/upgrades.json`, und das Repo ist öffentlich. Im Auftrag zu den Zcash-Endzahlen hattest du gesagt, das Zakura-Detail gehört nicht auf die Seite. Ich habe die Notiz wörtlich übernommen. Passt das so?
 
 ## Was Ben tun muss
 1. PR mergen.
