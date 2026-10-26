@@ -60,7 +60,29 @@ pulsehawk.io/upgrades
 ![upgrades 390](2026-10-26-kalender-daten/upgrades-390.png)
 
 ## Lauf auf dem Betriebspfad
-Das ist `ph-kalender.yml` per workflow_dispatch mit `heute=2026-10-26`. Es geht erst nach dem Merge, das Ergebnis kommt in einem kleinen Nachtrag.
+Das ist `ph-kalender.yml` per workflow_dispatch mit `heute=2026-10-26`, gestartet von Claude nach dem Merge von #37. Main enthielt da schon #37 und #38.
+
+**Nachtrag 26.10.2026:** Lauf Nr. 3, gestartet 16:10 UTC, Ergebnis **success**.
+- **Alle Schritte grün:** Renderer prüfen, Selbsttest, Entwurf bauen und an Discord.
+- **Selbsttest:** 54 von 54 richtig.
+- **Entwurf:** 3 Einträge, 274 Zeichen, keine Antwort nötig. Grafik 1600x900 angehängt. Discord hat mit **HTTP 200** angenommen.
+- **Webhook:** Im Log steht er nur als `***`.
+- **Text des Entwurfs:**
+
+```
+network upgrades in the next 14 days, from the pulsehawk calendar
+
+ethereum glamsterdam on testnet, 26 october 2026
+bnb chain jenner on testnet, 29 october 2026
+zcash nu7 on mainnet, around 6 november 2026
+
+@ethereum @bnbchain @zcash @zcashfoundation
+pulsehawk.io/upgrades
+```
+
+Ob der Entwurf mit Grafik in `#ph-entwuerfe` angekommen ist, sieht nur Ben. Claude kann den privaten Kanal nicht lesen. HTTP 200 heißt aber, dass Discord die Nachricht angenommen hat.
+
+Der planmäßige Montagslauf (Nr. 2) startete erst um 12:38 UTC statt 06:00 UTC, weil GitHub geplante Läufe verzögern kann. Er lief noch mit den alten Daten von vor #37.
 
 ## Offene Fragen an Ben
 1. **Hoodi auf `activated`:** Ab dem 27.10. muss der Status umgestellt werden. Ich lege dafür am 27.10. einen kleinen PR an. Oder soll der Generator `scheduled` mit vergangenem Datum selbst als `activated` zeigen? Davon rate ich ab, weil es dann ohne Quelle geschähe.
