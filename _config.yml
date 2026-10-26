@@ -2,6 +2,10 @@
 # als eigene Seiten auf pulsehawk.io ausgeliefert. Die Berichte und die
 # Hinweise fuer Claude sind fuer GitHub gedacht, nicht fuer die Website
 # (Ben, 22.10.2026). Alles andere bleibt, wie es war.
+# Der Design-Skill unter .claude/ und seine Arbeitsdateien gehoeren auch
+# nicht auf die Website (Ben, 26.10.2026).
 exclude:
   - berichte
   - CLAUDE.md
+  - .claude
+  - .taste-skill
