@@ -335,7 +335,14 @@ def lies_upgrades():
 def kalender_tabelle(eintraege):
     def datum(e):
         if e.get("date"):
-            return '<time datetime="%s">%s</time>' % (e["date"], lang(e["date"]))
+            # date_estimate, das datum ist geschaetzt (etwa aus der hoehe), die
+            # hoehe steht dann dahinter (Ben, 26.10.2026)
+            t = '<time datetime="%s">%s</time>' % (e["date"], lang(e["date"]))
+            if e.get("date_estimate"):
+                t = "around " + t
+                if e.get("height"):
+                    t += ", block %s" % betrag(e["height"])
+            return t
         # ohne datum, aber mit hoehe: die hoehe ist der termin, den das
         # projekt selbst nennt
         if e.get("height"):
@@ -737,7 +744,7 @@ def seiten():
          "When a source changes. The date each entry was checked is part of the data, and the page shows when it last changed."),
     ]
     S.append(dict(
-        datei="upgrades.html", pfad="/upgrades", og="upgrades", lastmod="2026-10-18",
+        datei="upgrades.html", pfad="/upgrades", og="upgrades", lastmod=up_stand,
         title="Network upgrade calendar | PulseHawk",
         desc=("Network upgrade calendar with upcoming hard forks across chains. Testnet and "
               "mainnet dates, status and the official source for every single entry."),
@@ -748,7 +755,7 @@ def seiten():
         body="""
 <section><h2>Which upgrades are coming?</h2>
 %s
-<p class="note">%d entries, checked on %s. Measured by us means we measured that upgrade ourselves and a case page follows.</p>
+<p class="note">%d entries, checked on %s. Around marks an estimated date, for example from an announced block height. Measured by us means we measured that upgrade ourselves and a case page follows.</p>
 </section>
 <section><h2>How does an upgrade get on this calendar?</h2>
 <p>Only with a source from the project itself, a specification, release notes or an official announcement. Each source was checked on the date stated above, and a changed date replaces the old one on the same row.</p>

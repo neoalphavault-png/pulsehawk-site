@@ -138,9 +138,13 @@ def datum_text(iso):
 
 def zeile(e):
     """eine zeile je eintrag, netzwerk, ereignis und datum."""
-    ereignis = re.sub(r"\s*,\s*", " ", e["event"])
-    return ("%s %s on %s, %s" % (e["chain"], ereignis, e["network"],
-                                 datum_text(e["date"]))).lower()
+    # x_event ist ein kurzer name fuer den post, wenn event zu lang ist
+    # (Zcash "NU7" statt "NU7, Network Upgrade 7", Ben 26.10.2026)
+    ereignis = re.sub(r"\s*,\s*", " ", e.get("x_event") or e["event"])
+    # ein geschaetztes datum heisst "around" (date_estimate, Ben 26.10.2026)
+    return ("%s %s on %s, %s%s" % (e["chain"], ereignis, e["network"],
+                                   "around " if e.get("date_estimate") else "",
+                                   datum_text(e["date"]))).lower()
 
 
 def handles(eintraege):
@@ -190,7 +194,8 @@ def grafik_html(eintraege, heute, tage=TAGE):
     font = "file://" + os.path.join(REPO, "assets", "fonts")
     reihen = "".join(
         '<tr><td class="d">%s</td><td class="c">%s</td><td>%s</td><td class="n">%s</td></tr>'
-        % (html.escape(datetime.date.fromisoformat(e["date"]).strftime("%-d %b %Y")),
+        % (("around " if e.get("date_estimate") else "")
+           + html.escape(datetime.date.fromisoformat(e["date"]).strftime("%-d %b %Y")),
            html.escape(e["chain"]), html.escape(e["event"]), html.escape(e["network"]))
         for e in eintraege[:7])
     mehr = ('<div class="mehr">and %d more on pulsehawk.io/upgrades</div>' % (len(eintraege) - 7)
@@ -210,7 +215,7 @@ h1{font:800 64px/1.1 Archivo;margin-top:44px;letter-spacing:-1px}
 .sub{font:400 24px Mono;color:#49EACB;margin-top:14px}
 table{border-collapse:collapse;margin-top:36px;width:100%%;font-size:28px}
 td{padding:14px 18px 14px 0;border-bottom:1px solid #1C2228;color:#A9B7B4;vertical-align:top}
-td.d{font-family:Mono;color:#49EACB;white-space:nowrap;width:240px}td.c{color:#F2F5F4;font-weight:600;width:250px}
+td.d{font-family:Mono;color:#49EACB;white-space:nowrap;width:330px;padding-right:32px}td.c{color:#F2F5F4;font-weight:600;width:250px}
 td.n{text-align:right;white-space:nowrap}
 .mehr{font-size:24px;color:#A9B7B4;margin-top:16px}
 .fuss{margin-top:auto;font:400 22px Mono;color:#A9B7B4;border-top:1px solid #1C2228;padding-top:20px}
@@ -380,6 +385,12 @@ def selbsttest():
            ["@kaspaunchained", "@zcash", "@zcashfoundation", "@ethereum", "@monero"])
     pruefe("rest in der antwort", antwort, "also on the calendar @monero")
     pruefe("datum ausgeschrieben", zeile(f[1]), "zcash upgrade 1 part on mainnet, 5 november 2026")
+    pruefe("x_event ersetzt event im post", zeile(dict(f[1], x_event="U1")),
+           "zcash u1 on mainnet, 5 november 2026")
+    pruefe("geschaetztes datum heisst around", zeile(dict(f[1], date_estimate=True)),
+           "zcash upgrade 1 part on mainnet, around 5 november 2026")
+    pruefe("around auch in der grafik",
+           "around 5 Nov 2026" in grafik_html([dict(f[1], date_estimate=True)], heute), True)
     viele = [e(10 + i, "Chain%d" % i, "2026-11-%02d" % (3 + i % 10), []) for i in range(20)]
     post_v, _ = texte(faellig(viele, heute))
     pruefe("viele eintraege bleiben unter 280", weighted_len(post_v) <= MAX_LEN, True)
