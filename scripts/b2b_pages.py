@@ -625,6 +625,154 @@ var ss=document.querySelectorAll('.home main section');d.classList.add('mo');for
 </script>"""
 
 
+# --- zcash nu7 mainnet (Ben, 27.10.2026, SEO /zcash-nu7) --------------------
+# Prognose und ab der Aktivierung die ersten gezaehlten Zahlen kommen aus dem
+# juengsten Mainnet-Stand, gekuerzt nach data/zcash-nu7/mainnet-stand.json
+# (scripts/zcash_stand.py). Jede Zahl traegt Datum und counted, computed
+# oder source.
+ZCASH_TEXT_STAND = "2026-10-28"   # letzte aenderung am text der seite
+ZCASH_STAND_DATEI = "data/zcash-nu7/mainnet-stand.json"
+ZEBRA_700 = "https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0"
+ZIP_218 = "https://github.com/zcash/zips/blob/main/zips/zip-0218.md"
+ZCASH_FACTS_CSS = """
+.facts{background:var(--card);border-radius:12px;padding:clamp(18px,3vw,28px);margin-top:28px}
+.facts h2{margin-top:0}
+.facts dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 28px;margin-top:6px}
+.facts dt{font-size:14px;color:var(--dim)}
+.facts dd{margin:2px 0 0}
+.facts .fv{font:800 clamp(22px,2.6vw,30px)/1.15 Archivo,sans-serif;color:var(--txt);letter-spacing:-.3px}
+.facts .fq{font-size:14px;color:var(--dim);margin-top:4px;max-width:46ch}
+@media (max-width:640px){.facts dl{grid-template-columns:1fr}}
+"""
+
+
+def lies_mainnet_stand():
+    pfad = os.path.join(REPO, ZCASH_STAND_DATEI)
+    if not os.path.exists(pfad):
+        return None
+    with open(pfad, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def utc_lang(s, mit_jahr=True):
+    """'2026-11-06 02:21:52' -> '6 November 2026, 02:21 UTC'."""
+    d = datetime.datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+    tag = "%d %s%s" % (d.day, MONATE[d.month - 1], " %d" % d.year if mit_jahr else "")
+    return "%s, %02d:%02d UTC" % (tag, d.hour, d.minute)
+
+
+def tempo_fenster(v):
+    """die vollen utc-tage vor dem tag der spitze, wie in mainnet_auswertung.py."""
+    ende = datetime.date.fromisoformat(v["spitze_utc"][:10]) - datetime.timedelta(days=1)
+    return lang(ende.isoformat())
+
+
+def zahl1(x):
+    """75.34 bleibt 75.34, 17.0 bleibt 17.0, ganze zahlen mit tausenderkomma."""
+    if not isinstance(x, float):
+        return betrag(x)
+    t = ("%.2f" % x).rstrip("0")
+    return t + "0" if t.endswith(".") else t
+
+
+def zcash_mainnet_teile(st):
+    """(fakten, abschnitte, faq-antwort aktivierung, faq-zusatz blockzeit, dateModified)"""
+    quelle = a(ZEBRA_700, "Zebra 7.0.0")
+    zeilen = [("Mainnet activation height", "3,543,405",
+               "source %s, checked 26 October 2026" % quelle)]
+    abschnitte, faq_akt, faq_zeit = "", None, ""
+    nach = st and st.get("nach_nu7")
+    v = st and st.get("vorhersage")
+    stand_text = lang(st["stand"]) if st else ""
+    if nach:
+        g, b = nach["gezaehlt"], nach["berechnet"]
+        erster = nach.get("erster_nu7_block_utc")
+        bis = st["bereich"]["bis_utc"]
+        n = nach["bereich"]["bis_hoehe"] - nach["bereich"]["von_hoehe"] + 1
+        if erster:
+            zeilen.append(("NU7 activated on mainnet", utc_lang(erster).split(",")[0],
+                           "counted, block 3,543,405 at %s" % utc_lang(erster)))
+        zeilen.append(("Mainnet after NU7, median interval", "%s s" % zahl1(g["median_s"]),
+                       "counted over %s intervals up to %s, computed %s s for an ideal 25 s chain"
+                       % (betrag(n), utc_lang(bis), zahl1(b["median_s"]))))
+        e = st.get("einpendeln") or {}
+        pendel = ""
+        if e.get("eingependelt_ab_block"):
+            pendel = ("<p>Block times settled near 25 s after %s blocks, about %s hours after the "
+                      "first NU7 block, counted%s.</p>"
+                      % (betrag(e["bloecke_bis_eingependelt"]), zahl1(e["stunden_bis_eingependelt"]),
+                         ", provisional while fewer than %s blocks confirm it" % betrag(e["halten_bloecke"])
+                         if e.get("vorlaeufig") else ""))
+        elif e.get("bloecke_nach_nu7"):
+            pendel = ("<p>Block times had not settled near 25 s within the first %s blocks, counted.</p>"
+                      % betrag(e["bloecke_nach_nu7"]))
+        abschnitte = """<section id="after-activation"><h2>First counted numbers after activation</h2>
+<p>%s Up to %s we counted %s intervals on mainnet after NU7, with a mean of %s s and a median of %s s. An ideal 25 s chain has a median of %s s, computed.</p>
+%s<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
+<tr id="mainnet-after-mean"><td class="c">Mean</td><td>%s s</td><td>25 s</td></tr>
+<tr id="mainnet-after-median"><td class="c">Median</td><td>%s s</td><td>%s s</td></tr>
+<tr><td class="c">p90</td><td>%s s</td><td>%s s</td></tr>
+<tr><td class="c">p99</td><td>%s s</td><td>%s s</td></tr>
+<tr><td class="c">Longest gap</td><td>%s s</td><td>about %s s</td></tr>
+</tbody></table></div>
+<p class="src">Our own header client, Zcash mainnet, blocks %s to %s, stand %s.</p>
+</section>""" % (("The first NU7 block came at %s." % utc_lang(erster)) if erster else "",
+                 utc_lang(bis), betrag(n), zahl1(g["mittel_s"]), zahl1(g["median_s"]), zahl1(b["median_s"]),
+                 pendel, zahl1(g["mittel_s"]), zahl1(g["median_s"]), zahl1(b["median_s"]),
+                 zahl1(g["p90_s"]), zahl1(b["p90_s"]), zahl1(g["p99_s"]), zahl1(b["p99_s"]),
+                 betrag(g["laengste_luecke_s"]), betrag(b["laengste_luecke_s"]),
+                 betrag(nach["bereich"]["von_hoehe"]), betrag(nach["bereich"]["bis_hoehe"]), stand_text)
+        faq_akt = ("It activated at block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. "
+                   "We counted that block at %s." % utc_lang(erster)) if erster else None
+        faq_zeit = (" On mainnet after NU7 we counted a median of %s s over %s intervals up to %s."
+                    % (zahl1(g["median_s"]), betrag(n), utc_lang(bis)))
+    elif v:
+        zeilen.append(("Our forecast for block 3,543,405", "around %s" % utc_lang(v["median_utc"]).split(",")[0],
+                       "computed from our counted pace, median %s, 90%% band %s to %s, stand %s"
+                       % (utc_lang(v["median_utc"]).split(", ", 1)[1], utc_lang(v["band_5_utc"], False),
+                          utc_lang(v["band_95_utc"], False), stand_text)))
+        faq_akt = ("At block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. At the pace we "
+                   "counted over the %d full UTC days up to %s, that block arrives around %s, "
+                   "computed, with 9 in 10 of our draws between %s and %s."
+                   % (v["tempo_fenster_tage"], tempo_fenster(v), utc_lang(v["median_utc"]),
+                      utc_lang(v["band_5_utc"], False), utc_lang(v["band_95_utc"], False)))
+        abschnitte = """<section id="mainnet-forecast"><h2>When does NU7 reach Zcash mainnet?</h2>
+<p>Block 3,543,405 is fixed in %s. On %s our header client stood at block %s, with %s blocks to go. At the pace we counted over the %d full UTC days up to %s, %s s per block, the median of %s draws puts block 3,543,405 at %s.</p>
+<p>Nine in ten draws fall between %s and %s. At exactly 75 s per block it would be %s. All three are computed from our count, not dates set by the project.</p>
+<p class="src">Our own header client, Zcash mainnet, stand %s. Method in %s.</p>
+</section>""" % (quelle, utc_lang(v["spitze_utc"]), betrag(v["spitze_hoehe"]), betrag(v["fehlend"]),
+                 v["tempo_fenster_tage"], tempo_fenster(v), zahl1(v["tempo_mittel_s"]),
+                 betrag(int(re.search(r"(\d+) ziehungen", v["methode"]).group(1))),
+                 utc_lang(v["median_utc"]), utc_lang(v["band_5_utc"]), utc_lang(v["band_95_utc"]),
+                 utc_lang(v["berechnet_75s_utc"]), stand_text, a("/method", "How we measure"))
+    zeilen.append(("Block target spacing", "75 s to 25 s", "source %s" % a(ZIP_218, "ZIP 218")))
+    zeilen.append(("Testnet after NU7, median interval", "17.0 s",
+                   "counted over 49,202 intervals, 4 to 18 October 2026, computed 17.3 s for an ideal 25 s chain"))
+    vor = st and st.get("vor_nu7")
+    if vor and not nach:
+        g, b = vor["gezaehlt"], vor["berechnet"]
+        abschnitte += """
+<section id="mainnet-before"><h2>What is the Zcash block time before NU7?</h2>
+<p>Before NU7 the mainnet targets 75 s per block. From %s to %s we counted %s intervals, with a mean of %s s and a median of %s s, close to an ideal 75 s chain.</p>
+<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">Computed at 75 s</th></tr></thead><tbody>
+<tr id="mainnet-mean"><td class="c">Mean</td><td>%s s</td><td>75 s</td></tr>
+<tr id="mainnet-median"><td class="c">Median</td><td>%s s</td><td>%s s</td></tr>
+<tr><td class="c">p90</td><td>%s s</td><td>%s s</td></tr>
+<tr><td class="c">p99</td><td>%s s</td><td>%s s</td></tr>
+<tr><td class="c">Longest gap</td><td>%s s</td><td>about %s s</td></tr>
+</tbody></table></div>
+<p class="src">Our own header client, Zcash mainnet, blocks %s to %s, stand %s.</p>
+</section>""" % (lang(st["bereich"]["von_utc"][:10]), lang(st["bereich"]["bis_utc"][:10]), betrag(vor["abstaende"]),
+                 zahl1(g["mittel_s"]), zahl1(g["median_s"]), zahl1(g["mittel_s"]), zahl1(g["median_s"]),
+                 zahl1(b["median_s"]), zahl1(g["p90_s"]), zahl1(b["p90_s"]), zahl1(g["p99_s"]), zahl1(b["p99_s"]),
+                 betrag(g["laengste_luecke_s"]), betrag(b["laengste_luecke_s"]),
+                 betrag(vor["bereich"]["von_hoehe"]), betrag(vor["bereich"]["bis_hoehe"]), stand_text)
+    fakten = ('<section id="in-short" class="facts"><h2>Zcash NU7 in short</h2><dl>%s</dl></section>'
+              % "".join('<div><dt>%s</dt><dd class="fv">%s</dd><dd class="fq">%s</dd></div>' % z for z in zeilen))
+    mod = max(ZCASH_TEXT_STAND, st["stand"]) if st else ZCASH_TEXT_STAND
+    return fakten, abschnitte, faq_akt, faq_zeit, mod
+
+
 def seiten():
     S = []
     up_meta, up = lies_upgrades()
@@ -1047,34 +1195,40 @@ def seiten():
              '49,203 blocks up to 18 October 2026, licensed CC BY 4.0.' % ZCASH_CSV) if csv else ""
     quelle = ('<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet '
               'peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>')
+    z_stand = lies_mainnet_stand()
+    z_fakten, z_mainnet, z_faq_akt, z_faq_zeit, z_mod = zcash_mainnet_teile(z_stand)
     z_faq = [
-        ("Is the Zcash NU7 testnet producing 25 second blocks?",
-         "Yes, close to it. Up to 18 October 2026, 06:00 UTC the mean block interval was "
-         "23.68 s over 49,203 blocks, and median, p90 and p99 sat a few seconds below an "
-         "ideal 25 s chain."),
-        ("Do shorter blocks mean more orphaned blocks?",
-         "In our listener window on 17 October 2026, 14:51 to 20:21 UTC, 5 of 780 announced "
-         "blocks did not land in the chain, 0.64%, each at depth 1."),
-        ("How many confirmations match the old 10 at 75 s?",
-         "Thirty blocks at 25 s take the same 750 s on average as ten blocks at 75 s. Measured, "
-         "they spanned a median of 730 s and a p99 of 1,187 s, well below the 1,409 s for ten "
-         "blocks at 75 s."),
+        ("When does Zcash NU7 activate?",
+         z_faq_akt or "At block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0."),
+        ("What is the Zcash block time after NU7?",
+         "The block target spacing drops from 75 s to 25 s with NU7, per ZIP 218. On the testnet "
+         "after NU7 we counted a mean of 23.68 s and a median of 17.0 s over 49,202 intervals, "
+         "4 to 18 October 2026." + z_faq_zeit),
+        ("How long do 500 blocks take after NU7?",
+         "At exactly 25 s, 500 blocks take 12,500 s, about 3.5 hours, computed. On the testnet after "
+         "NU7 we counted a median of 3.46 hours for 500 consecutive blocks, 4 to 18 October 2026. "
+         "At the old 75 s target they take about 10.4 hours, computed."),
+        ("Did the NU7 testnet hit 25 second blocks?",
+         "Yes, close to it. Over 49,202 intervals from 4 to 18 October 2026 we counted a mean of "
+         "23.68 s against the 25 s target, about 5% faster, and a median of 17.0 s against 17.3 s "
+         "computed for an ideal 25 s chain."),
     ]
     S.append(dict(
-        datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod="2026-10-23",
-        title="Zcash NU7 on testnet, block times measured | PulseHawk",
-        desc=("Zcash testnet after NU7, block times measured independently from testnet "
-              "headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap."),
-        h1="Zcash NU7 on testnet, block times measured",
-        lead=("Yes, the Zcash testnet after NU7 runs close to 25 second blocks. Over the 49,203 "
-              "testnet blocks since activation the mean interval was 23.68 s against the 25 s target, and the "
-              "spread stayed close to an ideal 25 s chain, apart from one gap of 451 s. Measured "
-              "independently up to 18 October 2026, 06:00 UTC, with 500 of 500 sampled hashes "
-              "matching two Zebra peers."),
+        datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod=z_mod,
+        title="Zcash NU7 block times, expected vs counted | PulseHawk",
+        desc=("Zcash NU7 activates at block 3,543,405 and cuts the block time from 75 s to 25 s. "
+              "Our forecast, mainnet and testnet block times counted, 500 block spans."),
+        h1="Zcash NU7 block times, expected and counted",
+        lead=("Zcash NU7 cuts the block target spacing from 75 s to 25 s. On mainnet it activates "
+              "at block 3,543,405. On the testnet after NU7 we counted a median interval of 17.0 s "
+              "over 49,202 intervals from 4 to 18 October 2026, close to an ideal 25 s chain."),
+        css=ZCASH_FACTS_CSS,
         body="""
-<section><h2>Does NU7 hit 25 second blocks on testnet?</h2>
+%s
+%s
+<section id="testnet"><h2>Does NU7 hit 25 second blocks on testnet?</h2>
 <p>Yes. The mean interval was 23.68 s, so blocks came about 5%% faster than the target. The median of 17.0 s is what a 25 s chain should show, because most blocks arrive early and a few arrive late.</p>
-<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Measured</th><th scope="col">Expected at 25 s</th></tr></thead><tbody>
+<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
 <tr id="mean"><td class="c">Mean</td><td>23.68 s</td><td>25 s</td></tr>
 <tr id="median"><td class="c">Median</td><td>17.0 s</td><td>17.3 s</td></tr>
 <tr id="p90"><td class="c">p90</td><td>52 s</td><td>57.6 s</td></tr>
@@ -1083,7 +1237,7 @@ def seiten():
 <tr id="over-150s"><td class="c">Over 150 s</td><td>0.203%%</td><td>0.248%%</td></tr>
 <tr id="longest-gap"><td class="c">Longest gap</td><td>451 s</td><td>about 284 s</td></tr>
 </tbody></table></div>
-<p class="note">Expected means an ideal chain with a 25 s mean, where intervals follow an exponential distribution.</p>
+<p class="note">Computed means an ideal chain with a 25 s mean, where intervals follow an exponential distribution.</p>
 %s
 %s
 </section>
@@ -1111,12 +1265,12 @@ def seiten():
 %s
 %s
 <p class="cta">%s</p>
-""" % (quelle, zitier_kasten("cite-zcash", "Zcash NU7 testnet block intervals", "2026-10-18",
+""" % (z_fakten, z_mainnet, quelle, zitier_kasten("cite-zcash", "Zcash NU7 testnet block intervals", "2026-10-18",
                             "/zcash-nu7#mean", csv=z_csv),
        quelle, quelle, quelle, a("/method", "How we measure"), downloads,
        faq_html(z_faq), contact_button("Request a measurement for your upgrade")),
         faqs=z_faq,
-        schema=["ARTICLE:2026-10-18:2026-10-23", {
+        schema=["ARTICLE:2026-10-18:%s" % z_mod, {
             "@type": "Dataset",
             "name": "Zcash NU7 testnet block intervals",
             "description": ("Block intervals on the Zcash testnet from the NU7 activation at "
@@ -1129,7 +1283,8 @@ def seiten():
             "isAccessibleForFree": True,
             "license": "https://creativecommons.org/licenses/by/4.0/",
             "datePublished": "2026-10-18",
-            "temporalCoverage": "../2026-10-18T06:00:00Z",
+            "temporalCoverage": "2026-10-04T18:21:45Z/2026-10-18T05:59:48Z",
+            "dateModified": "2026-10-18",
             "measurementTechnique": ("Own header client fetching headers directly from testnet "
                                      "peers over P2P, hash linkage and proof of work checked, "
                                      "timestamps of consecutive blocks, 500 hashes compared "
