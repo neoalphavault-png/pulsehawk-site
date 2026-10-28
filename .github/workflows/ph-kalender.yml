@@ -8,6 +8,14 @@ name: ph kalender entwurf
 #
 # Die Webhook-URL steht nur im Secret DISCORD_WEBHOOK_PH_DRAFTS und wird
 # aus der Umgebung gelesen, nie ausgegeben.
+#
+# Ben, 28.10.2026: Zu jedem Entwurf zusaetzlich eine Aufforderung nach
+# #moderator-only ("📤 VON HAND Mo 16:30, X @pulsehawkio, ..."), mit Posttext,
+# antwort.txt und dem Hinweis auf die Grafik im Entwurfspost. Secret
+# DISCORD_WEBHOOK_OPS, nur im Schritt, der sendet. Fehlt es, geht nichts raus
+# und das Job-Log sagt es. Ohne Eintrag in 14 Tagen keine Aufforderung. Bricht
+# ein Selbsttest ab, laeuft nichts danach, also auch keine Aufforderung.
+# Probe (workflow_dispatch, probe) schreibt die Aufforderung nur ins Job-Log.
 
 on:
   schedule:
@@ -18,6 +26,11 @@ on:
         description: "Stichtag YYYY-MM-DD, leer heisst heute"
         required: false
         type: string
+      probe:
+        description: "Probe, Aufforderung nicht an #moderator-only, nur ins Job-Log"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -48,6 +61,9 @@ jobs:
       - name: selbsttest
         run: python3 scripts/ph_kalender_post.py --selbsttest
 
+      - name: selbsttest aufforderung
+        run: python3 scripts/ph/ops_melden.py --selbsttest
+
       - name: entwurf bauen und an discord
         env:
           DISCORD_WEBHOOK_PH_DRAFTS: ${{ secrets.DISCORD_WEBHOOK_PH_DRAFTS }}
@@ -58,3 +74,18 @@ jobs:
           else
             python3 scripts/ph_kalender_post.py --discord
           fi
+
+      # Nur wenn der Entwurf gebaut und gesendet ist. Ohne Eintrag in 14 Tagen
+      # schreibt der Entwurf keine post.txt, dann keine Aufforderung.
+      - name: aufforderung an moderator-only
+        env:
+          DISCORD_WEBHOOK_OPS: ${{ secrets.DISCORD_WEBHOOK_OPS }}
+          PROBE: ${{ inputs.probe && 'ja' || 'nein' }}
+        run: |
+          set -eu
+          if [ ! -f graphics/kalender/post.txt ]; then
+            echo "kein entwurf, keine aufforderung"; exit 0
+          fi
+          ARGS="--aufforderung kalender --post graphics/kalender/post.txt --antwort graphics/kalender/antwort.txt --grafik kalender.png"
+          if [ "$PROBE" = "ja" ]; then ARGS="$ARGS --probe"; fi
+          python3 scripts/ph/ops_melden.py $ARGS
