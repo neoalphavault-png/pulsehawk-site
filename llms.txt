@@ -17,7 +17,7 @@ Services and prices (net, plus VAT where it applies, invoiced in euro, as of Oct
 - [How we measure](https://pulsehawk.io/method): Our open method. Block time distribution, stale block rate, propagation delay, confirmation time and fees, from our own measurement in dated windows.
 - [How we stay independent](https://pulsehawk.io/independence): Four rules for every PulseHawk measurement. The price never depends on the result, no client tokens held, results published as measured, links named.
 - [Network upgrade calendar](https://pulsehawk.io/upgrades): Network upgrade calendar with upcoming hard forks across chains. Testnet and mainnet dates, status and the official source for every single entry.
-- [Zcash NU7 on testnet, block times measured](https://pulsehawk.io/zcash-nu7): Zcash testnet after NU7, block times measured independently from testnet headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap.
+- [Zcash NU7 block times, expected and counted](https://pulsehawk.io/zcash-nu7): Zcash NU7 activates at block 3,543,405 and cuts the block time from 75 s to 25 s. Our forecast, mainnet and testnet block times counted, 500 block spans.
 - [Kaspa network measurements](https://pulsehawk.io/cases/kaspa): Kaspa block rate and fees against new issuance, every number dated and marked as our own measurement or as a series we take over, with links to raw data.
 - [Request a measurement](https://pulsehawk.io/contact): Request an independent blockchain measurement. Tell us network, scope, timing and budget. We reply to each request by email within one business day.
 

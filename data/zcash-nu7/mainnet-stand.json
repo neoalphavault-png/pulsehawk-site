@@ -1,0 +1,75 @@
+{
+ "hinweis": "Gekuerzte Kopie des Zcash-Mainnet-Stands fuer /zcash-nu7, erzeugt mit scripts/zcash_stand.py. Nicht von Hand aendern, neu holen.",
+ "quelle": "kaspa-pulse, Branch messung/zcash-mainnet, data/zcash-mainnet/stand-2026-10-28.json",
+ "stand": "2026-10-28",
+ "abruf_utc": "2026-10-28T11:29:09Z",
+ "nu7_hoehe": 3543405,
+ "bereich": {
+  "von_hoehe": 3489717,
+  "bis_hoehe": 3533510,
+  "von_utc": "2026-09-20 06:59:07",
+  "bis_utc": "2026-10-28 11:28:42",
+  "bloecke": 43794
+ },
+ "pruefungen": [
+  "prev-hash-kette",
+  "hash <= ziel aus nbits",
+  "zebra-checkpoints"
+ ],
+ "gegenproben": [
+  {
+   "verglichen": 500,
+   "gleich": 500
+  },
+  {
+   "verglichen": 500,
+   "gleich": 500
+  }
+ ],
+ "vor_nu7": {
+  "abstaende": 43793,
+  "gezaehlt": {
+   "mittel_s": 75.34,
+   "median_s": 53,
+   "p90_s": 172.0,
+   "p99_s": 349.0,
+   "laengste_luecke_s": 930,
+   "laengste_luecke_vor_block": 3524451,
+   "laengste_luecke_utc": "2026-10-20 14:01:05",
+   "anteil_ueber_3T_prozent": 5.06,
+   "anteil_ueber_T_ln1000_prozent": 0.114,
+   "negativ": 0
+  },
+  "berechnet": {
+   "zielzeit_s": 75.0,
+   "mittel_s": 75.0,
+   "median_s": 52.0,
+   "p90_s": 172.7,
+   "p99_s": 345.4,
+   "laengste_luecke_s": 845,
+   "anteil_ueber_3T_prozent": 4.98,
+   "anteil_ueber_T_ln1000_prozent": 0.1
+  },
+  "bereich": {
+   "von_hoehe": 3489718,
+   "bis_hoehe": 3533510
+  }
+ },
+ "vorhersage": {
+  "zielhoehe": 3543405,
+  "fehlend": 9895,
+  "spitze_hoehe": 3533510,
+  "spitze_utc": "2026-10-28 11:28:42",
+  "tempo_fenster_tage": 14,
+  "tempo_mittel_s": 75.29,
+  "tagesmittel_min_s": 74.8,
+  "tagesmittel_max_s": 76.0,
+  "gezaehltes_tempo_utc": "2026-11-06 02:24:56",
+  "median_utc": "2026-11-06 02:26:16",
+  "band_5_utc": "2026-11-05 23:01:22",
+  "band_95_utc": "2026-11-06 05:51:31",
+  "band_breite_h": 6.8,
+  "berechnet_75s_utc": "2026-11-06 01:37:27",
+  "methode": "tempo 14 volle utc-tage, bootstrap ueber tagesmittel, gamma(n, tempo), 20000 ziehungen, seed 2027"
+ }
+}
