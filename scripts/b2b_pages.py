@@ -9,11 +9,15 @@ gepflegt liefen die auseinander, also stehen sie hier an einer Stelle, und
 dieses Skript schreibt fertiges, statisches HTML. Im Browser wird nichts
 nachgeladen ausser Plausible; jede Zahl steht im Quelltext.
 
-WAS ES NICHT ANFASST
-Die alten Datenseiten (Bitcoin-Zyklus, what-if, markets) gehoeren dem
-Seitenstempel, scripts/stamp_pages.py. Dieses Skript schreibt keine dieser
-Dateien und keine Datei in data/ ausser es liest data/upgrades.json. Die
-Stichtagswache kennt die neuen Seiten nicht und muss sie nicht kennen.
+DIE ALTEN DATENSEITEN (Ben, 27.10.2026)
+Die Bitcoin- und Marktseiten aus der frueheren DAY-Serie (Zyklus,
+Drawdown, Dominanz, Gold, markets, what-if) und /archive leiten auf
+/method weiter. GitHub Pages kann keinen HTTP-301 senden; die Weiterleitung
+ist eine Seite mit meta refresh 0, canonical und noindex, wie die Kurzlinks
+in kaspa-pulse. Dieses Skript schreibt sie (WEITERLEITUNGEN), sie stehen
+nicht in der Sitemap, und keine Seite verlinkt sie. Der Seitenstempel und
+der DAY-N-Lauf, die diese Seiten frueher beschrieben, sind stillgelegt.
+In data/ schreibt dieses Skript nichts.
 
 EINSTELLUNGEN AUS DER UMGEBUNG
   KONTAKT_MAIL    Empfaenger fuer Kontakt und mailto-Rueckfall
@@ -1251,36 +1255,6 @@ def seiten():
         script=BREVO_JS if BREVO_FORM_URL else MAILTO_JS,
     ))
 
-    # 11 archive
-    alt = [
-        ("/bitcoin-halving-to-top.html", "The Bitcoin 4 year cycle, halving to top", "Four cycles counted in days from the halving to the cycle top."),
-        ("/bitcoin-top-to-bottom.html", "The Bitcoin cycle bottom, how long after the top", "The three completed cycles from top to bottom, with the dates behind each."),
-        ("/bitcoin-drawdown.html", "How far Bitcoin is below its all-time high", "The distance to the October 2025 top, recounted every day."),
-        ("/bitcoin-bull-run-length.html", "How long Bitcoin bull runs last", "From each cycle low to the following top, counted in days."),
-        ("/gold-in-bitcoin-bear-markets.html", "Does gold rise when Bitcoin falls?", "Gold and the S&amp;P 500 through every Bitcoin bear market."),
-        ("/bitcoin-dominance.html", "Bitcoin dominance", "Bitcoin's share of the crypto market, from a daily record."),
-        ("/markets.html", "Gold vs stocks vs bitcoin", "Three markets over the same seven calendar days."),
-        ("/what-if.html", "What if you had bought bitcoin, gold or the S&amp;P 500?", "One buy, a monthly plan or a daily amount, from daily prices since 2010."),
-    ]
-    S.append(dict(
-        datei="archive.html", pfad="/archive", og="archive",
-        title="Archive, market data pages | PulseHawk",
-        desc=("PulseHawk market data pages from 2026. Bitcoin cycle counts, drawdown, "
-              "dominance, gold and stocks. Still online and still updated by the same scripts."),
-        h1="Archive",
-        lead=("PulseHawk began in August 2026 as a market data feed. These pages are from "
-              "that time. They stay online at their addresses, and the same scripts still "
-              "update their numbers every day."),
-        body="""
-<section><h2>Which pages are in the archive?</h2>
-<div class="cards one">%s</div>
-</section>
-""" % "".join('<a class="card" href="%s"><span class="ct">%s</span><span class="cd">%s</span></a>'
-              % (h, t, d) for h, t, d in alt),
-        faqs=[],
-        schema=[],
-    ))
-
     # 12/13 rechtliches, inhalt wie bisher, absender pulsehawk.io
     S.append(dict(
         datei="impressum.html", pfad="/impressum.html", og="home",
@@ -1525,7 +1499,7 @@ def fuss():
     return ('<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · '
             'Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div>'
             '<div><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>'
-            ' · <a href="/archive">Archive</a> · <a href="/contact">Contact</a></div></div></footer>')
+            ' · <a href="/contact">Contact</a></div></div></footer>')
 
 
 def kopfleiste(pfad):
@@ -1624,22 +1598,45 @@ def render(seite):
 
 # --- sitemap, robots, llms ----------------------------------------------
 
-ALTE_SEITEN = ["bitcoin-halving-to-top.html", "bitcoin-top-to-bottom.html",
-               "bitcoin-drawdown.html", "bitcoin-bull-run-length.html",
-               "gold-in-bitcoin-bear-markets.html", "bitcoin-dominance.html",
-               "markets.html", "what-if.html"]
+# alte seiten, die auf /method weiterleiten (Ben, 27.10.2026). nicht in der
+# sitemap, von keiner seite verlinkt.
+WEITERLEITUNGEN = {d: "/method" for d in (
+    "bitcoin-halving-to-top.html", "bitcoin-top-to-bottom.html",
+    "bitcoin-drawdown.html", "bitcoin-bull-run-length.html",
+    "gold-in-bitcoin-bear-markets.html", "bitcoin-dominance.html",
+    "markets.html", "what-if.html", "archive.html")}
 
 
-def sitemap(S, alt_lastmod):
+def weiterleitung_html(ziel):
+    """wie die kurzlinks in kaspa-pulse: meta refresh 0, canonical, noindex,
+    ohne javascript, ein link fuer alle, die keine weiterleitung folgen."""
+    url = SITE + ziel
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, follow">
+<meta http-equiv="refresh" content="0; url=%(z)s">
+<link rel="canonical" href="%(u)s">
+<title>PulseHawk, how we measure</title>
+<!--
+  Weiterleitung, gebaut von scripts/b2b_pages.py (WEITERLEITUNGEN). Nicht von
+  Hand aendern. Die Seite stammt aus der frueheren DAY-Serie und leitet seit
+  dem 27.10.2026 auf %(z)s weiter (Ben). Nicht in der sitemap.xml.
+-->
+</head>
+<body><a href="%(z)s">PulseHawk, how we measure</a></body>
+</html>
+""" % {"z": ziel, "u": url}
+
+
+def sitemap(S):
     zeilen = []
     for s in S:
         if s.get("noindex"):
             continue
         zeilen.append("  <url>\n    <loc>%s%s</loc>\n    <lastmod>%s</lastmod>\n  </url>"
                       % (SITE, s["pfad"], s.get("lastmod", STAND)))
-    for d in ALTE_SEITEN:
-        zeilen.append("  <url>\n    <loc>%s/%s</loc>\n    <lastmod>%s</lastmod>\n  </url>"
-                      % (SITE, d, alt_lastmod.get(d, STAND)))
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n%s\n</urlset>\n'
             % "\n".join(zeilen))
@@ -1683,21 +1680,6 @@ def llms(S):
     return "\n".join(teile)
 
 
-def alt_lastmod():
-    """letzter commit je alter seite, damit die sitemap nicht luegt."""
-    import subprocess
-    aus = {}
-    for d in ALTE_SEITEN:
-        try:
-            r = subprocess.run(["git", "log", "-1", "--format=%cs", "--", d], cwd=REPO,
-                               capture_output=True, text=True, timeout=20)
-            if r.stdout.strip():
-                aus[d] = r.stdout.strip()
-        except Exception:                                   # noqa: BLE001
-            pass
-    return aus
-
-
 def og_html(seite):
     return """<!DOCTYPE html><html><head><meta charset="utf-8"><style>{css}
 body{{width:1200px;height:630px;overflow:hidden;background:#080B0F;background-image:radial-gradient(ellipse 80% 70% at 85% 10%,rgba(73,234,203,.16),transparent 60%)}}
@@ -1733,7 +1715,18 @@ def main(argv):
             with open(pfad, "w", encoding="utf-8") as fh:
                 fh.write(render(s))
         with open(os.path.join(REPO, "sitemap.xml"), "w", encoding="utf-8") as fh:
-            fh.write(sitemap(S, alt_lastmod()))
+            fh.write(sitemap(S))
+        for d, ziel in sorted(WEITERLEITUNGEN.items()):
+            with open(os.path.join(REPO, d), "w", encoding="utf-8") as fh:
+                fh.write(weiterleitung_html(ziel))
+        # keine seite darf eine weitergeleitete adresse verlinken
+        for s_ in S:
+            roh = render(s_)
+            for d in WEITERLEITUNGEN:
+                for form in ('href="/%s"' % d, 'href="/%s"' % d[:-5], 'href="%s/%s"' % (SITE, d),
+                             'href="%s/%s"' % (SITE, d[:-5])):
+                    if form in roh:
+                        raise SystemExit("%s verlinkt %s" % (s_["datei"], form))
         with open(os.path.join(REPO, "robots.txt"), "w", encoding="utf-8") as fh:
             fh.write(ROBOTS)
         with open(os.path.join(REPO, "llms.txt"), "w", encoding="utf-8") as fh:

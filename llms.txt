@@ -20,7 +20,6 @@ Services and prices (net, plus VAT where it applies, invoiced in euro, as of Oct
 - [Zcash NU7 on testnet, block times measured](https://pulsehawk.io/zcash-nu7): Zcash testnet after NU7, block times measured independently from testnet headers. Mean 23.68 s vs 25 s over 49,203 blocks, p90, p99, longest gap.
 - [Kaspa network measurements](https://pulsehawk.io/cases/kaspa): Kaspa block rate and fees against new issuance, every number dated and marked as our own measurement or as a series we take over, with links to raw data.
 - [Request a measurement](https://pulsehawk.io/contact): Request an independent blockchain measurement. Tell us network, scope, timing and budget. We reply to each request by email within one business day.
-- [Archive](https://pulsehawk.io/archive): PulseHawk market data pages from 2026. Bitcoin cycle counts, drawdown, dominance, gold and stocks. Still online and still updated by the same scripts.
 
 ## Contact
 

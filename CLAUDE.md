@@ -41,5 +41,7 @@ was live ist. Bei Seiten gehört die Abnahme auf der echten URL dazu
 ## Seiten
 Die B2B-Seiten baut `scripts/b2b_pages.py`. Erzeugte HTML-Dateien werden
 nicht von Hand geändert: Der nächste Neubau würde die Änderung löschen.
-`scripts/b2b_check.py` prüft die Textregeln. Die alten Datenseiten gehören
-dem Seitenstempel (`scripts/stamp_pages.py`).
+`scripts/b2b_check.py` prüft die Textregeln. Die alten Bitcoin- und
+Marktseiten der früheren DAY-Serie und /archive leiten seit dem 27.10.2026 auf
+/method weiter (Weiterleitungsseiten aus `b2b_pages.py`, `WEITERLEITUNGEN`).
+Seitenstempel und DAY-N-Lauf sind stillgelegt.
