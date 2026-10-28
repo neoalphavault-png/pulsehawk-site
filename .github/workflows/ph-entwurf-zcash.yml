@@ -15,6 +15,13 @@
 #
 # Die Regelpruefung des Texts laeuft vor dem Senden; bei Verstoss bricht der
 # Lauf ab und nichts geht raus.
+#
+# Ben, 28.10.2026: Nach jedem gesendeten Entwurf eine Aufforderung nach
+# #moderator-only ("📤 VON HAND nächster Mi oder Do 17:45, X @pulsehawkio, ..."),
+# mit Posttext und dem Hinweis auf die Grafik im Entwurfspost. Secret
+# DISCORD_WEBHOOK_OPS, nur im Schritt, der sendet. Fehlt es, geht nichts raus
+# und das Job-Log sagt es. Testlaeufe auf ph/discord-entwurf und
+# workflow_dispatch mit probe schreiben die Aufforderung nur ins Job-Log.
 name: ph entwurf zcash
 
 on:
@@ -37,6 +44,11 @@ on:
         description: "auto, verteilung oder verlauf"
         required: false
         default: "auto"
+      probe:
+        description: "Probe, Aufforderung nicht an #moderator-only, nur ins Job-Log"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -64,6 +76,9 @@ jobs:
 
       - name: selbsttest regeln
         run: python3 scripts/ph/ph_entwurf.py --selbsttest
+
+      - name: selbsttest aufforderung
+        run: python3 scripts/ph/ops_melden.py --selbsttest
 
       - name: welche csv
         id: stand
@@ -112,6 +127,20 @@ jobs:
           set -eu
           python3 scripts/ph/ph_entwurf.py zcash --csv "$CSV" --layout "$LAYOUT" --aus entwurf --senden
           { echo "## Entwurf fuer @pulsehawkio"; echo '```'; cat entwurf/text.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      # Nur nach einem gesendeten Entwurf; scheitert er, laeuft dieser Schritt nicht.
+      - name: aufforderung an moderator-only
+        if: steps.stand.outputs.senden == 'ja'
+        env:
+          DISCORD_WEBHOOK_OPS: ${{ secrets.DISCORD_WEBHOOK_OPS }}
+          PROBE: ${{ (github.ref == 'refs/heads/ph/discord-entwurf' || inputs.probe) && 'ja' || 'nein' }}
+        run: |
+          set -eu
+          # derselbe dateiname wie im entwurfspost (ph_entwurf.senden)
+          GRAFIK=$(python3 -c 'import json; m = json.load(open("entwurf/meta.json")); print("pulsehawk-%s-%s.png" % (m["quelle"], m["layout"]))')
+          ARGS="--aufforderung zcash --post entwurf/text.txt --grafik $GRAFIK"
+          if [ "$PROBE" = "ja" ]; then ARGS="$ARGS --probe"; fi
+          python3 scripts/ph/ops_melden.py $ARGS
 
       - uses: actions/upload-artifact@v4
         if: steps.stand.outputs.senden == 'ja'
