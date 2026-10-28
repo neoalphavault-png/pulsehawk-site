@@ -1,27 +1,27 @@
 {
- "date": "2026-10-27",
+ "date": "2026-10-28",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "RNG",
+  "name": "RingCentral, Inc.",
+  "sector": "Information Technology",
+  "industry": "Application Software",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 7.4587,
-  "pct": 645.9,
-  "from_1000": 7459,
+  "mult": 2.8476,
+  "pct": 184.8,
+  "from_1000": 2848,
   "d": "2026-10-26",
-  "close": 198.85,
+  "close": 86.31,
   "d_1y": "2025-10-27",
-  "close_1y": 26.66,
-  "low": 22.36,
-  "high": 245.81,
-  "drawdown_pct": -16.1,
+  "close_1y": 30.31,
+  "low": 24.82,
+  "high": 86.31,
+  "drawdown_pct": -18.1,
   "verified": {
    "source": "tiingo",
-   "mult": 7.4587,
-   "diff_pct": 0
+   "mult": 2.8242,
+   "diff_pct": 0.82
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 11.7,
-   "d": "2026-10-26",
+   "pct": 12.3,
+   "d": "2026-10-27",
    "d_1y": "2025-10-27"
   },
   "gold": {
-   "pct": 0.2,
-   "d": "2026-10-26",
+   "pct": 1.4,
+   "d": "2026-10-27",
    "d_1y": "2025-10-27"
   }
  },
- "candidates_total": 45,
+ "candidates_total": 48,
  "top10": [
   {
    "ticker": "MRNA",
@@ -86,6 +86,23 @@
    "mult": 2.7009
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (4.59%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (5.88%)"
+  },
+  {
+   "ticker": "MXL",
+   "reason": "quellen weichen ab (29.41%)"
+  },
+  {
+   "ticker": "DELL",
+   "reason": "quellen weichen ab (7.47%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
