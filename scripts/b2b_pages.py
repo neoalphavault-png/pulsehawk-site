@@ -668,7 +668,8 @@ def tempo_fenster(v):
 
 
 def zahl1(x):
-    """75.34 bleibt 75.34, 17.0 bleibt 17.0, ganze zahlen mit tausenderkomma."""
+    """75.34 bleibt 75.34, 17.0 bleibt 17.0, ganze zahlen mit tausenderkomma.
+    mediane kommen als float, damit 53 neben 52.0 als 53.0 steht (stand 28.10.)."""
     if not isinstance(x, float):
         return betrag(x)
     t = ("%.2f" % x).rstrip("0")
@@ -692,9 +693,9 @@ def zcash_mainnet_teile(st):
         if erster:
             zeilen.append(("NU7 activated on mainnet", utc_lang(erster).split(",")[0],
                            "counted, block 3,543,405 at %s" % utc_lang(erster)))
-        zeilen.append(("Mainnet after NU7, median interval", "%s s" % zahl1(g["median_s"]),
+        zeilen.append(("Mainnet after NU7, median interval", "%s s" % zahl1(float(g["median_s"])),
                        "counted over %s intervals up to %s, computed %s s for an ideal 25 s chain"
-                       % (betrag(n), utc_lang(bis), zahl1(b["median_s"]))))
+                       % (betrag(n), utc_lang(bis), zahl1(float(b["median_s"])))))
         e = st.get("einpendeln") or {}
         pendel = ""
         if e.get("eingependelt_ab_block"):
@@ -717,15 +718,15 @@ def zcash_mainnet_teile(st):
 </tbody></table></div>
 <p class="src">Our own header client, Zcash mainnet, blocks %s to %s, stand %s.</p>
 </section>""" % (("The first NU7 block came at %s." % utc_lang(erster)) if erster else "",
-                 utc_lang(bis), betrag(n), zahl1(g["mittel_s"]), zahl1(g["median_s"]), zahl1(b["median_s"]),
-                 pendel, zahl1(g["mittel_s"]), zahl1(g["median_s"]), zahl1(b["median_s"]),
+                 utc_lang(bis), betrag(n), zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(float(b["median_s"])),
+                 pendel, zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(float(b["median_s"])),
                  zahl1(g["p90_s"]), zahl1(b["p90_s"]), zahl1(g["p99_s"]), zahl1(b["p99_s"]),
                  betrag(g["laengste_luecke_s"]), betrag(b["laengste_luecke_s"]),
                  betrag(nach["bereich"]["von_hoehe"]), betrag(nach["bereich"]["bis_hoehe"]), stand_text)
         faq_akt = ("It activated at block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. "
                    "We counted that block at %s." % utc_lang(erster)) if erster else None
         faq_zeit = (" On mainnet after NU7 we counted a median of %s s over %s intervals up to %s."
-                    % (zahl1(g["median_s"]), betrag(n), utc_lang(bis)))
+                    % (zahl1(float(g["median_s"])), betrag(n), utc_lang(bis)))
     elif v:
         zeilen.append(("Our forecast for block 3,543,405", "around %s" % utc_lang(v["median_utc"]).split(",")[0],
                        "computed from our counted pace, median %s, 90%% band %s to %s, stand %s"
@@ -763,8 +764,8 @@ def zcash_mainnet_teile(st):
 </tbody></table></div>
 <p class="src">Our own header client, Zcash mainnet, blocks %s to %s, stand %s.</p>
 </section>""" % (lang(st["bereich"]["von_utc"][:10]), lang(st["bereich"]["bis_utc"][:10]), betrag(vor["abstaende"]),
-                 zahl1(g["mittel_s"]), zahl1(g["median_s"]), zahl1(g["mittel_s"]), zahl1(g["median_s"]),
-                 zahl1(b["median_s"]), zahl1(g["p90_s"]), zahl1(b["p90_s"]), zahl1(g["p99_s"]), zahl1(b["p99_s"]),
+                 zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(g["mittel_s"]), zahl1(float(g["median_s"])),
+                 zahl1(float(b["median_s"])), zahl1(g["p90_s"]), zahl1(b["p90_s"]), zahl1(g["p99_s"]), zahl1(b["p99_s"]),
                  betrag(g["laengste_luecke_s"]), betrag(b["laengste_luecke_s"]),
                  betrag(vor["bereich"]["von_hoehe"]), betrag(vor["bereich"]["bis_hoehe"]), stand_text)
     fakten = ('<section id="in-short" class="facts"><h2>Zcash NU7 in short</h2><dl>%s</dl></section>'
