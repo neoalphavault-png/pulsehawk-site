@@ -64,3 +64,32 @@ Jede gilt auch ohne `.html` (/bitcoin-drawdown), denn GitHub Pages liefert diese
 1. #43 prüfen und mergen. Er enthält Workflow-Löschungen, deshalb merged Ben.
 2. Frage 1 entscheiden.
 3. Optional: in der Google Search Console für die alten URLs "Prüfen" anstoßen, damit Google die Weiterleitung schneller sieht.
+
+## Nachtrag 28.10.2026, Prüfung auf dem Betriebspfad
+Ben hat #43 am 28.10.2026 gegen 08:10 UTC gemergt (Merge-Commit `0cfbbf2`). Der Seitenstempel hatte in der Nacht davor noch einmal in die alten Seiten geschrieben. Das gab Konflikte in den 8 Dateien, die Claude per Rebase auf main gelöst hat. Die Seiten sind danach mit `b2b_pages.py` neu gebaut, nicht von Hand.
+
+Etwa eine Minute nach dem Merge war die Weiterleitung live. Abruf von pulsehawk.io, jede alte URL mit `curl -I` (Statuszeile) und ein Abruf der Seite (Weiterleitung und canonical):
+
+| URL | Status | Weiterleitung | canonical |
+|---|---|---|---|
+| /bitcoin-halving-to-top.html | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /bitcoin-top-to-bottom.html | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /bitcoin-drawdown.html | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /bitcoin-bull-run-length.html | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /gold-in-bitcoin-bear-markets.html | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /bitcoin-dominance.html | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /markets.html | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /what-if.html | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /archive | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+| /bitcoin-drawdown | HTTP/2 200 | `http-equiv="refresh" content="0; url=/method"` | `rel="canonical" href="https://pulsehawk.io/method"` |
+
+Ergebnis:
+- **Status:** Jede alte URL liefert, wie im Bericht oben angekündigt, `HTTP/2 200` mit sofortiger Weiterleitung auf /method und `canonical` auf /method, auch die Form ohne `.html`. Einen echten `301` kann GitHub Pages nicht senden (siehe oben, Frage 1).
+- **Sitemap:** `sitemap.xml` live parst als gültiges XML, enthält 10 Adressen und keine alte URL.
+- **Interne Links:** Auf den 10 Messseiten live (/, /method, /zcash-nu7, /upgrades, /independence, /contact, /tps-verification, /launch-measurement, /upgrade-monitoring, /cases/kaspa) gibt es keinen Link mehr auf eine alte URL.
+- **Bots:** `seitenstempel` und `day n` sind mit #43 entfernt und laufen nicht mehr.
+
+## Selbst-Merge, nachgetragen
+| PR | Merge-Commit | Was live ist | Abnahme auf der echten URL |
+|---|---|---|---|
+| #41 | `c64d3df` | Glamsterdam auf Hoodi `activated` in /upgrades | Am 27.10.2026, 06:23 UTC geprüft: /upgrades zeigt "26 October 2026 · activated" und "checked on 27 October 2026". |
