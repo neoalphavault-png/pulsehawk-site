@@ -86,3 +86,10 @@ Die Grafik (pulsehawk-zcash-verteilung.png) hängt im #ph-entwuerfe-Post von heu
    - **Was die Probe tut:** Der Entwurf geht dabei wie immer nach #ph-entwuerfe. Die Aufforderung steht nur im Job-Log.
    - **Danach:** Der erste echte Lauf ist Mo 2.11.
 4. Fragen 1 bis 3 beantworten.
+
+## Nachtrag 28.10.2026, nach dem Merge
+- **Merge:** Ben hat #45 am 28.10.2026 um 11:03 UTC gemergt (Merge-Commit `b3c5b3a`).
+- **Lauf auf main:** Der Merge hat "ph entwurf zcash" einmal auf main gestartet, Lauf Nr. 5.
+  - **Selbsttests:** `selbsttest regeln` und der neue Schritt `selbsttest aufforderung` sind grün.
+  - **Kein Versand:** Der Merge brachte keine neue CSV, also gab es keinen Entwurf und keine Aufforderung. Nichts ging nach #ph-entwuerfe oder #moderator-only.
+- **Probe des Kalenders:** Die Probe mit `heute` 2026-11-02 und `probe` ist noch nicht gelaufen, weil sie einen echten Entwurf nach #ph-entwuerfe schickt. Sie läuft erst auf Bens Ja. Sonst ist der erste echte Lauf am Mo 2.11.
