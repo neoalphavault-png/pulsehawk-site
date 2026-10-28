@@ -80,6 +80,7 @@ Ganze Seite: [1440 px](2026-10-29-seo-zcash-nu7/zcash-nu7-1440.jpg), [390 px](20
 | PR | Merge-Commit | Was live ist | Abnahme auf der echten URL |
 |---|---|---|---|
 | #44 | `0ddfdd2` | Nur ein Bericht (Live-Prüfung der Weiterleitungen aus #43), keine Seite | entfällt, keine Seite geändert |
+| #42 | `6d2f439` | /zcash-nu7 mit neuem Title und H1, Fakt-Block, Mainnet-Prognose aus dem Stand vom 28.10., FAQ und Schemas | Am 28.10.2026, 12:43 UTC geprüft, siehe Nachtrag unten |
 
 ## Offene Fragen an Ben
 1. **"Kurznotiz vom 6.11.":** Ich verstehe darunter den ersten Stand mit `nach_nu7`, den `zcash-mainnet.yml` als "kurznotiz nach nu7" schreibt. Stimmt das?
@@ -89,3 +90,22 @@ Ganze Seite: [1440 px](2026-10-29-seo-zcash-nu7/zcash-nu7-1440.jpg), [390 px](20
 ## Was Ben tun muss
 1. Nach dem Merge Googles Rich Results Test mit der URL https://pulsehawk.io/zcash-nu7 laufen lassen.
 2. Frage 1 und 3 beantworten.
+
+## Nachtrag 28.10.2026, Abnahme auf pulsehawk.io
+Claude hat #42 am 28.10.2026 um 12:42 UTC per Squash gemergt (Merge-Commit `6d2f439`). Alle Checks waren grün, und der Branch lag auf dem aktuellen main. Etwa eine Minute später war die Seite live. Abruf von https://pulsehawk.io/zcash-nu7:
+
+- **Status, Title, H1:**
+  - `HTTP 200`;
+  - Title "Zcash NU7 block times, expected vs counted | PulseHawk";
+  - H1 "Zcash NU7 block times, expected and counted".
+- **Fakt-Block:** "Zcash NU7 in short" ist da, mit Prognose "around 6 November 2026", Median 02:26 UTC und "stand 28 October 2026".
+- **Neue Abschnitte:**
+  - "When does NU7 reach Zcash mainnet?";
+  - "What is the Zcash block time before NU7?", mit Median 53.0 s in der Tabelle.
+- **FAQPage:** 4 Fragen, wörtlich die vorgegebenen.
+- **Article und Dataset:**
+  - Article: `dateModified` 2026-10-28.
+  - Dataset: `temporalCoverage` 2026-10-04T18:21:45Z/2026-10-18T05:59:48Z.
+- **Sitemap:** /zcash-nu7 hat `lastmod` 2026-10-28.
+
+Offen bleibt der Rich Results Test von Google auf der Live-URL. Er ist aus der Claude-Umgebung nicht erreichbar, den macht Ben.
