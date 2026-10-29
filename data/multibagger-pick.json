@@ -1,108 +1,91 @@
 {
- "date": "2026-10-28",
+ "date": "2026-10-29",
  "pick": {
-  "ticker": "RNG",
-  "name": "RingCentral, Inc.",
-  "sector": "Information Technology",
-  "industry": "Application Software",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
-   "sp600"
+   "sp500"
   ],
-  "mult": 2.8476,
-  "pct": 184.8,
-  "from_1000": 2848,
-  "d": "2026-10-26",
-  "close": 86.31,
-  "d_1y": "2025-10-27",
-  "close_1y": 30.31,
-  "low": 24.82,
-  "high": 86.31,
-  "drawdown_pct": -18.1,
+  "mult": 8.4483,
+  "pct": 744.8,
+  "from_1000": 8448,
+  "d": "2026-10-28",
+  "close": 214.165,
+  "d_1y": "2025-10-28",
+  "close_1y": 25.35,
+  "low": 22.36,
+  "high": 245.81,
+  "drawdown_pct": -11.8,
   "verified": {
    "source": "tiingo",
-   "mult": 2.8242,
-   "diff_pct": 0.82
+   "mult": 8.4483,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 20,
-  "sp500_tripled": 4
+  "sp500_doubled": 22,
+  "sp500_tripled": 5
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 12.3,
-   "d": "2026-10-27",
-   "d_1y": "2025-10-27"
+   "pct": 12.4,
+   "d": "2026-10-28",
+   "d_1y": "2025-10-28"
   },
   "gold": {
-   "pct": 1.4,
-   "d": "2026-10-27",
-   "d_1y": "2025-10-27"
+   "pct": 2.5,
+   "d": "2026-10-28",
+   "d_1y": "2025-10-28"
   }
  },
- "candidates_total": 48,
+ "candidates_total": 51,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 7.4587
-  },
-  {
-   "ticker": "LITE",
-   "mult": 4.2214
+   "mult": 8.4483
   },
   {
    "ticker": "MXL",
-   "mult": 3.6221
+   "mult": 4.7647
+  },
+  {
+   "ticker": "LITE",
+   "mult": 4.6068
+  },
+  {
+   "ticker": "STX",
+   "mult": 3.1299
   },
   {
    "ticker": "DELL",
-   "mult": 2.8799
+   "mult": 2.9948
+  },
+  {
+   "ticker": "ILMN",
+   "mult": 2.9529
+  },
+  {
+   "ticker": "MRVL",
+   "mult": 2.8448
+  },
+  {
+   "ticker": "VSTS",
+   "mult": 2.8346
   },
   {
    "ticker": "RNG",
-   "mult": 2.8476
+   "mult": 2.8281
   },
   {
    "ticker": "WDC",
    "mult": 2.8115
-  },
-  {
-   "ticker": "STX",
-   "mult": 2.797
-  },
-  {
-   "ticker": "VSTS",
-   "mult": 2.791
-  },
-  {
-   "ticker": "VSXY",
-   "mult": 2.7233
-  },
-  {
-   "ticker": "ILMN",
-   "mult": 2.7009
   }
  ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (4.59%)"
-  },
-  {
-   "ticker": "LITE",
-   "reason": "quellen weichen ab (5.88%)"
-  },
-  {
-   "ticker": "MXL",
-   "reason": "quellen weichen ab (29.41%)"
-  },
-  {
-   "ticker": "DELL",
-   "reason": "quellen weichen ab (7.47%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
