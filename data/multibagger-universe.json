@@ -1,5 +1,5 @@
 {
- "date": "2026-10-22",
+ "date": "2026-10-30",
  "count": 1503,
  "rows": [
   {
@@ -3753,21 +3753,21 @@
    ]
   },
   {
-   "ticker": "PEG",
-   "name": "Public Service Enterprise Group",
-   "wiki": null,
-   "sector": "Utilities",
-   "industry": "Electric Utilities",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
    "ticker": "PTC",
    "name": "PTC Inc.",
    "wiki": null,
    "sector": "Information Technology",
    "industry": "Application Software",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
+   "ticker": "PEG",
+   "name": "Public Service Enterprise Group",
+   "wiki": null,
+   "sector": "Utilities",
+   "industry": "Electric Utilities",
    "indices": [
     "sp500"
    ]
@@ -3793,11 +3793,11 @@
    ]
   },
   {
-   "ticker": "PWR",
-   "name": "Quanta Services",
+   "ticker": "Q",
+   "name": "Qnity Electronics",
    "wiki": null,
-   "sector": "Industrials",
-   "industry": "Construction & Engineering",
+   "sector": "Information Technology",
+   "industry": "Semiconductor Materials & Equipment",
    "indices": [
     "sp500"
    ]
@@ -3813,21 +3813,21 @@
    ]
   },
   {
-   "ticker": "DGX",
-   "name": "Quest Diagnostics",
+   "ticker": "PWR",
+   "name": "Quanta Services",
    "wiki": null,
-   "sector": "Health Care",
-   "industry": "Health Care Services",
+   "sector": "Industrials",
+   "industry": "Construction & Engineering",
    "indices": [
     "sp500"
    ]
   },
   {
-   "ticker": "Q",
-   "name": "Qnity Electronics",
+   "ticker": "DGX",
+   "name": "Quest Diagnostics",
    "wiki": null,
-   "sector": "Information Technology",
-   "industry": "Semiconductor Materials & Equipment",
+   "sector": "Health Care",
+   "industry": "Health Care Services",
    "indices": [
     "sp500"
    ]
@@ -3858,16 +3858,6 @@
    "wiki": null,
    "sector": "Communication Services",
    "industry": "Interactive Media & Services",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
-   "ticker": "RTX",
-   "name": "RTX Corporation",
-   "wiki": null,
-   "sector": "Industrials",
-   "industry": "Aerospace & Defense",
    "indices": [
     "sp500"
    ]
@@ -4003,6 +3993,16 @@
    ]
   },
   {
+   "ticker": "RTX",
+   "name": "RTX Corporation",
+   "wiki": null,
+   "sector": "Industrials",
+   "industry": "Aerospace & Defense",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
    "ticker": "SPGI",
    "name": "S&P Global",
    "wiki": null,
@@ -4104,7 +4104,7 @@
   },
   {
    "ticker": "SKYD",
-   "name": "Skydance Corporation",
+   "name": "Skydance",
    "wiki": null,
    "sector": "Communication Services",
    "industry": "Movies & Entertainment",
