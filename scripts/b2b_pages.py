@@ -1732,6 +1732,90 @@ def seiten():
         crumbs=[("Kaspa", "/cases/kaspa")],
     ))
 
+    # 9b alexandria, fallseite (Ben, 1.11.2026). Freigabe des Kunden per X-DM am
+    # 1.11.2026: Befunde vom 12.10.2026 als unabhaengig beobachtet, jeder Befund
+    # datiert, Entwicklungsstand des Teams getrennt von unseren Pruefungen, Hinweis
+    # dass AP-0031 noch nicht verankert ist. Keine Preise, keine Rechnungs- oder
+    # Firmendaten, keine Adressen, keine internen IDs ausser den AP-Nummern.
+    def befunde(xs):
+        return '<ul class="list">%s</ul>' % "".join("<li><b>%s</b> %s</li>" % x for x in xs)
+    alx_fakten = "".join(
+        '<div><dt>%s</dt><dd class="fv">%s</dd><dd class="fq">%s</dd></div>' % z for z in (
+            ("Reviewed", "7 to 16 October 2026", "technical and usability review"),
+            ("Findings as of", "12 October 2026", "each finding below carries this date"),
+            ("Published", "with the client's consent", "consent given on 1 November 2026"),
+            ("Anchoring of AP-0031", "not anchored", "as of 1 November 2026, see the last section"),
+        ))
+    S.append(dict(
+        datei="cases/alexandria.html", pfad="/cases/alexandria", og="alexandria", lastmod="2026-11-01",
+        css=ZCASH_FACTS_CSS,
+        title="The Alexandria Protocol, independent review | PulseHawk",
+        desc=("Independent technical and usability review of the Alexandria Protocol, "
+              "7 to 16 October 2026. Every finding is dated and kept apart from team reports."),
+        h1="The Alexandria Protocol, independent technical and usability review",
+        lead=("We reviewed the Alexandria Protocol from 7 to 16 October 2026. The findings "
+              "below are as of 12 October 2026, observed independently by PulseHawk and "
+              "published with the client's consent. What we checked ourselves stays apart "
+              "from what the team reports about its progress since."),
+        body="""
+<section id="in-short" class="facts"><h2>The review in short</h2><dl>%s</dl></section>
+<section id="scope"><h2>What did we review?</h2>
+<p>We worked from four sources.</p>
+<ul class="list">
+<li>The reviewer brief from the Alexandria team, with the hashes it names for AP-0030 and AP-0031.</li>
+<li>The two records AP-0030 and AP-0031.</li>
+<li>The public walkthrough video of 10 October 2026.</li>
+<li>The public app, which we used on 12 October 2026.</li>
+</ul>
+</section>
+<section id="confirmed"><h2>What did we confirm on 12 October 2026?</h2>
+%s
+<p class="src">Checked by PulseHawk on 12 October 2026, in the public app and with the files we downloaded that day.</p>
+</section>
+<section id="open"><h2>What was still open on 12 October 2026?</h2>
+%s
+<p class="src">Observed by PulseHawk on 12 October 2026. Points the team may have changed since are not checked again on this page.</p>
+</section>
+<section id="team-update"><h2>Where does the project stand, according to the team?</h2>
+<p>On 1 November 2026 Kas Knight told us, for the Alexandria team, that a first anchoring path on the Kaspa testnet TN10 has been tested. There is no anchoring transaction on the chain yet.</p>
+<p>This is the team's statement, and we have not checked it. We will check the first anchor independently as soon as it is on the chain, and date that check here.</p>
+<p class="src">Statement of the Alexandria team, 1 November 2026, not checked by PulseHawk.</p>
+</section>
+<section id="anchoring"><h2>Is AP-0031 anchored?</h2>
+<p>No. As of 1 November 2026, the date of this page, AP-0031 is not anchored. Until a record is anchored, trust in it rests with the operator.</p>
+</section>
+<p>%s.</p>
+<p class="cta">%s</p>
+""" % (alx_fakten,
+       befunde([
+           ("Downloads match the brief.",
+            "AP-0030 and AP-0031, downloaded on 12 October 2026, matched the hashes in the reviewer brief byte for byte."),
+           ("Hashing stays on the device.",
+            "The app hashes a file locally in the browser, and the file does not leave the device. Checked 12 October 2026."),
+           ("New versions are clean.",
+            "A new version creates v2 cleanly, and v1 stays unchanged. Checked 12 October 2026."),
+           ("No fork at the same place.",
+            "A second version at the same place is blocked, so a record does not fork. Checked 12 October 2026."),
+       ]),
+       befunde([
+           ("Same file, new title.",
+            "The same file with a different title was accepted as a new original entry, without a warning. Observed 12 October 2026."),
+           ("The operator is the trust anchor.",
+            "Until a record is anchored, trust rests with the operator of the service. Observed 12 October 2026."),
+           ("ALX-KASPA-1 is not specified in public.",
+            "There was no published specification and no test vector for ALX-KASPA-1. Observed 12 October 2026."),
+           ("Anchoring for entries of others.",
+            "The app offered to anchor entries that other people had created. Observed 12 October 2026."),
+           ("Archive standards and a second store.",
+            "The archive standards followed and a second storage location were not named. Observed 12 October 2026."),
+       ]),
+       a("/independence", "How we keep reviews independent"),
+       contact_button("Request a review")),
+        faqs=[],
+        schema=["ARTICLE:2026-11-01:2026-11-01"],
+        crumbs=[("Alexandria", "/cases/alexandria")],
+    ))
+
     # 10 contact
     c_faq = [
         ("What happens after I send the form?",
