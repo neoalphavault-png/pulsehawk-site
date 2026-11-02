@@ -40,7 +40,7 @@ Die Seite ist **pulsehawk.io/cases/alexandria**. Unter `/cases/alexandria.html` 
    - ALX-KASPA-1 ohne veröffentlichte Spezifikation und Testvektor;
    - Ankern war für fremde Einträge angeboten;
    - Archivstandards und zweiter Speicher nicht benannt.
-5. **"Where does the project stand, according to the team?"**
+5. **"How far has the project come, according to the team?"**
    - **Inhalt:** Kas Knight am 1.11.2026 für das Team: erster Ankerpfad auf TN10 getestet, noch keine Transaktion auf der Kette.
    - **Markierung:** ausdrücklich als Aussage des Teams, "not checked by PulseHawk".
    - **Zusage:** Wir prüfen den ersten Anker unabhängig, sobald er auf der Kette ist.
@@ -63,6 +63,7 @@ ALX-KASPA-1 steht drin, weil es im Auftrag als Name des Ankerverfahrens genannt 
 
 ## Prüfungen
 - **Textregeln:** `b2b_check` 0 von 13 Seiten mit Fund.
+  - **Nachtrag 2.11.2026:** Seit #48 meldet `b2b_check` das Wort "stand". Die Überschrift von Abschnitt 5 hieß zuerst "Where does the project stand, according to the team?" und heißt jetzt "How far has the project come, according to the team?". Der Branch liegt auf dem aktuellen main, die Seite ist neu gebaut, die Screenshots sind neu.
   - **Verbotene Wörter:** "audit", "reviewed by" und "live" stehen nicht im Text, auch "Live-App" nicht. Sie heißt auf der Seite "the public app".
   - **Satzzeichen und Zahlen:** keine Doppelpunkte, Striche, Pfeile, Preise oder Sätze, die mit einer Ziffer beginnen. Die Description hat 149 Zeichen.
 - **Screenshots:** 390 und 1440 px, kein waagerechtes Scrollen. Die Listen stehen im Textrand.

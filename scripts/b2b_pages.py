@@ -1776,7 +1776,7 @@ def seiten():
 %s
 <p class="src">Observed by PulseHawk on 12 October 2026. Points the team may have changed since are not checked again on this page.</p>
 </section>
-<section id="team-update"><h2>Where does the project stand, according to the team?</h2>
+<section id="team-update"><h2>How far has the project come, according to the team?</h2>
 <p>On 1 November 2026 Kas Knight told us, for the Alexandria team, that a first anchoring path on the Kaspa testnet TN10 has been tested. There is no anchoring transaction on the chain yet.</p>
 <p>This is the team's statement, and we have not checked it. We will check the first anchor independently as soon as it is on the chain, and date that check here.</p>
 <p class="src">Statement of the Alexandria team, 1 November 2026, not checked by PulseHawk.</p>
