@@ -211,10 +211,22 @@ def service_schema(name, pfad, desc, k):
                        "availability": "https://schema.org/InStock"}}
 
 
+# Uhrzeit und Zeitzone fuer datePublished und dateModified im Schema, sonst meldet
+# Googles Rich Results Test "ungueltiger Datum/Uhrzeit-Wert" und "Zeitzone fehlt"
+# (Ben, 2.11.2026). Die Uhrzeit ist fest, das Datum bleibt der Text- oder Datenstand.
+SCHEMA_UHRZEIT = "T06:00:00+00:00"
+
+
+def schema_zeit(datum):
+    """'2026-10-28' -> '2026-10-28T06:00:00+00:00'."""
+    datetime.date.fromisoformat(datum)
+    return datum + SCHEMA_UHRZEIT
+
+
 def article_schema(seite, published, modified):
     return {"@type": "Article", "headline": seite["h1"], "description": seite["desc"],
-            "url": SITE + seite["pfad"], "datePublished": published,
-            "dateModified": modified, "inLanguage": "en",
+            "url": SITE + seite["pfad"], "datePublished": schema_zeit(published),
+            "dateModified": schema_zeit(modified), "inLanguage": "en",
             "author": {"@id": ORG_ID}, "publisher": {"@id": ORG_ID},
             "image": SITE + "/og/%s.png" % seite["og"]}
 
@@ -1283,9 +1295,9 @@ def seiten():
             "creator": {"@id": ORG_ID},
             "isAccessibleForFree": True,
             "license": "https://creativecommons.org/licenses/by/4.0/",
-            "datePublished": "2026-10-18",
+            "datePublished": schema_zeit("2026-10-18"),
             "temporalCoverage": "2026-10-04T18:21:45Z/2026-10-18T05:59:48Z",
-            "dateModified": "2026-10-18",
+            "dateModified": schema_zeit("2026-10-18"),
             "measurementTechnique": ("Own header client fetching headers directly from testnet "
                                      "peers over P2P, hash linkage and proof of work checked, "
                                      "timestamps of consecutive blocks, 500 hashes compared "
