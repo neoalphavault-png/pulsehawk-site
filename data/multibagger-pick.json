@@ -1,5 +1,5 @@
 {
- "date": "2026-11-01",
+ "date": "2026-11-02",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -28,7 +28,7 @@
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 16,
+  "sp500_doubled": 15,
   "sp500_tripled": 4
  },
  "benchmarks": {
@@ -43,7 +43,7 @@
    "d_1y": "2025-10-30"
   }
  },
- "candidates_total": 52,
+ "candidates_total": 49,
  "top10": [
   {
    "ticker": "MRNA",
@@ -56,10 +56,6 @@
   {
    "ticker": "LITE",
    "mult": 4.2008
-  },
-  {
-   "ticker": "GKOS",
-   "mult": 3.1454
   },
   {
    "ticker": "VSTS",
@@ -78,12 +74,16 @@
    "mult": 2.7291
   },
   {
+   "ticker": "GKOS",
+   "mult": 2.7062
+  },
+  {
    "ticker": "WDC",
    "mult": 2.6505
   },
   {
    "ticker": "DELL",
-   "mult": 2.6352
+   "mult": 2.5736
   }
  ],
  "rejected": [],
