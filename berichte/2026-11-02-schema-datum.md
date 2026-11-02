@@ -30,3 +30,16 @@ Die Fallseite Alexandria (#47) nutzt dieselbe Funktion. Nach dem Merge hier baue
 
 ## Was Ben tun muss
 1. Den Rich Results Test wiederholen (Frage 1).
+
+## Selbst-Merge
+| PR | Kopf beim Merge | Merge-Commit | Was live ist | Abnahme auf der echten URL |
+|---|---|---|---|---|
+| #50 | `6ef9f31` | `a73dbd5` | Schema-Datum mit Uhrzeit und Zeitzone auf /zcash-nu7, /upgrades und /cases/kaspa | Am 2.11.2026 um 08:11 UTC geprüft, kurz nach dem Merge |
+
+Abruf auf pulsehawk.io, JSON-LD:
+- **/zcash-nu7, Article:** 2026-10-18T06:00:00+00:00 und 2026-10-28T06:00:00+00:00.
+- **/zcash-nu7, Dataset:** 2026-10-18T06:00:00+00:00 und 2026-10-18T06:00:00+00:00.
+- **/upgrades, Article:** 2026-10-16T06:00:00+00:00 und 2026-10-27T06:00:00+00:00.
+- **/cases/kaspa, Article:** 2026-10-16T06:00:00+00:00 und 2026-10-16T06:00:00+00:00.
+
+**#47 (Alexandria)** ist auf den neuen main gesetzt und neu gebaut (Kopf `164e54f`). Dort steht jetzt `2026-11-01T06:00:00+00:00`.
