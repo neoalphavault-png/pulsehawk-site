@@ -45,3 +45,16 @@ Die Überschrift "Where does the project stand, according to the team?" enthält
 
 ## Was Ben tun muss
 Nichts. Claude mergt selbst nach der Regel und prüft die Live-URL.
+
+## Selbst-Merge
+| PR | Kopf beim Merge | Merge-Commit | Was live ist | Abnahme auf der echten URL |
+|---|---|---|---|---|
+| #48 | `1952984` | `6de4e65` | /zcash-nu7 mit "as of 28 October 2026" statt "stand" | Am 2.11.2026 um 07:34 UTC geprüft, eine Minute nach dem Merge |
+
+Abruf von https://pulsehawk.io/zcash-nu7:
+- **"as of 28 October 2026":** 3-mal, an den drei Stellen von vorher.
+- **"stand":** kein einziges Mal im sichtbaren Text.
+- **Quellenzeilen:**
+  - "Our own header client, Zcash mainnet, as of 28 October 2026."
+  - "Our own header client, Zcash mainnet, blocks 3,489,718 to 3,533,510, as of 28 October 2026."
+- **Article:** `dateModified` unverändert 2026-10-28, wie der Stand.
