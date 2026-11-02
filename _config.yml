@@ -9,3 +9,6 @@ exclude:
   - CLAUDE.md
   - .claude
   - .taste-skill
+# Die Anleitung fuer die Report-Daten ist fuer Sitzungen auf GitHub, nicht
+# fuer die Website (Ben, 2.11.2026).
+  - data/reports/README.md

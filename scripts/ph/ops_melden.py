@@ -8,8 +8,8 @@ in #ph-entwuerfe allein reicht nicht: Zu jedem Entwurf kommt eine
 Aufforderung nach #moderator-only, die mit "📤 VON HAND" beginnt und Uhrzeit,
 Plattform, direkten Link und alles zum Kopieren nennt.
 
-Kleine Schwester von scripts/ops_melden.py in kaspa-pulse, hier nur mit der
-Art "hand". Der Webhook kommt nur aus der Umgebung, DISCORD_WEBHOOK_OPS
+Kleine Schwester von scripts/ops_melden.py in kaspa-pulse, mit den Arten
+"hand" und "log" (#ops-log, Secret DISCORD_WEBHOOK_LOG, seit 2.11.2026). Der Webhook kommt nur aus der Umgebung, DISCORD_WEBHOOK_OPS
 (GitHub Secret), und erscheint nie in einer Ausgabe. Fehlt das Secret, geht
 nichts raus, die Aufforderung steht dann nur im Job-Log.
 
@@ -33,8 +33,11 @@ from pathlib import Path
 
 HIER = Path(__file__).resolve().parent
 VON_HAND = "📤 VON HAND"
-ARTEN = {"hand": "DISCORD_WEBHOOK_OPS"}
-KANAL = {"hand": "#moderator-only"}
+# log: Meldungen ohne Handlungsbedarf fuer Ben, etwa ein abgebrochener
+# Upgrade-Report (Ben, 2.11.2026). Fehlt DISCORD_WEBHOOK_LOG, geht eine
+# Log-Meldung nie nach #moderator-only, sie steht dann nur im Job-Log.
+ARTEN = {"hand": "DISCORD_WEBHOOK_OPS", "log": "DISCORD_WEBHOOK_LOG"}
+KANAL = {"hand": "#moderator-only", "log": "#ops-log"}
 GRENZE = 1990
 UA = "pulsehawk-ops"
 WEBHOOK = re.compile(r"https?://(?:\w+\.)?discord(?:app)?\.com/api/webhooks/\S+", re.I)
@@ -106,9 +109,9 @@ def aufforderung(zeit, post, antwort="", grafik="", pruefe=None, pruefe_antwort=
 
 def _text_fuer(art, text):
     if art not in ARTEN:
-        raise Fehler("unbekannte art %r, erlaubt hand" % art)
+        raise Fehler("unbekannte art %r, erlaubt hand oder log" % art)
     t = sauber(text).strip()
-    if not t.startswith(VON_HAND):
+    if art == "hand" and not t.startswith(VON_HAND):
         t = VON_HAND + "\n" + t
     return t[:GRENZE]
 
@@ -149,6 +152,10 @@ def hand(text, was="aufforderung", probe=False):
     return senden("hand", text, was, probe)
 
 
+def log(text, was="meldung", probe=False):
+    return senden("log", text, was, probe)
+
+
 def zusammenfassung(text):
     """Die Aufforderung auch in die Zusammenfassung des Laufs, wenn es eine gibt."""
     ziel = os.environ.get("GITHUB_STEP_SUMMARY")
@@ -166,6 +173,7 @@ def selbsttest():
             f.append(name)
 
     alt = os.environ.get("DISCORD_WEBHOOK_OPS")
+    alt_log = os.environ.get("DISCORD_WEBHOOK_LOG")
     gesendet = []
     global _post
     echt = _post
@@ -227,8 +235,17 @@ def selbsttest():
         ok("probe sendet nichts", hand(a, probe=True) is None and len(gesendet) == n)
         del os.environ["DISCORD_WEBHOOK_OPS"]
         ok("ohne secret nichts gesendet, nur job-log", hand(a) is None and len(gesendet) == n)
+        os.environ["DISCORD_WEBHOOK_OPS"] = basis + "1/hand-test"
+        os.environ["DISCORD_WEBHOOK_LOG"] = basis + "2/log-test"
+        ok("log geht an den log-webhook", log("report abgebrochen") == 204
+           and gesendet[-1][0].endswith("log-test"))
+        ok("log ohne von-hand-kopf", not json.loads(gesendet[-1][1])["content"].startswith(VON_HAND))
+        n = len(gesendet)
+        del os.environ["DISCORD_WEBHOOK_LOG"]
+        ok("ohne log-secret nichts gesendet, auch nicht an ops", log("x") is None and len(gesendet) == n)
+        del os.environ["DISCORD_WEBHOOK_OPS"]
         try:
-            senden("log", "x")
+            senden("laut", "x")
             ok("unbekannte art stoppt", False)
         except Fehler:
             ok("unbekannte art stoppt", True)
@@ -239,6 +256,10 @@ def selbsttest():
             ok("ohne posttext keine aufforderung", True)
     finally:
         _post = echt
+        if alt_log is None:
+            os.environ.pop("DISCORD_WEBHOOK_LOG", None)
+        else:
+            os.environ["DISCORD_WEBHOOK_LOG"] = alt_log
         if alt is None:
             os.environ.pop("DISCORD_WEBHOOK_OPS", None)
         else:

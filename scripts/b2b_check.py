@@ -184,7 +184,8 @@ def funde_text(text, datei):
             i = t_ohne.index(zeichen)
             f.append("%s in '%s'" % (name, t_ohne[max(0, i - 40):i + 20].strip()))
     low = t.lower()
-    if "percent" in low:
+    # "percentile" ist ein fachwort und bleibt, nur "percent" fuer % ist falsch
+    if re.search(r"(?<![a-z])percent(?![a-z])", low):
         f.append("'percent' statt %")
     # "stand 28 October 2026" ist deutsch, englisch heisst es "as of" (Ben, 2.11.2026)
     m = re.search(r"(?<![a-z])stand(?![a-z])", low)
@@ -218,10 +219,12 @@ def dicht(s):
     return re.sub(r"\s+", "", s)
 
 
-def pruefe(datei):
-    pfad = os.path.join(REPO, datei)
-    with open(pfad, encoding="utf-8") as fh:
-        roh = fh.read()
+def pruefe(datei, roh=None):
+    """funde fuer eine seite. Mit roh wird der html-text geprueft, bevor er auf
+    der platte liegt (upgrade-report-waechter, Ben 2.11.2026)."""
+    if roh is None:
+        with open(os.path.join(REPO, datei), encoding="utf-8") as fh:
+            roh = fh.read()
     p = Text()
     p.feed(roh)
     f = []
