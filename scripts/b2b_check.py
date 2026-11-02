@@ -5,7 +5,8 @@
 Regeln vom 16.10.2026 (Ben), fuer sichtbaren Text:
   kein Gedankenstrich, kein Doppelpunkt, kein Pfeil (Uhrzeiten, Links und
   "|" im Title ausgenommen), "%" statt "percent", keine Echtzeit-Woerter,
-  "PulseHawk" in einem Wort, keine gemiedenen Suchbegriffe, keine
+  "PulseHawk" in einem Wort, kein deutsches "stand" (Ben, 2.11.2026),
+  keine gemiedenen Suchbegriffe, keine
   Superlative aus der Liste, Saetze ueber das, was wir nicht tun, nur auf
   /method und /independence.
 Dazu SEO: Title hoechstens 60 Zeichen, Description 140 bis 155, genau eine
@@ -184,6 +185,10 @@ def funde_text(text, datei):
     low = t.lower()
     if "percent" in low:
         f.append("'percent' statt %")
+    # "stand 28 October 2026" ist deutsch, englisch heisst es "as of" (Ben, 2.11.2026)
+    m = re.search(r"(?<![a-z])stand(?![a-z])", low)
+    if m:
+        f.append("'stand' in '%s', englisch 'as of <datum>'" % t[max(0, m.start() - 30):m.end() + 25].strip())
     for w in ECHTZEIT:
         if re.search(r"(?<![a-z])%s(?![a-z])" % re.escape(w), low):
             f.append("echtzeit-wort '%s'" % w)
