@@ -63,7 +63,7 @@ ALX-KASPA-1 steht drin, weil es im Auftrag als Name des Ankerverfahrens genannt 
 
 ## Prüfungen
 - **Textregeln:** `b2b_check` 0 von 13 Seiten mit Fund.
-  - **Nachtrag 2.11.2026:** Seit #48 meldet `b2b_check` das Wort "stand". Die Überschrift von Abschnitt 5 hieß zuerst "Where does the project stand, according to the team?" und heißt jetzt "How far has the project come, according to the team?". Der Branch liegt auf dem aktuellen main, die Seite ist neu gebaut, die Screenshots sind neu.
+  - **Nachtrag 2.11.2026:** Seit #48 meldet `b2b_check` das Wort "stand". Die Überschrift von Abschnitt 5 hieß zuerst "Where does the project stand, according to the team?" und heißt jetzt "How far has the project come, according to the team?". Der Branch liegt auf dem aktuellen main, die Seite ist neu gebaut, die Screenshots sind neu. Nach #50 hat auch diese Seite im Schema Uhrzeit und Zeitzone, `2026-11-01T06:00:00+00:00`.
   - **Verbotene Wörter:** "audit", "reviewed by" und "live" stehen nicht im Text, auch "Live-App" nicht. Sie heißt auf der Seite "the public app".
   - **Satzzeichen und Zahlen:** keine Doppelpunkte, Striche, Pfeile, Preise oder Sätze, die mit einer Ziffer beginnen. Die Description hat 149 Zeichen.
 - **Screenshots:** 390 und 1440 px, kein waagerechtes Scrollen. Die Listen stehen im Textrand.
