@@ -51,6 +51,7 @@ RE_ZITIER = re.compile(r"PulseHawk \(@pulsehawkio\), [^,]+, (counted|published) 
                        r"September|October|November|December) \d{4}, "
                        r"pulsehawk\.io(/[a-z0-9/-]*)#([a-z0-9-]+)$")
 EINLADUNG = "Using our numbers? Tag @pulsehawkio and we add you to the list."
+RE_ZEITPUNKT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$")
 
 
 def ziel_datei(pfad):
@@ -282,6 +283,12 @@ def pruefe(datei):
                 v = node.get(k)
                 if isinstance(v, str):
                     f += ["schema %s, %s" % (k, x) for x in funde_text(v, datei)]
+            # datum mit uhrzeit und zeitzone, sonst meldet googles rich results
+            # test "ungueltiger datum/uhrzeit-wert" (Ben, 2.11.2026)
+            for k in ("datePublished", "dateModified"):
+                v = node.get(k)
+                if v is not None and not RE_ZEITPUNKT.match(str(v)):
+                    f.append("schema %s ohne uhrzeit und zeitzone '%s'" % (k, v))
     return f
 
 
