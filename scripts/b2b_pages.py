@@ -716,7 +716,7 @@ def zcash_mainnet_teile(st):
 <tr><td class="c">p99</td><td>%s s</td><td>%s s</td></tr>
 <tr><td class="c">Longest gap</td><td>%s s</td><td>about %s s</td></tr>
 </tbody></table></div>
-<p class="src">Our own header client, Zcash mainnet, blocks %s to %s, stand %s.</p>
+<p class="src">Our own header client, Zcash mainnet, blocks %s to %s, as of %s.</p>
 </section>""" % (("The first NU7 block came at %s." % utc_lang(erster)) if erster else "",
                  utc_lang(bis), betrag(n), zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(float(b["median_s"])),
                  pendel, zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(float(b["median_s"])),
@@ -729,7 +729,7 @@ def zcash_mainnet_teile(st):
                     % (zahl1(float(g["median_s"])), betrag(n), utc_lang(bis)))
     elif v:
         zeilen.append(("Our forecast for block 3,543,405", "around %s" % utc_lang(v["median_utc"]).split(",")[0],
-                       "computed from our counted pace, median %s, 90%% band %s to %s, stand %s"
+                       "computed from our counted pace, median %s, 90%% band %s to %s, as of %s"
                        % (utc_lang(v["median_utc"]).split(", ", 1)[1], utc_lang(v["band_5_utc"], False),
                           utc_lang(v["band_95_utc"], False), stand_text)))
         faq_akt = ("At block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. At the pace we "
@@ -740,7 +740,7 @@ def zcash_mainnet_teile(st):
         abschnitte = """<section id="mainnet-forecast"><h2>When does NU7 reach Zcash mainnet?</h2>
 <p>Block 3,543,405 is fixed in %s. On %s our header client stood at block %s, with %s blocks to go. At the pace we counted over the %d full UTC days up to %s, %s s per block, the median of %s draws puts block 3,543,405 at %s.</p>
 <p>Nine in ten draws fall between %s and %s. At exactly 75 s per block it would be %s. All three are computed from our count, not dates set by the project.</p>
-<p class="src">Our own header client, Zcash mainnet, stand %s. Method in %s.</p>
+<p class="src">Our own header client, Zcash mainnet, as of %s. Method in %s.</p>
 </section>""" % (quelle, utc_lang(v["spitze_utc"]), betrag(v["spitze_hoehe"]), betrag(v["fehlend"]),
                  v["tempo_fenster_tage"], tempo_fenster(v), zahl1(v["tempo_mittel_s"]),
                  betrag(int(re.search(r"(\d+) ziehungen", v["methode"]).group(1))),
@@ -762,7 +762,7 @@ def zcash_mainnet_teile(st):
 <tr><td class="c">p99</td><td>%s s</td><td>%s s</td></tr>
 <tr><td class="c">Longest gap</td><td>%s s</td><td>about %s s</td></tr>
 </tbody></table></div>
-<p class="src">Our own header client, Zcash mainnet, blocks %s to %s, stand %s.</p>
+<p class="src">Our own header client, Zcash mainnet, blocks %s to %s, as of %s.</p>
 </section>""" % (lang(st["bereich"]["von_utc"][:10]), lang(st["bereich"]["bis_utc"][:10]), betrag(vor["abstaende"]),
                  zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(g["mittel_s"]), zahl1(float(g["median_s"])),
                  zahl1(float(b["median_s"])), zahl1(g["p90_s"]), zahl1(b["p90_s"]), zahl1(g["p99_s"]), zahl1(b["p99_s"]),
