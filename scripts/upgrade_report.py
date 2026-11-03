@@ -1,24 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """upgrade_report.py, Report-Typ "Upgrade Report" (PH-UR) im PulseHawk Measurement
-Framework, Spezifikation v1.0 (Ben, 2.11.2026).
+Framework, Spezifikation v1.0 (Ben, 2.11. und 3.11.2026).
 
 Rechnet M1 bis M7 aus reports/<slug>.csv und baut den Seiteninhalt. Der
 gemeinsame Waechter (scripts/report_waechter.py) prueft vorher und nachher
 alles, was fuer jeden Typ gilt, und baut die Seite nur, wenn alles gruen ist.
 
-Kopfdaten: data/reports/<slug>.json mit "typ": "upgrade-report". Die messende
-Sitzung liefert die CSV und ihre eigenen Werte unter "werte"; der Waechter
-rechnet sie aus der CSV nach und vergleicht exakt.
+Die Rechnung folgt scripts/wache/report_v1.py in kaspa-pulse, Stand main nach
+#245 (Ben, 3.11.2026): Perzentile mit linearer Interpolation auf 0.1 s, die
+Mengen bei M1 und M2, die Fenstergrenze ueber die Hoehe, M3 getrennt vor und
+nach als Verteilung nach Tiefe mit Kopfzahl ab Tiefe 2, M4 als Episoden des
+Signals kettenspaltung, M5 als Anteil in Prozent beim Handschlag. Einzige
+Abweichung bis zum Auftrag an die Zcash-Sitzung: M6 verlangt, dass die 60 min
+ganz in den Daten liegen, und rechnet in ganzen Sekunden. Beide Staende
+sollen bis 8.11.2026 gleich rechnen.
+
+Die messende Sitzung liefert ihre Messwert-CSV; scripts/report_import.py macht
+daraus "werte" in data/reports/<slug>.json und die Roh-CSV im PH-Format.
+Der Waechter rechnet alles aus der Roh-CSV nach und vergleicht Wert und n
+jeder Kennzahl exakt, als Text, so wie csv.writer sie schreibt.
 """
 
+import bisect
 import csv
+import datetime
 import hashlib
 import io
 import math
 import re
 
-from report_waechter import (SITE, E, betrag, ts, iso, lang, datum_lang, fenster, fenster_text,
+from report_waechter import (SITE, E, betrag, lang, datum_lang, fenster, fenster_text,
                              wert_html, zitier_html)
 
 # die quellenfelder, die der waechter unter d) prueft
@@ -27,223 +39,321 @@ QUELLEN_FELDER = (("aktivierungshoehe", "aktivierungshoehe"), ("ziel_vorher", "z
 
 METHODE = "1.0"                     # aktuelle version der rechenvorschrift
 METHODE_PFAD = "/standard/upgrade-report/v1-0"   # jede version bleibt unter ihrem pfad abrufbar
-VOR_S = 24 * 3600                   # fenster 24 h vor der aktivierungshoehe
-NACH_S = 72 * 3600                  # bis 72 h danach
+VOR_H, NACH_H = 24, 72              # fenster um die kopfzeit des aktivierungsblocks
 LUECKE_FAKTOR = 5                   # M2, abstaende ueber 5 x ziel
-# M6 nach Bens Entscheidung vom 3.11.2026: das Mittel der Blockabstaende der
-# letzten Stunde liegt innerhalb +-20 % des neuen Ziels T, stabil ab dem ersten
-# Block, nach dem das 60 Minuten ohne Unterbrechung gilt. Dieselbe Rechnung
-# macht report_v1.py in kaspa-pulse, Variante "mittel".
+KOPF_TIEFE = 2                      # M3, kopfzahl ab dieser tiefe
 STABIL_FENSTER_S = 3600             # M6, gleitendes fenster 1 h
 STABIL_HALTEN_S = 3600              # M6, 60 min ohne unterbrechung im band
 STABIL_TOLERANZ = 0.20              # M6, innerhalb 20 % des ziels
-# die proben, die der report zeigt. Die Wache probt auch nach 6 h, diese Probe
-# bleibt in den Rohdaten (label plus_6h) und erscheint nicht in M5.
-PROBEN = (("activation", 0), ("plus_24h", 24 * 3600), ("plus_72h", 72 * 3600))
-PROBEN_ROH = PROBEN + (("plus_6h", 6 * 3600),)
-PROBE_TOLERANZ_S = 3600             # M5, probe hoechstens 1 h neben ihrem zeitpunkt
+# die proben der wache in stunden nach der aktivierung; der report zeigt 0,
+# 24 und 72 h, die probe nach 6 h bleibt in den rohdaten (Ben, 3.11.2026)
+PROBEN_H = (0, 6, 24, 72)
+PROBEN_REPORT_H = (0, 24, 72)
+PROBE_LABEL = {0: "activation", 6: "plus_6h", 24: "plus_24h", 72: "plus_72h"}
+SPLIT_STUFEN = ("alarm", "entwarnung")
 CSV_SPALTEN = ["report_id", "method_version", "kind", "label", "height", "time_utc", "value"]
+TEILE = (("vor", "before"), ("nach", "after"))
+
 METRIKEN = [
     ("M1", "Block intervals",
      "p50, p90 and p99 of the block intervals, before and after the activation height, "
      "each against the value computed for an ideal chain at the target interval."),
     ("M2", "Longest gap",
-     "The longest block interval and the number of intervals above five times the target."),
-    ("M3", "Reorgs", "The number of reorgs and their maximum depth in blocks."),
+     "The longest block interval and the number of intervals above five times the target, "
+     "before and after the activation height."),
+    ("M3", "Reorgs",
+     "Every switch of our listener's tip to another branch, before and after activation, as a "
+     "distribution by depth, with the number of switches of depth 2 or more as the headline."),
     ("M4", "Chain split",
-     "Heights with competing tips, the most tips at one height and how long the longest lasted."),
+     "Episodes of the chain split signal before and after activation, their total duration and "
+     "the longest one."),
     ("M5", "Peers on pre-upgrade software",
-     "The share of peers in our sample that run pre-upgrade software at activation, "
-     "24 hours later and 72 hours later, with n."),
+     "The share of peers below the minimum protocol version of the upgrade, at the handshake with "
+     "our listener, at activation, 24 hours later and 72 hours later, with n."),
     ("M6", "Time to stable",
      "The time from the activation block until the mean of the block intervals over the last hour "
      "lies within 20 % of the new target and stays there for 60 minutes without a break."),
     ("M7", "First block at the activation height",
-     "Its time and the gap to our own estimate published before activation."),
+     "Its header time and the gap to our own estimate published before activation."),
 ]
 
 
-def rang(werte, zaehler, nenner=100):
-    """perzentil nach dem naechsten rang: der wert an stelle ceil(q n) der
-    sortierten liste, q = zaehler / nenner. ganzzahlig, ohne interpolation."""
-    s = sorted(werte)
-    k = -(-zaehler * len(s) // nenner)
-    return s[max(k, 1) - 1]
+def kennzahlen():
+    """die kennzahlen, die der report zeigt und der waechter vergleicht, in
+    den namen der messwert-csv von report_v1.py."""
+    k = []
+    for teil, _ in TEILE:
+        for nm in ("p50", "p90", "p99"):
+            k += ["%s_%s" % (nm, teil), "%s_%s_modell" % (nm, teil)]
+        k += ["laengste_luecke_" + teil, "luecken_ueber_5x_ziel_" + teil]
+    for teil, _ in TEILE:
+        k += ["reorgs_ab_tiefe_%d_%s" % (KOPF_TIEFE, teil), "reorgs_tiefe_1_" + teil,
+              "reorgs_tiefe_2_" + teil, "reorgs_tiefe_3_plus_" + teil, "reorg_max_tiefe_" + teil,
+              "kettenspaltung_dauer_" + teil, "kettenspaltung_laengste_" + teil]
+    for h in PROBEN_REPORT_H:
+        k.append(probe_kennzahl(h))
+    k += ["zeit_bis_stabil", "erster_block_kopfzeit", "kopfzeit_minus_schaetzung"]
+    return k
 
 
-def ideal(ziel, q):
-    """perzentil einer idealen kette mit exponentiellen abstaenden, auf 0.1 s."""
-    return round(-ziel * math.log(1 - q), 1)
+def probe_kennzahl(h):
+    return "peers_unter_min_protokoll_" + ("aktivierung" if h == 0 else "aktivierung_plus_%dh" % h)
 
 
-def dauer_text(s):
-    if s is None:
-        return "not within the window"
-    h, m = divmod(round(s / 60), 60)
-    return ("%d h %d min" % (h, m)) if h else ("%d min" % m)
+# --- wie report_v1.py ------------------------------------------------------
+
+def quantil(s, q):
+    s = sorted(s)
+    if not s:
+        return None
+    pos = (len(s) - 1) * q
+    lo = math.floor(pos)
+    hi = min(lo + 1, len(s) - 1)
+    return s[lo] + (s[hi] - s[lo]) * (pos - lo)
 
 
-def prozent(alt, n):
-    return "%.1f %%" % (100 * alt / n) if n else "no peers sampled"
+def r(x, n=1):
+    return "" if x is None else round(x, n)
+
+
+def ts(text):
+    """wie wache_kern.ts: iso-zeit mit Z oder +00:00 in sekunden, als float."""
+    return datetime.datetime.fromisoformat(text.replace("Z", "+00:00")).timestamp()
+
+
+def utc(t):
+    """wie wache_kern.utc."""
+    return datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def iso(t):
+    return datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def grenzen(kette, akt, t_akt):
+    """vor: bloecke unter der aktivierungshoehe ab dem ersten mit kopfzeit ab
+    t_akt - 24 h; nach: ab der aktivierungshoehe bis vor den ersten block mit
+    kopfzeit ab t_akt + 72 h. Abgegrenzt ueber die hoehe."""
+    hoehen = sorted(kette)
+    vor = [h for h in hoehen if h < akt]
+    a = next((i for i, h in enumerate(vor) if kette[h] >= t_akt - VOR_H * 3600), None)
+    vor = vor[a:] if a is not None else []
+    nach = [h for h in hoehen if h >= akt]
+    e = next((i for i, h in enumerate(nach) if kette[h] >= t_akt + NACH_H * 3600), None)
+    nach = nach[:e] if e is not None else nach
+    return vor, nach
+
+
+def abstaende(kette, hoehen):
+    return [(h, kette[h] - kette[h - 1]) for h in hoehen if h - 1 in kette]
+
+
+# --- csv lesen -------------------------------------------------------------
+
+RE_ZEIT = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 
 
 def zeilen(text):
-    """csv streng lesen. jede spalte hat ihr format, sonst ValueError."""
-    r = csv.DictReader(io.StringIO(text))
-    if r.fieldnames != CSV_SPALTEN:
-        raise ValueError("csv-spalten %r, erwartet %r" % (r.fieldnames, CSV_SPALTEN))
+    """roh-csv streng lesen. jede spalte hat ihr format, sonst ValueError."""
+    r_ = csv.DictReader(io.StringIO(text))
+    if r_.fieldnames != CSV_SPALTEN:
+        raise ValueError("csv-spalten %r, erwartet %r" % (r_.fieldnames, CSV_SPALTEN))
     aus = []
-    for i, z in enumerate(r, 2):
-        art = z["kind"]
-        if art not in ("block", "reorg", "tip", "peer"):
-            raise ValueError("zeile %d, kind %r unbekannt" % (i, art))
-        if art == "peer":
-            if z["label"] not in dict(PROBEN_ROH) or z["height"] or z["value"] not in ("0", "1"):
-                raise ValueError("zeile %d, peer braucht label %s, leere height, value 0 oder 1"
-                                 % (i, "/".join(dict(PROBEN_ROH))))
-        elif z["label"]:
-            raise ValueError("zeile %d, label nur bei peer" % i)
-        if art != "peer" and not re.fullmatch(r"\d+", z["height"]):
+    labels = set(PROBE_LABEL.values())
+    for i, z in enumerate(r_, 2):
+        art, lab, hoehe, wert = z["kind"], z["label"], z["height"], z["value"]
+        if not RE_ZEIT.fullmatch(z["time_utc"]):
+            raise ValueError("zeile %d, time_utc nicht JJJJ-MM-TTThh:mm:ssZ" % i)
+        if hoehe and not re.fullmatch(r"\d+", hoehe):
             raise ValueError("zeile %d, height keine ganze zahl" % i)
-        if z["value"] and not re.fullmatch(r"-?\d+", z["value"]):
+        if wert and not re.fullmatch(r"-?\d+", wert):
             raise ValueError("zeile %d, value keine ganze zahl" % i)
-        if art in ("reorg", "tip") and not z["value"]:
-            raise ValueError("zeile %d, %s braucht value" % (i, art))
-        aus.append(dict(z, t=ts(z["time_utc"]),
-                        h=int(z["height"]) if z["height"] else None,
-                        v=int(z["value"]) if z["value"] else None))
+        ok = {"block": not lab and hoehe,
+              "meta": lab == "log" and wert == "1",
+              "reorg": not lab and wert and int(wert) >= 1,
+              "split": lab in SPLIT_STUFEN,
+              "peer": lab in labels and not hoehe and wert in ("0", "1")}
+        if art not in ok:
+            raise ValueError("zeile %d, kind %r unbekannt" % (i, art))
+        if not ok[art]:
+            raise ValueError("zeile %d, %s mit label %r, height %r, value %r passt nicht zum format"
+                             % (i, art, lab, hoehe, wert))
+        aus.append(dict(z, t=ts(z["time_utc"]), h=int(hoehe) if hoehe else None,
+                        v=int(wert) if wert else None))
     return aus
 
 
+# --- neu rechnen -----------------------------------------------------------
+
 def rechnen(kopf, rows):
-    """alle werte M1 bis M7 aus den csv-zeilen, nach spezifikation v1.0."""
-    H = kopf["aktivierungshoehe"]["wert"]
-    t_vor, t_nach = kopf["ziel_vorher"]["wert"], kopf["ziel_nachher"]["wert"]
-    bl = sorted((z for z in rows if z["kind"] == "block"), key=lambda z: z["h"])
-    zeit = {z["h"]: z["t"] for z in bl}
-    if H not in zeit:
-        raise ValueError("kein block auf der aktivierungshoehe %d in der csv" % H)
-    ta = zeit[H]
-    vor = [zeit[h] - zeit[h - 1] for h in sorted(zeit) if h < H and h - 1 in zeit]
-    nach_paare = [(zeit[h], zeit[h] - zeit[h - 1]) for h in sorted(zeit) if h > H and h - 1 in zeit]
-    nach = [a for _, a in nach_paare]
+    """alle kennzahlen aus den zeilen der roh-csv, wie report_v1.py.
+    Liefert {"kz": {kennzahl: {wert, n, von, bis, art}}, "_fenster": ...}."""
+    akt = kopf["aktivierungshoehe"]["wert"]
+    ziel_vor, ziel_nach = kopf["ziel_vorher"]["wert"], kopf["ziel_nachher"]["wert"]
+    kette = {z["h"]: int(z["t"]) for z in rows if z["kind"] == "block"}
+    if akt not in kette:
+        raise ValueError("kein block auf der aktivierungshoehe %d in der csv" % akt)
+    t_akt = kette[akt]
+    vor, nach = grenzen(kette, akt, t_akt)
+    kz = {}
 
-    def m1(ab, ziel):
-        if not ab:
-            return {"n": 0}
-        return {"n": len(ab), "p50": rang(ab, 50), "p90": rang(ab, 90), "p99": rang(ab, 99),
-                "p50_ideal": ideal(ziel, 0.5), "p90_ideal": ideal(ziel, 0.9),
-                "p99_ideal": ideal(ziel, 0.99)}
+    def setz(k, wert, n, von, bis, art="counted"):
+        kz[k] = {"wert": wert, "n": n, "von": von, "bis": bis, "art": art}
 
-    def m2(ab, ziel):
-        if not ab:
-            return {"n": 0}
-        return {"n": len(ab), "laengste_s": max(ab),
-                "ueber_5x": sum(1 for a in ab if a > LUECKE_FAKTOR * ziel),
-                "schwelle_s": LUECKE_FAKTOR * ziel}
+    fenster_ = {}
+    for teil, hoehen, ziel in (("vor", vor, ziel_vor), ("nach", nach, ziel_nach)):
+        if not hoehen:
+            continue
+        ab = abstaende(kette, hoehen)
+        w = [x for _, x in ab]
+        von, bis = kette[hoehen[0]], kette[hoehen[-1]]
+        fenster_[teil] = (von, bis, ab, ziel)
+        n = len(w)
+        for q, nm, faktor in ((0.5, "p50", math.log(2)), (0.9, "p90", math.log(10)), (0.99, "p99", math.log(100))):
+            setz("%s_%s" % (nm, teil), r(quantil(w, q)), n, von, bis)
+            setz("%s_%s_modell" % (nm, teil), r(faktor * ziel), "", von, bis, "computed")
+        setz("laengste_luecke_" + teil, max(x for _, x in ab), n, von, bis)
+        setz("luecken_ueber_5x_ziel_" + teil, sum(1 for x in w if x > LUECKE_FAKTOR * ziel), n, von, bis)
 
-    reorgs = [z["v"] for z in rows if z["kind"] == "reorg"]
-    tips = {}
-    for z in rows:
-        if z["kind"] == "tip":
-            tips.setdefault(z["h"], []).append(z["v"])
-    konk = {h: d for h, d in tips.items() if len(d) >= 2}
+    # M3 und M4 aus dem log der wache, nach der ankunftszeit
+    hat_log = any(z["kind"] == "meta" for z in rows)
+    log = [z for z in rows if z["kind"] in ("reorg", "split")]
+    for teil, (von, bis, ab, _) in fenster_.items():
+        bis_log = bis + 1  # die letzte sekunde des fensters mitnehmen
+        if not hat_log:
+            setz("reorgs_%s" % teil, "fehlt", "", von, bis)
+            setz("kettenspaltung_dauer_" + teil, "fehlt", "", von, bis)
+            continue
+        tiefen = [z["v"] for z in log if z["kind"] == "reorg" and von <= z["t"] < bis_log]
+        setz("reorgs_ab_tiefe_%d_%s" % (KOPF_TIEFE, teil), sum(1 for x in tiefen if x >= KOPF_TIEFE),
+             len(ab), von, bis)
+        for name_t, pruef in (("1", lambda x: x == 1), ("2", lambda x: x == 2), ("3_plus", lambda x: x >= 3)):
+            setz("reorgs_tiefe_%s_%s" % (name_t, teil), sum(1 for x in tiefen if pruef(x)), len(tiefen), von, bis)
+        setz("reorg_max_tiefe_" + teil, max(tiefen) if tiefen else 0, len(tiefen), von, bis)
+        eps, start = [], None
+        for z in log:
+            if z["kind"] != "split":
+                continue
+            if z["label"] == "alarm" and start is None:
+                start = z["t"]
+            elif z["label"] == "entwarnung" and start is not None:
+                eps.append((start, z["t"]))
+                start = None
+        if start is not None:
+            eps.append((start, bis))
+        eps = [(max(a, von), min(b, bis)) for a, b in eps if b > von and a < bis]
+        setz("kettenspaltung_dauer_" + teil, round(sum(b - a for a, b in eps)), len(eps), von, bis)
+        setz("kettenspaltung_laengste_" + teil, round(max((b - a for a, b in eps), default=0)), len(eps), von, bis)
+
+    # M5 proben beim handschlag
     proben = {}
-    for name, _ in PROBEN:
-        p = [z for z in rows if z["kind"] == "peer" and z["label"] == name]
-        proben[name] = {"n": len(p), "alt": sum(z["v"] for z in p),
-                        "von": min((z["t"] for z in p), default=None),
-                        "bis": max((z["t"] for z in p), default=None)}
-    # M6: fuer jeden block ab aktivierung + 1 h das mittel der abstaende der
-    # bloecke in der stunde davor (zeit u mit t - 1 h < u <= t). Stabil ab dem
-    # ersten block, ab dem jedes mittel bis 60 min spaeter im band liegt und die
-    # daten diese 60 min ganz abdecken.
-    lo, hi = t_nach * (1 - STABIL_TOLERANZ), t_nach * (1 + STABIL_TOLERANZ)
-    punkte = sorted(nach_paare)
-    verlauf = []
-    for t, _ in punkte:
-        if t < ta + STABIL_FENSTER_S:
+    for h in PROBEN_H:
+        p = [z for z in rows if z["kind"] == "peer" and z["label"] == PROBE_LABEL[h]]
+        if not p:
+            setz(probe_kennzahl(h), "fehlt", "", "", "")
             continue
-        w60 = [a for u, a in punkte if t - STABIL_FENSTER_S < u <= t]
-        verlauf.append((t, lo <= sum(w60) / len(w60) <= hi))
-    stabil = None
-    for i, (t, drin) in enumerate(verlauf):
-        if not drin or verlauf[-1][0] < t + STABIL_HALTEN_S:
-            continue
-        if all(d for u, d in verlauf[i:] if u <= t + STABIL_HALTEN_S):
-            stabil = t - ta
-            break
-    schaetz = ts(kopf["schaetzung"]["zeit_utc"])
-    return {
-        "M1": {"vorher": m1(vor, t_vor), "nachher": m1(nach, t_nach)},
-        "M2": {"vorher": m2(vor, t_vor), "nachher": m2(nach, t_nach)},
-        "M3": {"reorgs": len(reorgs), "max_tiefe": max(reorgs, default=0)},
-        "M4": {"hoehen": len(konk), "max_tips": max((len(d) for d in konk.values()), default=0),
-               "laengste_s": max((max(d) for d in konk.values()), default=0)},
-        "M5": {k: {"n": v["n"], "alt": v["alt"]} for k, v in proben.items()},
-        "M6": {"sekunden": stabil, "fenster": len(verlauf), "band_von_s": round(lo, 1),
-               "band_bis_s": round(hi, 1)},
-        "M7": {"zeit_utc": iso(ta), "abstand_s": ta - schaetz},
-        "_fenster": {"von": ta - VOR_S, "bis": ta + NACH_S, "ta": ta,
-                     "proben": {k: (v["von"], v["bis"]) for k, v in proben.items()}},
-    }
+        alt = sum(z["v"] for z in p)
+        t_p = min(z["t"] for z in p)
+        proben[h] = t_p
+        setz(probe_kennzahl(h), round(100 * alt / len(p), 1), len(p), t_p, t_p)
+
+    # M6 zeit bis stabil, nach den kopfzeiten
+    if "nach" in fenster_:
+        von, bis, ab, ziel = fenster_["nach"]
+        punkte = sorted((kette[h], x) for h, x in ab)
+        zeiten = [t for t, _ in punkte]
+        verlauf = []
+        for i, (t, _) in enumerate(punkte):
+            if t < von + STABIL_FENSTER_S:
+                continue
+            a = bisect.bisect_right(zeiten, t - STABIL_FENSTER_S)
+            w60 = [x for _, x in punkte[a:i + 1]]
+            verlauf.append((t, sum(w60) / len(w60)))
+        lo, hi = ziel * (1 - STABIL_TOLERANZ), ziel * (1 + STABIL_TOLERANZ)
+        drin = [lo <= m <= hi for _, m in verlauf]
+        stabil = None
+        for i, (t, _) in enumerate(verlauf):
+            if not drin[i]:
+                continue
+            j = i
+            while j < len(verlauf) and verlauf[j][0] <= t + STABIL_HALTEN_S and drin[j]:
+                j += 1
+            # anders als report_v1.py nach #245: die 60 min muessen ganz in den
+            # daten liegen (Ben, 3.11.2026), also ein zeitpunkt danach existieren
+            if j < len(verlauf) and verlauf[j][0] > t + STABIL_HALTEN_S:
+                stabil = t
+                break
+        setz("zeit_bis_stabil", int(stabil - von) if stabil is not None else "nie", len(verlauf), von, bis)
+
+    # M7 erster block auf der aktivierungshoehe
+    schaetzung = ts(kopf["schaetzung"]["zeit_utc"])
+    setz("erster_block_kopfzeit", utc(t_akt), 1, t_akt, t_akt)
+    setz("kopfzeit_minus_schaetzung", round(t_akt - schaetzung), 1, t_akt, t_akt, "computed")
+    return {"kz": kz, "_fenster": {"t_akt": t_akt, "teile": {t: (f[0], f[1]) for t, f in fenster_.items()},
+                                   "proben": proben, "ziel": {"vor": ziel_vor, "nach": ziel_nach},
+                                   "von": min(kette[h] for h in vor + nach) if vor or nach else t_akt,
+                                   "bis": max(kette[h] for h in vor + nach) if vor or nach else t_akt}}
+
+
+def kanon(x):
+    """so, wie csv.writer den wert schreibt."""
+    return "" if x is None else str(x)
 
 
 def oeffentlich(w):
-    return {k: v for k, v in w.items() if not k.startswith("_")}
+    """die werte, die die messende sitzung ebenso liefert: wert und n als text."""
+    return {k: {"wert": kanon(w["kz"][k]["wert"]), "n": kanon(w["kz"][k]["n"])}
+            for k in kennzahlen() if k in w["kz"]}
 
 
-def pruefe_plausibel(w, rows=None, kopf=None):
-    """c) reihenfolge der perzentile, keine negativen zaehlungen, fenster."""
+def zahl(s):
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return None
+
+
+def pruefe_plausibel(werte, rows=None, kopf=None):
+    """c) reihenfolge der perzentile, keine negativen zaehlungen, fenster und
+    vollstaendigkeit der roh-csv. werte ist {kennzahl: {wert, n}} als text."""
     f = []
-    for teil in ("vorher", "nachher"):
-        m = w["M1"][teil]
-        if m.get("n") and not (m["p50"] <= m["p90"] <= m["p99"]):
-            f.append(("c", "M1 %s, p50 %s, p90 %s, p99 %s nicht aufsteigend"
-                      % (teil, m["p50"], m["p90"], m["p99"])))
-    zaehl = [("M1 %s n" % t, w["M1"][t]["n"]) for t in ("vorher", "nachher")]
-    zaehl += [("M2 %s n" % t, w["M2"][t]["n"]) for t in ("vorher", "nachher")]
-    zaehl += [("M2 %s ueber_5x" % t, w["M2"][t].get("ueber_5x", 0)) for t in ("vorher", "nachher")]
-    zaehl += [("M3 reorgs", w["M3"]["reorgs"]), ("M3 max_tiefe", w["M3"]["max_tiefe"]),
-              ("M4 hoehen", w["M4"]["hoehen"]), ("M4 max_tips", w["M4"]["max_tips"]),
-              ("M4 laengste_s", w["M4"]["laengste_s"])]
-    for k, v in w["M5"].items():
-        zaehl += [("M5 %s n" % k, v["n"]), ("M5 %s alt" % k, v["alt"])]
-        if v["alt"] > v["n"]:
-            f.append(("c", "M5 %s, %d alte peers bei n %d" % (k, v["alt"], v["n"])))
-    for name, v in zaehl:
-        if not isinstance(v, int) or v < 0:
-            f.append(("c", "zaehlung %s ist %r" % (name, v)))
-    if w["M6"]["sekunden"] is not None and w["M6"]["sekunden"] < STABIL_FENSTER_S:
-        f.append(("c", "M6 %s s liegt vor dem ersten vollen 1-h-fenster" % w["M6"]["sekunden"]))
+    for teil, _ in TEILE:
+        p = [zahl((werte.get("%s_%s" % (nm, teil)) or {}).get("wert")) for nm in ("p50", "p90", "p99")]
+        if None not in p and not p[0] <= p[1] <= p[2]:
+            f.append(("c", "M1 %s, p50 %s, p90 %s, p99 %s nicht aufsteigend" % (teil, p[0], p[1], p[2])))
+    for k, v in werte.items():
+        for feld in ("wert", "n"):
+            x = v.get(feld, "")
+            if x in ("", "fehlt", "nie") or k == "erster_block_kopfzeit" and feld == "wert":
+                continue
+            if k == "kopfzeit_minus_schaetzung" and feld == "wert":
+                if not re.fullmatch(r"-?\d+", x):
+                    f.append(("c", "%s %s ist %r" % (k, feld, x)))
+                continue
+            z = zahl(x)
+            if z is None or z < 0:
+                f.append(("c", "zaehlung %s %s ist %r" % (k, feld, x)))
+        if k.startswith("peers_unter") and zahl(v.get("wert")) is not None and zahl(v["wert"]) > 100:
+            f.append(("c", "%s ueber 100 %%" % k))
     if rows is not None:
-        H = kopf["aktivierungshoehe"]["wert"]
-        bl = sorted(z["h"] for z in rows if z["kind"] == "block")
-        if H not in bl:
-            f.append(("c", "kein block auf der aktivierungshoehe %d" % H))
+        akt = kopf["aktivierungshoehe"]["wert"]
+        kette = {z["h"]: z["t"] for z in rows if z["kind"] == "block"}
+        hoehen = sorted(kette)
+        if akt not in kette:
+            f.append(("c", "kein block auf der aktivierungshoehe %d" % akt))
             return f
-        if bl != list(range(bl[0], bl[-1] + 1)):
+        if hoehen != list(range(hoehen[0], hoehen[-1] + 1)):
             f.append(("c", "blockhoehen in der csv nicht lueckenlos"))
-        ta = next(z["t"] for z in rows if z["kind"] == "block" and z["h"] == H)
-        von, bis = ta - VOR_S, ta + NACH_S
+        t_akt = kette[akt]
+        if kette[hoehen[0]] >= t_akt - VOR_H * 3600:
+            f.append(("c", "csv beginnt erst am fenster, der block davor (kopfzeit vor %s) fehlt"
+                      % utc(t_akt - VOR_H * 3600)))
+        if not any(t >= t_akt + NACH_H * 3600 for h, t in kette.items() if h > akt):
+            f.append(("c", "fenster unvollstaendig, kein block mit kopfzeit ab %s" % utc(t_akt + NACH_H * 3600)))
         for z in rows:
-            if not von <= z["t"] <= bis:
-                f.append(("c", "%s auf hoehe %s um %s liegt ausserhalb des fensters %s"
-                          % (z["kind"], z["height"] or "-", z["time_utc"], fenster(von, bis))))
-                break
-        if bl[0] >= H or bl[-1] <= H:
-            f.append(("c", "fenster deckt die aktivierungshoehe nicht von beiden seiten"))
-        for name, ab in PROBEN_ROH:
-            p = [z["t"] for z in rows if z["kind"] == "peer" and z["label"] == name]
-            if p and (min(p) < ta + ab - PROBE_TOLERANZ_S or max(p) > ta + ab + PROBE_TOLERANZ_S):
-                f.append(("c", "peer-probe %s nicht innerhalb 1 h um aktivierung %+d h"
-                          % (name, ab // 3600)))
-        zeit = {z["h"]: z["t"] for z in rows if z["kind"] == "block"}
-        for z in rows:
-            if z["kind"] == "block" and z["v"] is not None and z["h"] - 1 in zeit \
-                    and z["v"] != zeit[z["h"]] - zeit[z["h"] - 1]:
-                f.append(("c", "block %d, value %d passt nicht zu den zeiten (%d)"
-                          % (z["h"], z["v"], zeit[z["h"]] - zeit[z["h"] - 1])))
+            if z["kind"] == "block" and z["v"] is not None and z["h"] - 1 in kette \
+                    and z["v"] != kette[z["h"]] - kette[z["h"] - 1]:
+                f.append(("c", "block %d, value %d passt nicht zu den zeiten" % (z["h"], z["v"])))
                 break
         for z in rows:
             if z["report_id"] != kopf["id"] or z["method_version"] != kopf["methode"]:
@@ -253,30 +363,53 @@ def pruefe_plausibel(w, rows=None, kopf=None):
     return f
 
 
+# --- seite -----------------------------------------------------------------
+
 def seiten_werte(w):
-    """alle (schluessel, kanonischer wert) die auf der seite stehen muessen."""
-    aus = {}
-    for t in ("vorher", "nachher"):
-        m1 = w["M1"][t]
-        if m1["n"]:
-            for k in ("p50", "p90", "p99", "p50_ideal", "p90_ideal", "p99_ideal"):
-                aus["M1.%s.%s" % (t, k)] = m1[k]
-        m2 = w["M2"][t]
-        if m2["n"]:
-            for k in ("laengste_s", "ueber_5x", "schwelle_s"):
-                aus["M2.%s.%s" % (t, k)] = m2[k]
-    for k in ("reorgs", "max_tiefe"):
-        aus["M3." + k] = w["M3"][k]
-    for k in ("hoehen", "max_tips", "laengste_s"):
-        aus["M4." + k] = w["M4"][k]
-    for k, v in w["M5"].items():
-        aus["M5.%s.alt" % k] = v["alt"]
-    aus["M6.sekunden"] = w["M6"]["sekunden"]
-    aus["M6.band_von_s"] = w["M6"]["band_von_s"]
-    aus["M6.band_bis_s"] = w["M6"]["band_bis_s"]
-    aus["M7.zeit_utc"] = w["M7"]["zeit_utc"]
-    aus["M7.abstand_s"] = w["M7"]["abstand_s"]
-    return aus
+    """kennzahl -> kanonischer wert, so steht er in data-v auf der seite."""
+    return {k: kanon(w["kz"][k]["wert"]) for k in kennzahlen() if k in w["kz"]}
+
+
+def schaetz_text(s):
+    """unsere schaetzung fuer den aktivierungsblock, mit band und datum."""
+    t = "%s, computed from our count of the block pace" % lang(ts(s["zeit_utc"]))
+    if s.get("band_von_utc") and s.get("band_bis_utc"):
+        t += ", with 9 in 10 of our draws between %s and %s" % (lang(ts(s["band_von_utc"])),
+                                                                 lang(ts(s["band_bis_utc"])))
+    return t + ", as of %s" % datum_lang(s["datum"])
+
+
+def dauer_text(s):
+    h, m = divmod(round(s / 60), 60)
+    return ("%d h %d min" % (h, m)) if h else ("%d min" % m)
+
+
+def anzeige(k, x):
+    """der sichtbare text zu einem kanonischen wert."""
+    if x in ("fehlt", ""):
+        return "missing"
+    if x == "nie":
+        return "not within the window"
+    if k.startswith("peers_unter"):
+        return "%s %%" % x
+    if k == "zeit_bis_stabil":
+        return "%s s, %s" % (betrag(int(x)), dauer_text(int(x)))
+    if k == "erster_block_kopfzeit":
+        return lang(ts(x.replace(" ", "T") + "Z"))
+    if k == "kopfzeit_minus_schaetzung":
+        return "%+d s" % int(x)
+    if k.startswith(("p50", "p90", "p99", "laengste_luecke", "kettenspaltung")):
+        return "%s s" % (betrag(int(x)) if re.fullmatch(r"\d+", x) else x)
+    return betrag(int(x)) if re.fullmatch(r"\d+", x) else x
+
+
+def zelle(w, k, n_ersatz=1, fen=None):
+    """ein wert mit kennung, n und fenster fuer die seite."""
+    e = w["kz"][k]
+    n = e["n"] if isinstance(e["n"], int) else n_ersatz
+    if fen is None:
+        fen = fenster(e["von"], e["bis"]) if e["von"] != "" else fenster(w["_fenster"]["t_akt"], w["_fenster"]["t_akt"])
+    return wert_html(k, kanon(e["wert"]), anzeige(k, kanon(e["wert"])), e["art"], n, fen)
 
 
 def body(kopf, w, csv_text):
@@ -293,15 +426,15 @@ def body(kopf, w, csv_text):
         ("Activation height", betrag(H), "source %s" % q("aktivierungshoehe")),
         ("Target interval", ziel_text, "source %s" % (q("ziel_vorher") if t_vor == t_nach else
                                                       "%s, then %s" % (q("ziel_vorher"), q("ziel_nachher")))),
-        ("Window", "24 h before to 72 h after", "the activation block, in UTC"),
+        ("Window", "24 h before to 72 h after", "the activation block, cut by height, in UTC"),
         ("Status", "measured" if w else "pending", "numbers from the CSV below" if w
          else "first numbers after block %s" % betrag(H)),
     ))
     teile = ['<section id="in-short" class="facts"><h2>The report in short</h2><dl>%s</dl></section>' % fakten]
     if kopf.get("hinweis"):
         teile.append("<p>%s</p>" % E(kopf["hinweis"]))
+    s = kopf["schaetzung"]
     if not w:
-        s = kopf["schaetzung"]
         for mid, name, was in METRIKEN:
             # zu M7 gehoert unsere schaetzung, die vor der aktivierung feststeht
             extra = ("<p>Our estimate before activation is %s.</p>" % schaetz_text(s)
@@ -309,96 +442,84 @@ def body(kopf, w, csv_text):
             teile.append('<section id="%s"><h2>%s %s</h2><p>%s</p>%s<p class="note">Not yet counted. '
                          'The numbers follow after block %s, from our own count.</p></section>'
                          % (mid.lower(), mid, name, was, extra, betrag(H)))
-        teile.append('<section id="data"><h2>Data</h2><p>The CSV with every block, reorg, tip and '
-                     'peer sample follows with the first numbers, with its sha256 and the method version.'
-                     '</p></section>')
+        teile.append('<section id="data"><h2>Data</h2><p>The CSV with every block, reorg, chain split '
+                     'signal and peer sample follows with the first numbers, with its sha256 and the method '
+                     'version.</p></section>')
     else:
-        f = w["_fenster"]
-        f_vor, f_nach, f_alle = fenster(f["von"], f["ta"]), fenster(f["ta"], f["bis"]), fenster(f["von"], f["bis"])
-        for t, ziel, fen, wort in (("vorher", t_vor, f_vor, "before"), ("nachher", t_nach, f_nach, "after")):
-            m = w["M1"][t]
-            if not m["n"]:
-                continue
-            zeilen_ = "".join(
-                '<tr><td class="c">%s</td><td>%s</td><td>%s</td></tr>'
-                % (k, wert_html("M1.%s.%s" % (t, k), m[k], "%s s" % m[k], "counted", m["n"], fen),
-                   wert_html("M1.%s.%s_ideal" % (t, k), m[k + "_ideal"], "%s s" % m[k + "_ideal"],
-                             "computed", m["n"], fen))
-                for k in ("p50", "p90", "p99"))
-            teile.append(
-                '<section id="m1-%s"><h2>M1 Block intervals %s activation</h2>'
-                '<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Interval</th>'
-                '<th scope="col">Counted</th><th scope="col">Computed at %d s</th></tr></thead>'
-                '<tbody>%s</tbody></table></div><p class="src">Window %s.</p></section>'
-                % (wort, wort, ziel, zeilen_, fenster_text(fen)))
-        def tabelle(sid, h2, zeilen_, fen_text, zusatz=""):
-            """ein abschnitt mit einer tabelle wert und ergebnis, darunter das fenster."""
-            rows_ = "".join('<tr><td class="c">%s</td><td>%s</td></tr>' % z for z in zeilen_)
-            return ('<section id="%s"><h2>%s</h2><div class="tablewrap"><table class="nums"><thead><tr>'
-                    '<th scope="col">Value</th><th scope="col">Result</th></tr></thead><tbody>%s</tbody>'
-                    '</table></div>%s<p class="src">Window %s.</p></section>' % (sid, h2, rows_, zusatz, fen_text))
+        fw = w["_fenster"]
+        teil_fen = {t: fenster(*fw["teile"][t]) for t in fw["teile"]}
 
-        for t, fen, wort in (("vorher", f_vor, "before"), ("nachher", f_nach, "after")):
-            m = w["M2"][t]
-            if not m["n"]:
+        def tabelle(sid, h2, kopfzeile, zeilen_, fussnote):
+            rows_ = "".join("<tr><td class=\"c\">%s</td>%s</tr>" % (z[0], "".join("<td>%s</td>" % c for c in z[1:]))
+                            for z in zeilen_)
+            th = "".join('<th scope="col">%s</th>' % x for x in kopfzeile)
+            return ('<section id="%s"><h2>%s</h2><div class="tablewrap"><table class="nums"><thead><tr>%s</tr>'
+                    '</thead><tbody>%s</tbody></table></div><p class="src">%s</p></section>'
+                    % (sid, h2, th, rows_, fussnote))
+
+        fen_satz = "Windows, before activation %s, after activation %s." % (
+            fenster_text(teil_fen["vor"]) if "vor" in teil_fen else "none",
+            fenster_text(teil_fen["nach"]) if "nach" in teil_fen else "none")
+        hat = lambda k: k in w["kz"]
+        for teil, wort in TEILE:
+            if not hat("p50_" + teil):
                 continue
-            teile.append(tabelle("m2-" + wort, "M2 Longest gap %s activation" % wort, [
-                ("Longest interval", wert_html("M2.%s.laengste_s" % t, m["laengste_s"],
-                                               "%s s" % betrag(m["laengste_s"]), "counted", m["n"], fen)),
-                ("Five times the target", wert_html("M2.%s.schwelle_s" % t, m["schwelle_s"],
-                                                    "%d s" % m["schwelle_s"], "computed", m["n"], fen)),
-                ("Intervals above five times the target", wert_html("M2.%s.ueber_5x" % t, m["ueber_5x"],
-                                                                    betrag(m["ueber_5x"]), "counted", m["n"], fen)),
-            ], fenster_text(fen)))
-        n_rows = len([1 for _ in csv.DictReader(io.StringIO(csv_text))])
-        teile.append(tabelle("m3", "M3 Reorgs", [
-            ("Reorgs", wert_html("M3.reorgs", w["M3"]["reorgs"], betrag(w["M3"]["reorgs"]), "counted", n_rows, f_alle)),
-            ("Maximum depth in blocks", wert_html("M3.max_tiefe", w["M3"]["max_tiefe"], betrag(w["M3"]["max_tiefe"]),
-                                                  "counted", n_rows, f_alle)),
-        ], fenster_text(f_alle)))
-        teile.append(tabelle("m4", "M4 Chain split", [
-            ("Heights with competing tips", wert_html("M4.hoehen", w["M4"]["hoehen"], betrag(w["M4"]["hoehen"]),
-                                                      "counted", n_rows, f_alle)),
-            ("Most tips at one height", wert_html("M4.max_tips", w["M4"]["max_tips"], betrag(w["M4"]["max_tips"]),
-                                                  "counted", n_rows, f_alle)),
-            ("Longest time with competing tips", wert_html("M4.laengste_s", w["M4"]["laengste_s"],
-                                                           "%s s" % betrag(w["M4"]["laengste_s"]),
-                                                           "counted", n_rows, f_alle)),
-        ], fenster_text(f_alle)))
-        zeilen5, fenster5 = [], []
-        for name, ab in PROBEN:
-            v = w["M5"][name]
-            pv, pb = f["proben"][name]
-            fen = fenster(pv, pb) if pv is not None else fenster(f["ta"] + ab, f["ta"] + ab)
-            wort = {"activation": "At activation", "plus_24h": "Activation plus 24 h",
-                    "plus_72h": "Activation plus 72 h"}[name]
-            zeilen5.append(("%s, pre-upgrade share" % wort,
-                            wert_html("M5.%s.alt" % name, v["alt"], prozent(v["alt"], v["n"]), "counted", v["n"], fen)))
-            fenster5.append("sample %s %s" % ({"activation": "at activation", "plus_24h": "after 24 h",
-                                                "plus_72h": "after 72 h"}[name], fenster_text(fen)))
-        teile.append(
-            '<section id="m5"><h2>M5 Peers on pre-upgrade software</h2><div class="tablewrap"><table class="nums">'
-            '<thead><tr><th scope="col">Value</th><th scope="col">Result</th></tr></thead><tbody>%s</tbody></table></div>'
-            '<p class="src">Share of the peers in our own sample, software version only, no addresses kept. '
-            'Windows %s.</p></section>'
-            % ("".join('<tr><td class="c">%s</td><td>%s</td></tr>' % z for z in zeilen5), ", ".join(fenster5)))
-        m6 = w["M6"]
-        teile.append(tabelle("m6", "M6 Time to stable", [
-            ("Time to stable", wert_html("M6.sekunden", m6["sekunden"], dauer_text(m6["sekunden"]),
-                                         "counted", m6["fenster"], f_nach)),
-            ("Lower edge of the band, 20 %% below %d s" % t_nach,
-             wert_html("M6.band_von_s", m6["band_von_s"], "%s s" % m6["band_von_s"], "computed", m6["fenster"], f_nach)),
-            ("Upper edge of the band, 20 %% above %d s" % t_nach,
-             wert_html("M6.band_bis_s", m6["band_bis_s"], "%s s" % m6["band_bis_s"], "computed", m6["fenster"], f_nach)),
-        ], fenster_text(f_nach)))
-        s = kopf["schaetzung"]
-        teile.append(tabelle("m7", "M7 First block at the activation height", [
-            ("Time of block %s" % betrag(H), wert_html("M7.zeit_utc", w["M7"]["zeit_utc"],
-                                                       lang(ts(w["M7"]["zeit_utc"])), "counted", 1, f_alle)),
-            ("Gap to our estimate", wert_html("M7.abstand_s", w["M7"]["abstand_s"], "%+d s" % w["M7"]["abstand_s"],
-                                              "computed", 1, f_alle)),
-        ], fenster_text(f_alle), "<p>Our estimate was %s.</p>" % schaetz_text(s)))
+            ziel = fw["ziel"][teil]
+            n = w["kz"]["p50_" + teil]["n"]
+            teile.append(tabelle(
+                "m1-" + wort, "M1 Block intervals %s activation" % wort, ("Interval", "Counted", "Computed at %d s" % ziel),
+                [(nm, zelle(w, "%s_%s" % (nm, teil)), zelle(w, "%s_%s_modell" % (nm, teil), n))
+                 for nm in ("p50", "p90", "p99")],
+                "Window %s. Header times, linear interpolation." % fenster_text(teil_fen[teil])))
+        teile.append(tabelle(
+            "m2", "M2 Longest gap", ("Value", "Before activation", "After activation"),
+            [("Longest interval",) + tuple(zelle(w, "laengste_luecke_" + t) if hat("laengste_luecke_" + t) else "none"
+                                           for t, _ in TEILE),
+             ("Intervals above five times the target",)
+             + tuple(zelle(w, "luecken_ueber_5x_ziel_" + t) if hat("luecken_ueber_5x_ziel_" + t) else "none"
+                     for t, _ in TEILE)],
+            fen_satz + " Five times the target is %d s before and %d s after activation." % (5 * t_vor, 5 * t_nach)))
+        m3 = [("Switches of depth %d or more" % KOPF_TIEFE, "reorgs_ab_tiefe_%d_" % KOPF_TIEFE),
+              ("Switches of depth 1", "reorgs_tiefe_1_"), ("Switches of depth 2", "reorgs_tiefe_2_"),
+              ("Switches of depth 3 or more", "reorgs_tiefe_3_plus_"), ("Maximum depth in blocks", "reorg_max_tiefe_")]
+        teile.append(tabelle(
+            "m3", "M3 Reorgs", ("Value", "Before activation", "After activation"),
+            [(name,) + tuple(zelle(w, pre + t) if hat(pre + t) else "missing" for t, _ in TEILE) for name, pre in m3],
+            fen_satz + " Arrival time at our listener."))
+        sp = kopf.get("kettenspaltung") or {}
+        teile.append(tabelle(
+            "m4", "M4 Chain split", ("Value", "Before activation", "After activation"),
+            [("Total duration of chain split episodes",)
+             + tuple(zelle(w, "kettenspaltung_dauer_" + t) if hat("kettenspaltung_dauer_" + t) else "missing"
+                     for t, _ in TEILE),
+             ("Longest episode",)
+             + tuple(zelle(w, "kettenspaltung_laengste_" + t) if hat("kettenspaltung_laengste_" + t) else "missing"
+                     for t, _ in TEILE)],
+            fen_satz + " An episode runs from the alarm to the all clear of the signal, two branches from the "
+            "activation height, each seen by at least %s peers and both deeper than %s blocks. Arrival time at our "
+            "listener." % (sp.get("min_peers", "the stated number of"), sp.get("min_tiefe", "the stated number of"))))
+        m5 = []
+        for h in PROBEN_REPORT_H:
+            k = probe_kennzahl(h)
+            wort = "At activation" if h == 0 else "Activation plus %d h" % h
+            m5.append((wort, zelle(w, k), ("sampled %s" % lang(fw["proben"][h])) if h in fw["proben"] else "not sampled"))
+        teile.append(tabelle(
+            "m5", "M5 Peers on pre-upgrade software", ("Sample", "Share below the minimum protocol", "Time"), m5,
+            "Share of the peers at the handshake with our listener, protocol version only, no addresses kept. "
+            "The sample after 6 h stays in the raw data."))
+        teile.append(tabelle(
+            "m6", "M6 Time to stable", ("Value", "Result"),
+            [("Time from the activation block", zelle(w, "zeit_bis_stabil"))] if hat("zeit_bis_stabil") else [],
+            "Window %s. Band %s s to %s s, 20 %% around the target of %d s, computed. Header times."
+            % (fenster_text(teil_fen["nach"]) if "nach" in teil_fen else "none",
+               r(t_nach * (1 - STABIL_TOLERANZ)), r(t_nach * (1 + STABIL_TOLERANZ)), t_nach)))
+        teile.append(tabelle(
+            "m7", "M7 First block at the activation height", ("Value", "Result"),
+            [("Header time of block %s" % betrag(H), zelle(w, "erster_block_kopfzeit")),
+             ("Gap to our estimate", zelle(w, "kopfzeit_minus_schaetzung"))],
+            "Window %s. Our estimate was %s." % (fenster_text(fenster(fw["t_akt"], fw["t_akt"])), schaetz_text(s))))
         sha = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
+        n_rows = len([1 for _ in csv.DictReader(io.StringIO(csv_text))])
         teile.append(
             '<section id="data"><h2>Data</h2><p>%s, method v%s, %s rows.</p>'
             '<p class="src sha">sha256 <code>%s</code></p></section>'
@@ -410,24 +531,15 @@ def body(kopf, w, csv_text):
     return "\n".join(teile)
 
 
-def schaetz_text(s):
-    """unsere schaetzung fuer den aktivierungsblock, mit band und datum."""
-    t = "%s, computed from our count of the block pace" % lang(ts(s["zeit_utc"]))
-    if s.get("band_von_utc") and s.get("band_bis_utc"):
-        t += ", with 9 in 10 of our draws between %s and %s" % (lang(ts(s["band_von_utc"])),
-                                                                 lang(ts(s["band_bis_utc"])))
-    return t + ", as of %s" % datum_lang(s["datum"])
-
-
 def titel(kopf):
     return "%s %s upgrade report" % (kopf["chain"], kopf["upgrade"])
 
 
 def seite(kopf, w, csv_text):
     """das seiten-dict fuer b2b_pages, ohne css (das setzt der waechter)."""
-    titel = kopf["titel"]
+    titel_ = kopf["titel"]
     url = SITE + "/reports/" + kopf["slug"]
-    ds = {"@type": "Dataset", "name": "%s, %s" % (titel, kopf["id"]), "identifier": kopf["id"],
+    ds = {"@type": "Dataset", "name": "%s, %s" % (titel_, kopf["id"]), "identifier": kopf["id"],
           "description": ("PulseHawk Upgrade Report %s for %s %s on %s, method v%s. Measured values M1 to M7, "
                           "from 24 hours before to 72 hours after activation height %s."
                           % (kopf["id"], kopf["chain"], kopf["upgrade"], kopf["netz"], kopf["methode"],
@@ -441,90 +553,141 @@ def seite(kopf, w, csv_text):
                                   % (kopf["methode"], SITE, METHODE_PFAD),
           "variableMeasured": ["%s %s" % (m, n) for m, n, _ in METRIKEN]}
     if w:
-        f = w["_fenster"]
-        ds["temporalCoverage"] = fenster(f["von"], f["bis"])
+        fw = w["_fenster"]
+        ds["temporalCoverage"] = "%s/%s" % (iso(fw["von"]), iso(fw["bis"]))
         ds["distribution"] = {"@type": "DataDownload", "encodingFormat": "text/csv",
                               "contentUrl": SITE + "/" + kopf["csv"]}
     return dict(
         datei="reports/%s.html" % kopf["slug"], pfad="/reports/" + kopf["slug"],
         og=kopf.get("og", "report-" + kopf["slug"]), lastmod=kopf["geaendert"],
-        title="%s | PulseHawk" % titel,
+        title="%s | PulseHawk" % titel_,
         desc=kopf["beschreibung"],
-        h1=titel,
+        h1=titel_,
         lead=("PulseHawk Upgrade Report %s, method v%s. We measure %s %s on %s from 24 hours before "
               "to 72 hours after block %s, with seven fixed values and no grades."
               % (kopf["id"], kopf["methode"], kopf["chain"], kopf["upgrade"], kopf["netz"],
                  betrag(kopf["aktivierungshoehe"]["wert"]))),
         body=body(kopf, w, csv_text),
         faqs=[], schema=["ARTICLE:%s:%s" % (kopf["veroeffentlicht"], kopf["geaendert"]), ds],
-        crumbs=[("Measurement Framework", "/standard/"), (titel, "/reports/" + kopf["slug"])],
+        crumbs=[("Measurement Framework", "/standard/"), (titel_, "/reports/" + kopf["slug"])],
         report=kopf["id"],
     )
 
 
+# --- testdaten -------------------------------------------------------------
+# Ein szenario ist das gemeinsame modell der testdaten: daraus schreibt
+# ph_csv() die roh-csv, und upgrade_report_probe.py dieselben daten im format
+# der wache (koepfe, log, zustand), damit report_v1.py sie rechnen kann.
+
 def testkopf():
     q = lambda art, n, w: {"art": art, "name": n, "url": "https://github.com/test/%s" % n.replace(" ", "-"),
-                           "wert": w, "geprueft": "2026-11-02"}
+                           "wert": w, "geprueft": "2026-11-03"}
     return {
-        "id": "PH-UR-2026-999", "typ": "upgrade-report", "slug": "test-chain-up1", "chain": "Testchain", "upgrade": "UP1",
-        "netz": "mainnet", "methode": METHODE, "veroeffentlicht": "2026-11-02", "geaendert": "2026-11-02",
+        "id": "PH-UR-2026-999", "typ": "upgrade-report", "slug": "test-chain-up1", "chain": "Testchain",
+        "upgrade": "UP1", "netz": "mainnet", "methode": METHODE, "veroeffentlicht": "2026-11-03",
+        "geaendert": "2026-11-03",
         "beschreibung": ("Upgrade report for the test chain, measured from 24 hours before to 72 hours "
                          "after activation, seven fixed values, each dated, with raw data."),
         "aktivierungshoehe": {"wert": 100000, "quellen": [q("protocol constant", "spec A", 100000),
                                                         q("release", "release B", 100000)]},
         "ziel_vorher": {"wert": 75, "quellen": [q("protocol constant", "spec C", 75), q("release", "release D", 75)]},
         "ziel_nachher": {"wert": 25, "quellen": [q("protocol constant", "spec E", 25), q("release", "release F", 25)]},
-        "schaetzung": {"zeit_utc": "2026-11-06T02:30:00Z", "datum": "2026-11-04"},
+        "schaetzung": {"zeit_utc": "2026-11-06T02:30:00Z", "datum": "2026-11-04",
+                       "band_von_utc": "2026-11-06T00:20:00Z", "band_bis_utc": "2026-11-06T04:50:00Z"},
+        "kettenspaltung": {"min_peers": 2, "min_tiefe": 2}, "min_protokoll": 170190,
         "csv": "reports/test-chain-up1.csv", "werte": None, "og": "zcash-nu7",
     }
 
 
-def test_csv(kopf, ta=None):
-    """ein sauberer datensatz, mit festem zufall: 24 h vor 75 s, 72 h nach 25 s."""
+def testszenario(kopf, saat=2026):
+    """kette, log und proben mit festem zufall, wie sie die wache haette."""
     import random
-    zufall = random.Random(2026)
-    ta = ta or ts("2026-11-06T02:40:00Z")
+    zufall = random.Random(saat)
     H = kopf["aktivierungshoehe"]["wert"]
-    rid, mv = kopf["id"], kopf["methode"]
-    t, h, vor = ta, H, []
-    while True:
+    t_akt = int(ts("2026-11-06T02:40:00Z"))
+    kette, t, h = {H: t_akt}, t_akt, H
+    while t > t_akt - 27 * 3600:                         # etwas mehr als 24 h davor
         t -= max(1, int(zufall.expovariate(1 / 75)))
         h -= 1
-        if t < ta - VOR_S + 10:
-            break
-        vor.append((h, t))
-    bloecke = sorted(vor) + [(H, ta)]
-    t, h = ta, H
-    while True:
-        t += max(1, int(zufall.expovariate(1 / 25)))
+        kette[h] = t
+    t, h = t_akt, H
+    while t < t_akt + 73 * 3600:                         # etwas mehr als 72 h danach
+        # in der ersten stunde nach nu7 langsamer, die schwierigkeit pendelt sich ein
+        mittel = 60 if t < t_akt + 1800 else 25
+        t += max(1, int(zufall.expovariate(1 / mittel)))
         h += 1
-        if t > ta + NACH_S - 10:
-            break
-        bloecke.append((h, t))
+        kette[h] = t
+    # ein paar kopfzeiten, die rueckwaerts laufen, wie im echten netz
+    for hh in (H - 300, H + 500, H + 4000):
+        kette[hh] = kette[hh - 1] - 3
+    log = []
+
+    def eintrag(t_, hoehe, signal, wert, schwelle, stufe):
+        log.append({"utc": utc(t_), "hoehe": hoehe, "signal": signal, "wert": wert,
+                    "schwelle": schwelle, "stufe": stufe})
+    for dt, tiefe in ((-20 * 3600, 1), (-5 * 3600, 2), (-3600, 1), (600, 1), (2000, 3), (9000, 1),
+                      (40000, 2), (200000, 1)):
+        eintrag(t_akt + dt, H + dt // 25, "reorg_gesehen", tiefe, 2, "info")
+    eintrag(t_akt - 30 * 3600, H - 1400, "blockpause", 700, 600, "hinweis")
+    for a, b in ((-26 * 3600, -23 * 3600), (300, 1500), (7200, 7300), (250000, None)):
+        eintrag(t_akt + a, H, "kettenspaltung", 3, 2, "alarm")
+        if b is not None:
+            eintrag(t_akt + b, H, "kettenspaltung", 0, 2, "entwarnung")
+    log.sort(key=lambda x: x["utc"])
+    proben = {}
+    for stunde, alt, n in ((0, 14, 40), (6, 9, 38), (24, 5, 41), (72, 1, 39)):
+        versionen = {"170140": alt, "170190": n - alt}
+        proben[str(stunde)] = {"utc": utc(t_akt + stunde * 3600 + 30), "peers": n, "vor_upgrade": alt,
+                               "anteil_prozent": round(100 * alt / n, 1), "hoehe": None, "versionen": versionen}
+    return {"kette": kette, "log": log, "proben": proben, "hat_log": True,
+            "min_protokoll": kopf.get("min_protokoll", 170190)}
+
+
+def ph_csv(szenario, kopf):
+    """die roh-csv im PH-format aus einem szenario oder aus den daten der wache.
+    Bloecke vom block vor dem fenster bis zum ersten block ab t_akt + 72 h."""
+    kette, akt = szenario["kette"], kopf["aktivierungshoehe"]["wert"]
+    t_akt = kette[akt]
+    vor, nach = grenzen(kette, akt, t_akt)
+    erste = (vor or nach)[0] - 1
+    schnitt = next((h for h in sorted(kette) if h > akt and kette[h] >= t_akt + NACH_H * 3600), max(kette))
+    rid, mv = kopf["id"], kopf["methode"]
     out = io.StringIO()
     wr = csv.writer(out, lineterminator="\n")
     wr.writerow(CSV_SPALTEN)
-    vorige = None
-    for h, t in bloecke:
-        wr.writerow([rid, mv, "block", "", h, iso(t), "" if vorige is None else t - vorige])
-        vorige = t
-    wr.writerow([rid, mv, "reorg", "", H + 40, iso(ta + 1000), 1])
-    wr.writerow([rid, mv, "tip", "", H + 40, iso(ta + 990), 12])
-    wr.writerow([rid, mv, "tip", "", H + 40, iso(ta + 990), 9])
-    alt = {"activation": 14, "plus_6h": 9, "plus_24h": 5, "plus_72h": 1}
-    for name, ab in PROBEN_ROH:
-        for i in range(40):
-            wr.writerow([rid, mv, "peer", name, "", iso(ta + ab - i), 1 if i < alt[name] else 0])
+    for h in range(erste, schnitt + 1):
+        wr.writerow([rid, mv, "block", "", h, iso(kette[h]), kette[h] - kette[h - 1] if h > erste else ""])
+    if szenario.get("hat_log"):
+        wr.writerow([rid, mv, "meta", "log", "", iso(t_akt), 1])
+    for z in szenario["log"]:
+        zeit = z["utc"].replace(" ", "T") + "Z"
+        hoehe = z["hoehe"] if z["hoehe"] not in (None, "") else ""
+        if z["signal"] == "reorg_gesehen":
+            wr.writerow([rid, mv, "reorg", "", hoehe, zeit, int(float(z["wert"]))])
+        elif z["signal"] == "kettenspaltung" and z["stufe"] in SPLIT_STUFEN:
+            wr.writerow([rid, mv, "split", z["stufe"], hoehe, zeit, int(float(z["wert"])) if z["wert"] != "" else ""])
+    for stunde in PROBEN_H:
+        p = szenario["proben"].get(str(stunde))
+        if not p:
+            continue
+        zeit = p["utc"].replace(" ", "T") + "Z"
+        for version, anzahl in sorted(p["versionen"].items()):
+            for _ in range(int(anzahl)):
+                wr.writerow([rid, mv, "peer", PROBE_LABEL[stunde], "", zeit,
+                             1 if int(version) < szenario["min_protokoll"] else 0])
     return out.getvalue()
 
 
+def test_csv(kopf):
+    return ph_csv(testszenario(kopf), kopf)
 
 
-# --- spezifikation --------------------------------------------------------
+# --- spezifikation ---------------------------------------------------------
 # Jede Aenderung der Rechenvorschrift erhoeht die Version (Ben, 2.11.2026).
 # Eine alte Version bleibt unter /standard/upgrade-report/v<x>-<y> abrufbar.
 # Wer eine neue Version anlegt, kopiert den Text der alten in einen eigenen
-# Zweig von spezifikation_html und aendert nur den neuen.
+# Zweig von spezifikation_html und aendert nur den neuen. v1.0 ist noch nicht
+# veroeffentlicht; die Fassung vom 3.11.2026 folgt report_v1.py (Ben).
 VERSIONEN = [
     ("1.0", "2026-11-03", "First version, with the values M1 to M7."),
 ]
@@ -542,30 +705,37 @@ def spezifikation_html(version):
     log = "".join("<li><b>Version %s, %s.</b> %s</li>" % (v, datum_lang(d), t) for v, d, t in VERSIONEN)
     return """
 <section id="scope"><h2>What does an Upgrade Report measure?</h2>
-<p>An Upgrade Report covers one network upgrade on one PoW or DAG chain. Its window runs from 24 hours before to 72 hours after the first block at the activation height. All times are in UTC. Block times are the timestamps in the block headers that our own listener or header client receives.</p>
+<p>An Upgrade Report covers one network upgrade on one PoW or DAG chain, from 24 hours before to 72 hours after the activation block. All times are in UTC. The activation time is the header time of the block at the activation height.</p>
 <p>The target interval and the activation height each come from two independent sources, a protocol constant and a release. If the two differ, no report is built.</p>
 </section>
 <section id="values"><h2>Which values does every Upgrade Report carry?</h2>
 <ul class="list">%s</ul>
 </section>
+<section id="window"><h2>How is the window cut?</h2>
+<ul class="list">
+<li><b>By height.</b> Header times need not rise from block to block, so the window is cut by height. The set before activation starts at the first block below the activation height whose header time is at least 24 hours before the activation time. The set after activation starts at the activation block and ends before the first block whose header time is at least 72 hours after it.</li>
+<li><b>Intervals.</b> The interval of a block is its header time minus the header time of the block before it. Every block of a set counts, so the first interval of a set reaches back to the block just before it, and the interval of the activation block belongs to the set after activation.</li>
+<li><b>Time basis.</b> M1, M2 and M6 use header times. M3 and M4 use the arrival time at our listener. M3 and M4 count from the first header time of a set to the last one, including that last second.</li>
+</ul>
+</section>
 <section id="rules"><h2>How are the values computed?</h2>
 <ul class="list">
-<li><b>Two sets of intervals.</b> The interval of a block is its time minus the time of the block before it. Blocks below the activation height form the set before activation, blocks above it the set after. The interval that ends at the activation block belongs to neither set.</li>
-<li><b>Percentiles.</b> A percentile is the value at rank ceil(q × n) of the sorted intervals, without interpolation.</li>
+<li><b>Percentiles.</b> Linear interpolation between the two nearest ranks of the sorted intervals, at position (n minus 1) × q, rounded to 0.1 s.</li>
 <li><b>Ideal chain.</b> For a chain with exponential intervals at target T, p50 is T × ln 2, p90 is T × ln 10 and p99 is T × ln 100, rounded to 0.1 s. These values are computed.</li>
-<li><b>Gaps.</b> M2 counts intervals strictly above five times the target.</li>
-<li><b>Reorgs and tips.</b> A reorg is a switch of our listener to a competing branch, its depth the number of blocks replaced. A tip competes when another block at the same height reaches our listener, and lasts until one of them is abandoned.</li>
+<li><b>Gaps.</b> M2 counts intervals strictly above five times the target of the set.</li>
+<li><b>Reorgs.</b> Every switch of our listener's tip to another branch counts, with its depth in blocks. M3 gives the number of switches of depth 2 or more, the distribution by depth 1, 2 and 3 or more, and the maximum depth.</li>
+<li><b>Chain split.</b> The chain split signal raises an alarm when two branches from the activation height are each seen by at least a stated number of peers and both are deeper than a stated number of blocks. An episode runs from the alarm to the all clear, cut to the set. M4 gives the total duration and the longest episode in seconds.</li>
 </ul>
 </section>
 <section id="peers-stable"><h2>How are peers and time to stable counted?</h2>
 <ul class="list">
-<li><b>Peer samples.</b> Our listener asks the peers it connects to for their software version. A peer counts as pre-upgrade when its version cannot follow the upgrade. The report shows three samples, at activation, after 24 hours and after 72 hours, each within one hour of its time. Further samples, such as one after 6 hours, stay in the raw data. Only the version is kept, no address.</li>
-<li><b>Time to stable.</b> For every block from one hour after activation on, we take the mean of the intervals in the hour before it. That mean is in the band when it lies within 20 %% of the new target T. Time to stable is the time from the activation block to the first block from which the mean stays in the band for 60 minutes without a break. If no block does within the window, the report says so.</li>
-<li><b>Our estimate.</b> M7 compares the time of the activation block with our own estimate, published before activation with its date.</li>
+<li><b>Peer samples.</b> Our listener reads the protocol version that each peer it connects to sends in the handshake. A peer counts as pre-upgrade when its version is below the minimum protocol version of the upgrade. The share is given in %% of n, rounded to 0.1. The report shows the samples at activation, after 24 hours and after 72 hours. Further samples, such as one after 6 hours, stay in the raw data. Only the version is kept, no address.</li>
+<li><b>Time to stable.</b> For every block of the set after activation whose header time is at least one hour after the activation time, we take the mean of the intervals of the blocks in the hour up to it. That mean is in the band when it lies within 20 %% of the new target T. Time to stable is the time in whole seconds from the activation block to the first block from which the mean stays in the band for 60 minutes without a break, with the data covering those 60 minutes. If no block does within the window, the report says so.</li>
+<li><b>Our estimate.</b> M7 gives the header time of the activation block and its gap to our own estimate in whole seconds, published before activation with its date.</li>
 </ul>
 </section>
 <section id="data"><h2>What does the data file contain?</h2>
-<p>Each report publishes one CSV with the columns report_id, method_version, kind, label, height, time_utc and value. A row of kind block holds a height, its header time and the interval to the block before. Rows of kind reorg hold the depth, rows of kind tip the duration in seconds, and rows of kind peer the sample label and 1 for pre-upgrade software or 0 for upgraded software.</p>
+<p>Each report publishes one CSV with the columns report_id, method_version, kind, label, height, time_utc and value. Rows of kind block run from the block before the window to the first block after it, each with its header time and interval. Rows of kind reorg hold the depth, rows of kind split the alarm or all clear of the chain split signal, rows of kind peer the sample and 1 for a peer below the minimum protocol or 0 above it, and one row of kind meta says that the listener log is complete.</p>
 <p>The page shows the sha256 of the CSV. Every value on the page is computed again from that file before the page is built.</p>
 </section>
 <section id="changelog"><h2>Changelog</h2>

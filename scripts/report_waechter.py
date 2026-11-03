@@ -317,7 +317,8 @@ def pruefe_seite_html(roh, soll, datei):
         fen = a.get("data-f", "")
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", fen):
             f.append(("a", "%s ohne fenster in utc" % key))
-        elif fenster_text(fen) not in html.unescape(re.sub(r"<[^>]+>", "", roh)):
+        elif (fenster_text(fen) if fen.split("/")[0] != fen.split("/")[1] else lang(ts(fen.split("/")[0]))) \
+                not in html.unescape(re.sub(r"<[^>]+>", "", roh)):
             f.append(("a", "%s, fenster %s steht nicht sichtbar auf der seite" % (key, fen)))
         sichtbar = m.group(4) or ""
         if a.get("data-k") and a.get("data-n") and sichtbar != "%s, n %s" % (a["data-k"], betrag(int(a["data-n"]))
@@ -425,6 +426,14 @@ def alle(render, css=""):
 
 # --- selbsttest -----------------------------------------------------------
 
+def _kette(ur, kopf, text):
+    """kette, aktivierungshoehe und kopfzeit aus einer roh-csv, fuer den selbsttest."""
+    rows = ur.zeilen(text)
+    kette = {z["h"]: int(z["t"]) for z in rows if z["kind"] == "block"}
+    akt = kopf["aktivierungshoehe"]["wert"]
+    return kette, akt, kette[akt]
+
+
 def selbsttest():
     sys.path.insert(0, HERE)
     sys.path.insert(0, os.path.join(HERE, "ph"))
@@ -462,16 +471,24 @@ def selbsttest():
         w = ur.oeffentlich(ur.rechnen(kopf, ur.zeilen(text)))
         gut = dict(kopf, werte=w)
         s, ww = lauf(gut, text)
+        kz = ww["kz"]
         ok("sauberer datensatz geht durch", s["datei"] == "reports/test-chain-up1.html")
-        ok("M1 nach der aktivierung hat werte", ww["M1"]["nachher"]["n"] > 10000)
-        ok("perzentil nach naechstem rang", ur.rang([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 90) == 9
-           and ur.rang([5], 50) == 5 and ur.rang([1, 2], 50) == 1)
-        ok("ideale kette bei 25 s, p50 17.3 s", ur.ideal(25, 0.5) == 17.3)
-        ok("M6 stabil gefunden, nach der ersten vollen stunde", w["M6"]["sekunden"] is not None
-           and w["M6"]["sekunden"] >= 3600 and (w["M6"]["band_von_s"], w["M6"]["band_bis_s"]) == (20.0, 30.0))
-        ok("probe nach 6 h bleibt in den rohdaten, nicht in M5", "plus_6h" in text and "plus_6h" not in w["M5"])
+        ok("M1 nach der aktivierung hat werte", kz["p50_nach"]["n"] > 10000)
+        ok("perzentil mit linearer interpolation", ur.quantil([1, 2, 3, 4], 0.5) == 2.5
+           and ur.quantil([10, 20], 0.9) == 19.0 and ur.r(ur.quantil([1, 2, 4], 0.99)) == 4.0)
+        ok("modell bei 25 s, p50 17.3 s", kz["p50_nach_modell"]["wert"] == 17.3)
+        ok("abstand des aktivierungsblocks gehoert zu nach", kz["p50_nach"]["n"]
+           == len([h for h in ur.grenzen(*_kette(ur, kopf, text))[1]]))
+        ok("M3 verteilung und kopfzahl ab tiefe 2", (kz["reorgs_ab_tiefe_2_vor"]["wert"],
+           kz["reorgs_tiefe_1_vor"]["wert"], kz["reorgs_tiefe_3_plus_nach"]["wert"]) == (1, 2, 1))
+        ok("M4 episoden, offene episode endet am fenster", kz["kettenspaltung_dauer_nach"]["n"] == 3)
+        ok("M5 anteil in prozent, probe nach 6 h nicht im report",
+           w["peers_unter_min_protokoll_aktivierung"]["wert"] == "35.0"
+           and not any("plus_6h" in k for k in w) and ",peer,plus_6h," in text)
+        ok("M6 stabil in ganzen sekunden, nach der ersten vollen stunde",
+           re.fullmatch(r"\d+", w["zeit_bis_stabil"]["wert"]) and int(w["zeit_bis_stabil"]["wert"]) >= 3600)
         roh = b2b_pages.render(s)
-        ok("jeder wert steht mit kennung auf der seite", roh.count('class="mv"') == len(ur.seiten_werte(w)))
+        ok("jeder wert steht mit kennung auf der seite", roh.count('class="mv"') == len(ur.seiten_werte(ww)))
         ok("zitierblock mit id und bibtex", "@misc{PH-UR-2026-999," in roh and "method v1.0" in roh)
         ok("sha256 der csv auf der seite", hashlib.sha256(text.encode()).hexdigest() in roh)
 
@@ -491,36 +508,40 @@ def selbsttest():
             lambda s_: b2b_pages.render(s_).replace('<span class="mk">', '<span class="mx">', 1))
         # b) neu rechnen
         w2 = json.loads(json.dumps(w))
-        w2["M1"]["nachher"]["p90"] += 1
+        w2["p90_nach"]["wert"] = str(round(float(w2["p90_nach"]["wert"]) + 0.1, 1))
         rot("sitzung meldet anderes p90", "b", dict(kopf, werte=w2), text)
+        w2n = json.loads(json.dumps(w))
+        w2n["reorgs_tiefe_1_vor"]["n"] = "99"
+        rot("sitzung meldet anderes n", "b", dict(kopf, werte=w2n), text)
         rot("seite zeigt anderen wert", "b", gut, text,
-            lambda s_: b2b_pages.render(s_).replace('data-m="M3.reorgs" data-v="1"', 'data-m="M3.reorgs" data-v="0"'))
+            lambda s_: b2b_pages.render(s_).replace('data-m="reorgs_ab_tiefe_2_vor" data-v="&quot;1&quot;"',
+                                                    'data-m="reorgs_ab_tiefe_2_vor" data-v="&quot;0&quot;"'))
         rot("csv ohne werte", "b", dict(kopf, werte=None), text)
         w6 = json.loads(json.dumps(w))
-        w6["M6"]["sekunden"] += 60
+        w6["zeit_bis_stabil"]["wert"] = str(int(w6["zeit_bis_stabil"]["wert"]) + 60)
         rot("sitzung meldet andere zeit bis stabil", "b", dict(kopf, werte=w6), text)
+        w6m = json.loads(json.dumps(w))
+        w6m["zeit_bis_stabil"]["wert"] = str(round(int(w6m["zeit_bis_stabil"]["wert"]) / 60, 1))
+        rot("sitzung meldet zeit bis stabil in minuten", "b", dict(kopf, werte=w6m), text)
         rot("geruest zeigt messwerte", "b", dict(kopf, csv=None, werte=None), None,
-            lambda s_: b2b_pages.render(s_).replace("</main>", wert_html("M3.reorgs", 0, "0", "counted", 1,
+            lambda s_: b2b_pages.render(s_).replace("</main>", wert_html("reorg_max_tiefe_vor", "0", "0", "counted", 1,
                                                                          "2026-11-06T00:00:00Z/2026-11-06T01:00:00Z")
                                                      + "</main>"))
         # c) plausibel und fenster
         w3 = json.loads(json.dumps(w))
-        w3["M1"]["vorher"]["p50"] = w3["M1"]["vorher"]["p99"] + 1
+        w3["p50_vor"]["wert"] = str(float(w3["p99_vor"]["wert"]) + 1)
         rot("p50 groesser als p99", "c", dict(kopf, werte=w3), text)
         w4 = json.loads(json.dumps(w))
-        w4["M3"]["reorgs"] = -1
+        w4["reorgs_tiefe_1_nach"]["wert"] = "-1"
         rot("negative zaehlung", "c", dict(kopf, werte=w4), text)
         zl = text.split("\n")
-        weit = [z for z in zl if ",block," in z]
-        t0 = ts(weit[0].split(",")[5])
-        frueh = zl[:1] + [z.replace(weit[0].split(",")[5], iso(t0 - 3 * 3600)) if z == weit[0] else z for z in zl[1:]]
-        rot("zeile ausserhalb des fensters", "c", gut, "\n".join(frueh))
+        bl = [z for z in zl if ",block," in z]
+        rot("block vor dem fenster fehlt", "c", gut, "\n".join(z for z in zl if z != bl[0]))
+        rot("fenster nach der aktivierung unvollstaendig", "c", gut, "\n".join(z for z in zl if z not in bl[-400:]))
         ohne_h = "\n".join(z for z in zl if not re.search(r",block,,%d," % kopf["aktivierungshoehe"]["wert"], z))
         rot("block auf der aktivierungshoehe fehlt", "c", gut, ohne_h)
         rot("csv mit fremder spalte", "c", gut, text.replace("report_id,", "report,", 1))
-        z6 = [z for z in zl if ",peer,plus_6h," in z][0]
-        rot("probe nach 6 h ausserhalb ihrer stunde", "c", gut,
-            text.replace(z6, z6.replace(z6.split(",")[5], iso(ts(z6.split(",")[5]) + 3 * 3600)), 1))
+        rot("blockhoehen mit luecke", "c", gut, "\n".join(z for z in zl if z != bl[len(bl) // 2]))
         rot("report-id mit falschem praefix", "c", dict(gut, id="PH-CD-2026-999"), text)
         rot("report-id mit falschem jahr", "c", dict(gut, id="PH-UR-2025-999"), text)
         # d) zwei quellen
@@ -536,8 +557,8 @@ def selbsttest():
         # e) adressen und schluessel
         rot("ip-adresse im hinweis", "e", dict(gut, hinweis="Peer 203.0.113.7 answered first."), text)
         rot("hostname im hinweis", "e", dict(gut, hinweis="Our node runs on zebra1.example.net here."), text)
-        rot("peer-adresse in der csv", "e", gut, text.replace(",peer,activation,,", ",peer,activation,,", 1)
-            + "PH-UR-2026-999,1.0,peer,activation,,2026-11-06T02:40:00Z,0 seed.example.org:8233\n")
+        rot("peer-adresse in der csv", "e", gut,
+            text + "PH-UR-2026-999,1.0,peer,activation,,2026-11-06T02:40:00Z,0 seed.example.org:8233\n")
         rot("schluessel im hinweis", "e", dict(gut, hinweis="ghp_" + "A1b2C3d4" * 5), text)
         # f) textregeln
         rot("gedankenstrich", "f", dict(gut, hinweis="Fast blocks – as planned."), text)
