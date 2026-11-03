@@ -3,7 +3,7 @@
 Auftrag von Ben vom 2.11.2026, mit der Ergänzung "Measurement Framework" vom selben Tag. Frist Do 5.11. 18:00 Berlin. Damit soll Zcash NU7 als erster Report im Format erscheinen; die Aktivierung ist um den 6.11. geschätzt. Umgesetzt in **#52** (Branch `site/upgrade-report-standard`).
 
 - **Workflows:** Keine Workflow-, deploy- oder c2-Datei ist geändert.
-- **Wer merged:** Ben, weil der PR öffentliche Regeln festlegt und vier Fragen offen sind (siehe unten). Sagt Ben "go", merge ich selbst.
+- **Wer merged:** Ben, nach Claudes Prüfung (Entscheidung vom 3.11.). Kein Selbst-Merge.
 
 ## Was gemacht wurde
 
@@ -103,7 +103,7 @@ So sieht ein Report mit Zahlen aus. Das Muster ist aus Testdaten einer erfundene
 ## Prüfungen
 - **Textregeln:** `b2b_check` 0 von 20 Seiten mit Fund.
 - **Wächter:** `report_waechter.py --pruefen` meldet "ok PH-UR-2026-001 zcash-nu7, geruest".
-- **Selbsttests:** Wächter 42 von 42, `ops_melden.py` 0 Fehler.
+- **Selbsttests:** Wächter 46 von 46 (am 2.11. 42 von 42), `ops_melden.py` 0 Fehler.
 - **Screenshots:** 390 und 1440 px aller neuen Seiten, kein waagerechtes Scrollen. Auf der Report-Seite mit Zahlen brach zuerst die sha256-Zeile bei 390 px aus. Das ist behoben.
 - **Code und Daten:**
   - `pyflakes` ohne Fund;
@@ -121,26 +121,63 @@ Screenshots (1440 px, ganze Seite):
 
 ![/independence](2026-11-02-upgrade-report-standard/independence-1440.jpg)
 
+![/cases/kaspa](2026-11-02-upgrade-report-standard/cases-kaspa-1440.jpg)
+
 Die Fassungen für 390 px liegen im selben Ordner.
 
+## Nachtrag 3.11.2026, Bens Entscheidungen eingearbeitet
+**Neuer Kopf von #52:**
+- Code und Seiten stehen in Commit `b8056ec`.
+- Dieser Bericht kommt als Commit danach.
+- Den Kopf beim Merge nennt Claude nach dem Merge.
+
+**Merge:** Kein Selbst-Merge, Ben merged nach Claudes Prüfung.
+
+| Nr. | Entscheidung | Umsetzung |
+|---|---|---|
+| 1 | M6, Mittel der letzten Stunde innerhalb ±20 % von T, stabil ab dem ersten Block, nach dem das 60 min ohne Unterbrechung gilt | `upgrade_report.py` rechnet so, Band 20 s bis 30 s bei T = 25 s. Ein Block zählt nur, wenn die Daten die 60 min danach ganz abdecken. Spezifikation, /standard/upgrade-report/v1-0 und Selbsttest sind angepasst. Die Seite zeigt Zeit bis stabil (counted) und beide Bandgrenzen (computed) |
+| 2 | keine Grants auf /independence | "It is funded by fees for paid measurements." Der Lead nennt keinen Grant mehr. Die Startseite spricht weiter Stiftungen und Grant-Gremien als Zielgruppe an, sie behauptet aber keine Finanzierung. Soll das auch weg, sag Bescheid |
+| 3 | Kaspa Pulse nirgends auf pulsehawk.io | Raus aus Fußzeile, Organisations-Schema (`sameAs`), `llms.txt`, /independence und der Kaspa-Fallseite. Die Kaspa-Fallseite nennt für 10 Blöcke je Sekunde KIP-14 als Quelle, für die Gebühren Kaspalytics. Die FAQ zu Kaspa Pulse, der Abschnitt "Where can I follow Kaspa?" und der Link auf Rohdaten im kaspa-pulse-Repo sind weg, ebenso ein HTML-Kommentar mit dem Namen. `scripts/` geht nicht mehr auf die Website, weil die Skripte den Namen in Kommentaren tragen. Die Quellangabe in `data/zcash-nu7/mainnet-stand.json` ist neutral. `b2b_check` und der Wächter melden den Namen künftig in jeder Schreibweise, auch im Schema |
+| 4 | geplante Typen bleiben noindex | bleibt so |
+| 5 | "Our listener asks the peers" | so übernommen. Auch bei Reorgs, Tips und Header-Zeiten steht jetzt "listener" statt "node". Die Proben bei 0, +24 und +72 h stehen im Report. Die Probe nach 6 h ist als Rohzeile `plus_6h` erlaubt, aber nicht in M5 |
+| 6 | Schätzung 2026-11-06T02:39:52Z, as of 2026-11-02, Band 00:28:23 bis 05:00:17 UTC | in `data/reports/zcash-nu7.json`. Die Seite zeigt "6 November 2026, 02:39 UTC … with 9 in 10 of our draws between … 00:28 UTC and … 05:00 UTC, as of 2 November 2026" |
+| 7 | CSV-Schnittstelle zu `report_v1.py` | `data/reports/README.md` beschreibt beide Dateien und die Zuordnung der Kennzahlen zu `werte`. Siehe die Absätze darunter |
+
+**Wer die Roh-CSV im PH-Format baut, und wo sie liegt:**
+- **Wer:** die messende Sitzung in kaspa-pulse, aus denselben Eingängen wie `report_v1.py` (Köpfe, Log, Zustand, Ereignisse der Wache), bis spätestens 9.11.2026.
+- **Wo:** kaspa-pulse, Branch `messung/zcash-mainnet`, Datei `data/zcash-mainnet/report/zcash-nu7.csv` mit `.sha256`.
+- **Danach:** Eine Sitzung in pulsehawk-site kopiert sie unverändert nach `reports/zcash-nu7.csv` und trägt die Werte aus der Messwert-CSV unter `werte` ein.
+- **Warum dort:** Nur die messende Sitzung hat die Rohdaten. Peer-Adressen bleiben so in kaspa-pulse.
+
+**Datum:** Spezifikation v1.0 und Report tragen jetzt den 3.11.2026, den Tag der Entscheidungen. Veröffentlicht ist noch nichts.
+
+### Unterschiede zwischen `report_v1.py` und Spezifikation v1.0, vor dem Merge zu klären
+Ich habe `scripts/wache/report_v1.py` gelesen, auf main und auf `wache/report-v1-c2`, Stand 3.11. 11:57 UTC. Prüfung b) vergleicht die Werte der Sitzung **exakt** mit der Rechnung aus der Roh-CSV. Bei diesen Unterschieden bleibt b) rot, und der Report wird nicht gebaut:
+
+| Punkt | `report_v1.py` | Spezifikation v1.0 und `upgrade_report.py` |
+|---|---|---|
+| M6 Band | Variante "mittel" mit ±10 % (`STABIL_TOLERANZ = 0.10`) | ±20 % nach Entscheidung 1. **report_v1.py muss auf 0.20** |
+| M6 Rand | stabil auch, wenn das Band bis zum Ende der Daten hält, selbst wenn weniger als 60 min übrig sind | die 60 min müssen ganz in den Daten liegen |
+| M6 Einheit | Minuten, auf 0.1 gerundet | Sekunden, ganzzahlig |
+| M1 Perzentile | lineare Interpolation, auf 0.1 s gerundet | nächster Rang, ganzzahlig |
+| M1 und M2 Mengen | "nach" zählt den Abstand des Aktivierungsblocks mit. "vor" beginnt mit dem Abstand zu einem Block vor dem Fenster | der Abstand am Aktivierungsblock gehört zu keiner Menge, gerechnet wird nur innerhalb der CSV |
+| Fenstergrenze | über die Höhe: der erste Block ab der Zeitgrenze und alles danach | über die Zeit jeder Zeile |
+| M3 | getrennt vor und nach der Aktivierung | ein Wert für das ganze Fenster |
+| M4 | Dauer der Episoden des Signals "kettenspaltung" (zwei Zweige mit Mindest-Peers und Mindesttiefe), Summe und längste | Höhen mit konkurrierenden Tips, meiste Tips an einer Höhe, längste Dauer |
+| M5 | Anteil in Prozent, Peers unter dem Mindestprotokoll, gezählt beim Handschlag | alte Peers durch n, je Peer eine Zeile 1 oder 0 |
+
+**Empfehlung:** Die Spezifikation folgt `report_v1.py`, denn sie beschreibt, was der Zuhörer wirklich messen kann. Das gilt für M3 (vor und nach getrennt), M4 (Episoden des Signals), die Mengen bei M1 und M2 und die Fenstergrenze über die Höhe. Bei den Perzentilen ist beides gut; einer muss nachgeben. `report_v1.py` stellt M6 auf ±20 % und auf die volle Stunde um, mit Sekunden statt Minuten.
+
+Wenn du das so entscheidest, passe ich Spezifikation, Generator und Selbsttest vor dem Merge an. Nach dem Merge wäre es schon v1.1.
+
 ## Offene Fragen an Ben
-1. **M6 Time to stable, wichtig vor dem 6.11.** Dein Text sagt "rolling 1 h p50 within 10 % of target".
-   - **Wörtlich erreicht das keine Kette:** Bei zufälligen Blockabständen liegt der p50 einer idealen Kette bei T × ln 2, also 17.3 s bei 25 s. Er liegt nie in der Nähe von 25 s.
-   - **Umsetzung:** Ich messe deshalb gegen die idealen 17.3 s. Das steht so in der Spezifikation.
-   - **Zweites Problem, die Streuung:** Über eine Stunde sind es nur etwa 144 Abstände. Der p50 schwankt dann um etwa 12 %, selbst bei einer idealen Kette. "Zum ersten Mal innerhalb von 10 %" kann darum ein Zufallstreffer sein.
-   - **Vorschlag:** "3 Stunden in Folge innerhalb von 10 %" oder ein Fenster von 6 Stunden.
-   - **Zeitpunkt:** Jede Änderung nach dem Merge wäre schon v1.1. Besser entscheiden wir das vorher.
-2. **Finanzierung:** Auf /independence steht: "run by Vizora Digital UG, funded by fees for paid measurements and by grants for public measurements". Stimmt das so?
-3. **Kaspa Pulse auf /independence:** Die alte Regel "The same team runs Kaspa Pulse" ist raus, wegen "Kaspa-Pulse-Marke nein". Die Fußzeile nennt kaspapulse.com weiter auf allen Seiten. Soll ein neutraler Satz zur Verbindung auf /independence bleiben? Für die Unabhängigkeit wäre das ehrlicher.
-4. **M3, M4 und M5 bei Zcash:**
-   - **M3 und M4:** Die Zählung in kaspa-pulse läuft über einen Header-Client. Kann er Reorgs und konkurrierende Tips sehen und aufschreiben? Sonst stünde bei M3 und M4 eine 0, die nur "nicht beobachtet" heißt. Dann sollten wir die Sitzung anweisen, das mitzuschreiben.
-   - **M5:** Gibt es um +24 h und +72 h eine Peer-Probe?
-5. **Schätzung für M7:** Eingetragen ist unsere Schätzung vom Stand 28.10., also 6.11. 02:26 UTC. Du nennst 02:40 UTC. Soll die messende Sitzung vor der Aktivierung den letzten Stand eintragen, mit dessen Datum?
-6. **Geplante Typen:** Sind die fünf Sätze so recht, und sollen ihre Unterseiten bis zur Spezifikation `noindex` bleiben?
+Die Fragen 1 bis 6 vom 2.11. sind mit den Entscheidungen vom 3.11. beantwortet, siehe Nachtrag. Offen ist:
+1. **Unterschiede zu `report_v1.py`:** Welche Seite gibt nach, Spezifikation oder `report_v1.py`? Die Tabelle steht im Nachtrag, meine Empfehlung darunter. Das sollte vor dem Merge feststehen.
+2. **Startseite:** Soll der Abschnitt "For foundations and grant committees" bleiben?
 
 ## Was Ben tun muss
 1. In pulsehawk-site das Secret `DISCORD_WEBHOOK_LOG` anlegen (Webhook von #ops-log), unter Settings, Secrets and variables, Actions.
    - **Lokale Läufe:** Läuft der Wächter in einer Claude-Sitzung, steht die Meldung nur im Log.
    - **Workflow:** Soll ein Workflow Reports bauen und melden, wäre das ein eigener PR, den Ben merged.
-2. Fragen 1 bis 6 beantworten, vor allem Frage 1 vor dem 6.11.
-3. #52 prüfen und mergen, oder "go" sagen, dann merge ich.
+2. Frage 1 entscheiden, vor dem Merge.
+3. #52 nach Claudes Prüfung mergen.
