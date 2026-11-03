@@ -24,7 +24,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 ZIEL = os.path.join(REPO, "data", "zcash-nu7", "mainnet-stand.json")
-QUELLE = "kaspa-pulse, Branch messung/zcash-mainnet, data/zcash-mainnet/%s"
+# keine Markennamen in Dateien, die auf pulsehawk.io liegen (Ben, 3.11.2026)
+QUELLE = "eigener Header-Client, Zcash Mainnet, %s"
 
 
 def kuerzen(st, name):

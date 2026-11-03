@@ -30,9 +30,17 @@ METHODE_PFAD = "/standard/upgrade-report/v1-0"   # jede version bleibt unter ihr
 VOR_S = 24 * 3600                   # fenster 24 h vor der aktivierungshoehe
 NACH_S = 72 * 3600                  # bis 72 h danach
 LUECKE_FAKTOR = 5                   # M2, abstaende ueber 5 x ziel
+# M6 nach Bens Entscheidung vom 3.11.2026: das Mittel der Blockabstaende der
+# letzten Stunde liegt innerhalb +-20 % des neuen Ziels T, stabil ab dem ersten
+# Block, nach dem das 60 Minuten ohne Unterbrechung gilt. Dieselbe Rechnung
+# macht report_v1.py in kaspa-pulse, Variante "mittel".
 STABIL_FENSTER_S = 3600             # M6, gleitendes fenster 1 h
-STABIL_TOLERANZ = 0.10              # M6, innerhalb 10 %
+STABIL_HALTEN_S = 3600              # M6, 60 min ohne unterbrechung im band
+STABIL_TOLERANZ = 0.20              # M6, innerhalb 20 % des ziels
+# die proben, die der report zeigt. Die Wache probt auch nach 6 h, diese Probe
+# bleibt in den Rohdaten (label plus_6h) und erscheint nicht in M5.
 PROBEN = (("activation", 0), ("plus_24h", 24 * 3600), ("plus_72h", 72 * 3600))
+PROBEN_ROH = PROBEN + (("plus_6h", 6 * 3600),)
 PROBE_TOLERANZ_S = 3600             # M5, probe hoechstens 1 h neben ihrem zeitpunkt
 CSV_SPALTEN = ["report_id", "method_version", "kind", "label", "height", "time_utc", "value"]
 METRIKEN = [
@@ -48,8 +56,8 @@ METRIKEN = [
      "The share of peers in our sample that run pre-upgrade software at activation, "
      "24 hours later and 72 hours later, with n."),
     ("M6", "Time to stable",
-     "The time from the activation block until the rolling 1 hour p50 of block intervals "
-     "first lies within 10 % of the p50 computed for an ideal chain at the new target."),
+     "The time from the activation block until the mean of the block intervals over the last hour "
+     "lies within 20 % of the new target and stays there for 60 minutes without a break."),
     ("M7", "First block at the activation height",
      "Its time and the gap to our own estimate published before activation."),
 ]
@@ -90,9 +98,9 @@ def zeilen(text):
         if art not in ("block", "reorg", "tip", "peer"):
             raise ValueError("zeile %d, kind %r unbekannt" % (i, art))
         if art == "peer":
-            if z["label"] not in dict(PROBEN) or z["height"] or z["value"] not in ("0", "1"):
+            if z["label"] not in dict(PROBEN_ROH) or z["height"] or z["value"] not in ("0", "1"):
                 raise ValueError("zeile %d, peer braucht label %s, leere height, value 0 oder 1"
-                                 % (i, "/".join(dict(PROBEN))))
+                                 % (i, "/".join(dict(PROBEN_ROH))))
         elif z["label"]:
             raise ValueError("zeile %d, label nur bei peer" % i)
         if art != "peer" and not re.fullmatch(r"\d+", z["height"]):
@@ -146,16 +154,23 @@ def rechnen(kopf, rows):
         proben[name] = {"n": len(p), "alt": sum(z["v"] for z in p),
                         "von": min((z["t"] for z in p), default=None),
                         "bis": max((z["t"] for z in p), default=None)}
-    # M6: erster block ab aktivierung + 1 h, dessen gleitender p50 der letzten
-    # stunde innerhalb von 10 % des idealen p50 beim neuen ziel liegt
-    ref = t_nach * math.log(2)
-    stabil, fenster_n = None, 0
-    for t, _ in nach_paare:
+    # M6: fuer jeden block ab aktivierung + 1 h das mittel der abstaende der
+    # bloecke in der stunde davor (zeit u mit t - 1 h < u <= t). Stabil ab dem
+    # ersten block, ab dem jedes mittel bis 60 min spaeter im band liegt und die
+    # daten diese 60 min ganz abdecken.
+    lo, hi = t_nach * (1 - STABIL_TOLERANZ), t_nach * (1 + STABIL_TOLERANZ)
+    punkte = sorted(nach_paare)
+    verlauf = []
+    for t, _ in punkte:
         if t < ta + STABIL_FENSTER_S:
             continue
-        fenster_n += 1
-        r = rang([a for u, a in nach_paare if t - STABIL_FENSTER_S < u <= t], 50)
-        if abs(r - ref) <= STABIL_TOLERANZ * ref:
+        w60 = [a for u, a in punkte if t - STABIL_FENSTER_S < u <= t]
+        verlauf.append((t, lo <= sum(w60) / len(w60) <= hi))
+    stabil = None
+    for i, (t, drin) in enumerate(verlauf):
+        if not drin or verlauf[-1][0] < t + STABIL_HALTEN_S:
+            continue
+        if all(d for u, d in verlauf[i:] if u <= t + STABIL_HALTEN_S):
             stabil = t - ta
             break
     schaetz = ts(kopf["schaetzung"]["zeit_utc"])
@@ -166,7 +181,8 @@ def rechnen(kopf, rows):
         "M4": {"hoehen": len(konk), "max_tips": max((len(d) for d in konk.values()), default=0),
                "laengste_s": max((max(d) for d in konk.values()), default=0)},
         "M5": {k: {"n": v["n"], "alt": v["alt"]} for k, v in proben.items()},
-        "M6": {"sekunden": stabil, "fenster": fenster_n, "ref_s": round(ref, 1)},
+        "M6": {"sekunden": stabil, "fenster": len(verlauf), "band_von_s": round(lo, 1),
+               "band_bis_s": round(hi, 1)},
         "M7": {"zeit_utc": iso(ta), "abstand_s": ta - schaetz},
         "_fenster": {"von": ta - VOR_S, "bis": ta + NACH_S, "ta": ta,
                      "proben": {k: (v["von"], v["bis"]) for k, v in proben.items()}},
@@ -217,7 +233,7 @@ def pruefe_plausibel(w, rows=None, kopf=None):
                 break
         if bl[0] >= H or bl[-1] <= H:
             f.append(("c", "fenster deckt die aktivierungshoehe nicht von beiden seiten"))
-        for name, ab in PROBEN:
+        for name, ab in PROBEN_ROH:
             p = [z["t"] for z in rows if z["kind"] == "peer" and z["label"] == name]
             if p and (min(p) < ta + ab - PROBE_TOLERANZ_S or max(p) > ta + ab + PROBE_TOLERANZ_S):
                 f.append(("c", "peer-probe %s nicht innerhalb 1 h um aktivierung %+d h"
@@ -256,7 +272,8 @@ def seiten_werte(w):
     for k, v in w["M5"].items():
         aus["M5.%s.alt" % k] = v["alt"]
     aus["M6.sekunden"] = w["M6"]["sekunden"]
-    aus["M6.ref_s"] = w["M6"]["ref_s"]
+    aus["M6.band_von_s"] = w["M6"]["band_von_s"]
+    aus["M6.band_bis_s"] = w["M6"]["band_bis_s"]
     aus["M7.zeit_utc"] = w["M7"]["zeit_utc"]
     aus["M7.abstand_s"] = w["M7"]["abstand_s"]
     return aus
@@ -287,8 +304,7 @@ def body(kopf, w, csv_text):
         s = kopf["schaetzung"]
         for mid, name, was in METRIKEN:
             # zu M7 gehoert unsere schaetzung, die vor der aktivierung feststeht
-            extra = ("<p>Our estimate before activation is %s, computed from our count of the "
-                     "block pace, as of %s.</p>" % (lang(ts(s["zeit_utc"])), datum_lang(s["datum"]))
+            extra = ("<p>Our estimate before activation is %s.</p>" % schaetz_text(s)
                      if mid == "M7" else "")
             teile.append('<section id="%s"><h2>%s %s</h2><p>%s</p>%s<p class="note">Not yet counted. '
                          'The numbers follow after block %s, from our own count.</p></section>'
@@ -370,8 +386,10 @@ def body(kopf, w, csv_text):
         teile.append(tabelle("m6", "M6 Time to stable", [
             ("Time to stable", wert_html("M6.sekunden", m6["sekunden"], dauer_text(m6["sekunden"]),
                                          "counted", m6["fenster"], f_nach)),
-            ("Reference p50 of an ideal chain at %d s" % t_nach,
-             wert_html("M6.ref_s", m6["ref_s"], "%s s" % m6["ref_s"], "computed", m6["fenster"], f_nach)),
+            ("Lower edge of the band, 20 %% below %d s" % t_nach,
+             wert_html("M6.band_von_s", m6["band_von_s"], "%s s" % m6["band_von_s"], "computed", m6["fenster"], f_nach)),
+            ("Upper edge of the band, 20 %% above %d s" % t_nach,
+             wert_html("M6.band_bis_s", m6["band_bis_s"], "%s s" % m6["band_bis_s"], "computed", m6["fenster"], f_nach)),
         ], fenster_text(f_nach)))
         s = kopf["schaetzung"]
         teile.append(tabelle("m7", "M7 First block at the activation height", [
@@ -379,8 +397,7 @@ def body(kopf, w, csv_text):
                                                        lang(ts(w["M7"]["zeit_utc"])), "counted", 1, f_alle)),
             ("Gap to our estimate", wert_html("M7.abstand_s", w["M7"]["abstand_s"], "%+d s" % w["M7"]["abstand_s"],
                                               "computed", 1, f_alle)),
-        ], fenster_text(f_alle), "<p>Our estimate was %s, computed from our count of the block pace, as of %s.</p>"
-                                % (lang(ts(s["zeit_utc"])), datum_lang(s["datum"]))))
+        ], fenster_text(f_alle), "<p>Our estimate was %s.</p>" % schaetz_text(s)))
         sha = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
         teile.append(
             '<section id="data"><h2>Data</h2><p>%s, method v%s, %s rows.</p>'
@@ -391,6 +408,15 @@ def body(kopf, w, csv_text):
     teile.append('<p>Corrections to this report are dated and listed on %s.</p>'
                  % '<a href="/independence#corrections">our independence page</a>')
     return "\n".join(teile)
+
+
+def schaetz_text(s):
+    """unsere schaetzung fuer den aktivierungsblock, mit band und datum."""
+    t = "%s, computed from our count of the block pace" % lang(ts(s["zeit_utc"]))
+    if s.get("band_von_utc") and s.get("band_bis_utc"):
+        t += ", with 9 in 10 of our draws between %s and %s" % (lang(ts(s["band_von_utc"])),
+                                                                 lang(ts(s["band_bis_utc"])))
+    return t + ", as of %s" % datum_lang(s["datum"])
 
 
 def titel(kopf):
@@ -485,9 +511,10 @@ def test_csv(kopf, ta=None):
     wr.writerow([rid, mv, "reorg", "", H + 40, iso(ta + 1000), 1])
     wr.writerow([rid, mv, "tip", "", H + 40, iso(ta + 990), 12])
     wr.writerow([rid, mv, "tip", "", H + 40, iso(ta + 990), 9])
-    for name, ab in PROBEN:
+    alt = {"activation": 14, "plus_6h": 9, "plus_24h": 5, "plus_72h": 1}
+    for name, ab in PROBEN_ROH:
         for i in range(40):
-            wr.writerow([rid, mv, "peer", name, "", iso(ta + ab - i), 1 if i < {0: 14, 86400: 5, 259200: 1}[ab] else 0])
+            wr.writerow([rid, mv, "peer", name, "", iso(ta + ab - i), 1 if i < alt[name] else 0])
     return out.getvalue()
 
 
@@ -499,7 +526,7 @@ def test_csv(kopf, ta=None):
 # Wer eine neue Version anlegt, kopiert den Text der alten in einen eigenen
 # Zweig von spezifikation_html und aendert nur den neuen.
 VERSIONEN = [
-    ("1.0", "2026-11-02", "First version, with the values M1 to M7."),
+    ("1.0", "2026-11-03", "First version, with the values M1 to M7."),
 ]
 
 
@@ -515,7 +542,7 @@ def spezifikation_html(version):
     log = "".join("<li><b>Version %s, %s.</b> %s</li>" % (v, datum_lang(d), t) for v, d, t in VERSIONEN)
     return """
 <section id="scope"><h2>What does an Upgrade Report measure?</h2>
-<p>An Upgrade Report covers one network upgrade on one PoW or DAG chain. Its window runs from 24 hours before to 72 hours after the first block at the activation height. All times are in UTC. Block times are the timestamps in the block headers that our own node or header client receives.</p>
+<p>An Upgrade Report covers one network upgrade on one PoW or DAG chain. Its window runs from 24 hours before to 72 hours after the first block at the activation height. All times are in UTC. Block times are the timestamps in the block headers that our own listener or header client receives.</p>
 <p>The target interval and the activation height each come from two independent sources, a protocol constant and a release. If the two differ, no report is built.</p>
 </section>
 <section id="values"><h2>Which values does every Upgrade Report carry?</h2>
@@ -527,13 +554,13 @@ def spezifikation_html(version):
 <li><b>Percentiles.</b> A percentile is the value at rank ceil(q × n) of the sorted intervals, without interpolation.</li>
 <li><b>Ideal chain.</b> For a chain with exponential intervals at target T, p50 is T × ln 2, p90 is T × ln 10 and p99 is T × ln 100, rounded to 0.1 s. These values are computed.</li>
 <li><b>Gaps.</b> M2 counts intervals strictly above five times the target.</li>
-<li><b>Reorgs and tips.</b> A reorg is a switch of our node to a competing branch, its depth the number of blocks replaced. A tip competes when another block at the same height reaches our node, and lasts until one of them is abandoned.</li>
+<li><b>Reorgs and tips.</b> A reorg is a switch of our listener to a competing branch, its depth the number of blocks replaced. A tip competes when another block at the same height reaches our listener, and lasts until one of them is abandoned.</li>
 </ul>
 </section>
 <section id="peers-stable"><h2>How are peers and time to stable counted?</h2>
 <ul class="list">
-<li><b>Peer samples.</b> Our node asks the peers it connects to for their software version. A peer counts as pre-upgrade when its version cannot follow the upgrade. There are three samples, at activation, after 24 hours and after 72 hours, each within one hour of its time. Only the version is kept, no address.</li>
-<li><b>Time to stable.</b> For every block from one hour after activation on, we take the p50 of the intervals in the hour before it. Time to stable is the time from the activation block to the first block where that p50 lies within 10 %% of T × ln 2 at the new target. If no block does within the window, the report says so.</li>
+<li><b>Peer samples.</b> Our listener asks the peers it connects to for their software version. A peer counts as pre-upgrade when its version cannot follow the upgrade. The report shows three samples, at activation, after 24 hours and after 72 hours, each within one hour of its time. Further samples, such as one after 6 hours, stay in the raw data. Only the version is kept, no address.</li>
+<li><b>Time to stable.</b> For every block from one hour after activation on, we take the mean of the intervals in the hour before it. That mean is in the band when it lies within 20 %% of the new target T. Time to stable is the time from the activation block to the first block from which the mean stays in the band for 60 minutes without a break. If no block does within the window, the report says so.</li>
 <li><b>Our estimate.</b> M7 compares the time of the activation block with our own estimate, published before activation with its date.</li>
 </ul>
 </section>

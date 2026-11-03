@@ -158,7 +158,7 @@ TLD = ("com|net|org|io|cash|dev|xyz|onion|local|lan|internal|info|co|app|cloud|n
 RE_HOST = re.compile(r"\b(?:[a-z0-9-]+\.)+(?:%s)\b" % TLD, re.I)
 # hosts, die die seite selbst nennt: eigene domain, quellen, schema, analytics
 HOSTS_ERLAUBT = {"pulsehawk.io", "github.com", "zips.z.cash", "x.com", "schema.org",
-                 "creativecommons.org", "plausible.io", "kaspapulse.com", "z.cash"}
+                 "creativecommons.org", "plausible.io", "z.cash"}
 
 
 def funde_e(text, wo):
@@ -467,6 +467,9 @@ def selbsttest():
         ok("perzentil nach naechstem rang", ur.rang([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 90) == 9
            and ur.rang([5], 50) == 5 and ur.rang([1, 2], 50) == 1)
         ok("ideale kette bei 25 s, p50 17.3 s", ur.ideal(25, 0.5) == 17.3)
+        ok("M6 stabil gefunden, nach der ersten vollen stunde", w["M6"]["sekunden"] is not None
+           and w["M6"]["sekunden"] >= 3600 and (w["M6"]["band_von_s"], w["M6"]["band_bis_s"]) == (20.0, 30.0))
+        ok("probe nach 6 h bleibt in den rohdaten, nicht in M5", "plus_6h" in text and "plus_6h" not in w["M5"])
         roh = b2b_pages.render(s)
         ok("jeder wert steht mit kennung auf der seite", roh.count('class="mv"') == len(ur.seiten_werte(w)))
         ok("zitierblock mit id und bibtex", "@misc{PH-UR-2026-999," in roh and "method v1.0" in roh)
@@ -493,6 +496,9 @@ def selbsttest():
         rot("seite zeigt anderen wert", "b", gut, text,
             lambda s_: b2b_pages.render(s_).replace('data-m="M3.reorgs" data-v="1"', 'data-m="M3.reorgs" data-v="0"'))
         rot("csv ohne werte", "b", dict(kopf, werte=None), text)
+        w6 = json.loads(json.dumps(w))
+        w6["M6"]["sekunden"] += 60
+        rot("sitzung meldet andere zeit bis stabil", "b", dict(kopf, werte=w6), text)
         rot("geruest zeigt messwerte", "b", dict(kopf, csv=None, werte=None), None,
             lambda s_: b2b_pages.render(s_).replace("</main>", wert_html("M3.reorgs", 0, "0", "counted", 1,
                                                                          "2026-11-06T00:00:00Z/2026-11-06T01:00:00Z")
@@ -512,6 +518,9 @@ def selbsttest():
         ohne_h = "\n".join(z for z in zl if not re.search(r",block,,%d," % kopf["aktivierungshoehe"]["wert"], z))
         rot("block auf der aktivierungshoehe fehlt", "c", gut, ohne_h)
         rot("csv mit fremder spalte", "c", gut, text.replace("report_id,", "report,", 1))
+        z6 = [z for z in zl if ",peer,plus_6h," in z][0]
+        rot("probe nach 6 h ausserhalb ihrer stunde", "c", gut,
+            text.replace(z6, z6.replace(z6.split(",")[5], iso(ts(z6.split(",")[5]) + 3 * 3600)), 1))
         rot("report-id mit falschem praefix", "c", dict(gut, id="PH-CD-2026-999"), text)
         rot("report-id mit falschem jahr", "c", dict(gut, id="PH-UR-2025-999"), text)
         # d) zwei quellen

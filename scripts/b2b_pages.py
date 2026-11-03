@@ -137,7 +137,7 @@ ORG = {
                     "postalCode": "40477", "addressLocality": "Düsseldorf",
                     "addressCountry": "DE"},
     },
-    "sameAs": ["https://x.com/pulsehawkio", "https://kaspapulse.com"],
+    "sameAs": ["https://x.com/pulsehawkio"],
 }
 
 E = html.escape
@@ -1115,7 +1115,7 @@ def seiten():
               "paid work marked as paid, price fixed in advance, no client tokens."),
         h1="How we stay independent",
         lead=("A measurement is only worth something if the result could have gone the other way. "
-              "These rules apply to every report, paid by a client or funded by a grant."),
+              "These rules apply to every report and every paid measurement."),
         body="""
 <section id="rules"><h2>What are the rules?</h2>
 <ol class="rules-list">
@@ -1127,7 +1127,7 @@ def seiten():
 </ol>
 </section>
 <section id="funding"><h2>How is PulseHawk funded?</h2>
-<p>PulseHawk is run by Vizora Digital UG (haftungsbeschränkt). It is funded by fees for paid measurements and by grants for public measurements. A grant pays for the measurement, never for the result.</p>
+<p>PulseHawk is run by Vizora Digital UG (haftungsbeschränkt). It is funded by fees for paid measurements.</p>
 </section>
 <section id="corrections"><h2>Correction log</h2>
 %s
@@ -1320,48 +1320,43 @@ def seiten():
         noindex=not ZCASH_OFFEN,
     ))
 
-    # 9 kaspa
+    # 9 kaspa. Kaspa Pulse wird auf pulsehawk.io nicht genannt, die Marken sind
+    # getrennt (Ben, 3.11.2026). Platz fuer den Testnet-Sturm vom 11.10.2026 nur
+    # mit Quelle, dem eigenen Zaehlbericht vom 11.10., 07:30 bis 12:29 UTC
+    # (Ben, 16.10.2026); dann als Abschnitt "What happened on the Kaspa testnet
+    # on 11 October 2026?", jede Zahl mit "measured" und dem Bericht als Quelle.
     k_faq = [
-        ("Is Kaspa Pulse part of PulseHawk?",
-         "The same team runs both. Kaspa Pulse is a media brand for Kaspa, PulseHawk measures networks across all chains."),
         ("Can we book a Kaspa measurement?",
-         "Yes, under the same rules as any other network. The link to Kaspa Pulse is named on the report."),
+         "Yes, under the same rules as any other network."),
     ]
     S.append(dict(
-        datei="cases/kaspa.html", pfad="/cases/kaspa", og="kaspa",
+        datei="cases/kaspa.html", pfad="/cases/kaspa", og="kaspa", lastmod="2026-11-03",
         title="Kaspa network measurements | PulseHawk",
-        desc=("Kaspa block rate and fees against new issuance, every number dated and marked "
-              "as our own measurement or as a series we take over, with links to raw data."),
+        desc=("Kaspa block rate and fees against new issuance. Every number is dated and "
+              "marked as our own measurement or as a series we take over and name."),
         h1="Kaspa network measurements",
-        lead=("Kaspa is the network we have followed longest, every day since August 2026, "
-              "through our media brand Kaspa Pulse at kaspapulse.com. Every number on this page "
+        lead=("Kaspa block rate and fees against new issuance. Every number on this page "
               "carries its date and is marked either measured, by us, or source, "
               "a series we take over and name."),
         body="""
 <section><h2>How fast does Kaspa produce blocks?</h2>
-<p>Kaspa runs at 10 blocks per second since the Crescendo upgrade in 2025. At that rate a block time distribution is counted in tenths of a second, and the longest gap matters more than the median.</p>
-<p class="src">Source %s, protocol block rate, checked 16 October 2026.</p>
+<p>Kaspa runs at 10 blocks per second since the Crescendo hardfork. At that rate a block time distribution is counted in tenths of a second, and the longest gap matters more than the median.</p>
+<p class="src">Source %s, protocol block rate, checked 3 November 2026.</p>
 </section>
 <section><h2>How do fees compare with new issuance?</h2>
 <p>In the 30 days from 12 September to 11 October 2026, Kaspalytics counted 68,493 KAS in transaction fees. In the same 30 days the emission schedule created 55,848,455 new KAS, about 815 times the fees.</p>
-<p class="src">Source Kaspalytics for the fees, a series taken over in the Kaspa Pulse daily log of 12 October 2026, %s. New coins from the emission schedule, arithmetic, not a count.</p>
+<p class="src">Source Kaspalytics for the fees, taken over on 12 October 2026. New coins from the emission schedule, arithmetic, not a count.</p>
 </section>
-<!-- PLATZ FUER DEN TESTNET-STURM 11.10.2026, bewusst leer (Ben, 16.10.2026).
-     Nur mit Quelle: Zaehlbericht vom 11.10., 07:30 bis 12:29 UTC, zwei eigene Knoten,
-     auf kaspa-pulse messung/tn10-zaehler. Stand 16.10.2026 liegt dort kein Bericht,
-     nur Zaehler und Fenster. Dann als section "What happened on the Kaspa testnet on
-     11 October 2026?", jede Zahl mit "measured" und dem Bericht als Quelle. -->
-<section><h2>Where can I follow Kaspa?</h2>
-<p>Daily numbers, the weekly reading and the cheat sheet are on %s. PulseHawk measures Kaspa under the same %s as every other network.</p>
+<section><h2>Under which rules do we measure Kaspa?</h2>
+<p>PulseHawk measures Kaspa under the same %s as every other network.</p>
 </section>
 %s
 <p class="cta">%s %s</p>
-""" % (a("https://kaspapulse.com/kaspa-hashrate.html", "kaspapulse.com, Kaspa hashrate page"),
-       a("https://github.com/neoalphavault-png/kaspa-pulse/blob/main/data/tagesgrafik-log.json", "raw data"),
-       a("https://kaspapulse.com", "kaspapulse.com"), a("/independence", "rules"),
+""" % (a("https://github.com/kaspanet/kips/blob/master/kip-0014.md", "KIP-14, The Crescendo Hardfork"),
+       a("/independence", "rules"),
        faq_html(k_faq), sample_button(), contact_button()),
         faqs=k_faq,
-        schema=["ARTICLE:2026-10-16:2026-10-16"],
+        schema=["ARTICLE:2026-10-16:2026-11-03"],
         crumbs=[("Kaspa", "/cases/kaspa")],
     ))
 
@@ -1779,8 +1774,8 @@ PLAUSIBLE = """<!-- Privacy-friendly analytics by Plausible -->
 
 
 def fuss():
-    return ('<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · '
-            'Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div>'
+    # keine kaspa pulse auf pulsehawk.io, die marken sind getrennt (Ben, 3.11.2026)
+    return ('<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand</div>'
             '<div><a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a>'
             ' · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>'
             ' · <a href="/contact">Contact</a></div></div></footer>')
@@ -1950,7 +1945,7 @@ def llms(S):
              "> Independent blockchain measurement under load, across all chains. "
              "PulseHawk does its own measurement with its own nodes or header clients, publishes an open method, dates every number "
              "and releases the raw data. A brand of Vizora Digital UG (haftungsbeschränkt), "
-             "Düsseldorf, Germany. Kaspa coverage at https://kaspapulse.com.", "",
+             "Düsseldorf, Germany.", "",
              "Services and prices (net, plus VAT where it applies, invoiced in euro, as of October 2026)",
              "- TPS verification, review %s" % preis_text("review"),
              "- Launch measurement %s" % preis_text("launch"),

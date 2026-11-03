@@ -7,8 +7,8 @@
  "upgrade": "NU7",
  "netz": "mainnet",
  "methode": "1.0",
- "veroeffentlicht": "2026-11-02",
- "geaendert": "2026-11-02",
+ "veroeffentlicht": "2026-11-03",
+ "geaendert": "2026-11-03",
  "beschreibung": "Zcash NU7 upgrade report PH-UR-2026-001. Seven fixed values from 24 hours before to 72 hours after block 3,543,405, each dated, with raw data.",
  "aktivierungshoehe": {
   "wert": 3543405,
@@ -68,8 +68,10 @@
   ]
  },
  "schaetzung": {
-  "zeit_utc": "2026-11-06T02:26:16Z",
-  "datum": "2026-10-28"
+  "zeit_utc": "2026-11-06T02:39:52Z",
+  "datum": "2026-11-02",
+  "band_von_utc": "2026-11-06T00:28:23Z",
+  "band_bis_utc": "2026-11-06T05:00:17Z"
  },
  "csv": null,
  "werte": null

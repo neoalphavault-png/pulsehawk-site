@@ -240,6 +240,11 @@ def pruefe(datei, roh=None):
             if satz[:1].isdigit():
                 f.append("satz beginnt mit ziffer '%s'" % satz[:60])
     f += funde_zitierkasten(roh)
+    # Kaspa Pulse steht nirgends auf pulsehawk.io, auch nicht im schema oder in
+    # einem link; die marken sind getrennt (Ben, 3.11.2026)
+    m = re.search(r"kaspa[ _-]?pulse", roh, re.I)
+    if m:
+        f.append("kaspa pulse genannt '%s'" % roh[max(0, m.start() - 40):m.end() + 20].replace("\n", " "))
     # meta description und og-texte gelten als sichtbar
     desc = p.meta.get("description", "")
     f += ["description, " + x for x in funde_text(desc, datei)]

@@ -12,3 +12,6 @@ exclude:
 # Die Anleitung fuer die Report-Daten ist fuer Sitzungen auf GitHub, nicht
 # fuer die Website (Ben, 2.11.2026).
   - data/reports/README.md
+# Der Code liegt auf GitHub, nicht auf der Website (Ben, 3.11.2026: Kaspa Pulse
+# wird auf pulsehawk.io nicht genannt, die Skripte nennen es in Kommentaren).
+  - scripts

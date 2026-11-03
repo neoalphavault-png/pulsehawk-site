@@ -51,8 +51,7 @@
     }
    },
    "sameAs": [
-    "https://x.com/pulsehawkio",
-    "https://kaspapulse.com"
+    "https://x.com/pulsehawkio"
    ]
   },
   {
@@ -60,8 +59,8 @@
    "headline": "PulseHawk Upgrade Report, specification v1.0",
    "description": "How PulseHawk measures a network upgrade on PoW and DAG chains. Seven fixed values from 24 hours before to 72 hours after the activation height.",
    "url": "https://pulsehawk.io/standard/upgrade-report/",
-   "datePublished": "2026-11-02T06:00:00+00:00",
-   "dateModified": "2026-11-02T06:00:00+00:00",
+   "datePublished": "2026-11-03T06:00:00+00:00",
+   "dateModified": "2026-11-03T06:00:00+00:00",
    "inLanguage": "en",
    "author": {
     "@id": "https://pulsehawk.io/#org"
@@ -105,13 +104,13 @@
 <main id="inhalt"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <a href="/standard/">Measurement Framework</a> · <span aria-current="page">Upgrade Report</span></nav>
 <h1>PulseHawk Upgrade Report, specification v1.0</h1>
-<p class="lead">This specification fixes how a PulseHawk Upgrade Report is measured, computed and published. Version 1.0, dated 2 November 2026, ID prefix PH-UR. Every report names the version it follows.</p>
+<p class="lead">This specification fixes how a PulseHawk Upgrade Report is measured, computed and published. Version 1.0, dated 3 November 2026, ID prefix PH-UR. Every report names the version it follows.</p>
 <section id="scope"><h2>What does an Upgrade Report measure?</h2>
-<p>An Upgrade Report covers one network upgrade on one PoW or DAG chain. Its window runs from 24 hours before to 72 hours after the first block at the activation height. All times are in UTC. Block times are the timestamps in the block headers that our own node or header client receives.</p>
+<p>An Upgrade Report covers one network upgrade on one PoW or DAG chain. Its window runs from 24 hours before to 72 hours after the first block at the activation height. All times are in UTC. Block times are the timestamps in the block headers that our own listener or header client receives.</p>
 <p>The target interval and the activation height each come from two independent sources, a protocol constant and a release. If the two differ, no report is built.</p>
 </section>
 <section id="values"><h2>Which values does every Upgrade Report carry?</h2>
-<ul class="list"><li><b>M1 Block intervals.</b> p50, p90 and p99 of the block intervals, before and after the activation height, each against the value computed for an ideal chain at the target interval.</li><li><b>M2 Longest gap.</b> The longest block interval and the number of intervals above five times the target.</li><li><b>M3 Reorgs.</b> The number of reorgs and their maximum depth in blocks.</li><li><b>M4 Chain split.</b> Heights with competing tips, the most tips at one height and how long the longest lasted.</li><li><b>M5 Peers on pre-upgrade software.</b> The share of peers in our sample that run pre-upgrade software at activation, 24 hours later and 72 hours later, with n.</li><li><b>M6 Time to stable.</b> The time from the activation block until the rolling 1 hour p50 of block intervals first lies within 10 % of the p50 computed for an ideal chain at the new target.</li><li><b>M7 First block at the activation height.</b> Its time and the gap to our own estimate published before activation.</li></ul>
+<ul class="list"><li><b>M1 Block intervals.</b> p50, p90 and p99 of the block intervals, before and after the activation height, each against the value computed for an ideal chain at the target interval.</li><li><b>M2 Longest gap.</b> The longest block interval and the number of intervals above five times the target.</li><li><b>M3 Reorgs.</b> The number of reorgs and their maximum depth in blocks.</li><li><b>M4 Chain split.</b> Heights with competing tips, the most tips at one height and how long the longest lasted.</li><li><b>M5 Peers on pre-upgrade software.</b> The share of peers in our sample that run pre-upgrade software at activation, 24 hours later and 72 hours later, with n.</li><li><b>M6 Time to stable.</b> The time from the activation block until the mean of the block intervals over the last hour lies within 20 % of the new target and stays there for 60 minutes without a break.</li><li><b>M7 First block at the activation height.</b> Its time and the gap to our own estimate published before activation.</li></ul>
 </section>
 <section id="rules"><h2>How are the values computed?</h2>
 <ul class="list">
@@ -119,13 +118,13 @@
 <li><b>Percentiles.</b> A percentile is the value at rank ceil(q × n) of the sorted intervals, without interpolation.</li>
 <li><b>Ideal chain.</b> For a chain with exponential intervals at target T, p50 is T × ln 2, p90 is T × ln 10 and p99 is T × ln 100, rounded to 0.1 s. These values are computed.</li>
 <li><b>Gaps.</b> M2 counts intervals strictly above five times the target.</li>
-<li><b>Reorgs and tips.</b> A reorg is a switch of our node to a competing branch, its depth the number of blocks replaced. A tip competes when another block at the same height reaches our node, and lasts until one of them is abandoned.</li>
+<li><b>Reorgs and tips.</b> A reorg is a switch of our listener to a competing branch, its depth the number of blocks replaced. A tip competes when another block at the same height reaches our listener, and lasts until one of them is abandoned.</li>
 </ul>
 </section>
 <section id="peers-stable"><h2>How are peers and time to stable counted?</h2>
 <ul class="list">
-<li><b>Peer samples.</b> Our node asks the peers it connects to for their software version. A peer counts as pre-upgrade when its version cannot follow the upgrade. There are three samples, at activation, after 24 hours and after 72 hours, each within one hour of its time. Only the version is kept, no address.</li>
-<li><b>Time to stable.</b> For every block from one hour after activation on, we take the p50 of the intervals in the hour before it. Time to stable is the time from the activation block to the first block where that p50 lies within 10 % of T × ln 2 at the new target. If no block does within the window, the report says so.</li>
+<li><b>Peer samples.</b> Our listener asks the peers it connects to for their software version. A peer counts as pre-upgrade when its version cannot follow the upgrade. The report shows three samples, at activation, after 24 hours and after 72 hours, each within one hour of its time. Further samples, such as one after 6 hours, stay in the raw data. Only the version is kept, no address.</li>
+<li><b>Time to stable.</b> For every block from one hour after activation on, we take the mean of the intervals in the hour before it. That mean is in the band when it lies within 20 % of the new target T. Time to stable is the time from the activation block to the first block from which the mean stays in the band for 60 minutes without a break. If no block does within the window, the report says so.</li>
 <li><b>Our estimate.</b> M7 compares the time of the activation block with our own estimate, published before activation with its date.</li>
 </ul>
 </section>
@@ -134,9 +133,9 @@
 <p>The page shows the sha256 of the CSV. Every value on the page is computed again from that file before the page is built.</p>
 </section>
 <section id="changelog"><h2>Changelog</h2>
-<ul class="list"><li><b>Version 1.0, 2 November 2026.</b> First version, with the values M1 to M7.</li></ul>
+<ul class="list"><li><b>Version 1.0, 3 November 2026.</b> First version, with the values M1 to M7.</li></ul>
 </section><p>Older and current versions stay online, version 1.0 at <a href="/standard/upgrade-report/v1-0">/standard/upgrade-report/v1-0</a>. The shared rules are in the <a href="/standard/">Measurement Framework</a>.</p>
 </div></main>
-<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div><div><a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/contact">Contact</a></div></div></footer>
+<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand</div><div><a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/contact">Contact</a></div></div></footer>
 </body>
 </html>
