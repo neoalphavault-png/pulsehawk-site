@@ -170,14 +170,86 @@ Ich habe `scripts/wache/report_v1.py` gelesen, auf main und auf `wache/report-v1
 
 Wenn du das so entscheidest, passe ich Spezifikation, Generator und Selbsttest vor dem Merge an. Nach dem Merge wäre es schon v1.1.
 
+## Nachtrag 3.11.2026 abends, Spezifikation folgt report_v1.py
+Bens Entscheidungen vom 3.11. (zweite Runde) sind eingearbeitet.
+
+**Neuer Kopf von #52:**
+- Code, Seiten und Probe stehen in Commit `cfd39cc`.
+- Dieser Nachtrag kommt als Commit danach.
+- Grundlage ist `scripts/wache/report_v1.py` in kaspa-pulse, main nach #245 (Commit `f254ce7`), gelesen auf main `c9b5f29`.
+
+**Merge:** Ben merged nach Claudes Prüfung.
+
+### Was sich in Spezifikation v1.0 geändert hat
+Es bleibt v1.0, veröffentlicht ist noch nichts. Geändert sind die Spezifikation, /standard/upgrade-report/v1-0, `upgrade_report.py` und der Selbsttest.
+
+| Punkt | jetzt, wie `report_v1.py` |
+|---|---|
+| M1 Perzentile | lineare Interpolation an Stelle (n minus 1) × q, auf 0.1 s gerundet |
+| M1 und M2 Mengen | Jeder Block einer Menge zählt. Der erste Abstand reicht zum Block davor, und der Abstand des Aktivierungsblocks gehört zu "nach" |
+| Fenstergrenze | über die Höhe. "vor" ab dem ersten Block unter der Aktivierungshöhe mit Kopfzeit ab 24 h davor, "nach" bis vor den ersten Block mit Kopfzeit ab 72 h danach |
+| M3 | getrennt vor und nach. Kopfzahl sind die Wechsel ab Tiefe 2. Dazu die Verteilung nach Tiefe 1, 2 und 3 und mehr, und die größte Tiefe. Gezählt nach der Ankunft bei der Wache |
+| M4 | Episoden des Signals kettenspaltung von Alarm bis Entwarnung, auf die Menge geschnitten, als Summe und längste, in Sekunden |
+| M5 | Anteil in % unter dem Mindestprotokoll beim Handschlag, auf 0.1 gerundet, n = Peers der Probe |
+| M6 | wie entschieden: Mittel der letzten Stunde innerhalb ±20 % von T, stabil ab dem ersten Block, ab dem das 60 min ohne Unterbrechung gilt. Die 60 min müssen ganz in den Daten liegen, die Einheit sind ganze Sekunden |
+| Zeitbasis | M1, M2 und M6 nach den Kopfzeiten, M3 und M4 nach der Ankunft bei der Wache |
+
+- **Roh-CSV im PH-Format:** Sie hat dafür die Zeilenarten block, meta, reorg, split und peer.
+- **Werte:** Unter `werte` stehen Wert und n jeder Kennzahl als Text, unter den Namen der Messwert-CSV.
+- **Prüfung b):** Sie vergleicht beides exakt.
+- **Prüfung c):** Sie verlangt den Block vor dem Fenster und einen Block ab 72 h nach der Aktivierung. So ist das Fenster nachweislich vollständig.
+
+### Wer die Roh-CSV baut (ersetzt die Angabe vom Nachmittag)
+- **Messende Sitzung:** Sie liefert wie bisher Köpfe, Rohdaten der Wache und die Messwert-CSV auf ihrem Datenbranch.
+- **pulsehawk-site:** Eine Sitzung hier baut die Roh-CSV mit dem neuen `scripts/report_import.py` aus genau diesen Dateien, bis spätestens 9.11. Das Skript trägt auch `werte` unverändert aus der Messwert-CSV ein.
+- **Warum:** So braucht die Zcash-Sitzung kein neues Exportformat, und die zweite Rechnung bleibt in einer zweiten Codebasis.
+- **Details:** `data/reports/README.md`.
+
+### Die Probe, beide Rechnungen auf denselben Testdaten
+`scripts/upgrade_report_probe.py` erzeugt ein Testszenario mit festem Zufall (Saat 2026):
+- **Kette:** 27 h vor bis 73 h nach der Aktivierung. In der ersten halben Stunde nach dem Wechsel sind die Blöcke langsamer, drei Kopfzeiten laufen rückwärts.
+- **Log:** 8 Reorgs der Tiefen 1 bis 3, eine Blockpause, 4 Episoden der Kettenspaltung, davon eine vor dem Fenster und eine offene.
+- **Peer-Proben:** 4.
+- **Ablauf:**
+  - Die Probe schreibt das Szenario einmal im Format der Wache. Daraus rechnet das echte `report_v1.py`.
+  - Dazu baut sie mit `report_import.py` die Roh-CSV: 12,125 Zeilen, sha256 `a84ba1e8…8834a717`. Daraus rechnet der Wächter.
+
+| Lauf | Ergebnis |
+|---|---|
+| `report_v1.py` wie auf main | 35 von 36 Kennzahlen exakt gleich. Nur `zeit_bis_stabil` weicht ab, 118.5 min gegen 7112 s, also die Einheit. Der Import bricht deshalb mit der Meldung ab, dass `report_v1.py` M6 noch in Minuten schreibt |
+| `report_v1.py` mit nachgezogenem M6 (unten) | **36 von 36 Kennzahlen exakt gleich, Wert und n als Text. Der volle Wächter ist grün, die Seite würde gebaut** |
+| dasselbe mit den Saaten 7, 99 und 4242 | jeweils 36 von 36, Wächter grün |
+
+Die vollständigen Ausgaben liegen im Bericht-Ordner:
+- [probe-report_v1-main.txt](2026-11-02-upgrade-report-standard/probe-report_v1-main.txt);
+- [probe-report_v1-m6-nachgezogen.txt](2026-11-02-upgrade-report-standard/probe-report_v1-m6-nachgezogen.txt).
+
+So sieht der Report mit diesen Testdaten aus, nur zur Ansicht und nicht auf der Website:
+
+![Muster mit Testdaten](2026-11-02-upgrade-report-standard/muster-testdaten-1440.jpg)
+
+### Auftrag an die Zcash-Sitzung, bis 8.11.2026
+Den Auftrag gibt Ben, nach seiner Entscheidung 2. Ich habe der Sitzung nichts geschickt. In `scripts/wache/report_v1.py` sind zwei Zeilen zu ändern, genau die, die die Probe mit `--m6-nachgezogen` ersetzt:
+1. **Stabil-Bedingung:** `if j == len(verlauf) or verlauf[j][0] > t + STABIL_HALTEN_S:` wird zu `if j < len(verlauf) and verlauf[j][0] > t + STABIL_HALTEN_S:`. Die 60 min müssen ganz in den Daten liegen.
+2. **Einheit:** `zeile("M6", "zeit_bis_stabil", round((stabil - von) / 60, 1) if stabil else "nie", "min", ...` wird zu `zeile("M6", "zeit_bis_stabil", int(stabil - von) if stabil else "nie", "s", ...`, also ganze Sekunden.
+
+**Abnahme:** Danach muss `python3 scripts/upgrade_report_probe.py --wache <kaspa-pulse>/scripts/wache` aus pulsehawk-site ohne den Schalter "36 von 36" melden.
+
+### Weitere Punkte
+- **Startseite:** Der Abschnitt "For foundations and grant committees" bleibt (Entscheidung 3).
+- **Prüfungen:**
+  - Wächter-Selbsttest 52 von 52;
+  - `b2b_check` 0 von 20 Seiten mit Fund;
+  - `report_waechter.py --pruefen` meldet für zcash-nu7 "geruest";
+  - `pyflakes` ohne Fund, Secret-Scan ohne Fund;
+  - Screenshots 390 und 1440 px neu, kein waagerechtes Scrollen.
+
 ## Offene Fragen an Ben
-Die Fragen 1 bis 6 vom 2.11. sind mit den Entscheidungen vom 3.11. beantwortet, siehe Nachtrag. Offen ist:
-1. **Unterschiede zu `report_v1.py`:** Welche Seite gibt nach, Spezifikation oder `report_v1.py`? Die Tabelle steht im Nachtrag, meine Empfehlung darunter. Das sollte vor dem Merge feststehen.
-2. **Startseite:** Soll der Abschnitt "For foundations and grant committees" bleiben?
+Keine. Die Unterschiede zu `report_v1.py` sind mit den Entscheidungen vom 3.11. geklärt. Offen ist nur noch der Auftrag zu M6 an die Zcash-Sitzung, bis 8.11.
 
 ## Was Ben tun muss
 1. In pulsehawk-site das Secret `DISCORD_WEBHOOK_LOG` anlegen (Webhook von #ops-log), unter Settings, Secrets and variables, Actions.
    - **Lokale Läufe:** Läuft der Wächter in einer Claude-Sitzung, steht die Meldung nur im Log.
    - **Workflow:** Soll ein Workflow Reports bauen und melden, wäre das ein eigener PR, den Ben merged.
-2. Frage 1 entscheiden, vor dem Merge.
+2. Der Zcash-Sitzung den Auftrag zu M6 geben (Abschnitt "Auftrag an die Zcash-Sitzung").
 3. #52 nach Claudes Prüfung mergen.
