@@ -582,7 +582,7 @@ HOME_CSS = """
 .ld{font-size:18px;color:var(--dim)}.lp{font-size:18px;text-align:right;font-variant-numeric:tabular-nums}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .tile{background:var(--card);padding:clamp(20px,2.4vw,32px);display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
-.tile.w2{grid-column:span 2}.tile.acc{background:var(--teal)}
+.tile.w2{grid-column:span 2}.tile.w4{grid-column:1/-1}.tile.acc{background:var(--teal)}
 .tile.acc h2{color:#06110E;margin:0}.tile.acc p{color:#06110E}
 .tile .big{font:800 var(--l)/1 Archivo,sans-serif;letter-spacing:-.03em;color:var(--txt);margin-top:4px}
 .tile .big+.small{margin-top:-8px}
@@ -1066,9 +1066,10 @@ def seiten():
 </section>
 <section><div class="tiles">
 <div class="tile w2 acc"><h2>Which networks have we measured?</h2><p>We publish dated numbers, raw data and an open method.</p></div>
-<div class="tile w2"><h3>Kaspa</h3><p>A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</p><p>%s</p></div>
+<div class="tile w2"><h3>Kaspa</h3><p>A network with a very high block rate, ten blocks per second since the Crescendo hardfork, KIP-14.</p><p>%s</p></div>
 <div class="tile w2"><h3>Zcash NU7 on testnet</h3><div class="big">23.68 s</div><p class="small">Mean block interval, against a 25 s target</p><p>Network Upgrade 7 (ZIP 259) on the Zcash testnet, measured independently over 49,203 blocks up to 18 October 2026.</p>%s<p>%s</p></div>
 %s
+<div class="tile w4"><h3>The Alexandria Protocol</h3><p>An independent technical and usability review, with dated findings and a checked anchoring transaction on Kaspa Testnet 10.</p><p>%s</p></div>
 </div></section>
 %s
 <section><div class="panel"><div><h2>What is in a report?</h2>
@@ -1090,7 +1091,7 @@ def seiten():
        leistungen(), PREIS_STAND,
        a("/cases/kaspa", "Read the Kaspa case"),
        zcash_fragment(), a("/zcash-nu7", "Read the Zcash NU7 case"),
-       bch_kachel(),
+       bch_kachel(), a("/cases/alexandria", "Read the Alexandria case"),
        zitat_zeilen(lies_zitate(), hoechstens=3),
        a(SAMPLE_URL, "See a sample report", "btn ghost plausible-event-name=Sample+Report"),
        csv_fragment(),
@@ -1730,6 +1731,116 @@ def seiten():
         faqs=k_faq,
         schema=["ARTICLE:2026-10-16:2026-11-04"],
         crumbs=[("Kaspa", "/cases/kaspa")],
+    ))
+
+    # 9b alexandria, fallseite (Ben, 1.11.2026). Freigabe des Kunden per X-DM am
+    # 1.11.2026: Befunde vom 12.10.2026 als unabhaengig beobachtet, jeder Befund
+    # datiert, Entwicklungsstand des Teams getrennt von unseren Pruefungen, Hinweis
+    # dass AP-0031 noch nicht verankert ist. Keine Preise, keine Rechnungs- oder
+    # Firmendaten, keine Adressen, keine internen IDs ausser den AP-Nummern.
+    # Antworten von Ben vom 4.11.2026: Name Kas Knight ok, Link nur auf die
+    # oeffentliche Projektseite, Netz "Kaspa Testnet 10 (TN10)", Datum der Seite
+    # ist das Datum des Merges (ALEX_DATUM, beim Merge pruefen). Abschnitt 5
+    # mit der Pruefung der Anker-Tx zu study 52 vom 2.11.2026, nur counted;
+    # Quelle kaspa-pulse berichte/2026-11-03-alexandria-anker.md. Tx-ID und
+    # Blockhash duerfen stehen, Adressen nie.
+    ALEX_DATUM = "2026-11-04"
+    ALEX_PROJEKT = "https://the-alexandria-protocol.replit.app/"
+    ALEX_TX = "3db50bc618db869ebfdda76381d7d5beb491f61a97426faadd02d831dfd70269"
+    ALEX_BLOCK = "9afd242166b4ddc2b900b30c6d6016014414c2dd199d7856804213bf0618a7d5"
+
+    def befunde(xs):
+        return '<ul class="list">%s</ul>' % "".join("<li><b>%s</b> %s</li>" % x for x in xs)
+    alx_fakten = "".join(
+        '<div><dt>%s</dt><dd class="fv">%s</dd><dd class="fq">%s</dd></div>' % z for z in (
+            ("Reviewed", "7 to 16 October 2026", "technical and usability review"),
+            ("Findings as of", "12 October 2026", "each finding below carries this date"),
+            ("Published", "with the client's consent", "consent given on 1 November 2026"),
+            ("Anchoring of AP-0031", "not anchored", "as of %s, see the last section" % lang(ALEX_DATUM)),
+        ))
+    S.append(dict(
+        datei="cases/alexandria.html", pfad="/cases/alexandria", og="alexandria", lastmod=ALEX_DATUM,
+        css=ZCASH_FACTS_CSS + ".hex code{word-break:break-all;overflow-wrap:anywhere}",
+        title="The Alexandria Protocol, independent review | PulseHawk",
+        desc=("Independent technical and usability review of the Alexandria Protocol, "
+              "7 to 16 October 2026. Every finding is dated and kept apart from team reports."),
+        h1="The Alexandria Protocol, independent technical and usability review",
+        lead=("We reviewed the Alexandria Protocol from 7 to 16 October 2026. The findings "
+              "below are as of 12 October 2026, observed independently by PulseHawk and "
+              "published with the client's consent. What we checked ourselves stays apart "
+              "from what the team reports about its progress since."),
+        body="""
+<section id="in-short" class="facts"><h2>The review in short</h2><dl>%s</dl></section>
+<section id="scope"><h2>What did we review?</h2>
+<p>We worked from four sources.</p>
+<ul class="list">
+<li>The reviewer brief from the Alexandria team, with the hashes it names for AP-0030 and AP-0031.</li>
+<li>The two records AP-0030 and AP-0031.</li>
+<li>The public walkthrough video of 10 October 2026.</li>
+<li>The public app, which we used on 12 October 2026.</li>
+</ul>
+<p>The project page of the Alexandria Protocol is %s.</p>
+</section>
+<section id="confirmed"><h2>What did we confirm on 12 October 2026?</h2>
+%s
+<p class="src">Checked by PulseHawk on 12 October 2026, in the public app and with the files we downloaded that day.</p>
+</section>
+<section id="open"><h2>What was still open on 12 October 2026?</h2>
+%s
+<p class="src">Observed by PulseHawk on 12 October 2026. Points the team may have changed since are not checked again on this page.</p>
+</section>
+<section id="team-update"><h2>How far has the project come, according to the team?</h2>
+<p>On 1 November 2026 Kas Knight told us, for the Alexandria team, that a first anchoring path on Kaspa Testnet 10 (TN10) had been tested. Since 1 November 2026, 21:24 UTC, an anchoring transaction for study 52 is on TN10.</p>
+<p class="src">Statement of the Alexandria team, 1 November 2026. The anchoring transaction is checked below.</p>
+</section>
+<section id="anchor-check" class="hex"><h2>What did we check on the anchoring transaction?</h2>
+<p>Checked by PulseHawk on 2 November 2026, on two public TN10 nodes, read only. Every value in this list is counted.</p>
+<ul class="list">
+<li><b>Transaction accepted.</b> Transaction <code>%s</code> is on TN10 and accepted in block <code>%s</code>, on both nodes.</li>
+<li><b>Block time.</b> The accepting block has the time 1 November 2026, 21:24:24 UTC.</li>
+<li><b>Payload.</b> The payload matches the expected text byte for byte, 85 bytes.</li>
+</ul>
+<p>Still open on 2 November 2026.</p>
+<ul class="list">
+<li><b>Input and fee.</b> The input, and with it the fee, could not be read, because the transaction before it is older than what both nodes keep.</li>
+<li><b>Commitment.</b> The commitment in the payload cannot be computed again without a published ALX-KASPA-1 specification.</li>
+</ul>
+<p class="src">Counted by PulseHawk on 2 November 2026. No addresses are shown on this page.</p>
+</section>
+<section id="anchoring"><h2>Is AP-0031 anchored?</h2>
+<p>No. As of %s, the date of this page, AP-0031 is not anchored. The transaction checked above anchors study 52. Until a record is anchored, trust in it rests with the operator.</p>
+</section>
+<p>%s.</p>
+<p class="cta">%s</p>
+""" % (alx_fakten, a(ALEX_PROJEKT, "the-alexandria-protocol.replit.app"),
+       befunde([
+           ("Downloads match the brief.",
+            "AP-0030 and AP-0031, downloaded on 12 October 2026, matched the hashes in the reviewer brief byte for byte."),
+           ("Hashing stays on the device.",
+            "The app hashes a file locally in the browser, and the file does not leave the device. Checked 12 October 2026."),
+           ("New versions are clean.",
+            "A new version creates v2 cleanly, and v1 stays unchanged. Checked 12 October 2026."),
+           ("No fork at the same place.",
+            "A second version at the same place is blocked, so a record does not fork. Checked 12 October 2026."),
+       ]),
+       befunde([
+           ("Same file, new title.",
+            "The same file with a different title was accepted as a new original entry, without a warning. Observed 12 October 2026."),
+           ("The operator is the trust anchor.",
+            "Until a record is anchored, trust rests with the operator of the service. Observed 12 October 2026."),
+           ("ALX-KASPA-1 is not specified in public.",
+            "There was no published specification and no test vector for ALX-KASPA-1. Observed 12 October 2026."),
+           ("Anchoring for entries of others.",
+            "The app offered to anchor entries that other people had created. Observed 12 October 2026."),
+           ("Archive standards and a second store.",
+            "The archive standards followed and a second storage location were not named. Observed 12 October 2026."),
+       ]),
+       ALEX_TX, ALEX_BLOCK, lang(ALEX_DATUM),
+       a("/independence", "How we keep reviews independent"),
+       contact_button("Request a review")),
+        faqs=[],
+        schema=["ARTICLE:%s:%s" % (ALEX_DATUM, ALEX_DATUM)],
+        crumbs=[("Alexandria", "/cases/alexandria")],
     ))
 
     # 10 contact
