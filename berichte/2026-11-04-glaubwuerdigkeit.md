@@ -112,3 +112,8 @@ Frist: So 8.11. 18:00.
   Vorher stand dort pauschal "The code for each ID is in github.com/pulsehawk/methods". Das stimmte nicht, weil die Erzeugung der Eingaben noch nicht im Repo liegt (Bens Frist dafür: 30.11.).
 - **Link:** /method verlinkt METHODS.md.
 - **M7:** Unser M7 hat keinen Wert "erste Sicht", deshalb bleiben die IDs für M7 bei PH-M-001 und PH-M-006. Die Probe zeigt weiter 36 von 36.
+
+## Selbst-Merge #56 (4.11.2026)
+
+- PR #56 per Squash gemergt, Merge-Commit `afbb057`.
+- Live auf pulsehawk.io/method: byte-gleich mit dem Bau, 6 Zeilen "Code" und ein Link auf METHODS.md.
