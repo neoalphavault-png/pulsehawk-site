@@ -788,13 +788,23 @@ def verfahren_abschnitte():
              '<p>Each way of counting has a fixed ID. Every report and every measurement page names '
              'the IDs it uses, with a measurement uncertainty line for each number. An ID never '
              'changes its meaning. A changed method gets a new ID.</p>\n<ul class="list">%s</ul>\n'
-             '<p>The code for each ID is in %s.</p>\n</section>'
+             '<p>The same IDs are described in %s in %s, with the code as it is published.</p>\n</section>'
              % ("".join('<li>%s, %s</li>' % (a("#" + v["id"].lower(), v["id"]), E(v["name"].lower()))
                         for v in rw.VERFAHREN),
-                a(rw.METHODS_REPO, "github.com/pulsehawk/methods"))]
+                a(rw.METHODS_MD, "METHODS.md"), a(rw.METHODS_REPO, "github.com/pulsehawk/methods"))]
     for v in rw.VERFAHREN:
-        teile.append('<section id="%s"><h2>%s %s</h2>\n<p>%s</p>\n<p><b>Validation.</b> %s</p>\n</section>'
-                     % (v["id"].lower(), v["id"], E(v["name"]), E(v["was"]), E(v["validierung"])))
+        if v["id"] == "PH-M-006":
+            code = ("The report rows are computed in %s. The implementation of the forecast itself in "
+                    "github.com/pulsehawk/methods follows." % a(rw.REPORT_V1, "upgrade_report/report_v1.py"))
+        elif rw.VERFAHREN_CODE.get(v["id"]):
+            code = ("The calculation from our recorded data is in %s. The implementation that records the "
+                    "data, our header client and listener, in github.com/pulsehawk/methods follows."
+                    % a(rw.REPORT_V1, "upgrade_report/report_v1.py"))
+        else:
+            code = "The implementation in github.com/pulsehawk/methods follows."
+        teile.append('<section id="%s"><h2>%s %s</h2>\n<p>%s</p>\n<p><b>Validation.</b> %s</p>\n'
+                     '<p><b>Code.</b> %s</p>\n</section>'
+                     % (v["id"].lower(), v["id"], E(v["name"]), E(v["was"]), E(v["validierung"]), code))
     return "\n".join(teile)
 
 

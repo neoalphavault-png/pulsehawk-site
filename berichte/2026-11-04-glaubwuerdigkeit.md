@@ -96,3 +96,19 @@ Frist: So 8.11. 18:00.
   - /zcash-nu7 und /reports/zcash-nu7 haben je 7 Methodenzeilen, 7 Zeilen "Measurement uncertainty" und den Block "Reproduce this".
   - Der Link auf /track-record steht auf der Startseite und in der Fußzeile.
   - Die Sitemap führt die drei neuen Seiten.
+
+## Nachtrag 4.11.2026, Antwort der Sitzung "Zcash NU7 Testnet Messung"
+
+- **IDs:** PH-M-001 bis PH-M-006 sind abgestimmt. METHODS.md liegt in pulsehawk/methods auf main (PR #1 dort gemergt).
+- **Namen:** Bei PH-M-002 und PH-M-004 weichen die Namen noch ab, siehe offene Frage 4.
+- **Reproduce:**
+  - Die Mainnet-Befehle für /reports/zcash-nu7 stehen jetzt wörtlich so in `data/reproduce.json`, wie die Sitzung sie genannt hat. Die Prüfsummendatei heißt `report-v1-zcash-mainnet-nu7.sha256`.
+  - Die Befehle bleiben als folgend markiert (`bestaetigt` false), bis der Daten-PR mit `data/zcash-mainnet-nu7/` in pulsehawk/methods gemergt ist, ab etwa 9.11.
+- **Code auf /method:** Jede ID hat jetzt eine Zeile "Code", die dem Stand im Repo entspricht.
+  - PH-M-001 bis PH-M-004: Die Rechnung aus den aufgezeichneten Daten steht in `upgrade_report/report_v1.py`. Kopf-Client und Zuhörer folgen.
+  - PH-M-005: folgt.
+  - PH-M-006: Die Report-Zeilen stehen in report_v1.py, die Prognose selbst folgt.
+
+  Vorher stand dort pauschal "The code for each ID is in github.com/pulsehawk/methods". Das stimmte nicht, weil die Erzeugung der Eingaben noch nicht im Repo liegt (Bens Frist dafür: 30.11.).
+- **Link:** /method verlinkt METHODS.md.
+- **M7:** Unser M7 hat keinen Wert "erste Sicht", deshalb bleiben die IDs für M7 bei PH-M-001 und PH-M-006. Die Probe zeigt weiter 36 von 36.

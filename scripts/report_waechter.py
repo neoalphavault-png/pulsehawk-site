@@ -116,6 +116,15 @@ VERFAHREN = [
 ]
 VERFAHREN_ID = {v["id"] for v in VERFAHREN}
 METHODS_REPO = "https://github.com/pulsehawk/methods"
+METHODS_MD = METHODS_REPO + "/blob/main/METHODS.md"
+REPORT_V1 = METHODS_REPO + "/blob/main/upgrade_report/report_v1.py"
+# was davon schon in pulsehawk/methods steht (Antwort der Sitzung "Zcash NU7
+# Testnet Messung", 4.11.2026): die rechnung aus den aufgezeichneten daten in
+# upgrade_report/report_v1.py; kopf-client, wache und zuhoerer, die zaehlung
+# der stale blocks und die prognose selbst folgen. "rechnung" True heisst, die
+# rechnung steht in report_v1.py.
+VERFAHREN_CODE = {"PH-M-001": True, "PH-M-002": True, "PH-M-003": True, "PH-M-004": True,
+                  "PH-M-005": False, "PH-M-006": True}
 
 
 def verfahren_html(ids):
