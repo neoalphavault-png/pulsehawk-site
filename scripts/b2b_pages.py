@@ -524,8 +524,11 @@ def zitat_zeilen(eintraege, hoechstens=3):
     mehr = ""
     if len(eintraege) > hoechstens:
         mehr = '<p>%s</p>' % a("/independence#cited-by", "All %d citations" % len(eintraege))
-    return ('<section class="zit">%s<h2>Who cites our numbers?</h2>\n<p class="sub">%s</p>\n%s\n%s</section>'
-            % (zaehler, ZITAT_SATZ, "\n".join(zeilen), mehr))
+    # dazu ein satz mit link auf den track record (Ben, 4.11.2026)
+    tr = ('<p class="small">How our own estimates turned out, with every counted result, is on our %s.</p>'
+          % a("/track-record", "track record"))
+    return ('<section class="zit">%s<h2>Who cites our numbers?</h2>\n<p class="sub">%s</p>\n%s\n%s\n%s</section>'
+            % (zaehler, ZITAT_SATZ, "\n".join(zeilen), mehr, tr))
 
 
 def leistungen():
@@ -642,7 +645,7 @@ var ss=document.querySelectorAll('.home main section');d.classList.add('mo');for
 # juengsten Mainnet-Stand, gekuerzt nach data/zcash-nu7/mainnet-stand.json
 # (scripts/zcash_stand.py). Jede Zahl traegt Datum und counted, computed
 # oder source.
-ZCASH_TEXT_STAND = "2026-10-28"   # letzte aenderung am text der seite
+ZCASH_TEXT_STAND = "2026-11-04"   # letzte aenderung am text der seite (unsicherheit, methoden, Ben 4.11.2026)
 ZCASH_STAND_DATEI = "data/zcash-nu7/mainnet-stand.json"
 ZEBRA_700 = "https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0"
 ZIP_218 = "https://github.com/zcash/zips/blob/main/zips/zip-0218.md"
@@ -659,24 +662,230 @@ ZCASH_FACTS_CSS = """
 
 
 FRAMEWORK_STAND = "2026-11-02"   # measurement framework, erste fassung (Ben, 2.11.2026)
-KORREKTUREN = "data/korrekturen.json"
+KORREKTUREN = "data/corrections.json"
+TRACK_RECORD = "data/track-record.json"
+GLAUB_STAND = "2026-11-04"   # track record, corrections, about (Ben, 4.11.2026)
+# gruender auf /about und als schema.org Person. Solange hier der platzhalter
+# steht, fehlt der abschnitt, und der neubau warnt (Ben entscheidet, 4.11.2026)
+GRUENDER = "GRUENDER"
+TR_STATUS = ("in band", "outside", "open")
+TR_ARTEN = {"estimate": "Our estimate", "comparison": "Against a published value"}
+RE_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+TR_CSS = """
+.trl{display:grid;gap:14px;margin:14px 0}
+.tre{border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.tre h3{margin:0 0 8px}
+.tre dl{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:6px 14px;margin:0}
+.tre dt{color:var(--dim);font-size:14px}.tre dd{margin:0}
+.st{display:inline-block;font:600 13px/1 var(--mono);padding:5px 9px;border-radius:99px;border:1px solid var(--line)}
+.st.in-band{border-color:#3fb37f;color:#3fb37f}.st.outside{border-color:#e0a240;color:#e0a240}
+@media (max-width:640px){.tre dl{grid-template-columns:1fr}.tre dt{margin-top:6px}}
+"""
 
 
-def korrektur_log():
-    """korrekturlog auf /independence. Jede korrektur ist ein eintrag in
-    data/korrekturen.json mit datum, seite, alt, neu und grund."""
+def _rot(datei, fehler):
+    raise SystemExit("%s\n  %s" % (datei, "\n  ".join(fehler)))
+
+
+def lies_track_record():
+    """track record mit waechter (Ben, 4.11.2026). Jeder eintrag hat link und
+    datum, kein "in band" oder "outside" ohne gezaehltes ergebnis mit fenster
+    und n, kein ergebnis bei "open"."""
+    with open(os.path.join(REPO, TRACK_RECORD), encoding="utf-8") as fh:
+        eintraege = json.load(fh)["entries"]
+    f = pruefe_track_record(eintraege)
+    if f:
+        _rot(TRACK_RECORD, f)
+    return eintraege
+
+
+def pruefe_track_record(eintraege):
+    sys.path.insert(0, HERE)
+    import report_waechter as rw
+    f = []
+    ids = set()
+    for e in eintraege:
+        i = e.get("id", "?")
+        if i in ids:
+            f.append("%s doppelt" % i)
+        ids.add(i)
+        if not str(e.get("url", "")).startswith("https://"):
+            f.append("%s ohne link" % i)
+        if not RE_ISO.match(str(e.get("published", ""))):
+            f.append("%s ohne datum" % i)
+        if e.get("art") not in TR_ARTEN:
+            f.append("%s art %r" % (i, e.get("art")))
+        if e.get("status") not in TR_STATUS:
+            f.append("%s status %r" % (i, e.get("status")))
+        for k in ("network", "subject", "where"):
+            if not e.get(k):
+                f.append("%s ohne %s" % (i, k))
+        if not e.get("methods") or set(e["methods"]) - rw.VERFAHREN_ID:
+            f.append("%s verfahren %r" % (i, e.get("methods")))
+        r = e.get("result")
+        if e.get("status") == "open":
+            if r or e.get("deviation"):
+                f.append("%s ist open und hat ein ergebnis" % i)
+        else:
+            if not r or not all(r.get(k) for k in ("value", "window", "n", "interval")):
+                f.append("%s %s ohne gezaehltes ergebnis mit wert, fenster, n und intervall" % (i, e.get("status")))
+            if not e.get("deviation"):
+                f.append("%s ohne abweichung" % i)
+        if e.get("art") == "comparison" and not (e.get("reference") or {}).get("value"):
+            f.append("%s vergleich ohne veroeffentlichten wert" % i)
+        if e.get("art") == "estimate":
+            s = e.get("estimate") or {}
+            if not all(s.get(k) for k in ("value", "band", "as_of")):
+                f.append("%s schaetzung ohne wert, band und datum" % i)
+            # upgrade-zeiten nur als hoehe plus schaetzung (Ben, 4.11.2026)
+            if not re.search(r"block [\d,]+", e.get("subject", "")):
+                f.append("%s schaetzung ohne blockhoehe" % i)
+        # ein upgrade braucht die spezifikation im selben satz
+        if re.search(r"upgrade|nu\d|hardfork|activation|chip|faster blocks", e.get("network", "") + e.get("subject", ""), re.I) \
+                and not RE_SPEZ.search(e.get("network", "")):
+            f.append("%s upgrade ohne spezifikationsnummer im netzwerk" % i)
+    return f
+
+
+RE_SPEZ = re.compile(r"\b(ZIP|CHIP|KIP|BIP|EIP|SIMD|BEP)[ -]?\d", re.I)
+
+
+def tr_status(st):
+    return '<span class="st %s">%s</span>' % (st.replace(" ", "-"), E(st.capitalize()))
+
+
+def tr_eintrag(e):
+    zeilen = [("Published", '%s, %s' % (lang(e["published"]), a(e["url"], E(e["where"]))))]
+    zeilen.append(("Network", E(e["network"])))
+    zeilen.append(("What", E(e["subject"][:1].upper() + e["subject"][1:])))
+    if e["art"] == "estimate":
+        s = e["estimate"]
+        zeilen.append(("Our estimate", "%s, 90%% band %s to %s, as of %s"
+                       % (E(s["value"]), *map(E, s["band"].split(" to ")), lang(s["as_of"]))))
+    else:
+        zeilen.append(("Published value", "%s, %s" % (E(e["reference"]["value"]), E(e["reference"]["what"]))))
+    r = e.get("result")
+    if r:
+        zeilen.append(("Result", "%s %s, 95%% interval %s, %s values, %s"
+                       % (E(r["value"]), E(r["label"]), E(r["interval"]), betrag(r["n"]), E(r["window"]))))
+        zeilen.append(("Deviation", E(e["deviation"].replace("-", "−"))))
+    else:
+        zeilen.append(("Result", "Not counted yet"))
+    zeilen.append(("Methods", ", ".join(a("/method#" + m.lower(), m) for m in e["methods"])))
+    zeilen.append(("Status", tr_status(e["status"])))
+    return ('<div class="tre" id="%s"><h3>%s, %s</h3><dl>%s</dl></div>'
+            % (e["id"].lower(), E(e["id"]), E(e["subject"]),
+               "".join("<dt>%s</dt><dd>%s</dd>" % z for z in zeilen)))
+
+
+def verfahren_abschnitte():
+    """die festen verfahrens-ids auf /method, aus report_waechter.VERFAHREN.
+    Jeder report nennt die ids, die er nutzt (Ben, 4.11.2026)."""
+    sys.path.insert(0, HERE)
+    import report_waechter as rw
+    teile = ['<section id="method-ids"><h2>Which method IDs do we use?</h2>\n'
+             '<p>Each way of counting has a fixed ID. Every report and every measurement page names '
+             'the IDs it uses, with a measurement uncertainty line for each number. An ID never '
+             'changes its meaning. A changed method gets a new ID.</p>\n<ul class="list">%s</ul>\n'
+             '<p>The code for each ID is in %s.</p>\n</section>'
+             % ("".join('<li>%s, %s</li>' % (a("#" + v["id"].lower(), v["id"]), E(v["name"].lower()))
+                        for v in rw.VERFAHREN),
+                a(rw.METHODS_REPO, "github.com/pulsehawk/methods"))]
+    for v in rw.VERFAHREN:
+        teile.append('<section id="%s"><h2>%s %s</h2>\n<p>%s</p>\n<p><b>Validation.</b> %s</p>\n</section>'
+                     % (v["id"].lower(), v["id"], E(v["name"]), E(v["was"]), E(v["validierung"])))
+    return "\n".join(teile)
+
+
+def lies_korrekturen():
     with open(os.path.join(REPO, KORREKTUREN), encoding="utf-8") as fh:
-        eintraege = json.load(fh)
-    if not eintraege:
-        return ("<p>Every correction to a published value gets a dated line here, with the page, "
-                "the old value, the new value and the reason. The log has no entries yet.</p>")
-    zeilen = "".join(
-        '<tr><td class="c">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
-        % (lang(e["datum"]), a(e["seite"], E(e["seite"])), E(e["alt"]), E(e["neu"]), E(e["grund"]))
-        for e in sorted(eintraege, key=lambda e: e["datum"], reverse=True))
-    return ('<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Date</th>'
-            '<th scope="col">Page</th><th scope="col">Old</th><th scope="col">New</th>'
-            '<th scope="col">Reason</th></tr></thead><tbody>%s</tbody></table></div>' % zeilen)
+        eintraege = json.load(fh)["entries"]
+    f = []
+    for n, e in enumerate(eintraege, 1):
+        if not RE_ISO.match(str(e.get("date", ""))):
+            f.append("eintrag %d ohne datum" % n)
+        for k in ("page", "wrong", "now", "reported_by"):
+            if not e.get(k):
+                f.append("eintrag %d ohne %s" % (n, k))
+    if f:
+        _rot(KORREKTUREN, f)
+    return sorted(eintraege, key=lambda e: e["date"], reverse=True)
+
+
+def korrektur_eintrag(n, e):
+    seiten_ = ", ".join(a(s.strip(), E(s.strip())) if s.strip().startswith("/") else E(s.strip())
+                        for s in e["page"].split(","))
+    zeilen = [("Date", lang(e["date"])), ("Page", seiten_), ("What was wrong", E(e["wrong"])),
+              ("What stands now", E(e["now"])), ("Reported by", E(e["reported_by"]))]
+    return ('<div class="tre" id="c-%03d"><dl>%s</dl></div>'
+            % (n, "".join("<dt>%s</dt><dd>%s</dd>" % z for z in zeilen)))
+
+
+REPRO_CSS = """
+.unc{font-size:13px;color:var(--dim);margin-top:8px}.meth{font-size:14px;margin-top:8px}
+.repro pre{background:var(--card);border-radius:10px;padding:14px 16px;overflow-x:auto;white-space:pre-wrap;
+word-break:break-word;font:400 13.5px/1.55 var(--mono);color:var(--txt);margin-top:6px}
+"""
+MAINNET_UNSICHER = "data/zcash-nu7/mainnet-unsicherheit.json"
+
+
+def zahl2(x):
+    return ("%.2f" % x).rstrip("0").rstrip(".") if x >= 1 else "%.3f" % x
+
+
+def anteil95(k, n):
+    sys.path.insert(0, HERE)
+    import unsicherheit
+    return unsicherheit.anteil_intervall(k, n)
+
+
+def testnet_intervalle():
+    """95-%-intervalle der testnet-tabelle, aus der veroeffentlichten csv."""
+    import csv as csv_
+    sys.path.insert(0, HERE)
+    import unsicherheit
+    with open(os.path.join(REPO, ZCASH_CSV), newline="") as fh:
+        w = [int(z["interval_s"]) for z in csv_.DictReader(fh) if z["interval_s"]]
+    erg = unsicherheit.alle(w)
+    n = len(w)
+    erg["ueber75"] = unsicherheit.anteil_intervall(sum(x > 75 for x in w), n)
+    erg["ueber150"] = unsicherheit.anteil_intervall(sum(x > 150 for x in w), n)
+    return erg
+
+
+def spanne(lo, hi, einheit):
+    if lo == hi:
+        return "%s %s" % (lo, einheit) if einheit != "%" else "%s%%" % lo
+    return "%s to %s%s" % (lo, hi, "%" if einheit == "%" else " " + einheit)
+
+
+def zi_zellen(zi):
+    if not zi:
+        return ["not computed"] * 6
+    return [spanne("%.2f" % zi["mittel"][0], "%.2f" % zi["mittel"][1], "s"),
+            spanne(*zi["p50"], "s"), spanne(*zi["p90"], "s"), spanne(*zi["p99"], "s"),
+            spanne(zahl2(zi["ueber75"][0]), zahl2(zi["ueber75"][1]), "%"),
+            spanne(zahl2(zi["ueber150"][0]), zahl2(zi["ueber150"][1]), "%")]
+
+
+def mainnet_unsicher(teil, st):
+    """(kopfzelle, zellen mittel p50 p90 p99, unsicherheitszeile) fuer eine
+    mainnet-tabelle. Die spalte steht nur, wenn die intervalle zum selben
+    stand gerechnet sind wie die zahlen."""
+    with open(os.path.join(REPO, MAINNET_UNSICHER), encoding="utf-8") as fh:
+        u = json.load(fh).get(teil)
+    if u and st and u["stand"] == st["stand"]:
+        zellen = ["<td>%s</td>" % x for x in (
+            spanne("%.2f" % u["mittel"][0], "%.2f" % u["mittel"][1], "s"),
+            spanne(*u["p50"], "s"), spanne(*u["p90"], "s"), spanne(*u["p99"], "s"), "single value")]
+        return ('<th scope="col">95% interval</th>', zellen,
+                '<p class="unc">Measurement uncertainty. The interval column is the 95% range of each value, from '
+                'the rank statistics for percentiles and the standard error for the mean. Header times are whole '
+                'seconds set by the miners.</p>')
+    return ("", [""] * 5,
+            '<p class="unc">Measurement uncertainty. Header times are whole seconds set by the miners. The 95%% '
+            'intervals for these values are not computed yet for the data as of %s.</p>' % (lang(st["stand"]) if st else ""))
 
 
 def lies_mainnet_stand():
@@ -711,6 +920,8 @@ def zahl1(x):
 
 def zcash_mainnet_teile(st):
     """(fakten, abschnitte, faq-antwort aktivierung, faq-zusatz blockzeit, dateModified)"""
+    sys.path.insert(0, HERE)
+    import report_waechter as rw
     quelle = a(ZEBRA_700, "Zebra 7.0.0")
     zeilen = [("Mainnet activation height", "3,543,405",
                "source %s, checked 26 October 2026" % quelle)]
@@ -729,6 +940,7 @@ def zcash_mainnet_teile(st):
         zeilen.append(("Mainnet after NU7, median interval", "%s s" % zahl1(float(g["median_s"])),
                        "counted over %s intervals up to %s, computed %s s for an ideal 25 s chain"
                        % (betrag(n), utc_lang(bis), zahl1(float(b["median_s"])))))
+        un = mainnet_unsicher("nach_nu7", st)
         e = st.get("einpendeln") or {}
         pendel = ""
         if e.get("eingependelt_ab_block"):
@@ -742,20 +954,23 @@ def zcash_mainnet_teile(st):
                       % betrag(e["bloecke_nach_nu7"]))
         abschnitte = """<section id="after-activation"><h2>First counted numbers after activation</h2>
 <p>%s Up to %s we counted %s intervals on mainnet after NU7, with a mean of %s s and a median of %s s. An ideal 25 s chain has a median of %s s, computed.</p>
-%s<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
-<tr id="mainnet-after-mean"><td class="c">Mean</td><td>%s s</td><td>25 s</td></tr>
-<tr id="mainnet-after-median"><td class="c">Median</td><td>%s s</td><td>%s s</td></tr>
-<tr><td class="c">p90</td><td>%s s</td><td>%s s</td></tr>
-<tr><td class="c">p99</td><td>%s s</td><td>%s s</td></tr>
-<tr><td class="c">Longest gap</td><td>%s s</td><td>about %s s</td></tr>
+%s<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th>%s<th scope="col">Computed at 25 s</th></tr></thead><tbody>
+<tr id="mainnet-after-mean"><td class="c">Mean</td><td>%s s</td>%s<td>25 s</td></tr>
+<tr id="mainnet-after-median"><td class="c">Median</td><td>%s s</td>%s<td>%s s</td></tr>
+<tr><td class="c">p90</td><td>%s s</td>%s<td>%s s</td></tr>
+<tr><td class="c">p99</td><td>%s s</td>%s<td>%s s</td></tr>
+<tr><td class="c">Longest gap</td><td>%s s</td>%s<td>about %s s</td></tr>
 </tbody></table></div>
 <p class="src">Our own header client, Zcash mainnet, blocks %s to %s, as of %s.</p>
+%s
+%s
 </section>""" % (("The first NU7 block came at %s." % utc_lang(erster)) if erster else "",
                  utc_lang(bis), betrag(n), zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(float(b["median_s"])),
-                 pendel, zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(float(b["median_s"])),
-                 zahl1(g["p90_s"]), zahl1(b["p90_s"]), zahl1(g["p99_s"]), zahl1(b["p99_s"]),
-                 betrag(g["laengste_luecke_s"]), betrag(b["laengste_luecke_s"]),
-                 betrag(nach["bereich"]["von_hoehe"]), betrag(nach["bereich"]["bis_hoehe"]), stand_text)
+                 pendel, un[0], zahl1(g["mittel_s"]), un[1][0], zahl1(float(g["median_s"])), un[1][1], zahl1(float(b["median_s"])),
+                 zahl1(g["p90_s"]), un[1][2], zahl1(b["p90_s"]), zahl1(g["p99_s"]), un[1][3], zahl1(b["p99_s"]),
+                 betrag(g["laengste_luecke_s"]), un[1][4], betrag(b["laengste_luecke_s"]),
+                 betrag(nach["bereich"]["von_hoehe"]), betrag(nach["bereich"]["bis_hoehe"]), stand_text,
+                 un[2], rw.verfahren_html(["PH-M-001"]))
         faq_akt = ("It activated at block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. "
                    "We counted that block at %s." % utc_lang(erster)) if erster else None
         faq_zeit = (" On mainnet after NU7 we counted a median of %s s over %s intervals up to %s."
@@ -766,41 +981,49 @@ def zcash_mainnet_teile(st):
                        % (utc_lang(v["median_utc"]).split(", ", 1)[1], utc_lang(v["band_5_utc"], False),
                           utc_lang(v["band_95_utc"], False), stand_text)))
         faq_akt = ("At block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. At the pace we "
-                   "counted over the %d full UTC days up to %s, that block arrives around %s, "
-                   "computed, with 9 in 10 of our draws between %s and %s."
+                   "counted over the %d full UTC days up to %s, our estimate for that block is %s, "
+                   "with 9 in 10 of our draws between %s and %s."
                    % (v["tempo_fenster_tage"], tempo_fenster(v), utc_lang(v["median_utc"]),
                       utc_lang(v["band_5_utc"], False), utc_lang(v["band_95_utc"], False)))
         abschnitte = """<section id="mainnet-forecast"><h2>When does NU7 reach Zcash mainnet?</h2>
-<p>Block 3,543,405 is fixed in %s. On %s our header client stood at block %s, with %s blocks to go. At the pace we counted over the %d full UTC days up to %s, %s s per block, the median of %s draws puts block 3,543,405 at %s.</p>
-<p>Nine in ten draws fall between %s and %s. At exactly 75 s per block it would be %s. All three are computed from our count, not dates set by the project.</p>
+<p>Block 3,543,405 is fixed in %s. On %s our header client stood at block %s, with %s blocks to go. At the pace we counted over the %d full UTC days up to %s, %s s per block, the median of %s draws puts block 3,543,405 at %s. That is our estimate.</p>
+<p>Nine in ten draws fall between %s and %s. At exactly 75 s per block it would be %s. All three are estimates computed from our count, not dates set by the project.</p>
 <p class="src">Our own header client, Zcash mainnet, as of %s. Method in %s.</p>
+<p class="unc">Measurement uncertainty. The 90%% band is the spread of the draws from the pace we counted. It does not cover a change in hashrate after %s, so we publish each new forecast with its date and score it on our %s.</p>
+%s
 </section>""" % (quelle, utc_lang(v["spitze_utc"]), betrag(v["spitze_hoehe"]), betrag(v["fehlend"]),
                  v["tempo_fenster_tage"], tempo_fenster(v), zahl1(v["tempo_mittel_s"]),
                  betrag(int(re.search(r"(\d+) ziehungen", v["methode"]).group(1))),
                  utc_lang(v["median_utc"]), utc_lang(v["band_5_utc"]), utc_lang(v["band_95_utc"]),
-                 utc_lang(v["berechnet_75s_utc"]), stand_text, a("/method", "How we measure"))
+                 utc_lang(v["berechnet_75s_utc"]), stand_text, a("/method", "How we measure"),
+                 stand_text, a("/track-record", "track record"), rw.verfahren_html(["PH-M-001", "PH-M-006"]))
     zeilen.append(("Block target spacing", "75 s to 25 s", "source %s" % a(ZIP_218, "ZIP 218")))
     zeilen.append(("Testnet after NU7, median interval", "17.0 s",
                    "counted over 49,202 intervals, 4 to 18 October 2026, computed 17.3 s for an ideal 25 s chain"))
     vor = st and st.get("vor_nu7")
     if vor and not nach:
         g, b = vor["gezaehlt"], vor["berechnet"]
+        un = mainnet_unsicher("vor_nu7", st)
         abschnitte += """
 <section id="mainnet-before"><h2>What is the Zcash block time before NU7?</h2>
 <p>Before NU7 the mainnet targets 75 s per block. From %s to %s we counted %s intervals, with a mean of %s s and a median of %s s, close to an ideal 75 s chain.</p>
-<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">Computed at 75 s</th></tr></thead><tbody>
-<tr id="mainnet-mean"><td class="c">Mean</td><td>%s s</td><td>75 s</td></tr>
-<tr id="mainnet-median"><td class="c">Median</td><td>%s s</td><td>%s s</td></tr>
-<tr><td class="c">p90</td><td>%s s</td><td>%s s</td></tr>
-<tr><td class="c">p99</td><td>%s s</td><td>%s s</td></tr>
-<tr><td class="c">Longest gap</td><td>%s s</td><td>about %s s</td></tr>
+<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th>%s<th scope="col">Computed at 75 s</th></tr></thead><tbody>
+<tr id="mainnet-mean"><td class="c">Mean</td><td>%s s</td>%s<td>75 s</td></tr>
+<tr id="mainnet-median"><td class="c">Median</td><td>%s s</td>%s<td>%s s</td></tr>
+<tr><td class="c">p90</td><td>%s s</td>%s<td>%s s</td></tr>
+<tr><td class="c">p99</td><td>%s s</td>%s<td>%s s</td></tr>
+<tr><td class="c">Longest gap</td><td>%s s</td>%s<td>about %s s</td></tr>
 </tbody></table></div>
 <p class="src">Our own header client, Zcash mainnet, blocks %s to %s, as of %s.</p>
+%s
+%s
 </section>""" % (lang(st["bereich"]["von_utc"][:10]), lang(st["bereich"]["bis_utc"][:10]), betrag(vor["abstaende"]),
-                 zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(g["mittel_s"]), zahl1(float(g["median_s"])),
-                 zahl1(float(b["median_s"])), zahl1(g["p90_s"]), zahl1(b["p90_s"]), zahl1(g["p99_s"]), zahl1(b["p99_s"]),
-                 betrag(g["laengste_luecke_s"]), betrag(b["laengste_luecke_s"]),
-                 betrag(vor["bereich"]["von_hoehe"]), betrag(vor["bereich"]["bis_hoehe"]), stand_text)
+                 zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), un[0], zahl1(g["mittel_s"]), un[1][0],
+                 zahl1(float(g["median_s"])), un[1][1],
+                 zahl1(float(b["median_s"])), zahl1(g["p90_s"]), un[1][2], zahl1(b["p90_s"]), zahl1(g["p99_s"]), un[1][3],
+                 zahl1(b["p99_s"]), betrag(g["laengste_luecke_s"]), un[1][4], betrag(b["laengste_luecke_s"]),
+                 betrag(vor["bereich"]["von_hoehe"]), betrag(vor["bereich"]["bis_hoehe"]), stand_text,
+                 un[2], rw.verfahren_html(["PH-M-001"]))
     fakten = ('<section id="in-short" class="facts"><h2>Zcash NU7 in short</h2><dl>%s</dl></section>'
               % "".join('<div><dt>%s</dt><dd class="fv">%s</dd><dd class="fq">%s</dd></div>' % z for z in zeilen))
     mod = max(ZCASH_TEXT_STAND, st["stand"]) if st else ZCASH_TEXT_STAND
@@ -815,7 +1038,7 @@ def seiten():
     # 1 startseite, nach dem design-skill (Ben, 26.10.2026). Gleiche Aussagen,
     # Preise und Zahlen wie vorher, neu angeordnet. CSS und Skript nur hier.
     S.append(dict(
-        datei="index.html", pfad="/", og="home", lastmod="2026-10-26",
+        datei="index.html", pfad="/", og="home", lastmod="2026-11-04",
         title="Independent blockchain measurement | PulseHawk",
         desc=("PulseHawk does its own blockchain measurement under load, with own nodes or "
               "header clients. Dated numbers, raw data and an open method for upgrades."),
@@ -834,7 +1057,7 @@ def seiten():
 <section><div class="tiles">
 <div class="tile w2 acc"><h2>Which networks have we measured?</h2><p>We publish dated numbers, raw data and an open method.</p></div>
 <div class="tile w2"><h3>Kaspa</h3><p>A network with a very high block rate, followed every day since August 2026 through our Kaspa media brand.</p><p>%s</p></div>
-<div class="tile w2"><h3>Zcash NU7 on testnet</h3><div class="big">23.68 s</div><p class="small">Mean block interval, against a 25 s target</p><p>Network Upgrade 7 on the Zcash testnet, measured independently over 49,203 blocks up to 18 October 2026.</p>%s<p>%s</p></div>
+<div class="tile w2"><h3>Zcash NU7 on testnet</h3><div class="big">23.68 s</div><p class="small">Mean block interval, against a 25 s target</p><p>Network Upgrade 7 (ZIP 259) on the Zcash testnet, measured independently over 49,203 blocks up to 18 October 2026.</p>%s<p>%s</p></div>
 %s
 </div></section>
 %s
@@ -1044,7 +1267,7 @@ def seiten():
          "Yes. The method is on this page and the raw data is in the CSV. Two people with the same window should get the same numbers."),
     ]
     S.append(dict(
-        datei="method.html", pfad="/method", og="method", lastmod="2026-10-23",
+        datei="method.html", pfad="/method", og="method", lastmod=GLAUB_STAND,
         title="How we measure blockchains | PulseHawk",
         desc=("Our open method. Block time distribution, stale block rate, propagation "
               "delay, confirmation time and fees, from our own measurement in dated windows."),
@@ -1074,6 +1297,7 @@ def seiten():
 <li><b>Difficulty adjustment.</b> How fast difficulty follows a change in hashrate.</li>
 </ul>
 </section>
+%s
 <section><h2>What are the rules we publish by?</h2>
 <div class="rules">
 <div><h3>No source, no number</h3><p>A number without its window and raw data does not get published. If we counted something ourselves, we show how.</p></div>
@@ -1099,6 +1323,7 @@ def seiten():
 <p class="cta">%s</p>
 """ % (zitier_kasten("cite-method", "measurement method version 1", "2026-10-16",
                      "/method#version", verb="published"),
+       verfahren_abschnitte(),
        "The first public sample report, Zcash NU7 on testnet, follows on 18 October 2026, 12:00 Berlin time."
        if not ZCASH_OFFEN else
        "The first public sample report is %s, published on 18 October 2026." % a("/zcash-nu7", "Zcash NU7 on testnet"),
@@ -1107,9 +1332,10 @@ def seiten():
         schema=[],
     ))
 
-    # 6 independence, kurz und sachlich (Ben, 2.11.2026), mit korrekturlog
+    # 6 independence, kurz und sachlich (Ben, 2.11.2026); korrekturen auf
+    # /corrections (Ben, 4.11.2026)
     S.append(dict(
-        datei="independence.html", pfad="/independence", og="independence", lastmod="2026-11-02",
+        datei="independence.html", pfad="/independence", og="independence", lastmod=GLAUB_STAND,
         title="Our independence rules | PulseHawk",
         desc=("Five rules for every PulseHawk measurement. Data published whatever the result, "
               "paid work marked as paid, price fixed in advance, no client tokens."),
@@ -1123,21 +1349,133 @@ def seiten():
 <li>Paid measurements are marked as paid, on the report and on its page.</li>
 <li>The price never depends on the result. It is set in the offer, before the first block is counted.</li>
 <li>We hold no client tokens. A payment in a client's own token is converted when it arrives.</li>
-<li>Corrections are public and dated, in the log on this page.</li>
+<li>Corrections are public and dated, on our %s page.</li>
 </ol>
 </section>
 <section id="funding"><h2>How is PulseHawk funded?</h2>
 <p>PulseHawk is run by Vizora Digital UG (haftungsbeschränkt). It is funded by fees for paid measurements.</p>
 </section>
-<section id="corrections"><h2>Correction log</h2>
-%s
+<section id="corrections"><h2>Where are corrections listed?</h2>
+<p>Every correction to a published page gets a dated entry on our %s page, with what was wrong, what stands now and who reported it. Our estimates are scored against the result on our %s.</p>
 </section>
 <p>The rules for every report type are in the %s.</p>
 %s
-""" % (korrektur_log(), a("/standard/", "PulseHawk Measurement Framework"),
+""" % (a("/corrections", "corrections"), a("/corrections", "corrections"), a("/track-record", "track record"),
+       a("/standard/", "PulseHawk Measurement Framework"),
        zitat_abschnitt(lies_zitate(), sid="cited-by")),
         faqs=[],
-        schema=["ARTICLE:2026-10-16:2026-11-02"],
+        schema=["ARTICLE:2026-10-16:%s" % GLAUB_STAND],
+    ))
+
+    # 6a track record, 6b corrections, 6c about (Ben, 4.11.2026)
+    tr = lies_track_record()
+    tr_schaetz = [e for e in tr if e["art"] == "estimate"]
+    tr_vergl = [e for e in tr if e["art"] == "comparison"]
+    tr_zahl = {st: sum(e["status"] == st for e in tr) for st in TR_STATUS}
+    S.append(dict(
+        datei="track-record.html", pfad="/track-record", og="method", lastmod=GLAUB_STAND,
+        title="Track record of our estimates | PulseHawk",
+        desc=("Every PulseHawk estimate and comparison, scored against the counted result. "
+              "With link, date, our value, the window, deviation and status for each entry."),
+        h1="Track record",
+        lead=("Every estimate we publish, and every comparison of our count with a published value, "
+              "gets an entry here. Each entry links the place it was first published, with its date, "
+              "and stays open until there is a counted result."),
+        css=TR_CSS,
+        body="""
+<section id="scoring"><h2>How is an entry scored?</h2>
+<ul class="list">
+<li><b>In band.</b> For an estimate, the counted result fell inside the 90%% band we published. For a comparison, the published value lies inside the 95%% interval of our count.</li>
+<li><b>Outside.</b> The result fell outside. For a comparison this is a finding about the network, which did not run at its published value.</li>
+<li><b>Open.</b> There is no counted result yet. An open entry never shows a result.</li>
+</ul>
+<p>The list has %d entries, %d in band, %d outside and %d open. Entries are never removed. A mistake in an entry is fixed on our %s page.</p>
+</section>
+<section id="estimates"><h2>Our estimates</h2>
+<div class="trl">%s</div>
+</section>
+<section id="comparisons"><h2>Our count against a published value</h2>
+<div class="trl">%s</div>
+</section>
+<p>How each number is counted is on %s, under the method IDs named in each entry.</p>
+""" % (len(tr), tr_zahl["in band"], tr_zahl["outside"], tr_zahl["open"], a("/corrections", "corrections"),
+       "".join(tr_eintrag(e) for e in tr_schaetz), "".join(tr_eintrag(e) for e in tr_vergl),
+       a("/method#method-ids", "our method page")),
+        faqs=[],
+        schema=["ARTICLE:%s:%s" % (GLAUB_STAND, GLAUB_STAND)],
+    ))
+
+    korr = lies_korrekturen()
+    S.append(dict(
+        datei="corrections.html", pfad="/corrections", og="independence", lastmod=GLAUB_STAND,
+        title="Corrections | PulseHawk",
+        desc=("Every correction to a published PulseHawk page, dated. What was wrong, what stands "
+              "now and who reported it. Found an error? Write to us and we add it here."),
+        h1="Corrections",
+        lead=("Every correction to a published page or post gets a dated entry here, newest first. "
+              "Entries are never removed."),
+        css=TR_CSS,
+        body="""
+<section id="log"><h2>Which corrections have we made?</h2>
+<div class="trl">%s</div>
+</section>
+<section id="report"><h2>How do I report an error?</h2>
+<p>Write to %s with the page and what you think is wrong. If we correct it, the entry names you as the reporter, with the public name you choose, or PulseHawk if you prefer.</p>
+<p>How our own estimates turned out is on our %s.</p>
+</section>
+""" % ("".join(korrektur_eintrag(len(korr) - i, e) for i, e in enumerate(korr)),
+       a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)), a("/track-record", "track record")),
+        faqs=[],
+        schema=["ARTICLE:%s:%s" % (GLAUB_STAND, max(e["date"] for e in korr))],
+    ))
+
+    about_schema = [{"@type": "AboutPage", "@id": SITE + "/about#page", "url": SITE + "/about",
+                     "name": "About PulseHawk", "about": {"@id": ORG_ID},
+                     "dateModified": schema_zeit(GLAUB_STAND)}]
+    gruender = ""
+    if GRUENDER == "GRUENDER":
+        print("warnung: /about ohne gruender, GRUENDER ist noch der platzhalter (Ben entscheidet)")
+    else:
+        about_schema.append({"@type": "Person", "@id": SITE + "/about#founder", "name": GRUENDER,
+                             "jobTitle": "Founder", "worksFor": {"@id": ORG_ID}})
+        about_schema[0]["mainEntity"] = {"@id": SITE + "/about#founder"}
+        gruender = ('<p>PulseHawk was founded by %s, who runs the measurements and signs the reports.</p>'
+                    % E(GRUENDER))
+    S.append(dict(
+        datei="about.html", pfad="/about", og="home", lastmod=GLAUB_STAND,
+        title="About PulseHawk",
+        desc=("Who runs PulseHawk and who pays us. Fees for paid measurements, the price fixed "
+              "before the first block, no tokens held. We measure, others decide."),
+        h1="About PulseHawk",
+        lead="PulseHawk measures how blockchains behave and reports what it counted. Others decide what follows from it.",
+        body="""
+<section id="who"><h2>Who runs PulseHawk?</h2>
+%s<p>PulseHawk is a brand of Vizora Digital UG (haftungsbeschränkt), Düsseldorf, Germany. Reach us at %s. The legal details are in our %s.</p>
+</section>
+<section id="paid"><h2>Who pays us?</h2>
+<ul class="list">
+<li>Our income is fees for paid measurements. A paid measurement is marked as paid.</li>
+<li>We hold no tokens of the networks we measure. A payment in a client's own token is converted when it arrives.</li>
+<li>The price is fixed in the offer, before the measurement starts, and never depends on the result.</li>
+<li>A result of “did not pass” is a valid result. It is published like any other.</li>
+</ul>
+</section>
+<section id="role"><h2>What is our role?</h2>
+<p>We measure and report, others decide. A report says what we counted, in which window and with which method. Whether an upgrade ships, a grant is paid or a claim holds is for the people who asked.</p>
+</section>
+<section id="check"><h2>Where can you check our work?</h2>
+<ul class="list">
+<li>%s, with a fixed ID for each way of counting.</li>
+<li>%s, every estimate scored against the counted result.</li>
+<li>%s, every correction, dated.</li>
+<li>%s, the code to repeat our counts.</li>
+</ul>
+</section>
+""" % (gruender, a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)), a("/impressum.html", "Impressum"),
+       a("/method", "Our method"), a("/track-record", "Our track record"), a("/corrections", "Our corrections"),
+       a("https://github.com/pulsehawk/methods", "github.com/pulsehawk/methods")),
+        faqs=[],
+        schema=about_schema,
     ))
 
     # 7 upgrades
@@ -1217,6 +1555,16 @@ def seiten():
              '49,203 blocks up to 18 October 2026, licensed CC BY 4.0.' % ZCASH_CSV) if csv else ""
     quelle = ('<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet '
               'peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>')
+    # messunsicherheit, methoden und reproduce (Ben, 4.11.2026)
+    sys.path.insert(0, HERE)
+    import report_waechter as rw
+    zi = testnet_intervalle() if csv else None
+    unc_test = ('<p class="unc">Measurement uncertainty. The interval column is the 95% range of each value, '
+                'from rank statistics, the standard error or a Wilson interval. Header times are whole seconds '
+                'set by the miners.</p>')
+    unc_orph = ('<p class="unc">Measurement uncertainty. The 95%% Wilson interval for 5 of 780 is %s to %s%%. '
+                'A block our listener never heard of is not counted, so the share is a lower bound for what the '
+                'whole network saw.</p>' % tuple("%.2f" % x for x in anteil95(5, 780)))
     z_stand = lies_mainnet_stand()
     z_fakten, z_mainnet, z_faq_akt, z_faq_zeit, z_mod = zcash_mainnet_teile(z_stand)
     z_faq = [
@@ -1241,25 +1589,27 @@ def seiten():
         desc=("Zcash NU7 activates at block 3,543,405 and cuts the block time from 75 s to 25 s. "
               "Our forecast, mainnet and testnet block times counted, 500 block spans."),
         h1="Zcash NU7 block times, expected and counted",
-        lead=("Zcash NU7 cuts the block target spacing from 75 s to 25 s. On mainnet it activates "
-              "at block 3,543,405. On the testnet after NU7 we counted a median interval of 17.0 s "
+        lead=("Zcash NU7 cuts the block target spacing from 75 s to 25 s, per ZIP 218. On mainnet it activates "
+              "at block 3,543,405, per ZIP 259. On the testnet after NU7 we counted a median interval of 17.0 s "
               "over 49,202 intervals from 4 to 18 October 2026, close to an ideal 25 s chain."),
-        css=ZCASH_FACTS_CSS,
+        css=ZCASH_FACTS_CSS + REPRO_CSS,
         body="""
 %s
 %s
 <section id="testnet"><h2>Does NU7 hit 25 second blocks on testnet?</h2>
 <p>Yes. The mean interval was 23.68 s, so blocks came about 5%% faster than the target. The median of 17.0 s is what a 25 s chain should show, because most blocks arrive early and a few arrive late.</p>
-<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
-<tr id="mean"><td class="c">Mean</td><td>23.68 s</td><td>25 s</td></tr>
-<tr id="median"><td class="c">Median</td><td>17.0 s</td><td>17.3 s</td></tr>
-<tr id="p90"><td class="c">p90</td><td>52 s</td><td>57.6 s</td></tr>
-<tr id="p99"><td class="c">p99</td><td>109 s</td><td>115.1 s</td></tr>
-<tr id="over-75s"><td class="c">Over 75 s</td><td>3.59%%</td><td>4.98%%</td></tr>
-<tr id="over-150s"><td class="c">Over 150 s</td><td>0.203%%</td><td>0.248%%</td></tr>
-<tr id="longest-gap"><td class="c">Longest gap</td><td>451 s</td><td>about 284 s</td></tr>
+<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">95%% interval</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
+<tr id="mean"><td class="c">Mean</td><td>23.68 s</td><td>%s</td><td>25 s</td></tr>
+<tr id="median"><td class="c">Median</td><td>17.0 s</td><td>%s</td><td>17.3 s</td></tr>
+<tr id="p90"><td class="c">p90</td><td>52 s</td><td>%s</td><td>57.6 s</td></tr>
+<tr id="p99"><td class="c">p99</td><td>109 s</td><td>%s</td><td>115.1 s</td></tr>
+<tr id="over-75s"><td class="c">Over 75 s</td><td>3.59%%</td><td>%s</td><td>4.98%%</td></tr>
+<tr id="over-150s"><td class="c">Over 150 s</td><td>0.203%%</td><td>%s</td><td>0.248%%</td></tr>
+<tr id="longest-gap"><td class="c">Longest gap</td><td>451 s</td><td>single value</td><td>about 284 s</td></tr>
 </tbody></table></div>
 <p class="note">Computed means an ideal chain with a 25 s mean, where intervals follow an exponential distribution.</p>
+%s
+%s
 %s
 %s
 </section>
@@ -1267,29 +1617,41 @@ def seiten():
 <p>In 3.59%% of intervals, against 4.98%% for an ideal 25 s chain. Before NU7 the target itself was 75 s. Gaps over 150 s came in 0.203%% of intervals, against 0.248%% expected.</p>
 <p>The longest gap was 451 s, longer than the roughly 284 s an ideal chain would show over the same number of blocks. No block timestamp went backwards.</p>
 %s
+<p class="unc">Measurement uncertainty. The 95%% intervals for both shares are in the table above. The longest gap is a single counted value.</p>
+%s
 </section>
 <section id="difficulty"><h2>How fast does difficulty follow hashrate?</h2>
 <p>We found 6 hashrate jumps of 2x or more, and 5 of them caught up. The other one was followed by the next jump 200 blocks later, before it could catch up. For those five the difficulty came within ±15 %% of the new level after a median of 960 blocks, or about 2.7 hours when measured in time, and the longest catch-up took 1,839 blocks.</p>
+%s
+<p class="unc">Measurement uncertainty. Five catch-ups are too few for an interval, so the median of 960 blocks is a single counted value. Difficulty is read from the nBits field of each header and is exact.</p>
 %s
 </section>
 <section id="confirmations"><h2>How long do confirmations take?</h2>
 <p>Thirty blocks at 25 s spanned a median of 730 s and a p99 of 1,187 s. For perfect 25 s blocks the p99 would be about 1,105 s, so the measured value sits above that, partly because of the hashrate jumps (1,154 s without the windows around them), and still well below the 1,409 s for ten blocks at 75 s.</p>
 %s
+<p class="unc">Measurement uncertainty. Spans of 30 blocks overlap and are not independent, so they get no sample interval. Each span carries the whole second resolution of two header times.</p>
+%s
 </section>
 <section id="orphaned"><h2>How many blocks were orphaned?</h2>
 <p>From 17 October 2026, 14:51 to 20:21 UTC our listener recorded every block announced to it. Five of the 780 did not land in the chain, 0.64%%, and each of them at depth 1.</p>
 <p class="src">Our own listener, Zcash NU7 testnet, window 17 October 2026, 14:51 to 20:21 UTC.</p>
+%s
+%s
 </section>
 <section><h2>How we measured</h2>
-<p>Our own header client followed the Zcash testnet from the NU7 activation at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC, fetching headers directly from testnet peers and checking hash linkage and proof of work. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
+<p>Our own header client followed the Zcash testnet from the activation of NU7 (ZIP 259) at block 4,465,026 to block 4,514,228, the snapshot of 18 October 2026, 06:00 UTC, fetching headers directly from testnet peers and checking hash linkage and proof of work. That is 49,203 blocks. We checked 500 of them against two Zebra peers, and all 500 hashes matched, so we saw no fork in the blocks we compared.</p>
 <p>Intervals come from consecutive block timestamps. Method in %s, version 1.</p>
 </section>
 %s
 %s
+%s
 <p class="cta">%s</p>
-""" % (z_fakten, z_mainnet, quelle, zitier_kasten("cite-zcash", "Zcash NU7 testnet block intervals", "2026-10-18",
-                            "/zcash-nu7#mean", csv=z_csv),
-       quelle, quelle, quelle, a("/method", "How we measure"), downloads,
+""" % (z_fakten, z_mainnet, *zi_zellen(zi), quelle, unc_test, rw.verfahren_html(["PH-M-001"]),
+       zitier_kasten("cite-zcash", "Zcash NU7 testnet block intervals", "2026-10-18",
+                     "/zcash-nu7#mean", csv=z_csv),
+       quelle, rw.verfahren_html(["PH-M-001"]), quelle, rw.verfahren_html(["PH-M-001"]),
+       quelle, rw.verfahren_html(["PH-M-001"]), unc_orph, rw.verfahren_html(["PH-M-002", "PH-M-005"]),
+       a("/method", "How we measure"), rw.reproduzieren_html(rw.lies_reproduzieren("zcash-nu7")), downloads,
        faq_html(z_faq), contact_button("Request a measurement for your upgrade")),
         faqs=z_faq,
         schema=["ARTICLE:2026-10-18:%s" % z_mod, {
@@ -1330,7 +1692,7 @@ def seiten():
          "Yes, under the same rules as any other network."),
     ]
     S.append(dict(
-        datei="cases/kaspa.html", pfad="/cases/kaspa", og="kaspa", lastmod="2026-11-03",
+        datei="cases/kaspa.html", pfad="/cases/kaspa", og="kaspa", lastmod="2026-11-04",
         title="Kaspa network measurements | PulseHawk",
         desc=("Kaspa block rate and fees against new issuance. Every number is dated and "
               "marked as our own measurement or as a series we take over and name."),
@@ -1340,7 +1702,7 @@ def seiten():
               "a series we take over and name."),
         body="""
 <section><h2>How fast does Kaspa produce blocks?</h2>
-<p>Kaspa runs at 10 blocks per second since the Crescendo hardfork. At that rate a block time distribution is counted in tenths of a second, and the longest gap matters more than the median.</p>
+<p>Kaspa runs at 10 blocks per second since the Crescendo hardfork, KIP-14. At that rate a block time distribution is counted in tenths of a second, and the longest gap matters more than the median.</p>
 <p class="src">Source %s, protocol block rate, checked 3 November 2026.</p>
 </section>
 <section><h2>How do fees compare with new issuance?</h2>
@@ -1356,7 +1718,7 @@ def seiten():
        a("/independence", "rules"),
        faq_html(k_faq), sample_button(), contact_button()),
         faqs=k_faq,
-        schema=["ARTICLE:2026-10-16:2026-11-03"],
+        schema=["ARTICLE:2026-10-16:2026-11-04"],
         crumbs=[("Kaspa", "/cases/kaspa")],
     ))
 
@@ -1776,8 +2138,9 @@ PLAUSIBLE = """<!-- Privacy-friendly analytics by Plausible -->
 def fuss():
     # keine kaspa pulse auf pulsehawk.io, die marken sind getrennt (Ben, 3.11.2026)
     return ('<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand</div>'
-            '<div><a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a>'
-            ' · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>'
+            '<div><a href="/about">About</a> · <a href="/standard/">Measurement Framework</a>'
+            ' · <a href="/independence">Independence</a> · <a href="/track-record">Track record</a>'
+            ' · <a href="/corrections">Corrections</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>'
             ' · <a href="/contact">Contact</a></div></div></footer>')
 
 

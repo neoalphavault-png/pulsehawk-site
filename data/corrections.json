@@ -1,0 +1,26 @@
+{
+ "hinweis": "Oeffentliche Korrekturen von PulseHawk (Ben, 4.11.2026). Je Eintrag Datum, Seite oder Post, was falsch war, was jetzt steht, wer es gemeldet hat (nur oeffentliche Namen, sonst PulseHawk). Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "entries": [
+  {
+   "date": "2026-11-02",
+   "page": "/zcash-nu7",
+   "wrong": "Three source lines used a German word in place of the English as of.",
+   "now": "As of 28 October 2026, in all three places.",
+   "reported_by": "PulseHawk"
+  },
+  {
+   "date": "2026-11-02",
+   "page": "/zcash-nu7, /upgrades, /cases/kaspa",
+   "wrong": "The schema dates datePublished and dateModified had a date but no time and no time zone.",
+   "now": "Each date carries a time and the time zone, six in the morning UTC on the date shown.",
+   "reported_by": "PulseHawk, from the Google Rich Results Test"
+  },
+  {
+   "date": "2026-11-03",
+   "page": "/cases/kaspa",
+   "wrong": "The rate of 10 blocks per second cited a media page as its source, not the protocol specification.",
+   "now": "The source is KIP-14, The Crescendo Hardfork.",
+   "reported_by": "PulseHawk"
+  }
+ ]
+}

@@ -1,0 +1,97 @@
+{
+ "hinweis": "Track record von PulseHawk (Ben, 4.11.2026). Nur Eintraege, die oeffentlich und datiert stehen, Quelle von Claude selbst geprueft. art 'estimate' ist eine eigene Prognose, art 'comparison' ein Vergleich mit einem veroeffentlichten Wert. status: in band, outside, open. Bei Vergleichen heisst in band, dass der veroeffentlichte Wert im 95-%-Intervall unseres gezaehlten Werts liegt (scripts/unsicherheit.py); bei Prognosen, dass das gezaehlte Ergebnis im 90-%-Band unserer Prognose liegt. Ohne Ergebnis ist der Status open. Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "entries": [
+  {
+   "id": "TR-001",
+   "art": "comparison",
+   "published": "2026-10-22",
+   "url": "https://pulsehawk.io/#bch-median",
+   "where": "pulsehawk.io home page",
+   "network": "Bitcoin Cash tempnet (CHIP-2025-03 Faster Blocks)",
+   "subject": "median block interval",
+   "reference": {
+    "value": "41.6 s",
+    "what": "median of an ideal chain at the 60 s target of CHIP-2025-03, computed as 60 s × ln 2"
+   },
+   "result": {
+    "value": "43 s",
+    "label": "counted",
+    "window": "15 October 2026, 12:56 UTC to 21 October 2026, 09:59 UTC",
+    "n": 7571,
+    "interval": "41 to 44 s"
+   },
+   "deviation": "+1.4 s",
+   "status": "in band",
+   "methods": [
+    "PH-M-001"
+   ]
+  },
+  {
+   "id": "TR-002",
+   "art": "comparison",
+   "published": "2026-10-18",
+   "url": "https://pulsehawk.io/zcash-nu7#mean",
+   "where": "pulsehawk.io/zcash-nu7",
+   "network": "Zcash NU7 testnet (ZIP 218)",
+   "subject": "mean block interval",
+   "reference": {
+    "value": "25 s",
+    "what": "target spacing after NU7 in ZIP 218"
+   },
+   "result": {
+    "value": "23.68 s",
+    "label": "counted",
+    "window": "4 October 2026, 18:21 UTC to 18 October 2026, 05:59 UTC",
+    "n": 49202,
+    "interval": "23.48 to 23.88 s"
+   },
+   "deviation": "-1.32 s",
+   "status": "outside",
+   "methods": [
+    "PH-M-001"
+   ]
+  },
+  {
+   "id": "TR-003",
+   "art": "estimate",
+   "published": "2026-10-28",
+   "url": "https://pulsehawk.io/zcash-nu7#in-short",
+   "where": "pulsehawk.io/zcash-nu7",
+   "network": "Zcash mainnet, NU7 (ZIP 259)",
+   "subject": "time of block 3,543,405, the NU7 activation height",
+   "estimate": {
+    "value": "6 November 2026, 02:26 UTC",
+    "band": "5 November 2026, 23:01 UTC to 6 November 2026, 05:51 UTC",
+    "as_of": "2026-10-28"
+   },
+   "result": null,
+   "deviation": null,
+   "status": "open",
+   "methods": [
+    "PH-M-001",
+    "PH-M-006"
+   ]
+  },
+  {
+   "id": "TR-004",
+   "art": "estimate",
+   "published": "2026-11-04",
+   "url": "https://pulsehawk.io/reports/zcash-nu7#m7",
+   "where": "pulsehawk.io/reports/zcash-nu7",
+   "network": "Zcash mainnet, NU7 (ZIP 259)",
+   "subject": "time of block 3,543,405, the NU7 activation height",
+   "estimate": {
+    "value": "6 November 2026, 02:39 UTC",
+    "band": "6 November 2026, 00:28 UTC to 6 November 2026, 05:00 UTC",
+    "as_of": "2026-11-02"
+   },
+   "result": null,
+   "deviation": null,
+   "status": "open",
+   "methods": [
+    "PH-M-001",
+    "PH-M-006"
+   ]
+  }
+ ]
+}

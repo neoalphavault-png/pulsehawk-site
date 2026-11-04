@@ -14,7 +14,14 @@ H1, Abschnitte unter 250 Woertern, JSON-LD gueltig, FAQ-Schema nur mit
 Fragen, die sichtbar dastehen, Canonical und og:image vorhanden, Plausible
 auf jeder Seite. Und nie eine IP-Adresse im Quelltext.
 
+Dazu ab 4.11.2026 (Ben): ein Absatz, der ein Upgrade, eine Aktivierung oder
+eine Konsensregel einer Kette nennt, traegt die Spezifikationsnummer (ZIP,
+CHIP, KIP, BIP, EIP, SIMD, BEP); eine vorhergesagte Upgrade-Zeit steht nur als
+Blockhoehe plus "estimate"; Mess- und Report-Seiten tragen Methoden-IDs, eine
+Zeile "Measurement uncertainty" und den Block "reproduce this".
+
     python3 scripts/b2b_check.py datei.html ...
+    python3 scripts/b2b_check.py --selbsttest
 """
 
 import html
@@ -51,6 +58,51 @@ RE_ZITIER = re.compile(r"PulseHawk \(@pulsehawkio\), [^,]+, (counted|published) 
                        r"September|October|November|December) \d{4}, "
                        r"pulsehawk\.io(/[a-z0-9/-]*)#([a-z0-9-]+)$")
 EINLADUNG = "Using our numbers? Tag @pulsehawkio and we add you to the list."
+# Upgrades und Konsensregeln nur mit Spezifikationsnummer im selben Absatz,
+# Upgrade-Zeiten nur als Blockhoehe plus Schaetzung (Ben, 4.11.2026).
+# Ein Absatz nennt ein Upgrade, wenn er eine Kette oder ein benanntes Upgrade
+# zusammen mit einem Upgrade-Wort nennt (Aktivierung, Upgrade, Hardfork,
+# Konsensregel). Allgemeine Saetze ueber Upgrades ohne Kette bleiben frei,
+# ebenso Leiste, Fusszeile und Brotkrumen.
+KETTEN = re.compile(r"\b(Zcash|Bitcoin Cash|BCH|Bitcoin|Kaspa|Ethereum|Solana|Litecoin|Monero|Cardano|"
+                    r"Polkadot|Avalanche|Cosmos|Dogecoin|Tron|Ton|Sui|Aptos|Near)\b")
+UPGRADE_WORT = re.compile(r"\b(activat\w*|upgrade\w*|hard ?forks?|soft ?forks?|consensus rules?|"
+                          r"network upgrade)\b", re.I)
+BENANNT = re.compile(r"\b(NU\d+|Crescendo|Taproot|SegWit|Pectra|Dencun|Shapella|Faster Blocks)\b")
+RE_SPEZ = re.compile(r"\b(ZIP|CHIP|KIP|BIP|EIP|SIMD|BEP)[ -]?\d", re.I)
+PROGNOSE = re.compile(r"\b(forecasts?|expected|expect|arrives?|will (activate|reach|arrive)|puts block|"
+                      r"estimat\w*|draws)\b", re.I)
+ZEITANGABE = re.compile(r"\b\d{1,2}:\d{2}\b|\b\d{1,2} (January|February|March|April|May|June|July|"
+                        r"August|September|October|November|December)\b")
+# mess- und report-seiten tragen methoden-ids, eine unsicherheitszeile und
+# den block "reproduce this" (Ben, 4.11.2026)
+MESS_SEITEN = ("zcash-nu7.html",)
+
+
+def funde_spez(absaetze):
+    f = []
+    for text in absaetze:
+        upgrade = (BENANNT.search(text) or KETTEN.search(text)) and UPGRADE_WORT.search(text)
+        if upgrade and not RE_SPEZ.search(text):
+            f.append("upgrade ohne spezifikationsnummer (ZIP, CHIP, KIP, BIP) im absatz '%s'" % text[:90])
+        # eine vorhergesagte zeit fuer ein upgrade oder eine blockhoehe
+        if PROGNOSE.search(text) and ZEITANGABE.search(text) and (upgrade or re.search(r"\bblock [\d,]{4,}", text)):
+            if not re.search(r"\bblock [\d,]{4,}", text) or not re.search(r"estimat", text, re.I):
+                f.append("upgrade-zeit ohne blockhoehe und 'estimate' im absatz '%s'" % text[:90])
+    return f
+
+
+def funde_messseite(roh):
+    f = []
+    if 'class="meth"' not in roh or "/method#ph-m-" not in roh:
+        f.append("mess-seite ohne methoden-ids")
+    if "Measurement uncertainty" not in roh:
+        f.append("mess-seite ohne zeile measurement uncertainty")
+    if 'id="reproduce"' not in roh:
+        f.append("mess-seite ohne block reproduce this")
+    return f
+
+
 RE_ZEITPUNKT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$")
 
 
@@ -108,6 +160,7 @@ class Text(HTMLParser):
         self._title = False
         self.attrtext = []
         self.bloecke = []        # fliesstext je block, fuer die ziffernregel
+        self.absaetze = []       # p, li und lead, fuer die upgrade-regeln
         self._block = []         # stapel offener bloecke: (tag, sammelt)
 
     def handle_starttag(self, tag, attrs):
@@ -128,7 +181,8 @@ class Text(HTMLParser):
         klassen = (d.get("class") or "").split()
         if tag in SATZ_BLOECKE or any(k in SATZ_KLASSEN for k in klassen):
             sammelt = not any(k in SATZ_AUSNAHMEN for k in klassen)
-            self._block.append((tag, sammelt, []))
+            rahmen = any(t in ("nav", "header", "footer") for t in self.stapel)
+            self._block.append((tag, sammelt, [], (tag in ("p", "li") or "lead" in klassen) and not rahmen))
         if tag == "h1":
             self.h1 += 1
         if tag == "h2":
@@ -143,10 +197,12 @@ class Text(HTMLParser):
 
     def handle_endtag(self, tag):
         if self._block and self._block[-1][0] == tag:
-            _, sammelt, teile = self._block.pop()
+            _, sammelt, teile, absatz = self._block.pop()
             text = re.sub(r"\s+", " ", "".join(teile)).strip()
             if sammelt and text:
                 self.bloecke.append(text)
+                if absatz:
+                    self.absaetze.append(text)
         if tag in self.stapel:
             while self.stapel and self.stapel.pop() != tag:
                 pass
@@ -206,6 +262,9 @@ def funde_text(text, datei):
             continue
         if re.match(r"pulsehawk(\.io|io)", t[m.start():m.start() + 12]):
             continue
+        # die organisation auf github heisst so (github.com/pulsehawk/methods)
+        if t[max(0, m.start() - 11):m.start()] == "github.com/":
+            continue
         f.append("schreibweise '%s'" % m.group(0))
     if os.path.basename(datei) not in NICHT_TUN_ERLAUBT and NICHT_TUN.search(t):
         m = NICHT_TUN.search(t)
@@ -240,6 +299,10 @@ def pruefe(datei, roh=None):
             if satz[:1].isdigit():
                 f.append("satz beginnt mit ziffer '%s'" % satz[:60])
     f += funde_zitierkasten(roh)
+    f += funde_spez(p.absaetze)
+    rel = os.path.relpath(os.path.join(REPO, datei), REPO) if not os.path.isabs(datei) else os.path.relpath(datei, REPO)
+    if rel in MESS_SEITEN or (rel.startswith("reports/") and rel.endswith(".html")):
+        f += funde_messseite(roh)
     # Kaspa Pulse steht nirgends auf pulsehawk.io, auch nicht im schema oder in
     # einem link; die marken sind getrennt (Ben, 3.11.2026)
     m = re.search(r"kaspa[ _-]?pulse", roh, re.I)
@@ -300,6 +363,52 @@ def pruefe(datei, roh=None):
     return f
 
 
+SPEZ_FAELLE = [
+    ("Zcash NU7 activates at block 3,543,405.", 1),
+    ("Zcash NU7 activates at block 3,543,405, per ZIP 259.", 0),
+    ("We measure a network before and after an upgrade.", 0),
+    ("Kaspa runs at 10 blocks per second since the Crescendo hardfork.", 1),
+    ("Kaspa runs at 10 blocks per second since the Crescendo hardfork, KIP-14.", 0),
+    ("Our forecast puts the Zcash NU7 activation (ZIP 259) at 6 November 2026, 02:39 UTC.", 1),
+    ("Our estimate puts block 3,543,405, the Zcash NU7 activation (ZIP 259), at 6 November 2026, 02:39 UTC.", 0),
+    ("The median of 20,000 draws puts block 3,543,405 at 6 November 2026.", 1),
+    ("Read the Zcash NU7 case", 0),
+]
+
+
+def selbsttest():
+    """die regeln vom 4.11.2026 an festen faellen, dazu der waechter des track record."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import b2b_pages
+    falsch = 0
+    for text, n in SPEZ_FAELLE:
+        k = len(funde_spez([text]))
+        falsch += k != n
+        print("  %s  %d funde, erwartet %d  %s" % ("ok  " if k == n else "FEHL", k, n, text[:70]))
+    gut = {"id": "TR-T", "art": "estimate", "published": "2026-11-04", "url": "https://pulsehawk.io/x",
+           "where": "x", "network": "Zcash mainnet, NU7 (ZIP 259)", "subject": "time of block 3,543,405",
+           "estimate": {"value": "v", "band": "a to b", "as_of": "2026-11-02"}, "result": None,
+           "deviation": None, "status": "open", "methods": ["PH-M-006"]}
+    erg = {"value": "v", "label": "counted", "window": "w", "n": 5, "interval": "i"}
+    faelle = [
+        ("gut", gut, 0),
+        ("ohne link", dict(gut, url=""), 1),
+        ("ohne datum", dict(gut, published="4.11."), 1),
+        ("in band ohne ergebnis", dict(gut, status="in band", deviation="+1 s"), 1),
+        ("open mit ergebnis", dict(gut, result=erg), 1),
+        ("in band mit ergebnis", dict(gut, status="in band", result=erg, deviation="+1 s"), 0),
+        ("schaetzung ohne hoehe", dict(gut, subject="time of the upgrade"), 1),
+        ("upgrade ohne zip", dict(gut, network="Zcash mainnet, NU7"), 1),
+        ("unbekannte methode", dict(gut, methods=["PH-M-999"]), 1),
+    ]
+    for name, e, n in faelle:
+        k = len(b2b_pages.pruefe_track_record([e]))
+        falsch += k != n
+        print("  %s  track record %s, %d funde, erwartet %d" % ("ok  " if k == n else "FEHL", name, k, n))
+    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle)))
+    return 1 if falsch else 0
+
+
 def main(dateien):
     schlecht = 0
     for d in dateien:
@@ -314,4 +423,6 @@ def main(dateien):
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--selbsttest"]:
+        sys.exit(selbsttest())
     sys.exit(main(sys.argv[1:]))
