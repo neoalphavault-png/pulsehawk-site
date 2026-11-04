@@ -253,3 +253,24 @@ Keine. Die Unterschiede zu `report_v1.py` sind mit den Entscheidungen vom 3.11. 
    - **Workflow:** Soll ein Workflow Reports bauen und melden, wäre das ein eigener PR, den Ben merged.
 2. Der Zcash-Sitzung den Auftrag zu M6 geben (Abschnitt "Auftrag an die Zcash-Sitzung").
 3. #52 nach Claudes Prüfung mergen.
+
+## Nachtrag 4.11.2026, Abnahme auf pulsehawk.io
+Ben hat #52 am 4.11.2026 um 08:35 UTC gemergt (Merge-Commit `db3cca7`, Kopf `28a90a2`). Abruf auf pulsehawk.io danach:
+
+| Adresse | Ergebnis |
+|---|---|
+| /standard | `301` auf /standard/ |
+| /standard/ | `200`, "Measurement Framework for chain reports", index |
+| /standard/upgrade-report/ | `200`, Spezifikation v1.0 vom 3.11.2026, mit linearer Interpolation, ±20 % bei M6, "Our listener" und ganzen Sekunden |
+| /standard/upgrade-report/v1-0 | `200`, noindex |
+| /standard/load-test/ | `200`, geplanter Typ, noindex |
+| /reports/zcash-nu7 | `200`, PH-UR-2026-001, Gerüst mit "Not yet counted", Schätzung 02:39 UTC, BibTeX `@misc{PH-UR-2026-001` |
+| /independence | `200`, Finanzierung "fees for paid measurements", kein Grant, Korrekturlog `#corrections` |
+| / | `200`, der Abschnitt "For foundations and grant committees" bleibt |
+| /scripts/b2b_pages.py, /data/reports/README.md | `404`, der Code und die Anleitung liegen nicht mehr auf der Website |
+
+- **Kaspa Pulse:** wird auf keiner der geprüften Seiten genannt, auch nicht im Schema. Geprüft sind Startseite, /method, /zcash-nu7, /cases/kaspa, /independence, /standard/, die Spezifikation, v1-0 und der Report.
+- **Sitemap:** 13 Adressen, darunter /standard/, /standard/upgrade-report/ und /reports/zcash-nu7.
+- **Schema:** Alle Datumsfelder haben Uhrzeit und Zeitzone.
+
+Offen bleibt der Auftrag zu M6 an die Zcash-Sitzung, bis 8.11.2026.
