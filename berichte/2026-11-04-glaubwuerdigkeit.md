@@ -1,6 +1,6 @@
 # Glaubwürdigkeit PulseHawk (Auftrag Ben, 4.11.2026)
 
-PR #54, Branch `site/glaubwuerdigkeit`. Claude prüft, Ben merged. Claude merged nicht selbst.
+PR #54, Branch `site/glaubwuerdigkeit`. Selbst-Merge nach Bens Regel vom 26.10. (Korrektur 4.11.): keine Workflows, kein deploy, kein c2, kein Secrets-Bezug, Checks grün, keine Konflikte, Textregeln bestanden.
 Frist: So 8.11. 18:00.
 
 ## Was gemacht wurde
@@ -76,8 +76,8 @@ Frist: So 8.11. 18:00.
 
 ## Was Ben tun muss
 
-- PR #54 prüfen und mergen. Wird erst nach dem 4.11. gemergt, setze ich vorher `GLAUB_STAND` (lastmod und Schema-Daten der geänderten Seiten) auf das Merge-Datum.
-- **Reihenfolge mit #47:** Beide PRs ändern die Startseite (lastmod, Kachel) und /cases/kaspa. Wer zuerst gemergt wird, ist egal; den zweiten PR rebase ich auf main, baue ihn neu und prüfe ihn wieder.
+- Nichts zum Mergen: #54 merge ich selbst, die Abnahme auf pulsehawk.io folgt als eigene Zeile.
+- **#47 nach dem Merge von #54:** Beide PRs ändern die Startseite und /cases/kaspa. #47 rebase ich auf den neuen main, baue neu und prüfe wieder.
 - Die offenen Fragen 1 bis 5 beantworten.
 - Die Zcash-Sitzung bitten, die Reproduce-Befehle für /reports/zcash-nu7 zu bestätigen. Danach setze ich `bestaetigt` auf true.
 
