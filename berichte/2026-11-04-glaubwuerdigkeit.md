@@ -112,3 +112,14 @@ Frist: So 8.11. 18:00.
   Vorher stand dort pauschal "The code for each ID is in github.com/pulsehawk/methods". Das stimmte nicht, weil die Erzeugung der Eingaben noch nicht im Repo liegt (Bens Frist dafür: 30.11.).
 - **Link:** /method verlinkt METHODS.md.
 - **M7:** Unser M7 hat keinen Wert "erste Sicht", deshalb bleiben die IDs für M7 bei PH-M-001 und PH-M-006. Die Probe zeigt weiter 36 von 36.
+
+## Selbst-Merge #56 (4.11.2026)
+
+- PR #56 per Squash gemergt, Merge-Commit `afbb057`.
+- Live auf pulsehawk.io/method: byte-gleich mit dem Bau, 6 Zeilen "Code" und ein Link auf METHODS.md.
+
+## Offene Frage 6 (aus der zweiten Antwort der Zcash-Sitzung, 4.11.)
+
+report_v1.py schreibt in M7 zusätzlich die erste Sicht des ersten Blocks: die Zeilen `first_block_first_seen` und `first_seen_minus_header_time`, Methode PH-M-004. Spezifikation v1.0 und die Seite zeigen in M7 nur die Kopfzeit und den Abstand zur Schätzung. Die Probe vergleicht die 36 Kennzahlen der Spezifikation, dort stimmen beide Seiten überein.
+
+Soll die erste Sicht auf die Seite, als Kennzahl in einer späteren Spezifikation? Die Sitzung legt dir diese Frage, die Namensfrage (Frage 4) und die Frage vor, ob der Datensatz rufitnes/tempnet-data beim Namen genannt wird. Bis zu deiner Entscheidung bleibt der Name auf der Seite.
