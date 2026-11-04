@@ -86,14 +86,47 @@ Ganze Seite: [1440 px](2026-11-04-fallseite-alexandria/alexandria-1440.jpg), [39
   - die Screenshots 390 und 1440 px sind neu.
 - **Neuer Kopf:** steht in der Antwort an Ben und in der PR-Beschreibung.
 
+## Nachtrag 4.11.2026, Bens Antworten eingearbeitet
+**Neuer Kopf von #47:**
+- Seite, Startseite und Code stehen in Commit `8700abb`.
+- Dieser Nachtrag kommt als Commit danach.
+
+**Merge:** Kein Selbst-Merge.
+
+| Nr. | Antwort | Umsetzung |
+|---|---|---|
+| 1 | "Kas Knight" ist ok, keine bürgerlichen Namen | bleibt so, kein anderer Name auf der Seite |
+| 2 | nur die öffentliche Projektseite verlinken | Neuer Satz unter "What did we review?": "The project page of the Alexandria Protocol is the-alexandria-protocol.replit.app." Er verlinkt die Startadresse der App. Kein Video, keine Einzeleinträge. Die Adresse steht in `messung/alexandria/anker.txt` in kaspa-pulse. Aus meiner Umgebung ließ sie sich nicht abrufen, der Proxy lässt sie nicht durch. Bitte einmal im Browser prüfen |
+| 3 | Startseite verlinkt auch diesen Fall | Neue breite Kachel "The Alexandria Protocol" unter den Kacheln der gemessenen Netze, mit "Read the Alexandria case". Die Kaspa-Kachel sagte noch "followed … through our Kaspa media brand". Das war ein Hinweis auf Kaspa Pulse und steht jetzt so: "ten blocks per second since the Crescendo hardfork" (Quelle KIP-14, wie auf /cases/kaspa) |
+| 4 | "Kaspa Testnet 10 (TN10)" | so übernommen |
+| 5 | Datum der Seite ist das Datum des Merges | Article, Sitemap, Kasten "Anchoring of AP-0031" und der Abschnitt "Is AP-0031 anchored?" stehen auf dem 4.11.2026 (Konstante `ALEX_DATUM`). Mergst du später, ändere ich das Datum vorher |
+
+**Abschnitt 5 aktualisiert:**
+- **"How far has the project come, according to the team?":** Kas Knight am 1.11.: erster Ankerpfad auf TN10 getestet. Seit 1.11.2026, 21:24 UTC liegt eine Anker-Tx zu study 52 auf TN10.
+- **Neuer Abschnitt "What did we check on the anchoring transaction?":** "Checked by PulseHawk on 2 November 2026", nur counted. Er nennt:
+  - die angenommene Tx `3db50bc6…0269` im Block `9afd2421…a7d5`, auf zwei öffentlichen TN10-Knoten;
+  - die Blockzeit 1.11.2026 21:24:24 UTC;
+  - den Payload byte-genau, 85 Byte.
+- **Offen benannt:**
+  - Eingang und Gebühr sind nicht lesbar, weil die Tx davor älter ist als das, was beide Knoten halten.
+  - Das Commitment ist ohne veröffentlichte ALX-KASPA-1-Spezifikation nicht nachrechenbar.
+- **Tx-ID und Blockhash:** Sie stehen ganz da, in kleiner Schrift, bei 390 px umbrochen.
+- **Keine Adressen:** Auf der Seite steht keine Adresse.
+- **Quelle:** kaspa-pulse `berichte/2026-11-03-alexandria-anker.md`.
+- **AP-0031:** Der Abschnitt "Is AP-0031 anchored?" sagt dazu, dass die geprüfte Tx study 52 verankert, nicht AP-0031.
+
+**Prüfungen:**
+- `b2b_check` 0 von 21 Seiten mit Fund;
+- Wächter-Selbsttest 52 von 52;
+- Secret-Scan ohne Fund;
+- Screenshots 390 und 1440 px neu, kein waagerechtes Scrollen, dazu die Kacheln der Startseite.
+
+![Startseite, Kacheln 1440](2026-11-04-fallseite-alexandria/startseite-kacheln-1440.jpg)
+
 ## Offene Fragen an Ben
-1. **Name Kas Knight:** Die Seite nennt Kas Knight als Quelle der Aussage vom 1.11. Ist das mit Kas Knight so abgesprochen? Sonst schreibe ich nur "the Alexandria team".
-2. **Links:** Soll die Seite auf das Projekt, das Walkthrough-Video oder AP-0030 und AP-0031 verlinken? Dann brauche ich die öffentlichen Adressen.
-3. **Verlinkung bei uns:** Soll die Startseite neben "Read the Kaspa case" auch auf diesen Fall zeigen?
-4. **TN10:** Ich schreibe "the Kaspa testnet TN10". Stimmt das so?
-5. **Datum der Seite:** Article und Sitemap tragen den 1.11.2026, den Tag der Freigabe und der Teamaussage. Soll beim Merge das Datum des Merges stehen?
+Die fünf Fragen sind am 4.11. beantwortet. Neu ist nur eine Bitte: die Projektseite einmal im Browser öffnen, weil ich sie nicht abrufen konnte.
 
 ## Was Ben tun muss
 1. #47 prüfen und mergen. Erst damit ist die Seite live.
-2. Fragen 1 bis 5 beantworten.
+2. Die Projektseite im Browser prüfen. Beim Merge an einem anderen Tag als dem 4.11. Bescheid geben, dann setze ich das Datum vorher.
 3. Nach dem Merge prüft Claude die Seite auf pulsehawk.io und trägt das Ergebnis hier nach.
