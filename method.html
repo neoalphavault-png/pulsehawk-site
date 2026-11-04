@@ -132,6 +132,35 @@
 <li><b>Difficulty adjustment.</b> How fast difficulty follows a change in hashrate.</li>
 </ul>
 </section>
+<section id="method-ids"><h2>Which method IDs do we use?</h2>
+<p>Each way of counting has a fixed ID. Every report and every measurement page names the IDs it uses, with a measurement uncertainty line for each number. An ID never changes its meaning. A changed method gets a new ID.</p>
+<ul class="list"><li><a href="#ph-m-001">PH-M-001</a>, block intervals from headers</li><li><a href="#ph-m-002">PH-M-002</a>, reorg depth from the listener</li><li><a href="#ph-m-003">PH-M-003</a>, peer protocol version at the handshake</li><li><a href="#ph-m-004">PH-M-004</a>, propagation from the listener</li><li><a href="#ph-m-005">PH-M-005</a>, stale blocks after six confirmations</li><li><a href="#ph-m-006">PH-M-006</a>, forecast of an activation time</li></ul>
+<p>The code for each ID is in <a href="https://github.com/pulsehawk/methods" rel="noopener">github.com/pulsehawk/methods</a>.</p>
+</section>
+<section id="ph-m-001"><h2>PH-M-001 Block intervals from headers</h2>
+<p>Our own header client fetches block headers from network peers and checks hash linkage, proof of work from the difficulty bits and the checkpoints of the node software. Intervals are header time minus the header time of the block before.</p>
+<p><b>Validation.</b> Each run compares 500 block hashes with two independent peers. All 500 matched on Zcash mainnet on 2 November 2026, and on the Bitcoin Cash tempnet with two different node implementations on 28 October 2026.</p>
+</section>
+<section id="ph-m-002"><h2>PH-M-002 Reorg depth from the listener</h2>
+<p>Our listener connects to peers without running a node, follows the tip from every announced block and logs each switch to another branch with its depth in blocks. The same listener raises the chain split signal.</p>
+<p><b>Validation.</b> Replayed on 29 October 2026 against our recording of the Zcash NU7 testnet of 17 October 2026, 776 chain blocks and 5 orphaned blocks of depth 1, with a reorg of depth 2 and a chain split added on purpose. Every case was detected as set.</p>
+</section>
+<section id="ph-m-003"><h2>PH-M-003 Peer protocol version at the handshake</h2>
+<p>Our listener reads the protocol version each peer sends in the version handshake and counts the peers below the minimum protocol version of an upgrade. Only the version is kept, no address.</p>
+<p><b>Validation.</b> Checked in the replay of 29 October 2026. There is no independent comparison yet.</p>
+</section>
+<section id="ph-m-004"><h2>PH-M-004 Propagation from the listener</h2>
+<p>Our listener records the first announcement of every block in milliseconds and the spread between the first and the last peer that announced it.</p>
+<p><b>Validation.</b> Compared on 28 October 2026 with the public rufitnes/tempnet-data set for the Bitcoin Cash tempnet. All 4,207 blocks matched by hash, and the first announcement differed from his receive time by a median of 0.01 s.</p>
+</section>
+<section id="ph-m-005"><h2>PH-M-005 Stale blocks after six confirmations</h2>
+<p>A block counts as stale when it was announced to our listener and is not in the chain six blocks later. The share is stale blocks over chain blocks plus stale blocks.</p>
+<p><b>Validation.</b> Compared on 28 October 2026 with the reorg events in rufitnes/tempnet-data. The two measure different things, a node logs a reorg only when its own tip had moved. There is no independent count of the same quantity yet.</p>
+</section>
+<section id="ph-m-006"><h2>PH-M-006 Forecast of an activation time</h2>
+<p>From the block pace we counted over the last full UTC days, 20,000 draws give the median time at which a block height is reached and a 90 % band. Every forecast is published with its date and scored on our track record.</p>
+<p><b>Validation.</b> The first check against a real activation is Zcash NU7 (ZIP 259) on mainnet, listed on our track record.</p>
+</section>
 <section><h2>What are the rules we publish by?</h2>
 <div class="rules">
 <div><h3>No source, no number</h3><p>A number without its window and raw data does not get published. If we counted something ourselves, we show how.</p></div>
@@ -156,7 +185,7 @@
 <section class="faq"><h2>Questions we get asked</h2><details><summary><h3>What is a stale block rate?</h3></summary><p>The share of valid blocks that did not end up in the main chain, in % of all blocks we saw in the window. If it rises after an upgrade, blocks reach parts of the network too late.</p></details><details><summary><h3>How do you measure propagation delay?</h3></summary><p>Each of our measurement points records when a block first arrives. The gap between the first and the last point is the propagation delay for that block. We report median and p90 for the window.</p></details><details><summary><h3>Can we repeat your measurement?</h3></summary><p>Yes. The method is on this page and the raw data is in the CSV. Two people with the same window should get the same numbers.</p></details></section>
 <p class="cta"><a href="/contact" class="btn ghost">Request a measurement</a></p>
 </div></main>
-<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand</div><div><a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/contact">Contact</a></div></div></footer>
+<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand</div><div><a href="/about">About</a> · <a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a> · <a href="/track-record">Track record</a> · <a href="/corrections">Corrections</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/contact">Contact</a></div></div></footer>
 <script>
 (function(){var bs=document.querySelectorAll('button[data-copy]');
 function zeig(b,ok){var s=b.parentNode.querySelector('.vh');b.textContent=ok?'copied':'copy';if(s)s.textContent=ok?'Copied to clipboard':'';if(ok)setTimeout(function(){zeig(b,false)},2000)}

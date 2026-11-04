@@ -31,7 +31,27 @@ import math
 import re
 
 from report_waechter import (SITE, E, betrag, lang, datum_lang, fenster, fenster_text,
-                             wert_html, zitier_html)
+                             wert_html, zitier_html, verfahren_html, reproduzieren_html, lies_reproduzieren)
+import unsicherheit
+
+# die pruefverfahren je messwert, beschrieben auf /method (Ben, 4.11.2026)
+VERFAHREN_JE_M = {"M1": ["PH-M-001"], "M2": ["PH-M-001"], "M3": ["PH-M-002"], "M4": ["PH-M-002"],
+                  "M5": ["PH-M-003"], "M6": ["PH-M-001"], "M7": ["PH-M-001", "PH-M-006"]}
+# die zeile "measurement uncertainty" je messwert, solange es keine zahlen gibt
+UNSICHER = {
+    "M1": "a 95 % interval for each percentile from the rank statistics, computed, plus the 1 s resolution of "
+          "header times, which miners set.",
+    "M2": "the longest gap is a single counted value with no sampling interval. Header times resolve to 1 s and "
+          "are set by miners.",
+    "M3": "a count with no sampling interval. It depends on our listener staying connected, and any gap in "
+          "coverage is named in the report.",
+    "M4": "a duration from the arrival times at our listener, which resolve to 1 s. It depends on the listener "
+          "staying connected.",
+    "M5": "a 95 % Wilson interval for each share, computed from n.",
+    "M6": "header times resolve to 1 s and the band edges are computed exactly. The first block that stays in "
+          "the band can move by one block when header times run backwards.",
+    "M7": "the header time is set by the miner and resolves to 1 s. Our estimate carries its own 90 % band.",
+}
 
 # die quellenfelder, die der waechter unter d) prueft
 QUELLEN_FELDER = (("aktivierungshoehe", "aktivierungshoehe"), ("ziel_vorher", "zielabstand vorher"),
@@ -290,6 +310,11 @@ def rechnen(kopf, rows):
     setz("erster_block_kopfzeit", utc(t_akt), 1, t_akt, t_akt)
     setz("kopfzeit_minus_schaetzung", round(t_akt - schaetzung), 1, t_akt, t_akt, "computed")
     return {"kz": kz, "_fenster": {"t_akt": t_akt, "teile": {t: (f[0], f[1]) for t, f in fenster_.items()},
+                                   "abstaende": {t: [a for _, a in f[2]] for t, f in fenster_.items()},
+                                   "proben_zahl": {h: (sum(z["v"] for z in rows if z["kind"] == "peer"
+                                                           and z["label"] == PROBE_LABEL[h]),
+                                                       sum(1 for z in rows if z["kind"] == "peer"
+                                                           and z["label"] == PROBE_LABEL[h])) for h in PROBEN_H},
                                    "proben": proben, "ziel": {"vor": ziel_vor, "nach": ziel_nach},
                                    "von": min(kette[h] for h in vor + nach) if vor or nach else t_akt,
                                    "bis": max(kette[h] for h in vor + nach) if vor or nach else t_akt}}
@@ -440,8 +465,10 @@ def body(kopf, w, csv_text):
             extra = ("<p>Our estimate before activation is %s.</p>" % schaetz_text(s)
                      if mid == "M7" else "")
             teile.append('<section id="%s"><h2>%s %s</h2><p>%s</p>%s<p class="note">Not yet counted. '
-                         'The numbers follow after block %s, from our own count.</p></section>'
-                         % (mid.lower(), mid, name, was, extra, betrag(H)))
+                         'The numbers follow after block %s, from our own count.</p>%s'
+                         '<p class="unc">Measurement uncertainty, %s</p></section>'
+                         % (mid.lower(), mid, name, was, extra, betrag(H), verfahren_html(VERFAHREN_JE_M[mid]),
+                            UNSICHER[mid]))
         teile.append('<section id="data"><h2>Data</h2><p>The CSV with every block, reorg, chain split '
                      'signal and peer sample follows with the first numbers, with its sha256 and the method '
                      'version.</p></section>')
@@ -449,13 +476,35 @@ def body(kopf, w, csv_text):
         fw = w["_fenster"]
         teil_fen = {t: fenster(*fw["teile"][t]) for t in fw["teile"]}
 
-        def tabelle(sid, h2, kopfzeile, zeilen_, fussnote):
+        def tabelle(sid, h2, kopfzeile, zeilen_, fussnote, mid=None, unsicher=None):
             rows_ = "".join("<tr><td class=\"c\">%s</td>%s</tr>" % (z[0], "".join("<td>%s</td>" % c for c in z[1:]))
                             for z in zeilen_)
             th = "".join('<th scope="col">%s</th>' % x for x in kopfzeile)
+            mid = mid or sid[:2].upper()
             return ('<section id="%s"><h2>%s</h2><div class="tablewrap"><table class="nums"><thead><tr>%s</tr>'
-                    '</thead><tbody>%s</tbody></table></div><p class="src">%s</p></section>'
-                    % (sid, h2, th, rows_, fussnote))
+                    '</thead><tbody>%s</tbody></table></div><p class="src">%s</p>%s'
+                    '<p class="unc">Measurement uncertainty, %s</p></section>'
+                    % (sid, h2, th, rows_, fussnote, verfahren_html(VERFAHREN_JE_M[mid]),
+                       unsicher or UNSICHER[mid]))
+
+        def pi_text(teil):
+            ab = fw["abstaende"].get(teil) or []
+            teile_ = []
+            for nm, q in (("p50", 0.5), ("p90", 0.9), ("p99", 0.99)):
+                iv = unsicherheit.perzentil_intervall(ab, q)
+                if iv:
+                    teile_.append("%s %s to %s s" % (nm, betrag(iv[0]), betrag(iv[1])))
+            return ("95 %% intervals from the rank statistics, computed, %s. Header times resolve to 1 s."
+                    % ", ".join(teile_)) if teile_ else UNSICHER["M1"]
+
+        def wilson_text():
+            teile_ = []
+            for h in PROBEN_REPORT_H:
+                alt, n = fw["proben_zahl"].get(h, (0, 0))
+                iv = unsicherheit.anteil_intervall(alt, n)
+                if iv:
+                    teile_.append("%s %.1f to %.1f %%" % ("at activation" if h == 0 else "after %d h" % h, iv[0], iv[1]))
+            return ("95 %% Wilson intervals, computed, %s." % ", ".join(teile_)) if teile_ else UNSICHER["M5"]
 
         fen_satz = "Windows, before activation %s, after activation %s." % (
             fenster_text(teil_fen["vor"]) if "vor" in teil_fen else "none",
@@ -470,7 +519,8 @@ def body(kopf, w, csv_text):
                 "m1-" + wort, "M1 Block intervals %s activation" % wort, ("Interval", "Counted", "Computed at %d s" % ziel),
                 [(nm, zelle(w, "%s_%s" % (nm, teil)), zelle(w, "%s_%s_modell" % (nm, teil), n))
                  for nm in ("p50", "p90", "p99")],
-                "Window %s. Header times, linear interpolation." % fenster_text(teil_fen[teil])))
+                "Window %s. Header times, linear interpolation." % fenster_text(teil_fen[teil]),
+                "M1", pi_text(teil)))
         teile.append(tabelle(
             "m2", "M2 Longest gap", ("Value", "Before activation", "After activation"),
             [("Longest interval",) + tuple(zelle(w, "laengste_luecke_" + t) if hat("laengste_luecke_" + t) else "none"
@@ -506,7 +556,7 @@ def body(kopf, w, csv_text):
         teile.append(tabelle(
             "m5", "M5 Peers on pre-upgrade software", ("Sample", "Share below the minimum protocol", "Time"), m5,
             "Share of the peers at the handshake with our listener, protocol version only, no addresses kept. "
-            "The sample after 6 h stays in the raw data."))
+            "The sample after 6 h stays in the raw data.", "M5", wilson_text()))
         teile.append(tabelle(
             "m6", "M6 Time to stable", ("Value", "Result"),
             [("Time from the activation block", zelle(w, "zeit_bis_stabil"))] if hat("zeit_bis_stabil") else [],
@@ -525,9 +575,10 @@ def body(kopf, w, csv_text):
             '<p class="src sha">sha256 <code>%s</code></p></section>'
             % ('<a href="/%s" download>Download the CSV</a>' % E(kopf["csv"], quote=True),
                E(kopf["methode"]), betrag(n_rows), sha))
+    teile.append(reproduzieren_html(lies_reproduzieren("reports/" + kopf["slug"])))
     teile.append(zitier_html(kopf))
     teile.append('<p>Corrections to this report are dated and listed on %s.</p>'
-                 % '<a href="/independence#corrections">our independence page</a>')
+                 % '<a href="/corrections">our corrections page</a>')
     return "\n".join(teile)
 
 
@@ -563,10 +614,12 @@ def seite(kopf, w, csv_text):
         title="%s | PulseHawk" % titel_,
         desc=kopf["beschreibung"],
         h1=titel_,
-        lead=("PulseHawk Upgrade Report %s, method v%s. We measure %s %s on %s from 24 hours before "
-              "to 72 hours after block %s, with seven fixed values and no grades."
-              % (kopf["id"], kopf["methode"], kopf["chain"], kopf["upgrade"], kopf["netz"],
-                 betrag(kopf["aktivierungshoehe"]["wert"]))),
+        # die spezifikation steht im selben absatz wie das upgrade (Ben, 4.11.2026)
+        lead=("PulseHawk Upgrade Report %s, method v%s. We measure %s %s (%s) on %s from 24 hours before "
+              "to 72 hours after block %s, the activation height, with seven fixed values and no grades."
+              % (kopf["id"], kopf["methode"], kopf["chain"], kopf["upgrade"],
+                 next(q["name"] for q in kopf["aktivierungshoehe"]["quellen"] if q["art"] == "protocol constant"),
+                 kopf["netz"], betrag(kopf["aktivierungshoehe"]["wert"]))),
         body=body(kopf, w, csv_text),
         faqs=[], schema=["ARTICLE:%s:%s" % (kopf["veroeffentlicht"], kopf["geaendert"]), ds],
         crumbs=[("Measurement Framework", "/standard/"), (titel_, "/reports/" + kopf["slug"])],

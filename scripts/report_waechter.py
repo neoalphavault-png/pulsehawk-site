@@ -72,6 +72,83 @@ TYPEN = [
              "stated height and transaction."},
 ]
 TYP = {t["slug"]: t for t in TYPEN}
+
+# feste kennungen der pruefverfahren, auf /method beschrieben (Ben, 4.11.2026).
+# Jeder Report nennt die Kennungen, die er nutzt. Abgestimmt mit der Sitzung
+# "Zcash NU7 Testnet Messung" (Vorschlag vom 4.11.2026, Antwort im Bericht).
+VERFAHREN = [
+    {"id": "PH-M-001", "name": "Block intervals from headers",
+     "was": "Our own header client fetches block headers from network peers and checks hash linkage, proof of "
+            "work from the difficulty bits and the checkpoints of the node software. Intervals are header time "
+            "minus the header time of the block before.",
+     "validierung": "Each run compares 500 block hashes with two independent peers. All 500 matched on Zcash "
+                    "mainnet on 2 November 2026, and on the Bitcoin Cash tempnet with two different node "
+                    "implementations on 28 October 2026."},
+    {"id": "PH-M-002", "name": "Reorg depth from the listener",
+     "was": "Our listener connects to peers without running a node, follows the tip from every announced block "
+            "and logs each switch to another branch with its depth in blocks. The same listener raises the "
+            "chain split signal.",
+     "validierung": "Replayed on 29 October 2026 against our recording of the Zcash NU7 testnet of 17 October "
+                    "2026, 776 chain blocks and 5 orphaned blocks of depth 1, with a reorg of depth 2 and a "
+                    "chain split added on purpose. Every case was detected as set."},
+    {"id": "PH-M-003", "name": "Peer protocol version at the handshake",
+     "was": "Our listener reads the protocol version each peer sends in the version handshake and counts the "
+            "peers below the minimum protocol version of an upgrade. Only the version is kept, no address.",
+     "validierung": "Checked in the replay of 29 October 2026. There is no independent comparison yet."},
+    {"id": "PH-M-004", "name": "Propagation from the listener",
+     "was": "Our listener records the first announcement of every block in milliseconds and the spread between "
+            "the first and the last peer that announced it.",
+     "validierung": "Compared on 28 October 2026 with the public rufitnes/tempnet-data set for the Bitcoin Cash "
+                    "tempnet. All 4,207 blocks matched by hash, and the first announcement differed from his "
+                    "receive time by a median of 0.01 s."},
+    {"id": "PH-M-005", "name": "Stale blocks after six confirmations",
+     "was": "A block counts as stale when it was announced to our listener and is not in the chain six blocks "
+            "later. The share is stale blocks over chain blocks plus stale blocks.",
+     "validierung": "Compared on 28 October 2026 with the reorg events in rufitnes/tempnet-data. The two "
+                    "measure different things, a node logs a reorg only when its own tip had moved. There is no "
+                    "independent count of the same quantity yet."},
+    {"id": "PH-M-006", "name": "Forecast of an activation time",
+     "was": "From the block pace we counted over the last full UTC days, 20,000 draws give the median time at "
+            "which a block height is reached and a 90 % band. Every forecast is published with its date and "
+            "scored on our track record.",
+     "validierung": "The first check against a real activation is Zcash NU7 (ZIP 259) on mainnet, listed on our track "
+                    "record."},
+]
+VERFAHREN_ID = {v["id"] for v in VERFAHREN}
+METHODS_REPO = "https://github.com/pulsehawk/methods"
+
+
+def verfahren_html(ids):
+    """die zeile mit den verwendeten kennungen, jede verlinkt auf /method."""
+    return '<p class="meth">Methods used %s.</p>' % ", ".join(
+        '<a href="/method#%s">%s</a>' % (i.lower(), i) for i in ids)
+
+
+def reproduzieren_html(eintrag):
+    """der block "reproduce this". Mit bestaetigten befehlen zeigt er drei:
+    code holen, neu zaehlen, vergleichen. Solange die messende sitzung sie nicht
+    bestaetigt hat, zeigt er nur den ersten und sagt, wann die anderen kommen,
+    statt etwas zu zeigen, das nicht laeuft."""
+    repo = '<a href="%s" rel="noopener">github.com/pulsehawk/methods</a>' % METHODS_REPO
+    if eintrag.get("bestaetigt"):
+        befehle, satz = eintrag["befehle"], ("The code is in %s. These three commands fetch it, count again "
+                                             "and compare with the published values." % repo)
+    else:
+        befehle = eintrag["befehle"][:1]
+        satz = ("The code is in %s. The command below fetches it. The commands to count again and compare "
+                "follow %s." % (repo, eintrag["folgt"]))
+    return ('<section id="reproduce" class="repro" data-bestaetigt="%s"><h2>Reproduce this</h2>'
+            '<p>%s</p><pre id="repro-cmd">%s</pre><p><button type="button" class="cb" data-copy="repro-cmd">'
+            'copy</button><span class="vh" aria-live="polite"></span></p></section>'
+            % ("true" if eintrag.get("bestaetigt") else "false", satz, E("\n".join(befehle))))
+
+
+def lies_reproduzieren(schluessel):
+    """der eintrag aus data/reproduce.json, sonst nur der befehl zum holen."""
+    with open(os.path.join(REPO, "data", "reproduce.json"), encoding="utf-8") as fh:
+        alle_ = json.load(fh)["eintraege"]
+    return alle_.get(schluessel) or {"bestaetigt": False, "folgt": "with the code",
+                                     "befehle": ["git clone %s && cd methods" % METHODS_REPO]}
 RE_ID = re.compile(r"^(PH-[A-Z]{2})-(\d{4})-(\d{3})$")
 
 ARTEN_QUELLE = {"protocol constant", "release"}
@@ -266,6 +343,9 @@ word-break:break-word;font:400 13.5px/1.55 var(--mono);color:var(--txt);margin-t
 .rcite p{margin-top:14px}
 .mk{display:block;font-size:12.5px;color:var(--dim)}
 .mv{font-weight:600;color:var(--txt)}
+.unc{font-size:13px;color:var(--dim);margin-top:8px}
+.repro pre{background:var(--card);border-radius:10px;padding:14px 16px;overflow-x:auto;white-space:pre-wrap;
+word-break:break-word;font:400 13.5px/1.55 var(--mono);color:var(--txt);margin-top:6px}
 .sha code{word-break:break-all;overflow-wrap:anywhere}
 """
 
@@ -354,6 +434,26 @@ def pruefe_seite_html(roh, soll, datei):
     return f
 
 
+def pruefe_verfahren_unsicherheit(roh):
+    """a) jeder abschnitt eines messwerts nennt seine verfahrenskennungen und hat
+    eine zeile "Measurement uncertainty"; die kennungen gibt es auf /method; der
+    block "reproduce this" steht auf der seite (Ben, 4.11.2026)."""
+    f = []
+    for m in re.finditer(r'<section id="(m\d[^"]*)">(.*?)</section>', roh, re.S):
+        sid, inhalt = m.group(1), m.group(2)
+        ids = re.findall(r"PH-M-\d{3}", re.sub(r"<[^>]+>", "", inhalt))
+        if not ids:
+            f.append(("a", "abschnitt %s ohne verfahrenskennung" % sid))
+        for i in ids:
+            if i not in VERFAHREN_ID:
+                f.append(("a", "abschnitt %s nennt unbekannte kennung %s" % (sid, i)))
+        if "Measurement uncertainty" not in inhalt:
+            f.append(("a", "abschnitt %s ohne zeile measurement uncertainty" % sid))
+    if 'id="reproduce"' not in roh:
+        f.append(("a", "block reproduce this fehlt"))
+    return f
+
+
 def pruefe_report(kopf, csv_text, render, css=""):
     """alle pruefungen fuer einen report. Liefert (seiten-dict, werte) oder wirft Rot."""
     f = pruefe_id(kopf)
@@ -392,6 +492,7 @@ def pruefe_report(kopf, csv_text, render, css=""):
     s["css"] = css + REPORT_CSS
     roh = render(s)
     f = pruefe_seite_html(roh, m.seiten_werte(w) if w else None, s["datei"])
+    f += pruefe_verfahren_unsicherheit(roh)
     if f:
         raise Rot(f)
     return s, w
@@ -504,6 +605,12 @@ def selbsttest():
         rot("wert ohne kennung", "a", gut, text, ohne("data-k"))
         rot("wert ohne n", "a", gut, text, lambda s_: re.sub(r'data-n="\d+"', 'data-n=""', b2b_pages.render(s_), count=1))
         rot("wert ohne fenster", "a", gut, text, ohne("data-f"))
+        rot("abschnitt ohne unsicherheitszeile", "a", gut, text,
+            lambda s_: b2b_pages.render(s_).replace('<p class="unc">Measurement uncertainty', '<p class="unc">Unsicher', 1))
+        rot("unbekannte verfahrenskennung", "a", gut, text,
+            lambda s_: b2b_pages.render(s_).replace(">PH-M-001</a>", ">PH-M-999</a>", 1))
+        rot("block reproduce this fehlt", "a", gut, text,
+            lambda s_: b2b_pages.render(s_).replace('id="reproduce"', 'id="nachrechnen"', 1))
         rot("kennung nicht sichtbar", "a", gut, text,
             lambda s_: b2b_pages.render(s_).replace('<span class="mk">', '<span class="mx">', 1))
         # b) neu rechnen

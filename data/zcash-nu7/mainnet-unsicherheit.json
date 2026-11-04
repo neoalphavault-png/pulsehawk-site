@@ -1,0 +1,28 @@
+{
+ "hinweis": "95-%-Intervalle zu den Mainnet-Tabellen auf /zcash-nu7, je Teil (vor_nu7, nach_nu7) mit dem Stand, zu dem sie gerechnet sind. Gerechnet mit scripts/unsicherheit.py --koepfe aus den eigenen Koepfen. Passt der Stand nicht zu data/zcash-nu7/mainnet-stand.json, zeigt die Seite keine Spalte und sagt das. Bei neuem Stand neu rechnen.",
+ "vor_nu7": {
+  "stand": "2026-10-28",
+  "bereich": [
+   3489717,
+   3533510
+  ],
+  "n": 43793,
+  "mittel": [
+   74.63,
+   76.05
+  ],
+  "p50": [
+   53,
+   54
+  ],
+  "p90": [
+   170,
+   174
+  ],
+  "p99": [
+   344,
+   357
+  ]
+ },
+ "nach_nu7": null
+}

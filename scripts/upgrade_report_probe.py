@@ -90,7 +90,9 @@ def main(argv=None):
             code = open(rv1, encoding="utf-8").read()
             for alt, neu in zip(M6_ALT, M6_NEU):
                 if alt not in code:
-                    raise SystemExit("report_v1.py hat die erwartete m6-zeile nicht: %s" % alt.strip())
+                    # seit 4.11.2026 steht m6 auf main schon so (Auftrag an die Zcash-Sitzung erledigt)
+                    print("hinweis: report_v1.py hat die alte m6-zeile nicht mehr, gerechnet wird wie auf main")
+                    continue
                 code = code.replace(alt, neu)
             open(rv1, "w", encoding="utf-8").write(code)
         kette, koepfe, roh = eingaenge_der_wache(sz, kopf, tmp)
