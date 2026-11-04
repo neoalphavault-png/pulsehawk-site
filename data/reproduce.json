@@ -1,5 +1,5 @@
 {
- "hinweis": "Befehle fuer den Block reproduce this. Seit 4.11.2026 steht in github.com/pulsehawk/methods (main 04f3f6c) README mit drei Befehlen fuer das Beispiel aus dem Testnet. Fuer PH-UR-2026-001 kommen die Mainnet-Eingaben nach dem Messfenster nach data/zcash-mainnet-nu7/. bestaetigt bleibt false, bis die Sitzung 'Zcash NU7 Testnet Messung' die Befehle fuer genau diese Seite bestaetigt; bis dahin zeigt die Seite nur den ersten Befehl.",
+ "hinweis": "Befehle fuer den Block reproduce this. Die Mainnet-Befehle fuer PH-UR-2026-001 hat die Sitzung 'Zcash NU7 Testnet Messung' am 4.11.2026 genannt; sie bleiben als folgend markiert (bestaetigt false), bis der Daten-PR mit data/zcash-mainnet-nu7/ in pulsehawk/methods gemergt ist. Bis dahin zeigt die Seite nur den ersten Befehl.",
  "eintraege": {
   "reports/zcash-nu7": {
    "bestaetigt": false,
@@ -7,7 +7,7 @@
    "befehle": [
     "git clone https://github.com/pulsehawk/methods && cd methods",
     "python3 upgrade_report/report_v1.py --config upgrade_report/configs/zcash-mainnet-nu7.json --heads data/zcash-mainnet-nu7/heads.csv.gz --raw data/zcash-mainnet-nu7/raw --out out",
-    "cd out && sha256sum -c *.sha256"
+    "cd out && sha256sum -c report-v1-zcash-mainnet-nu7.sha256"
    ]
   },
   "zcash-nu7": {
