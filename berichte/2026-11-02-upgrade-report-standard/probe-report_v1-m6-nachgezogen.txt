@@ -1,0 +1,40 @@
+kennzahl                               report_v1.py (wert, n) waechter (wert, n)     gleich
+p50_vor                                52.0, 1166             52.0, 1166             ja
+p50_vor_modell                         52.0,                  52.0,                  ja
+p90_vor                                175.0, 1166            175.0, 1166            ja
+p90_vor_modell                         172.7,                 172.7,                 ja
+p99_vor                                339.4, 1166            339.4, 1166            ja
+p99_vor_modell                         345.4,                 345.4,                 ja
+laengste_luecke_vor                    598, 1166              598, 1166              ja
+luecken_ueber_5x_ziel_vor              9, 1166                9, 1166                ja
+p50_nach                               16.0, 10783            16.0, 10783            ja
+p50_nach_modell                        17.3,                  17.3,                  ja
+p90_nach                               56.0, 10783            56.0, 10783            ja
+p90_nach_modell                        57.6,                  57.6,                  ja
+p99_nach                               119.0, 10783           119.0, 10783           ja
+p99_nach_modell                        115.1,                 115.1,                 ja
+laengste_luecke_nach                   268, 10783             268, 10783             ja
+luecken_ueber_5x_ziel_nach             86, 10783              86, 10783              ja
+reorgs_ab_tiefe_2_vor                  1, 1166                1, 1166                ja
+reorgs_tiefe_1_vor                     2, 3                   2, 3                   ja
+reorgs_tiefe_2_vor                     1, 3                   1, 3                   ja
+reorgs_tiefe_3_plus_vor                0, 3                   0, 3                   ja
+reorg_max_tiefe_vor                    2, 3                   2, 3                   ja
+kettenspaltung_dauer_vor               3547, 1                3547, 1                ja
+kettenspaltung_laengste_vor            3547, 1                3547, 1                ja
+reorgs_ab_tiefe_2_nach                 2, 10783               2, 10783               ja
+reorgs_tiefe_1_nach                    3, 5                   3, 5                   ja
+reorgs_tiefe_2_nach                    1, 5                   1, 5                   ja
+reorgs_tiefe_3_plus_nach               1, 5                   1, 5                   ja
+reorg_max_tiefe_nach                   3, 5                   3, 5                   ja
+kettenspaltung_dauer_nach              10493, 3               10493, 3               ja
+kettenspaltung_laengste_nach           9193, 3                9193, 3                ja
+peers_unter_min_protokoll_aktivierung  35.0, 40               35.0, 40               ja
+peers_unter_min_protokoll_aktivierung_plus_24h 12.2, 41               12.2, 41               ja
+peers_unter_min_protokoll_aktivierung_plus_72h 2.6, 39                2.6, 39                ja
+zeit_bis_stabil                        7112, 10665            7112, 10665            ja
+erster_block_kopfzeit                  2026-11-06 02:40:00, 1 2026-11-06 02:40:00, 1 ja
+kopfzeit_minus_schaetzung              600, 1                 600, 1                 ja
+36 von 36 kennzahlen exakt gleich
+waechter: alle pruefungen gruen, die seite wuerde gebaut
+roh-csv 12125 zeilen, sha256 a84ba1e87285f98f34f69911ec27f22453bc3dec3006110aa771fdaf8834a717

@@ -1,0 +1,78 @@
+{
+ "hinweis_fuer_sitzungen": "Kopfdaten fuer scripts/report_waechter.py. Zahlen erst nach der Aktivierung, CSV unter reports/zcash-nu7.csv, Werte unter werte. Siehe data/reports/README.md.",
+ "id": "PH-UR-2026-001",
+ "typ": "upgrade-report",
+ "slug": "zcash-nu7",
+ "chain": "Zcash",
+ "upgrade": "NU7",
+ "netz": "mainnet",
+ "methode": "1.0",
+ "veroeffentlicht": "2026-11-03",
+ "geaendert": "2026-11-03",
+ "beschreibung": "Zcash NU7 upgrade report PH-UR-2026-001. Seven fixed values from 24 hours before to 72 hours after block 3,543,405, each dated, with raw data.",
+ "aktivierungshoehe": {
+  "wert": 3543405,
+  "quellen": [
+   {
+    "art": "protocol constant",
+    "name": "ZIP 259",
+    "url": "https://zips.z.cash/zip-0259",
+    "wert": 3543405,
+    "geprueft": "2026-11-02"
+   },
+   {
+    "art": "release",
+    "name": "Zebra 7.0.0",
+    "url": "https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0",
+    "wert": 3543405,
+    "geprueft": "2026-11-02"
+   }
+  ]
+ },
+ "ziel_vorher": {
+  "wert": 75,
+  "quellen": [
+   {
+    "art": "protocol constant",
+    "name": "ZIP 208",
+    "url": "https://zips.z.cash/zip-0208",
+    "wert": 75,
+    "geprueft": "2026-11-02"
+   },
+   {
+    "art": "release",
+    "name": "Zebra 7.0.0",
+    "url": "https://github.com/ZcashFoundation/zebra/blob/v7.0.0/zebra-chain/src/parameters/network_upgrade.rs#L254",
+    "wert": 75,
+    "geprueft": "2026-11-02"
+   }
+  ]
+ },
+ "ziel_nachher": {
+  "wert": 25,
+  "quellen": [
+   {
+    "art": "protocol constant",
+    "name": "ZIP 218",
+    "url": "https://zips.z.cash/zip-0218",
+    "wert": 25,
+    "geprueft": "2026-11-02"
+   },
+   {
+    "art": "release",
+    "name": "Zebra 7.0.0",
+    "url": "https://github.com/ZcashFoundation/zebra/blob/v7.0.0/zebra-chain/src/parameters/network_upgrade.rs#L261",
+    "wert": 25,
+    "geprueft": "2026-11-02"
+   }
+  ]
+ },
+ "schaetzung": {
+  "zeit_utc": "2026-11-06T02:39:52Z",
+  "datum": "2026-11-02",
+  "band_von_utc": "2026-11-06T00:28:23Z",
+  "band_bis_utc": "2026-11-06T05:00:17Z"
+ },
+ "csv": null,
+ "werte": null
+}

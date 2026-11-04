@@ -137,7 +137,7 @@ ORG = {
                     "postalCode": "40477", "addressLocality": "Düsseldorf",
                     "addressCountry": "DE"},
     },
-    "sameAs": ["https://x.com/pulsehawkio", "https://kaspapulse.com"],
+    "sameAs": ["https://x.com/pulsehawkio"],
 }
 
 E = html.escape
@@ -658,6 +658,27 @@ ZCASH_FACTS_CSS = """
 """
 
 
+FRAMEWORK_STAND = "2026-11-02"   # measurement framework, erste fassung (Ben, 2.11.2026)
+KORREKTUREN = "data/korrekturen.json"
+
+
+def korrektur_log():
+    """korrekturlog auf /independence. Jede korrektur ist ein eintrag in
+    data/korrekturen.json mit datum, seite, alt, neu und grund."""
+    with open(os.path.join(REPO, KORREKTUREN), encoding="utf-8") as fh:
+        eintraege = json.load(fh)
+    if not eintraege:
+        return ("<p>Every correction to a published value gets a dated line here, with the page, "
+                "the old value, the new value and the reason. The log has no entries yet.</p>")
+    zeilen = "".join(
+        '<tr><td class="c">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+        % (lang(e["datum"]), a(e["seite"], E(e["seite"])), E(e["alt"]), E(e["neu"]), E(e["grund"]))
+        for e in sorted(eintraege, key=lambda e: e["datum"], reverse=True))
+    return ('<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Date</th>'
+            '<th scope="col">Page</th><th scope="col">Old</th><th scope="col">New</th>'
+            '<th scope="col">Reason</th></tr></thead><tbody>%s</tbody></table></div>' % zeilen)
+
+
 def lies_mainnet_stand():
     pfad = os.path.join(REPO, ZCASH_STAND_DATEI)
     if not os.path.exists(pfad):
@@ -1086,49 +1107,37 @@ def seiten():
         schema=[],
     ))
 
-    # 6 independence
-    i_faq = [
-        ("Can a client stop a result from being published?",
-         "No. Clients see the result before publication and can correct facts, such as a "
-         "wrong upgrade height or a node version. The findings stay as measured."),
-        ("Do you accept payment in a client's token?",
-         "Yes, and it is converted when it arrives. No one at PulseHawk holds a client's token, from offer to publication."),
-        ("How can anyone check that a result is right?",
-         "Every published number comes with its window, its method version and the raw data, so anyone can count again."),
-    ]
+    # 6 independence, kurz und sachlich (Ben, 2.11.2026), mit korrekturlog
     S.append(dict(
-        datei="independence.html", pfad="/independence", og="independence", lastmod="2026-10-23",
+        datei="independence.html", pfad="/independence", og="independence", lastmod="2026-11-02",
         title="Our independence rules | PulseHawk",
-        desc=("Four rules for every PulseHawk measurement. The price never depends on the "
-              "result, no client tokens held, results published as measured, links named."),
+        desc=("Five rules for every PulseHawk measurement. Data published whatever the result, "
+              "paid work marked as paid, price fixed in advance, no client tokens."),
         h1="How we stay independent",
-        lead=("A measurement is only worth something if the result could have gone the "
-              "other way. These four rules apply to every job, paid by a client or funded by a grant."),
+        lead=("A measurement is only worth something if the result could have gone the other way. "
+              "These rules apply to every report and every paid measurement."),
         body="""
-<section><h2>What are the rules?</h2>
+<section id="rules"><h2>What are the rules?</h2>
 <ol class="rules-list">
-<li>Our price never depends on the result.</li>
-<li>No one at PulseHawk holds a client's token, from offer to publication. Payments in a client's own token are converted when they arrive.</li>
-<li>Results are published as measured. Clients see them before publication and can correct facts, not findings.</li>
-<li>The same team runs Kaspa Pulse, a Kaspa media brand at %s.</li>
+<li>Data is published whatever the result. Clients see a result before publication and can correct facts, not findings.</li>
+<li>Paid measurements are marked as paid, on the report and on its page.</li>
+<li>The price never depends on the result. It is set in the offer, before the first block is counted.</li>
+<li>We hold no client tokens. A payment in a client's own token is converted when it arrives.</li>
+<li>Corrections are public and dated, in the log on this page.</li>
 </ol>
 </section>
-<section><h2>Why does the price never depend on the result?</h2>
-<p>The price is set in the offer, before the first block is counted. A good result costs the same as a bad one, and there is no bonus for either. That is the only way a client can trust a number they like, and a reader can trust a number the client paid for.</p>
+<section id="funding"><h2>How is PulseHawk funded?</h2>
+<p>PulseHawk is run by Vizora Digital UG (haftungsbeschränkt). It is funded by fees for paid measurements.</p>
 </section>
-<section><h2>What does the Kaspa Pulse link mean?</h2>
-<p>Kaspa Pulse publishes on-chain and market data about Kaspa. When we measure Kaspa, every report names that link on its first page, so readers can weigh it themselves.</p>
-</section>
-<section><h2>What do we not do?</h2>
-<p>We do not hold a client's token, we do not change findings after a client has seen them, and we do not sell placement in our calendar or on our case pages.</p>
-</section>
+<section id="corrections"><h2>Correction log</h2>
 %s
+</section>
+<p>The rules for every report type are in the %s.</p>
 %s
-<p class="cta">%s</p>
-""" % (a("https://kaspapulse.com", "kaspapulse.com"),
-       zitat_abschnitt(lies_zitate(), sid="cited-by"), faq_html(i_faq), contact_button()),
-        faqs=i_faq,
-        schema=[],
+""" % (korrektur_log(), a("/standard/", "PulseHawk Measurement Framework"),
+       zitat_abschnitt(lies_zitate(), sid="cited-by")),
+        faqs=[],
+        schema=["ARTICLE:2026-10-16:2026-11-02"],
     ))
 
     # 7 upgrades
@@ -1311,48 +1320,43 @@ def seiten():
         noindex=not ZCASH_OFFEN,
     ))
 
-    # 9 kaspa
+    # 9 kaspa. Kaspa Pulse wird auf pulsehawk.io nicht genannt, die Marken sind
+    # getrennt (Ben, 3.11.2026). Platz fuer den Testnet-Sturm vom 11.10.2026 nur
+    # mit Quelle, dem eigenen Zaehlbericht vom 11.10., 07:30 bis 12:29 UTC
+    # (Ben, 16.10.2026); dann als Abschnitt "What happened on the Kaspa testnet
+    # on 11 October 2026?", jede Zahl mit "measured" und dem Bericht als Quelle.
     k_faq = [
-        ("Is Kaspa Pulse part of PulseHawk?",
-         "The same team runs both. Kaspa Pulse is a media brand for Kaspa, PulseHawk measures networks across all chains."),
         ("Can we book a Kaspa measurement?",
-         "Yes, under the same rules as any other network. The link to Kaspa Pulse is named on the report."),
+         "Yes, under the same rules as any other network."),
     ]
     S.append(dict(
-        datei="cases/kaspa.html", pfad="/cases/kaspa", og="kaspa",
+        datei="cases/kaspa.html", pfad="/cases/kaspa", og="kaspa", lastmod="2026-11-03",
         title="Kaspa network measurements | PulseHawk",
-        desc=("Kaspa block rate and fees against new issuance, every number dated and marked "
-              "as our own measurement or as a series we take over, with links to raw data."),
+        desc=("Kaspa block rate and fees against new issuance. Every number is dated and "
+              "marked as our own measurement or as a series we take over and name."),
         h1="Kaspa network measurements",
-        lead=("Kaspa is the network we have followed longest, every day since August 2026, "
-              "through our media brand Kaspa Pulse at kaspapulse.com. Every number on this page "
+        lead=("Kaspa block rate and fees against new issuance. Every number on this page "
               "carries its date and is marked either measured, by us, or source, "
               "a series we take over and name."),
         body="""
 <section><h2>How fast does Kaspa produce blocks?</h2>
-<p>Kaspa runs at 10 blocks per second since the Crescendo upgrade in 2025. At that rate a block time distribution is counted in tenths of a second, and the longest gap matters more than the median.</p>
-<p class="src">Source %s, protocol block rate, checked 16 October 2026.</p>
+<p>Kaspa runs at 10 blocks per second since the Crescendo hardfork. At that rate a block time distribution is counted in tenths of a second, and the longest gap matters more than the median.</p>
+<p class="src">Source %s, protocol block rate, checked 3 November 2026.</p>
 </section>
 <section><h2>How do fees compare with new issuance?</h2>
 <p>In the 30 days from 12 September to 11 October 2026, Kaspalytics counted 68,493 KAS in transaction fees. In the same 30 days the emission schedule created 55,848,455 new KAS, about 815 times the fees.</p>
-<p class="src">Source Kaspalytics for the fees, a series taken over in the Kaspa Pulse daily log of 12 October 2026, %s. New coins from the emission schedule, arithmetic, not a count.</p>
+<p class="src">Source Kaspalytics for the fees, taken over on 12 October 2026. New coins from the emission schedule, arithmetic, not a count.</p>
 </section>
-<!-- PLATZ FUER DEN TESTNET-STURM 11.10.2026, bewusst leer (Ben, 16.10.2026).
-     Nur mit Quelle: Zaehlbericht vom 11.10., 07:30 bis 12:29 UTC, zwei eigene Knoten,
-     auf kaspa-pulse messung/tn10-zaehler. Stand 16.10.2026 liegt dort kein Bericht,
-     nur Zaehler und Fenster. Dann als section "What happened on the Kaspa testnet on
-     11 October 2026?", jede Zahl mit "measured" und dem Bericht als Quelle. -->
-<section><h2>Where can I follow Kaspa?</h2>
-<p>Daily numbers, the weekly reading and the cheat sheet are on %s. PulseHawk measures Kaspa under the same %s as every other network.</p>
+<section><h2>Under which rules do we measure Kaspa?</h2>
+<p>PulseHawk measures Kaspa under the same %s as every other network.</p>
 </section>
 %s
 <p class="cta">%s %s</p>
-""" % (a("https://kaspapulse.com/kaspa-hashrate.html", "kaspapulse.com, Kaspa hashrate page"),
-       a("https://github.com/neoalphavault-png/kaspa-pulse/blob/main/data/tagesgrafik-log.json", "raw data"),
-       a("https://kaspapulse.com", "kaspapulse.com"), a("/independence", "rules"),
+""" % (a("https://github.com/kaspanet/kips/blob/master/kip-0014.md", "KIP-14, The Crescendo Hardfork"),
+       a("/independence", "rules"),
        faq_html(k_faq), sample_button(), contact_button()),
         faqs=k_faq,
-        schema=["ARTICLE:2026-10-16:2026-10-16"],
+        schema=["ARTICLE:2026-10-16:2026-11-03"],
         crumbs=[("Kaspa", "/cases/kaspa")],
     ))
 
@@ -1442,6 +1446,112 @@ def seiten():
         body=DATENSCHUTZ % {"mail": a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL))},
         faqs=[], schema=[], noindex=True, legal=True,
     ))
+    # 13 measurement framework und report-typen (Ben, 2.11.2026)
+    import report_waechter as rw
+    import upgrade_report as ur
+    reihen = "".join(
+        '<tr><td class="c">%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+        % (a("/standard/%s/" % t["slug"], E(t["name"])), t["praefix"],
+           ("v" + t["version"]) if t["version"] else "not yet", t["status"]) for t in rw.TYPEN)
+    saetze = "".join("<li><b>%s.</b> %s</li>" % (E(t["name"]), t["satz"]) for t in rw.TYPEN)
+    S.append(dict(
+        datei="standard/index.html", pfad="/standard/", og="standard", lastmod=FRAMEWORK_STAND,
+        title="Measurement Framework for chain reports | PulseHawk",
+        desc=("The rules every PulseHawk report follows, whatever it measures. Marked values, UTC "
+              "windows, raw data with sha256, fixed IDs and five report types."),
+        h1="PulseHawk Measurement Framework",
+        lead=("The framework sets the rules every PulseHawk report follows, whatever it measures. "
+              "Each report type adds its own specification with its own version."),
+        body="""
+<section id="rules"><h2>Which rules apply to every report?</h2>
+<ul class="list">
+<li><b>Marked values.</b> Every value is marked counted, source or computed. Counted is our own count, source is a value we take over and name, computed is arithmetic from counted or source values.</li>
+<li><b>Window and n.</b> Every value states its window in UTC and the n it rests on.</li>
+<li><b>Raw data.</b> Every report publishes its data as a CSV, with the sha256 of the file and the method version.</li>
+<li><b>Fixed ID.</b> Every report has a fixed ID, such as PH-UR-2026-001, and a permanent address under pulsehawk.io/reports.</li>
+<li><b>How to cite.</b> Every report carries a citation in plain text and in BibTeX, with ID, title, date, address and method version.</li>
+<li><b>Neutral values.</b> A report shows measured values only, with no grades and no words like good or bad.</li>
+</ul>
+</section>
+<section id="checks"><h2>What is checked before a report is published?</h2>
+<p>One shared set of checks runs for every report type. If a check fails, no page is built and we are alerted.</p>
+<ul class="list">
+<li>Every value carries its marking, its window and its n.</li>
+<li>Every value on the page is computed again from the CSV and must match exactly.</li>
+<li>Percentiles rise in order, counts are never negative, and the window fits the event.</li>
+<li>Reference values such as a target interval come from two independent sources, a protocol constant and a release.</li>
+<li>No IP address, hostname, peer address or key appears on the page or in the CSV.</li>
+<li>The text follows our writing rules.</li>
+<li>A self test feeds the checks wrong data on purpose, and every check has to fire.</li>
+</ul>
+<p>Every report is also reviewed before it is merged.</p>
+</section>
+<section id="independence"><h2>How do independence and corrections work?</h2>
+<p>The rules on our %s apply to every report. Corrections are public and dated in the %s.</p>
+</section>
+<section id="types"><h2>Which report types are there?</h2>
+<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Report type</th><th scope="col">ID prefix</th><th scope="col">Specification</th><th scope="col">Status</th></tr></thead><tbody>%s</tbody></table></div>
+<ul class="list">%s</ul>
+</section>
+<section id="versions"><h2>How do versions work?</h2>
+<p>Each specification has its own version. Every change to how a value is computed raises it. Old versions stay online at their own address, such as %s, and a report names the version it follows and keeps it.</p>
+<p>The framework changelog has one entry, dated %s, the first version with five report types, one of them active.</p>
+</section>
+""" % (a("/independence", "independence page"), a("/independence#corrections", "correction log"),
+       reihen, saetze, a(ur.versionspfad("1.0"), "/standard/upgrade-report/v1-0"), lang(FRAMEWORK_STAND)),
+        faqs=[], schema=["ARTICLE:%s:%s" % (FRAMEWORK_STAND, FRAMEWORK_STAND)],
+        crumbs=[("Measurement Framework", "/standard/")],
+    ))
+    aktuell, datum_akt, _ = ur.VERSIONEN[-1]
+    spez = dict(
+        og="standard",
+        title="Upgrade Report specification v%s | PulseHawk" % aktuell,
+        desc=("How PulseHawk measures a network upgrade on PoW and DAG chains. Seven fixed values "
+              "from 24 hours before to 72 hours after the activation height."),
+        h1="PulseHawk Upgrade Report, specification v%s" % aktuell,
+        faqs=[],
+    )
+    S.append(dict(spez,
+        datei="standard/upgrade-report/index.html", pfad="/standard/upgrade-report/", lastmod=datum_akt,
+        lead=("This specification fixes how a PulseHawk Upgrade Report is measured, computed and "
+              "published. Version %s, dated %s, ID prefix PH-UR. Every report names the version it follows."
+              % (aktuell, lang(datum_akt))),
+        body=ur.spezifikation_html(aktuell) + '<p>Older and current versions stay online, version %s at %s. The shared rules are in the %s.</p>'
+             % (aktuell, a(ur.versionspfad(aktuell), ur.versionspfad(aktuell)), a("/standard/", "Measurement Framework")),
+        schema=["ARTICLE:%s:%s" % (ur.VERSIONEN[0][1], datum_akt)],
+        crumbs=[("Measurement Framework", "/standard/"), ("Upgrade Report", "/standard/upgrade-report/")],
+    ))
+    for v, d, _ in ur.VERSIONEN:
+        S.append(dict(spez,
+            datei=ur.versionspfad(v).lstrip("/") + ".html", pfad=ur.versionspfad(v), lastmod=d,
+            h1="PulseHawk Upgrade Report, specification v%s" % v,
+            title="Upgrade Report specification v%s | PulseHawk" % v,
+            lead=("Version %s of the Upgrade Report specification, as published on %s. It stays online "
+                  "unchanged so that every report that follows it can be checked against it." % (v, lang(d))),
+            body=ur.spezifikation_html(v) + "<p>The current version is at %s.</p>"
+                 % a("/standard/upgrade-report/", "/standard/upgrade-report/"),
+            schema=["ARTICLE:%s:%s" % (d, d)], noindex=True,
+            crumbs=[("Measurement Framework", "/standard/"), ("Upgrade Report", "/standard/upgrade-report/"),
+                    ("v" + v, ur.versionspfad(v))],
+        ))
+    for t in rw.TYPEN:
+        if t["status"] == "active":
+            continue
+        S.append(dict(
+            datei="standard/%s/index.html" % t["slug"], pfad="/standard/%s/" % t["slug"], og="standard",
+            lastmod=FRAMEWORK_STAND,
+            title="%s, planned | PulseHawk" % t["name"], desc=t["satz"], h1=t["name"],
+            lead=t["satz"],
+            body=("<section><h2>What is the status?</h2><p>Planned, with the ID prefix %s. Its specification "
+                  "follows on this page with version 1.0. Until then no report of this type exists.</p>"
+                  "<p>The shared rules are in the %s.</p></section>"
+                  % (t["praefix"], a("/standard/", "Measurement Framework"))),
+            faqs=[], schema=["ARTICLE:%s:%s" % (FRAMEWORK_STAND, FRAMEWORK_STAND)], noindex=True,
+            crumbs=[("Measurement Framework", "/standard/"), (t["name"], "/standard/%s/" % t["slug"])],
+        ))
+    # die reports, nur wenn der waechter alles gruen meldet
+    S += rw.alle(render, ZCASH_FACTS_CSS)
+
     return S
 
 
@@ -1664,9 +1774,10 @@ PLAUSIBLE = """<!-- Privacy-friendly analytics by Plausible -->
 
 
 def fuss():
-    return ('<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand · '
-            'Kaspa coverage at <a href="https://kaspapulse.com" rel="noopener">kaspapulse.com</a></div>'
-            '<div><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>'
+    # keine kaspa pulse auf pulsehawk.io, die marken sind getrennt (Ben, 3.11.2026)
+    return ('<footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand</div>'
+            '<div><a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a>'
+            ' · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a>'
             ' · <a href="/contact">Contact</a></div></div></footer>')
 
 
@@ -1834,7 +1945,7 @@ def llms(S):
              "> Independent blockchain measurement under load, across all chains. "
              "PulseHawk does its own measurement with its own nodes or header clients, publishes an open method, dates every number "
              "and releases the raw data. A brand of Vizora Digital UG (haftungsbeschränkt), "
-             "Düsseldorf, Germany. Kaspa coverage at https://kaspapulse.com.", "",
+             "Düsseldorf, Germany.", "",
              "Services and prices (net, plus VAT where it applies, invoiced in euro, as of October 2026)",
              "- TPS verification, review %s" % preis_text("review"),
              "- Launch measurement %s" % preis_text("launch"),

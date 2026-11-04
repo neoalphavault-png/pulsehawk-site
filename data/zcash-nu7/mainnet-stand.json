@@ -1,6 +1,6 @@
 {
  "hinweis": "Gekuerzte Kopie des Zcash-Mainnet-Stands fuer /zcash-nu7, erzeugt mit scripts/zcash_stand.py. Nicht von Hand aendern, neu holen.",
- "quelle": "kaspa-pulse, Branch messung/zcash-mainnet, data/zcash-mainnet/stand-2026-10-28.json",
+ "quelle": "eigener Header-Client, Zcash Mainnet, stand-2026-10-28.json",
  "stand": "2026-10-28",
  "abruf_utc": "2026-10-28T11:29:09Z",
  "nu7_hoehe": 3543405,
