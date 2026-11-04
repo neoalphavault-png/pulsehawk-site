@@ -130,3 +130,13 @@ Die fünf Fragen sind am 4.11. beantwortet. Neu ist nur eine Bitte: die Projekts
 1. #47 prüfen und mergen. Erst damit ist die Seite live.
 2. Die Projektseite im Browser prüfen. Beim Merge an einem anderen Tag als dem 4.11. Bescheid geben, dann setze ich das Datum vorher.
 3. Nach dem Merge prüft Claude die Seite auf pulsehawk.io und trägt das Ergebnis hier nach.
+
+## Nachtrag 4.11.2026, nach #54 bis #57
+
+- **Rebase:** Der Branch liegt per Rebase auf main `227b90c`.
+- **Konflikt:** Er lag in `scripts/b2b_pages.py`, in den Kacheln der Startseite. Beide Seiten bleiben erhalten:
+  - Kaspa-Kachel aus diesem PR ("ten blocks per second since the Crescendo hardfork"). Nach der neuen Spec-Regel aus #54 steht dort jetzt "KIP-14".
+  - Zcash-Kachel von main, mit "ZIP 259".
+- **Neu gebaut:** b2b_check 0 von 24 Seiten mit Fund, Selbsttests 18 und 55 grün.
+- **Fußzeile:** /cases/alexandria hat jetzt die neue Fußzeile mit About, Track record und Corrections.
+- **Merge:** Ben merged (Kein Selbst-Merge, wie in seinem Auftrag zu #47).
