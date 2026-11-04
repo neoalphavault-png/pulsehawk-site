@@ -140,3 +140,13 @@ Die fünf Fragen sind am 4.11. beantwortet. Neu ist nur eine Bitte: die Projekts
 - **Neu gebaut:** b2b_check 0 von 24 Seiten mit Fund, Selbsttests 18 und 55 grün.
 - **Fußzeile:** /cases/alexandria hat jetzt die neue Fußzeile mit About, Track record und Corrections.
 - **Merge:** Ben merged (Kein Selbst-Merge, wie in seinem Auftrag zu #47).
+
+## Merge und Abnahme (4.11.2026)
+
+- **Merge:** Ben hat PR #47 am 4.11.2026 um 19:45 UTC gemergt, Merge-Commit `06f62b1`.
+- **Datum:** `ALEX_DATUM` 2026-11-04 entspricht dem Merge-Datum, keine Änderung nötig.
+- **Abnahme auf pulsehawk.io um 19:47 UTC:**
+  - Live byte-gleich mit dem Bau aus `06f62b1`: /cases/alexandria, die Startseite und /cases/kaspa.
+  - /cases/alexandria: Anker-Tx zu study 52 mit 85 Byte Payload; AP-0031 "As of 4 November 2026 … not anchored".
+  - Startseite: Kachel mit "Read the Alexandria case".
+  - Sitemap: führt /cases/alexandria.
