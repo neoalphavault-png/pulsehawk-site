@@ -85,3 +85,14 @@ Frist: So 8.11. 18:00.
 
 - TR-003 und TR-004 bekommen das gezählte Ergebnis (Zeit von Block 3.543.405) und den Status in band oder outside.
 - Für den Teil "nach_nu7" in `data/zcash-nu7/mainnet-unsicherheit.json` rechne ich die Intervalle mit `scripts/unsicherheit.py --koepfe`. Bis dahin sagt die Seite, dass sie noch fehlen.
+
+## Selbst-Merge und Abnahme (4.11.2026)
+
+- **Merge:** PR #54 per Squash gemergt, Merge-Commit `f764629`. Der Branch `site/glaubwuerdigkeit` ist gelöscht.
+- **Abnahme auf pulsehawk.io um 14:13 UTC:** /track-record, /corrections, /about, /method, /zcash-nu7, /reports/zcash-nu7, /independence, die Startseite und /cases/kaspa sind live byte-gleich mit dem Bau aus `f764629`.
+- **Geprüfte Inhalte:**
+  - /track-record zeigt 4 Einträge.
+  - /method hat 6 Anker PH-M-001 bis PH-M-006.
+  - /zcash-nu7 und /reports/zcash-nu7 haben je 7 Methodenzeilen, 7 Zeilen "Measurement uncertainty" und den Block "Reproduce this".
+  - Der Link auf /track-record steht auf der Startseite und in der Fußzeile.
+  - Die Sitemap führt die drei neuen Seiten.
