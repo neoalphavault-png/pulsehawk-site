@@ -76,6 +76,16 @@ ALX-KASPA-1 steht drin, weil es im Auftrag als Name des Ankerverfahrens genannt 
 
 Ganze Seite: [1440 px](2026-11-04-fallseite-alexandria/alexandria-1440.jpg), [390 px](2026-11-04-fallseite-alexandria/alexandria-390.jpg).
 
+## Nachtrag 4.11.2026, auf main nach #52
+- **Rebase:** Der Branch liegt auf main nach dem Merge von #52 (Measurement Framework). Der einzige Konflikt war `llms.txt`, eine erzeugte Datei. Ich habe sie mit `b2b_pages.py` neu gebaut, nicht von Hand.
+- **Fußzeile der Seite:** Sie nennt jetzt "Measurement Framework" und "Independence" und keine Kaspa-Pulse-Marke mehr (Bens Entscheidung vom 3.11.).
+- **Prüfungen:**
+  - `b2b_check` 0 von 21 Seiten mit Fund;
+  - Wächter-Selbsttest 52 von 52;
+  - Secret-Scan ohne Fund;
+  - die Screenshots 390 und 1440 px sind neu.
+- **Neuer Kopf:** steht in der Antwort an Ben und in der PR-Beschreibung.
+
 ## Offene Fragen an Ben
 1. **Name Kas Knight:** Die Seite nennt Kas Knight als Quelle der Aussage vom 1.11. Ist das mit Kas Knight so abgesprochen? Sonst schreibe ich nur "the Alexandria team".
 2. **Links:** Soll die Seite auf das Projekt, das Walkthrough-Video oder AP-0030 und AP-0031 verlinken? Dann brauche ich die öffentlichen Adressen.
