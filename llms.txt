@@ -2,10 +2,10 @@
 
 > Independent blockchain measurement under load, across all chains. PulseHawk does its own measurement with its own nodes or header clients, publishes an open method, dates every number and releases the raw data. A brand of Vizora Digital UG (haftungsbeschränkt), Düsseldorf, Germany.
 
-Services and prices (net, plus VAT where it applies, invoiced in euro, as of October 2026)
-- TPS verification, review 250 € ($290)
-- Launch measurement from 2,500 € ($2,900)
-- Upgrade monitoring, ongoing measurement from 1,500 € ($1,750) per month
+Services, each scoped per network and window. Ask for a quote at https://pulsehawk.io/contact
+- TPS verification
+- Launch measurement
+- Upgrade monitoring, ongoing measurement
 - Custom scope, on request
 
 ## Pages

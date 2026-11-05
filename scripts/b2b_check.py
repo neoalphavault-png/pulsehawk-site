@@ -19,6 +19,10 @@ eine Konsensregel einer Kette nennt, traegt die Spezifikationsnummer (ZIP,
 CHIP, KIP, BIP, EIP, SIMD, BEP); eine vorhergesagte Upgrade-Zeit steht nur als
 Blockhoehe plus "estimate"; Mess- und Report-Seiten tragen Methoden-IDs, eine
 Zeile "Measurement uncertainty" und den Block "reproduce this".
+Ab 5.11.2026 (Ben): "now" und "live" als ganzes Wort sind rot; ein Betrag mit
+€, EUR, $ oder USD im sichtbaren Text, in Title, Description oder Schema ist
+rot, ausser in den Optionen des Budget-Felds auf /contact; im Schema sind
+Offer, price und priceCurrency rot.
 
     python3 scripts/b2b_check.py datei.html ...
     python3 scripts/b2b_check.py --selbsttest
@@ -75,6 +79,21 @@ PROGNOSE = re.compile(r"\b(forecasts?|expected|expect|arrives?|will (activate|re
                       r"estimat\w*|draws)\b", re.I)
 ZEITANGABE = re.compile(r"\b\d{1,2}:\d{2}\b|\b\d{1,2} (January|February|March|April|May|June|July|"
                         r"August|September|October|November|December)\b")
+# Keine Preise oeffentlich (Ben, 5.11.2026). Ein Betrag mit €, EUR, $ oder USD
+# im sichtbaren Text, in Title, Description oder Schema ist rot. Ausnahme nur die
+# Optionen des Budget-Felds im Formular auf /contact. Im Schema sind Offer,
+# price und priceCurrency rot.
+RE_BETRAG = re.compile(r"(€|\$)\s?\d|\d\s?(€|\$)|\b(eur|usd)\s?\d|\d\s?(eur|usd)\b", re.I)
+BUDGET_SEITE = "contact.html"
+
+
+def funde_betrag(text):
+    m = RE_BETRAG.search(text)
+    if m:
+        return ["betrag '%s', preise nur im angebot" % text[max(0, m.start() - 30):m.end() + 20].strip()]
+    return []
+
+
 # mess- und report-seiten tragen methoden-ids, eine unsicherheitszeile und
 # den block "reproduce this" (Ben, 4.11.2026)
 MESS_SEITEN = ("zcash-nu7.html",)
@@ -162,6 +181,8 @@ class Text(HTMLParser):
         self.attrtext = []
         self.bloecke = []        # fliesstext je block, fuer die ziffernregel
         self.absaetze = []       # p, li und lead, fuer die upgrade-regeln
+        self.ohne_budget = []    # sichtbarer text ohne die optionen des budget-felds
+        self._budget = False
         self._block = []         # stapel offener bloecke: (tag, sammelt)
 
     def handle_starttag(self, tag, attrs):
@@ -195,8 +216,12 @@ class Text(HTMLParser):
             self._title = True
         if d.get("placeholder"):
             self.attrtext.append(d["placeholder"])
+        if tag == "select" and "budget" in ((d.get("name") or "") + (d.get("id") or "")).lower():
+            self._budget = True
 
     def handle_endtag(self, tag):
+        if tag == "select":
+            self._budget = False
         if self._block and self._block[-1][0] == tag:
             _, sammelt, teile, absatz = self._block.pop()
             text = re.sub(r"\s+", " ", "".join(teile)).strip()
@@ -226,6 +251,8 @@ class Text(HTMLParser):
         if data.strip():
             self.teile.append(data)
             self.abschnitte[-1].append(data)
+            if not self._budget:
+                self.ohne_budget.append(data)
 
 
 def funde_text(text, datei):
@@ -291,6 +318,11 @@ def pruefe(datei, roh=None):
     sichtbar = " ".join(p.teile + p.attrtext)
     sichtbar = re.sub(r"\s+", " ", sichtbar)
     f += funde_text(sichtbar, datei)
+    # betraege, auf /contact ohne die optionen des budget-felds
+    if os.path.basename(datei) == BUDGET_SEITE:
+        f += funde_betrag(re.sub(r"\s+", " ", " ".join(p.ohne_budget + p.attrtext)))
+    else:
+        f += funde_betrag(sichtbar)
     for block in p.bloecke:
         # abkuerzungen beenden keinen satz ("Art. 6 (1)(f) GDPR"), und eine
         # nummerierte ueberschrift ("1. Controller") ist kein satz
@@ -311,9 +343,9 @@ def pruefe(datei, roh=None):
         f.append("kaspa pulse genannt '%s'" % roh[max(0, m.start() - 40):m.end() + 20].replace("\n", " "))
     # meta description und og-texte gelten als sichtbar
     desc = p.meta.get("description", "")
-    f += ["description, " + x for x in funde_text(desc, datei)]
+    f += ["description, " + x for x in funde_text(desc, datei) + funde_betrag(desc)]
     titel = p.title.split("|")[0]
-    f += ["title, " + x for x in funde_text(titel, datei)]
+    f += ["title, " + x for x in funde_text(titel, datei) + funde_betrag(titel)]
     if len(p.title) > 60:
         f.append("title %d zeichen" % len(p.title))
     noindex = "noindex" in p.meta.get("robots", "")
@@ -354,7 +386,10 @@ def pruefe(datei, roh=None):
             for k in ("name", "description", "headline"):
                 v = node.get(k)
                 if isinstance(v, str):
-                    f += ["schema %s, %s" % (k, x) for x in funde_text(v, datei)]
+                    f += ["schema %s, %s" % (k, x) for x in funde_text(v, datei) + funde_betrag(v)]
+            # keine preise im schema (Ben, 5.11.2026)
+            for treffer in re.findall(r'"(@type": "Offer"|price"|priceCurrency"|priceSpecification"|minPrice")', json.dumps(node)):
+                f.append("schema mit preis %s" % treffer.strip('"'))
             # datum mit uhrzeit und zeitzone, sonst meldet googles rich results
             # test "ungueltiger datum/uhrzeit-wert" (Ben, 2.11.2026)
             for k in ("datePublished", "dateModified"):
@@ -413,7 +448,19 @@ def selbsttest():
     soll = ["echtzeit-wort 'live'", "echtzeit-wort 'now'"]
     falsch += k != soll
     print("  %s  echtzeit %s, erwartet %s" % ("ok  " if k == soll else "FEHL", k, soll))
-    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 1))
+    # betraege im sichtbaren text rot, die budget-optionen auf /contact nicht
+    # (Ben, 5.11.2026)
+    seite = ('<html><head><title>T</title></head><body><h1>T</h1><p>Review from 250 € per window.</p>'
+             '<select name="BUDGET"><option>Under 1,000 €</option></select></body></html>')
+    k_andere = [x for x in pruefe("x.html", seite) if x.startswith("betrag")]
+    k_contact = [x for x in pruefe(BUDGET_SEITE, seite) if x.startswith("betrag")]
+    k_nur_budget = [x for x in pruefe(BUDGET_SEITE, seite.replace("Review from 250 € per window.", "Ask for a quote."))
+                    if x.startswith("betrag")]
+    ok = len(k_andere) == 1 and len(k_contact) == 1 and not k_nur_budget
+    falsch += not ok
+    print("  %s  betrag, andere seite %d, contact mit betrag %d, contact nur budget %d, erwartet 1, 1, 0"
+          % ("ok  " if ok else "FEHL", len(k_andere), len(k_contact), len(k_nur_budget)))
+    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 2))
     return 1 if falsch else 0
 
 
