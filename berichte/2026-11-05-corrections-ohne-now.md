@@ -32,3 +32,10 @@ Keine neuen. Die offenen Fragen 1, 2 und 4 bis 6 aus `berichte/2026-11-04-glaubw
 ## Was Ben tun muss
 
 Nichts. Die Abnahme auf pulsehawk.io folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme (5.11.2026)
+
+- **Merge:** PR #61 per Squash, Merge-Commit `1edc329`, Branch gelöscht.
+- **Abnahme auf pulsehawk.io:** /corrections, /independence und /llms.txt sind live byte-gleich mit dem Bau aus `1edc329`.
+- **/corrections:** 3 Einträge mit "Corrected to", kein "stands now" mehr. "the corrected text and who reported it" steht in Description, og:description und Schema.
+- **/independence:** Der Absatz "Where are corrections listed?" lautet jetzt "… with what was wrong, the corrected text and who reported it."
