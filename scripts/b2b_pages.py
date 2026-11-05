@@ -78,31 +78,16 @@ def lang(iso):
     return "%d %s %d" % (d.day, MONATE[d.month - 1], d.year)
 
 
-# --- preise, eine stelle -------------------------------------------------
-# Dollar fest und rund, kein Wechselkurs zur Laufzeit (Ben, 16.10.2026).
-PREISE = {
-    "review": {"eur": 250, "usd": 290, "ab": False, "monat": False,
-               "name": "Review"},
-    "launch": {"eur": 2500, "usd": 2900, "ab": True, "monat": False,
-               "name": "Launch measurement"},
-    "ongoing": {"eur": 1500, "usd": 1750, "ab": True, "monat": True,
-                "name": "Ongoing measurement"},
-}
-PREIS_STAND = "Prices as of October 2026, net, plus VAT where it applies. Invoices in euro."
+# --- keine preise oeffentlich (Ben, 5.11.2026) ------------------------------
+# Preise nennen wir nur noch im Angebot nach einem Gespraech. An der Stelle der
+# Preise steht ein Satz mit Link auf /contact. Die Budgetspannen im Formular
+# auf /contact bleiben.
+ANGEBOT_SATZ = "Scoped per network and window."
+PREIS_FREI_STAND = "2026-11-05"
 
 
 def betrag(n):
     return "{:,}".format(n)
-
-
-def preis_text(k):
-    p = PREISE[k]
-    t = "%s € ($%s)" % (betrag(p["eur"]), betrag(p["usd"]))
-    if p["ab"]:
-        t = "from " + t
-    if p["monat"]:
-        t += " per month"
-    return t
 
 
 # --- seiten --------------------------------------------------------------
@@ -189,26 +174,16 @@ def schritte(xs):
         "<li><b>%s</b> %s</li>" % (t, d) for t, d in xs)
 
 
-def preis_block(k, zusatz=""):
-    p = PREISE[k]
-    return ('<div class="price"><div class="pl">%s</div><div class="pv">%s</div>'
-            '<p>%s %s</p></div>' % (p["name"], preis_text(k), PREIS_STAND, zusatz))
+def angebot_html():
+    """an der stelle der preise, mit link auf /contact (Ben, 5.11.2026)."""
+    return '<p class="quote">%s %s.</p>' % (ANGEBOT_SATZ, a("/contact", "Ask for a quote"))
 
 
-def service_schema(name, pfad, desc, k):
-    p = PREISE[k]
-    spec = {"@type": "UnitPriceSpecification" if p["monat"] else "PriceSpecification",
-            "price": p["eur"], "minPrice": p["eur"], "priceCurrency": "EUR",
-            "valueAddedTaxIncluded": False}
-    if p["monat"]:
-        spec["unitCode"] = "MON"
-        spec["referenceQuantity"] = {"@type": "QuantitativeValue", "value": 1, "unitCode": "MON"}
+def service_schema(name, pfad, desc):
+    """ohne Offer, price und priceCurrency (Ben, 5.11.2026)."""
     return {"@type": "Service", "name": name, "serviceType": name,
             "url": SITE + pfad, "description": desc, "provider": {"@id": ORG_ID},
-            "areaServed": "Worldwide",
-            "offers": {"@type": "Offer", "url": SITE + pfad, "priceCurrency": "EUR",
-                       "price": p["eur"], "priceSpecification": spec,
-                       "availability": "https://schema.org/InStock"}}
+            "areaServed": "Worldwide"}
 
 
 # Uhrzeit und Zeitzone fuer datePublished und dateModified im Schema, sonst meldet
@@ -532,9 +507,11 @@ def zitat_zeilen(eintraege, hoechstens=3):
 
 
 def leistungen():
-    reihen = [("/tps-verification", "TPS verification", "Claimed vs measured throughput, from our own measurement.", "Review " + preis_text("review")),
-              ("/launch-measurement", "Launch measurement", "The first week after a testnet or mainnet launch, set against the week before.", preis_text("launch").capitalize()),
-              ("/upgrade-monitoring", "Upgrade monitoring", "Block time, difficulty and orphaned blocks before and after a hard fork.", "Ongoing " + preis_text("ongoing"))]
+    # an der stelle der preise (Ben, 5.11.2026); die zeile ist selbst ein link
+    # auf die leistung, der link auf /contact steht darunter
+    reihen = [("/tps-verification", "TPS verification", "Claimed vs measured throughput, from our own measurement.", ANGEBOT_SATZ),
+              ("/launch-measurement", "Launch measurement", "The first week after a testnet or mainnet launch, set against the week before.", ANGEBOT_SATZ),
+              ("/upgrade-monitoring", "Upgrade monitoring", "Block time, difficulty and orphaned blocks before and after a hard fork.", ANGEBOT_SATZ)]
     return "\n".join('<a class="lr" href="%s"><h3 class="ln">%s</h3><span class="ld">%s</span><span class="lp">%s</span></a>'
                      % r for r in reihen)
 
@@ -1060,7 +1037,7 @@ def seiten():
     # 1 startseite, nach dem design-skill (Ben, 26.10.2026). Gleiche Aussagen,
     # Preise und Zahlen wie vorher, neu angeordnet. CSS und Skript nur hier.
     S.append(dict(
-        datei="index.html", pfad="/", og="home", lastmod="2026-11-04",
+        datei="index.html", pfad="/", og="home", lastmod=PREIS_FREI_STAND,
         title="Independent blockchain measurement | PulseHawk",
         desc=("PulseHawk does its own blockchain measurement under load, with own nodes or "
               "header clients. Dated numbers, raw data and an open method for upgrades."),
@@ -1100,7 +1077,7 @@ def seiten():
 """ % (a("/contact", "Request a measurement", "btn"),
        a(SAMPLE_URL, "See a sample report", "btn ghost plausible-event-name=Sample+Report"),
        puls_figur(),
-       leistungen(), PREIS_STAND,
+       leistungen(), "%s." % a("/contact", "Ask for a quote"),
        a("/cases/kaspa", "Read the Kaspa case"),
        zcash_fragment(), a("/zcash-nu7", "Read the Zcash NU7 case"),
        bch_kachel(), a("/cases/alexandria", "Read the Alexandria case"),
@@ -1128,7 +1105,7 @@ def seiten():
          "Yes. Results are published as measured. You see them before publication and can correct facts, not findings."),
     ]
     S.append(dict(
-        datei="tps-verification.html", pfad="/tps-verification", og="tps-verification",
+        datei="tps-verification.html", pfad="/tps-verification", og="tps-verification", lastmod=PREIS_FREI_STAND,
         title="TPS verification, claimed vs measured | PulseHawk",
         desc=("Independent TPS verification. We check a TPS claim against real network "
               "throughput in our own measurement and publish claimed vs measured, dated."),
@@ -1154,7 +1131,7 @@ def seiten():
             ("The conditions.", "We write down what stands behind the claim, transaction type and size, number of nodes, network and date."),
             ("The measurement.", "We count ourselves, with our own node or header client, over an agreed window in UTC. Transactions per minute, blocks per second and confirmation time."),
             ("The note.", "You get a dated note with claimed and measured numbers next to each other, plus the CSV."),
-        ]), preis_block("review"),
+        ]), angebot_html(),
             box(["Teams that want to check their own TPS number before they publish it",
                  "Foundations and grant committees that need a neutral view of a claim",
                  "Exchanges and integrators that plan capacity"],
@@ -1164,7 +1141,7 @@ def seiten():
             faq_html(tps_faq), sample_button(), contact_button()),
         faqs=tps_faq,
         schema=[service_schema("TPS verification", "/tps-verification",
-                               "Claimed vs measured TPS from our own measurement, with dated raw data.", "review")],
+                               "Claimed vs measured TPS from our own measurement, with dated raw data.")],
     ))
 
     # 3 launch
@@ -1178,7 +1155,7 @@ def seiten():
          "The measurement moves with it. The price stays the same as long as the scope does."),
     ]
     S.append(dict(
-        datei="launch-measurement.html", pfad="/launch-measurement", og="launch-measurement",
+        datei="launch-measurement.html", pfad="/launch-measurement", og="launch-measurement", lastmod=PREIS_FREI_STAND,
         title="Testnet and mainnet launch measurement | PulseHawk",
         desc=("Testnet stress test measurement and mainnet launch metrics. The first week "
               "after launch against the week before, from our own measurement, with raw data."),
@@ -1207,7 +1184,7 @@ def seiten():
             ("Launch.", "We count through the first week after launch, block by block."),
             ("After.", "You get a before and after report with charts, the CSV and the method version."),
             ("Publication.", "Results are published as measured, after you have seen them."),
-        ]), a("/method", "method"), preis_block("launch"),
+        ]), a("/method", "method"), angebot_html(),
             box(["Core teams launching a testnet or mainnet",
                  "Foundations that fund a launch and want an outside count",
                  "Teams planning a public testnet stress test"],
@@ -1217,7 +1194,7 @@ def seiten():
             faq_html(launch_faq), sample_button(), contact_button()),
         faqs=launch_faq,
         schema=[service_schema("Launch measurement", "/launch-measurement",
-                               "The first week after a testnet or mainnet launch against the week before, from our own measurement.", "launch")],
+                               "The first week after a testnet or mainnet launch against the week before, from our own measurement.")],
     ))
 
     # 4 upgrade
@@ -1230,7 +1207,7 @@ def seiten():
          'In our <a href="/upgrades">network upgrade calendar</a>. Every entry links to its source.'),
     ]
     S.append(dict(
-        datei="upgrade-monitoring.html", pfad="/upgrade-monitoring", og="upgrade-monitoring",
+        datei="upgrade-monitoring.html", pfad="/upgrade-monitoring", og="upgrade-monitoring", lastmod=PREIS_FREI_STAND,
         title="Hard fork and network upgrade monitoring | PulseHawk",
         desc=("Hard fork monitoring from our own measurement. Block time, difficulty and orphaned "
               "blocks compared before and after a network upgrade, with dated raw data."),
@@ -1265,7 +1242,7 @@ def seiten():
             ("Activation.", "We follow the upgrade height block by block, on testnet and mainnet."),
             ("Monthly report.", "Each month you get a dated report with charts and the CSV."),
             ("Publication.", "Results are published as measured, after you have seen them."),
-        ]), preis_block("ongoing", "A single upgrade without ongoing work is priced like a launch measurement."),
+        ]), angebot_html(),
             box(["Core teams shipping a hard fork",
                  "Foundations and grant committees that track a network over time",
                  "Mining pools and exchanges that plan around an upgrade"],
@@ -1275,7 +1252,7 @@ def seiten():
             faq_html(upg_faq), sample_button(), contact_button()),
         faqs=upg_faq,
         schema=[service_schema("Upgrade monitoring", "/upgrade-monitoring",
-                               "Block time, difficulty and orphaned blocks before and after a hard fork, from our own measurement.", "ongoing")],
+                               "Block time, difficulty and orphaned blocks before and after a hard fork, from our own measurement.")],
     ))
 
     # 5 method
@@ -2448,10 +2425,10 @@ def llms(S):
              "PulseHawk does its own measurement with its own nodes or header clients, publishes an open method, dates every number "
              "and releases the raw data. A brand of Vizora Digital UG (haftungsbeschränkt), "
              "Düsseldorf, Germany.", "",
-             "Services and prices (net, plus VAT where it applies, invoiced in euro, as of October 2026)",
-             "- TPS verification, review %s" % preis_text("review"),
-             "- Launch measurement %s" % preis_text("launch"),
-             "- Upgrade monitoring, ongoing measurement %s" % preis_text("ongoing"),
+             "Services, each scoped per network and window. Ask for a quote at %s/contact" % SITE,
+             "- TPS verification",
+             "- Launch measurement",
+             "- Upgrade monitoring, ongoing measurement",
              "- Custom scope, on request", "", "## Pages", ""]
     for s in S:
         if s.get("noindex"):
