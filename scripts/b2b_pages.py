@@ -666,8 +666,19 @@ KORREKTUREN = "data/corrections.json"
 TRACK_RECORD = "data/track-record.json"
 GLAUB_STAND = "2026-11-04"   # track record, corrections, about (Ben, 4.11.2026)
 # gruender auf /about und als schema.org Person. Solange hier der platzhalter
-# steht, fehlt der abschnitt, und der neubau warnt (Ben entscheidet, 4.11.2026)
-GRUENDER = "GRUENDER"
+# steht, fehlt der abschnitt, und der neubau warnt (Ben entscheidet, 4.11.2026).
+# Name und portraet von Ben, 5.11.2026. Das bild ist die fuers web optimierte
+# fassung (800 x 800 px, quadratisch, sonst unbearbeitet), das original liegt
+# nicht im repo.
+GRUENDER = "Benjamin Alkanli"
+GRUENDER_BILD = "/assets/about/founder.jpg"
+ABOUT_STAND = "2026-11-05"
+ABOUT_CSS = """
+.founder{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:14px 0 18px}
+.founder img{width:200px;height:200px;border-radius:12px;display:block;object-fit:cover}
+.founder .fname{font:800 22px/1.2 Archivo,sans-serif;color:var(--txt);margin:0 0 4px}
+.founder p{margin:0}
+"""
 TR_STATUS = ("in band", "outside", "open")
 TR_ARTEN = {"estimate": "Our estimate", "comparison": "Against a published value"}
 RE_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -1442,18 +1453,24 @@ def seiten():
 
     about_schema = [{"@type": "AboutPage", "@id": SITE + "/about#page", "url": SITE + "/about",
                      "name": "About PulseHawk", "about": {"@id": ORG_ID},
-                     "dateModified": schema_zeit(GLAUB_STAND)}]
+                     "dateModified": schema_zeit(ABOUT_STAND)}]
     gruender = ""
     if GRUENDER == "GRUENDER":
         print("warnung: /about ohne gruender, GRUENDER ist noch der platzhalter (Ben entscheidet)")
     else:
         about_schema.append({"@type": "Person", "@id": SITE + "/about#founder", "name": GRUENDER,
-                             "jobTitle": "Founder", "worksFor": {"@id": ORG_ID}})
+                             "jobTitle": "Founder", "worksFor": {"@id": ORG_ID},
+                             "image": SITE + GRUENDER_BILD})
         about_schema[0]["mainEntity"] = {"@id": SITE + "/about#founder"}
-        gruender = ('<p>PulseHawk was founded by %s, who runs the measurements and signs the reports.</p>'
-                    % E(GRUENDER))
+        if not os.path.exists(os.path.join(REPO, GRUENDER_BILD.lstrip("/"))):
+            raise SystemExit("portraet fehlt %s" % GRUENDER_BILD)
+        gruender = ('<div class="founder" id="founder"><img src="%s" width="200" height="200" '
+                    'alt="%s, founder of PulseHawk"><div><p class="fname">%s</p>'
+                    '<p>Founder of PulseHawk</p></div></div>\n'
+                    % (GRUENDER_BILD, E(GRUENDER, quote=True), E(GRUENDER)))
     S.append(dict(
-        datei="about.html", pfad="/about", og="home", lastmod=GLAUB_STAND,
+        datei="about.html", pfad="/about", og="home", lastmod=ABOUT_STAND,
+        css=ABOUT_CSS,
         title="About PulseHawk",
         desc=("Who runs PulseHawk and who pays us. Fees for paid measurements, the price fixed "
               "before the first block, no tokens held. We measure, others decide."),
