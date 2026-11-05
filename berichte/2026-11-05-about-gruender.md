@@ -34,3 +34,11 @@
 ## Was Ben tun muss
 
 - Nichts. Die Abnahme auf pulsehawk.io bei 390 und 1440 px folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme (5.11.2026)
+
+- **Merge:** PR #59 per Squash, Merge-Commit `2887de5`, Branch gelöscht.
+- **pulsehawk.io/about:** live byte-gleich mit dem Bau.
+- **Bild:** `/assets/about/founder.jpg` liefert 200, image/jpeg, 115.781 Byte, gleich der Datei im Repo.
+- **Im Browser bei 390 und 1440 px:** Das Bild lädt mit 800 px Eigenbreite und wird 200 px breit gezeigt. Alt-Text "Benjamin Alkanli, founder of PulseHawk". Kein waagerechtes Scrollen.
+- **Screenshots:** `about-live-390.jpg` und `about-live-1440.jpg` in `berichte/2026-11-05-about-gruender/`.
