@@ -33,7 +33,8 @@ from html.parser import HTMLParser
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-ECHTZEIT = ("live", "right now", "real time", "real-time", "realtime", "currently",
+# "now" und "live" als ganzes wort sind rot (Ben, 5.11.2026)
+ECHTZEIT = ("live", "now", "right now", "real time", "real-time", "realtime", "currently",
             "at the moment")
 GEMIEDEN = ("blockchain testing services", "smart contract audit", "security audit",
             "benchmark", "reviewed by", "audited by", "team of experts")
@@ -405,7 +406,14 @@ def selbsttest():
         k = len(b2b_pages.pruefe_track_record([e]))
         falsch += k != n
         print("  %s  track record %s, %d funde, erwartet %d" % ("ok  " if k == n else "FEHL", name, k, n))
-    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle)))
+    # echtzeit-woerter als ganzes wort, "now" und "live" (Ben, 5.11.2026);
+    # "known" und "delivered" enthalten sie nur als wortteil
+    text = "Corrected to the live text as it stands now, known and delivered."
+    k = sorted(x for x in funde_text(text, "x.html") if x.startswith("echtzeit"))
+    soll = ["echtzeit-wort 'live'", "echtzeit-wort 'now'"]
+    falsch += k != soll
+    print("  %s  echtzeit %s, erwartet %s" % ("ok  " if k == soll else "FEHL", k, soll))
+    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 1))
     return 1 if falsch else 0
 
 

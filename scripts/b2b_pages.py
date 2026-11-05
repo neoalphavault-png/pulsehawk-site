@@ -665,6 +665,7 @@ FRAMEWORK_STAND = "2026-11-02"   # measurement framework, erste fassung (Ben, 2.
 KORREKTUREN = "data/corrections.json"
 TRACK_RECORD = "data/track-record.json"
 GLAUB_STAND = "2026-11-04"   # track record, corrections, about (Ben, 4.11.2026)
+KORR_STAND = "2026-11-05"    # /corrections und /independence ohne "now" (Ben, 5.11.2026)
 # gruender auf /about und als schema.org Person. Solange hier der platzhalter
 # steht, fehlt der abschnitt, und der neubau warnt (Ben entscheidet, 4.11.2026).
 # Name und portraet von Ben, 5.11.2026. Das bild ist die fuers web optimierte
@@ -838,7 +839,7 @@ def korrektur_eintrag(n, e):
     seiten_ = ", ".join(a(s.strip(), E(s.strip())) if s.strip().startswith("/") else E(s.strip())
                         for s in e["page"].split(","))
     zeilen = [("Date", lang(e["date"])), ("Page", seiten_), ("What was wrong", E(e["wrong"])),
-              ("What stands now", E(e["now"])), ("Reported by", E(e["reported_by"]))]
+              ("Corrected to", E(e["now"])), ("Reported by", E(e["reported_by"]))]
     return ('<div class="tre" id="c-%03d"><dl>%s</dl></div>'
             % (n, "".join("<dt>%s</dt><dd>%s</dd>" % z for z in zeilen)))
 
@@ -1357,7 +1358,7 @@ def seiten():
     # 6 independence, kurz und sachlich (Ben, 2.11.2026); korrekturen auf
     # /corrections (Ben, 4.11.2026)
     S.append(dict(
-        datei="independence.html", pfad="/independence", og="independence", lastmod=GLAUB_STAND,
+        datei="independence.html", pfad="/independence", og="independence", lastmod=KORR_STAND,
         title="Our independence rules | PulseHawk",
         desc=("Five rules for every PulseHawk measurement. Data published whatever the result, "
               "paid work marked as paid, price fixed in advance, no client tokens."),
@@ -1378,7 +1379,7 @@ def seiten():
 <p>PulseHawk is run by Vizora Digital UG (haftungsbeschränkt). It is funded by fees for paid measurements.</p>
 </section>
 <section id="corrections"><h2>Where are corrections listed?</h2>
-<p>Every correction to a published page gets a dated entry on our %s page, with what was wrong, what stands now and who reported it. Our estimates are scored against the result on our %s.</p>
+<p>Every correction to a published page gets a dated entry on our %s page, with what was wrong, the corrected text and who reported it. Our estimates are scored against the result on our %s.</p>
 </section>
 <p>The rules for every report type are in the %s.</p>
 %s
@@ -1386,7 +1387,7 @@ def seiten():
        a("/standard/", "PulseHawk Measurement Framework"),
        zitat_abschnitt(lies_zitate(), sid="cited-by")),
         faqs=[],
-        schema=["ARTICLE:2026-10-16:%s" % GLAUB_STAND],
+        schema=["ARTICLE:2026-10-16:%s" % KORR_STAND],
     ))
 
     # 6a track record, 6b corrections, 6c about (Ben, 4.11.2026)
@@ -1429,10 +1430,10 @@ def seiten():
 
     korr = lies_korrekturen()
     S.append(dict(
-        datei="corrections.html", pfad="/corrections", og="independence", lastmod=GLAUB_STAND,
+        datei="corrections.html", pfad="/corrections", og="independence", lastmod=KORR_STAND,
         title="Corrections | PulseHawk",
-        desc=("Every correction to a published PulseHawk page, dated. What was wrong, what stands "
-              "now and who reported it. Found an error? Write to us and we add it here."),
+        desc=("Every correction to a PulseHawk page, dated. What was wrong, the corrected "
+              "text and who reported it. Found an error? Write to us and we add it here."),
         h1="Corrections",
         lead=("Every correction to a published page or post gets a dated entry here, newest first. "
               "Entries are never removed."),
@@ -1448,7 +1449,7 @@ def seiten():
 """ % ("".join(korrektur_eintrag(len(korr) - i, e) for i, e in enumerate(korr)),
        a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)), a("/track-record", "track record")),
         faqs=[],
-        schema=["ARTICLE:%s:%s" % (GLAUB_STAND, max(e["date"] for e in korr))],
+        schema=["ARTICLE:%s:%s" % (GLAUB_STAND, max([KORR_STAND] + [e["date"] for e in korr]))],
     ))
 
     about_schema = [{"@type": "AboutPage", "@id": SITE + "/about#page", "url": SITE + "/about",
