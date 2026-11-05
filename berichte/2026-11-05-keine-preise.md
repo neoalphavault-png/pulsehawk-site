@@ -61,3 +61,21 @@ Preise nennen wir nur noch im Angebot nach einem Gespräch.
 ## Was Ben tun muss
 
 Nichts. Die Abnahme auf pulsehawk.io bei 390 und 1440 px folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme (5.11.2026)
+
+- **Merge:** PR #63 per Squash, Merge-Commit `c65e0a9`, Branch gelöscht.
+- **Byte-gleich mit dem Bau aus `c65e0a9`:**
+  - Startseite
+  - /tps-verification
+  - /launch-measurement
+  - /upgrade-monitoring
+  - /contact
+  - /llms.txt
+  - /sitemap.xml
+- **Im Browser auf pulsehawk.io, je bei 390 und 1440 px:**
+  - kein Betrag mit € oder $ im Seitentext;
+  - "Scoped per network and window" steht auf der Startseite 3-mal, auf den drei Leistungsseiten je 1-mal;
+  - auf jeder der vier Seiten ein Link "Ask for a quote" auf /contact;
+  - kein waagerechtes Scrollen.
+- **Screenshots:** 8 Ausschnitte (je Seite 390 und 1440 px) in `berichte/2026-11-05-keine-preise/`.
