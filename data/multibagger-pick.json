@@ -1,26 +1,26 @@
 {
- "date": "2026-11-05",
+ "date": "2026-11-06",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "ECPG",
+  "name": "Encore Capital Group, Inc.",
+  "sector": "Financials",
+  "industry": "Consumer Finance",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 10.8792,
-  "pct": 987.9,
-  "from_1000": 10879,
-  "d": "2026-11-04",
-  "close": 258.38,
-  "d_1y": "2025-11-04",
-  "close_1y": 23.75,
-  "low": 22.36,
-  "high": 258.38,
-  "drawdown_pct": -5.9,
+  "mult": 2.9513,
+  "pct": 195.1,
+  "from_1000": 2951,
+  "d": "2026-11-05",
+  "close": 126.17,
+  "d_1y": "2025-11-05",
+  "close_1y": 42.75,
+  "low": 42.75,
+  "high": 126.17,
+  "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 10.8792,
+   "mult": 2.9513,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -33,59 +33,68 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 13.6,
-   "d": "2026-11-04",
-   "d_1y": "2025-11-04"
+   "pct": 8.2,
+   "d": "2026-11-05",
+   "d_1y": "2025-11-05"
   },
   "gold": {
-   "pct": 2.8,
-   "d": "2026-11-04",
-   "d_1y": "2025-11-04"
+   "pct": 2.4,
+   "d": "2026-11-05",
+   "d_1y": "2025-11-05"
   }
  },
- "candidates_total": 40,
+ "candidates_total": 38,
  "top10": [
   {
    "ticker": "MRNA",
    "mult": 10.8792
   },
   {
-   "ticker": "MXL",
-   "mult": 4.0954
-  },
-  {
    "ticker": "LITE",
    "mult": 3.3274
   },
   {
-   "ticker": "VSTS",
-   "mult": 2.8777
+   "ticker": "ECPG",
+   "mult": 2.9513
+  },
+  {
+   "ticker": "MXL",
+   "mult": 2.9209
   },
   {
    "ticker": "VSXY",
-   "mult": 2.7917
+   "mult": 2.8402
   },
   {
    "ticker": "LFST",
-   "mult": 2.7175
-  },
-  {
-   "ticker": "GKOS",
-   "mult": 2.6667
+   "mult": 2.7921
   },
   {
    "ticker": "RNG",
-   "mult": 2.6099
+   "mult": 2.7217
+  },
+  {
+   "ticker": "VSTS",
+   "mult": 2.6642
+  },
+  {
+   "ticker": "GKOS",
+   "mult": 2.6079
   },
   {
    "ticker": "SN",
    "mult": 2.5889
-  },
-  {
-   "ticker": "DELL",
-   "mult": 2.5507
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (5.80%)"
+  },
+  {
+   "ticker": "LITE",
+   "reason": "quellen weichen ab (34.19%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
