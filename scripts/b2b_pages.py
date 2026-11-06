@@ -642,6 +642,7 @@ FRAMEWORK_STAND = "2026-11-02"   # measurement framework, erste fassung (Ben, 2.
 KORREKTUREN = "data/corrections.json"
 TRACK_RECORD = "data/track-record.json"
 GLAUB_STAND = "2026-11-04"   # track record, corrections, about (Ben, 4.11.2026)
+TR_STAND = "2026-11-06"      # track record, TR-003 und TR-004 nach der NU7-aktivierung geschlossen
 KORR_STAND = "2026-11-05"    # /corrections und /independence ohne "now" (Ben, 5.11.2026)
 # gruender auf /about und als schema.org Person. Solange hier der platzhalter
 # steht, fehlt der abschnitt, und der neubau warnt (Ben entscheidet, 4.11.2026).
@@ -756,8 +757,13 @@ def tr_eintrag(e):
         zeilen.append(("Published value", "%s, %s" % (E(e["reference"]["value"]), E(e["reference"]["what"]))))
     r = e.get("result")
     if r:
-        zeilen.append(("Result", "%s %s, 95%% interval %s, %s values, %s"
-                       % (E(r["value"]), E(r["label"]), E(r["interval"]), betrag(r["n"]), E(r["window"]))))
+        if r["n"] == 1:
+            # ein einzelner gezaehlter wert, etwa die kopfzeit eines blocks
+            zeilen.append(("Result", "%s %s, %s, %s"
+                           % (E(r["value"]), E(r["label"]), E(r["window"]), E(r["interval"]))))
+        else:
+            zeilen.append(("Result", "%s %s, 95%% interval %s, %s values, %s"
+                           % (E(r["value"]), E(r["label"]), E(r["interval"]), betrag(r["n"]), E(r["window"]))))
         zeilen.append(("Deviation", E(e["deviation"].replace("-", "−"))))
     else:
         zeilen.append(("Result", "Not counted yet"))
@@ -868,6 +874,13 @@ def zi_zellen(zi):
             spanne(zahl2(zi["ueber150"][0]), zahl2(zi["ueber150"][1]), "%")]
 
 
+def abstand_text(dev):
+    """abweichung gezaehlt minus geschaetzt: '+7 min 46 s' heisst, der block kam
+    spaeter, die schaetzung war also frueh ('7 min 46 s early')."""
+    d = dev.strip()
+    return "%s %s" % (d.lstrip("+-−"), "early" if d.startswith("+") else "late")
+
+
 def mainnet_unsicher(teil, st):
     """(kopfzelle, zellen mittel p50 p90 p99, unsicherheitszeile) fuer eine
     mainnet-tabelle. Die spalte steht nur, wenn die intervalle zum selben
@@ -880,8 +893,7 @@ def mainnet_unsicher(teil, st):
             spanne(*u["p50"], "s"), spanne(*u["p90"], "s"), spanne(*u["p99"], "s"), "single value")]
         return ('<th scope="col">95% interval</th>', zellen,
                 '<p class="unc">Measurement uncertainty. The interval column is the 95% range of each value, from '
-                'the rank statistics for percentiles and the standard error for the mean. Header times are whole '
-                'seconds set by the miners.</p>')
+                'rank statistics and the standard error. Header times are whole seconds set by the miners.</p>')
     return ("", [""] * 5,
             '<p class="unc">Measurement uncertainty. Header times are whole seconds set by the miners. The 95%% '
             'intervals for these values are not computed yet for the data as of %s.</p>' % (lang(st["stand"]) if st else ""))
@@ -949,10 +961,30 @@ def zcash_mainnet_teile(st):
                          ", provisional while fewer than %s blocks confirm it" % betrag(e["halten_bloecke"])
                          if e.get("vorlaeufig") else ""))
         elif e.get("bloecke_nach_nu7"):
-            pendel = ("<p>Block times had not settled near 25 s within the first %s blocks, counted.</p>"
+            pendel = ("<p>Block times had not settled near 25 s within the first %s blocks, counted."
                       % betrag(e["bloecke_nach_nu7"]))
+            sw = (e.get("schwierigkeit_relativ_zu_vor_nu7") or {}).get("block_nu7_plus_100")
+            if sw and e.get("berechnet_bei_gleicher_hashrate"):
+                # warum das mittel noch ueber 25 s liegt (Ben, auftrag 6.11.2026)
+                pendel += (" Difficulty 100 blocks in stood at %s of its old level, counted, against %s "
+                           "for a 25 s target at the same hashrate, computed."
+                           % (zahl2(sw), zahl2(e["berechnet_bei_gleicher_hashrate"])))
+            pendel += "</p>"
+        # unsere schaetzungen gegen die gezaehlte kopfzeit, aus dem track record
+        tr_ = [x for x in lies_track_record() if x["art"] == "estimate" and x.get("result")
+               and "3,543,405" in x["subject"]]
+        if tr_:
+            teile_ = ["our estimate as of %s was %s" % (lang(x["estimate"]["as_of"]), abstand_text(x["deviation"]))
+                      for x in tr_]
+            imband = sum(x["status"] == "in band" for x in tr_)
+            pendel += ("<p>Against the counted header time of block 3,543,405 (ZIP 259), %s. %s inside their 90%% "
+                       "band, see our %s.</p>"
+                       % (", and ".join(teile_),
+                          ("Both lay" if len(tr_) == 2 else "All lay") if imband == len(tr_)
+                          else "%d of %d lay" % (imband, len(tr_)),
+                          a("/track-record", "track record")))
         abschnitte = """<section id="after-activation"><h2>First counted numbers after activation</h2>
-<p>%s Up to %s we counted %s intervals on mainnet after NU7, with a mean of %s s and a median of %s s. An ideal 25 s chain has a median of %s s, computed.</p>
+<p>%s Up to %s we counted %s intervals on mainnet after NU7, with a mean of %s s and a median of %s s, against %s s for an ideal 25 s chain, computed.</p>
 %s<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th>%s<th scope="col">Computed at 25 s</th></tr></thead><tbody>
 <tr id="mainnet-after-mean"><td class="c">Mean</td><td>%s s</td>%s<td>25 s</td></tr>
 <tr id="mainnet-after-median"><td class="c">Median</td><td>%s s</td>%s<td>%s s</td></tr>
@@ -963,7 +995,7 @@ def zcash_mainnet_teile(st):
 <p class="src">Our own header client, Zcash mainnet, blocks %s to %s, as of %s.</p>
 %s
 %s
-</section>""" % (("The first NU7 block came at %s." % utc_lang(erster)) if erster else "",
+</section>""" % (("Block 3,543,405, the first NU7 block, has a header time of %s, counted." % utc_lang(erster)) if erster else "",
                  utc_lang(bis), betrag(n), zahl1(g["mittel_s"]), zahl1(float(g["median_s"])), zahl1(float(b["median_s"])),
                  pendel, un[0], zahl1(g["mittel_s"]), un[1][0], zahl1(float(g["median_s"])), un[1][1], zahl1(float(b["median_s"])),
                  zahl1(g["p90_s"]), un[1][2], zahl1(b["p90_s"]), zahl1(g["p99_s"]), un[1][3], zahl1(b["p99_s"]),
@@ -1373,7 +1405,7 @@ def seiten():
     tr_vergl = [e for e in tr if e["art"] == "comparison"]
     tr_zahl = {st: sum(e["status"] == st for e in tr) for st in TR_STATUS}
     S.append(dict(
-        datei="track-record.html", pfad="/track-record", og="method", lastmod=GLAUB_STAND,
+        datei="track-record.html", pfad="/track-record", og="method", lastmod=TR_STAND,
         title="Track record of our estimates | PulseHawk",
         desc=("Every PulseHawk estimate and comparison, scored against the counted result. "
               "With link, date, our value, the window, deviation and status for each entry."),
@@ -1402,7 +1434,7 @@ def seiten():
        "".join(tr_eintrag(e) for e in tr_schaetz), "".join(tr_eintrag(e) for e in tr_vergl),
        a("/method#method-ids", "our method page")),
         faqs=[],
-        schema=["ARTICLE:%s:%s" % (GLAUB_STAND, GLAUB_STAND)],
+        schema=["ARTICLE:%s:%s" % (GLAUB_STAND, TR_STAND)],
     ))
 
     korr = lies_korrekturen()
@@ -1592,12 +1624,20 @@ def seiten():
     S.append(dict(
         datei="zcash-nu7.html", pfad="/zcash-nu7", og="zcash-nu7", lastmod=z_mod,
         title="Zcash NU7 block times, expected vs counted | PulseHawk",
-        desc=("Zcash NU7 activates at block 3,543,405 and cuts the block time from 75 s to 25 s. "
-              "Our forecast, mainnet and testnet block times counted, 500 block spans."),
+        desc=(("Zcash NU7 activated at block 3,543,405 on 6 November 2026 and cut the block time from 75 s "
+               "to 25 s. First mainnet numbers and testnet block times, counted.")
+              if z_stand and z_stand.get("nach_nu7") else
+              ("Zcash NU7 activates at block 3,543,405 and cuts the block time from 75 s to 25 s. "
+               "Our forecast, mainnet and testnet block times counted, 500 block spans.")),
         h1="Zcash NU7 block times, expected and counted",
-        lead=("Zcash NU7 cuts the block target spacing from 75 s to 25 s, per ZIP 218. On mainnet it activates "
-              "at block 3,543,405, per ZIP 259. On the testnet after NU7 we counted a median interval of 17.0 s "
-              "over 49,202 intervals from 4 to 18 October 2026, close to an ideal 25 s chain."),
+        lead=(("Zcash NU7 cut the block target spacing from 75 s to 25 s, per ZIP 218. On mainnet it activated "
+               "at block 3,543,405, per ZIP 259, with a header time of %s, counted. On the testnet after NU7 we "
+               "counted a median interval of 17.0 s over 49,202 intervals from 4 to 18 October 2026, close to an "
+               "ideal 25 s chain." % utc_lang(z_stand["nach_nu7"]["erster_nu7_block_utc"]))
+              if z_stand and z_stand.get("nach_nu7") and z_stand["nach_nu7"].get("erster_nu7_block_utc") else
+              ("Zcash NU7 cuts the block target spacing from 75 s to 25 s, per ZIP 218. On mainnet it activates "
+               "at block 3,543,405, per ZIP 259. On the testnet after NU7 we counted a median interval of 17.0 s "
+               "over 49,202 intervals from 4 to 18 October 2026, close to an ideal 25 s chain.")),
         css=ZCASH_FACTS_CSS + REPRO_CSS,
         body="""
 %s
