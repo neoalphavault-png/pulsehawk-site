@@ -1,5 +1,5 @@
 {
- "hinweis": "Track record von PulseHawk (Ben, 4.11.2026). Nur Eintraege, die oeffentlich und datiert stehen, Quelle von Claude selbst geprueft. art 'estimate' ist eine eigene Prognose, art 'comparison' ein Vergleich mit einem veroeffentlichten Wert. status: in band, outside, open. Bei Vergleichen heisst in band, dass der veroeffentlichte Wert im 95-%-Intervall unseres gezaehlten Werts liegt (scripts/unsicherheit.py); bei Prognosen, dass das gezaehlte Ergebnis im 90-%-Band unserer Prognose liegt. Ohne Ergebnis ist der Status open. Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "hinweis": "Track record von PulseHawk (Ben, 4.11.2026). Nur Eintraege, die oeffentlich und datiert stehen, Quelle von Claude selbst geprueft. art 'estimate' ist eine eigene Prognose, art 'comparison' ein Vergleich mit einem veroeffentlichten Wert. status: in band, outside, open. Bei Vergleichen heisst in band, dass der veroeffentlichte Wert im 95-%-Intervall unseres gezaehlten Werts liegt (scripts/unsicherheit.py); bei Prognosen, dass das gezaehlte Ergebnis im 90-%-Band unserer Prognose liegt. Ohne Ergebnis ist der Status open. Nach dem Aendern: python3 scripts/b2b_pages.py TR-003 und TR-004 am 6.11.2026 mit der gezaehlten Kopfzeit von Block 3,543,405 geschlossen (stand-2026-11-06.json).",
  "entries": [
   {
    "id": "TR-001",
@@ -64,9 +64,15 @@
     "band": "5 November 2026, 23:01 UTC to 6 November 2026, 05:51 UTC",
     "as_of": "2026-10-28"
    },
-   "result": null,
-   "deviation": null,
-   "status": "open",
+   "result": {
+    "value": "6 November 2026, 02:34:02 UTC",
+    "label": "counted",
+    "window": "header time of block 3,543,405",
+    "n": 1,
+    "interval": "single value, header time in whole seconds set by the miner"
+   },
+   "deviation": "+7 min 46 s",
+   "status": "in band",
    "methods": [
     "PH-M-001",
     "PH-M-006"
@@ -85,9 +91,15 @@
     "band": "6 November 2026, 00:28 UTC to 6 November 2026, 05:00 UTC",
     "as_of": "2026-11-02"
    },
-   "result": null,
-   "deviation": null,
-   "status": "open",
+   "result": {
+    "value": "6 November 2026, 02:34:02 UTC",
+    "label": "counted",
+    "window": "header time of block 3,543,405",
+    "n": 1,
+    "interval": "single value, header time in whole seconds set by the miner"
+   },
+   "deviation": "-5 min 50 s",
+   "status": "in band",
    "methods": [
     "PH-M-001",
     "PH-M-006"
