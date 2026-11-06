@@ -58,3 +58,10 @@ Ausgelöst von der geplanten Aufgabe "Zcash NU7 aktiviert: Seite nachziehen" um 
 ## Was Ben tun muss
 
 Nichts. Die Abnahme auf pulsehawk.io folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme (6.11.2026)
+
+- **Merge:** PR #66 per Squash, Merge-Commit `3541dd8`, Branch gelöscht.
+- **Abnahme auf pulsehawk.io:** /zcash-nu7, /track-record, /llms.txt und /sitemap.xml sind live byte-gleich mit dem Bau aus `3541dd8`.
+- **Im Browser bei 390 und 1440 px:** "In short", der Abschnitt nach der Aktivierung und die Schätzungen im Track record sind da, TR-003 und TR-004 jeweils "In band". Kein waagerechtes Scrollen.
+- **Screenshots:** sechs Live-Ausschnitte (`*-live.jpg`) in `berichte/2026-11-06-zcash-nu7-aktiviert/`.
