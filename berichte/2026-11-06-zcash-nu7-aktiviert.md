@@ -48,7 +48,7 @@ Ausgelöst von der geplanten Aufgabe "Zcash NU7 aktiviert: Seite nachziehen" um 
 
 ## PR
 
-#65. Keine Workflows, kein deploy, kein c2, kein Secrets-Bezug, daher Selbst-Merge nach der Regel vom 26.10.
+#66. Keine Workflows, kein deploy, kein c2, kein Secrets-Bezug, daher Selbst-Merge nach der Regel vom 26.10.
 
 ## Offene Fragen an Ben
 
