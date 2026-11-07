@@ -169,7 +169,7 @@
 <section id="in-short" class="facts"><h2>Zcash NU7 in short</h2><dl><div><dt>Mainnet activation height</dt><dd class="fv">3,543,405</dd><dd class="fq">source <a href="https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0" rel="noopener">Zebra 7.0.0</a>, checked 26 October 2026</dd></div><div><dt>NU7 activated on mainnet</dt><dd class="fv">6 November 2026</dd><dd class="fq">counted, block 3,543,405 at 6 November 2026, 02:34 UTC</dd></div><div><dt>Mainnet after NU7, median interval</dt><dd class="fv">25.0 s</dd><dd class="fq">counted over 250 intervals up to 6 November 2026, 05:13 UTC, computed 17.3 s for an ideal 25 s chain</dd></div><div><dt>Block target spacing</dt><dd class="fv">75 s to 25 s</dd><dd class="fq">source <a href="https://github.com/zcash/zips/blob/main/zips/zip-0218.md" rel="noopener">ZIP 218</a></dd></div><div><dt>Testnet after NU7, median interval</dt><dd class="fv">17.0 s</dd><dd class="fq">counted over 49,202 intervals, 4 to 18 October 2026, computed 17.3 s for an ideal 25 s chain</dd></div></dl></section>
 <section id="after-activation"><h2>First counted numbers after activation</h2>
 <p>Block 3,543,405, the first NU7 block, has a header time of 6 November 2026, 02:34 UTC, counted. Up to 6 November 2026, 05:13 UTC we counted 250 intervals on mainnet after NU7, with a mean of 38.21 s and a median of 25.0 s, against 17.3 s for an ideal 25 s chain, computed.</p>
-<p>Block times had not settled near 25 s within the first 250 blocks, counted. Difficulty 100 blocks in stood at 0.504 of its old level, counted, against 0.333 for a 25 s target at the same hashrate, computed.</p><p>Against the counted header time of block 3,543,405 (ZIP 259), our estimate as of 28 October 2026 was 7 min 46 s early, and our estimate as of 2 November 2026 was 5 min 50 s late. Both lay inside their 90% band, see our <a href="/track-record">track record</a>.</p><div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">95% interval</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
+<p>Block times had not settled near 25 s within the first 250 blocks, counted. Difficulty 100 blocks in stood at 0.504 of its old level, counted, against 0.333 for a 25 s target at the same hashrate, computed.</p><div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">95% interval</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
 <tr id="mainnet-after-mean"><td class="c">Mean</td><td>38.21 s</td><td>33.58 to 42.84 s</td><td>25 s</td></tr>
 <tr id="mainnet-after-median"><td class="c">Median</td><td>25.0 s</td><td>22 to 31 s</td><td>17.3 s</td></tr>
 <tr><td class="c">p90</td><td>85.1 s</td><td>73 to 104 s</td><td>57.6 s</td></tr>
@@ -179,6 +179,10 @@
 <p class="src">Our own header client, Zcash mainnet, blocks 3,543,406 to 3,543,655, as of 6 November 2026.</p>
 <p class="unc">Measurement uncertainty. The interval column is the 95% range of each value, from rank statistics and the standard error. Header times are whole seconds set by the miners.</p>
 <p class="meth">Methods used <a href="/method#ph-m-001">PH-M-001</a>.</p>
+</section>
+<section id="estimates-scored"><h2>How close were our estimates?</h2>
+<p>Against the counted header time of block 3,543,405 (ZIP 259), our estimates were 7 min 46 s early (as of 28 October 2026) and 5 min 50 s late (as of 2 November 2026), both inside their 90% band, see our <a href="/track-record">track record</a>.</p>
+<p class="meth">Methods used <a href="/method#ph-m-001">PH-M-001</a>, <a href="/method#ph-m-006">PH-M-006</a>.</p>
 </section>
 <section id="testnet"><h2>Does NU7 hit 25 second blocks on testnet?</h2>
 <p>Yes. The mean interval was 23.68 s, so blocks came about 5% faster than the target. The median of 17.0 s is what a 25 s chain should show, because most blocks arrive early and a few arrive late.</p>
