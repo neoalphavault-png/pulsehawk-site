@@ -14,6 +14,7 @@ Seite braucht. Peer-Software und die Zakura-Schaetzung bleiben draussen
 
   git clone --depth 1 --branch messung/zcash-mainnet <kaspa-pulse> /tmp/zm
   python3 scripts/zcash_stand.py /tmp/zm/data/zcash-mainnet/stand-2026-10-28.json
+  python3 scripts/zcash_stand.py /tmp/zm/data/zcash-mainnet/aktuell.json   (ab 7.11.2026)
   python3 scripts/b2b_pages.py
 """
 import json
@@ -30,11 +31,18 @@ QUELLE = "eigener Header-Client, Zcash Mainnet, %s"
 
 def kuerzen(st, name):
     m = re.match(r"stand-(\d{4}-\d{2}-\d{2})\.json$", name)
-    if not m:
-        raise SystemExit("erwartet stand-JJJJ-MM-TT.json, bekommen %r" % name)
+    if m:
+        datum, quelle = m.group(1), QUELLE % name
+    elif name == "aktuell.json":
+        # der taegliche lauf schreibt nach NU7 nur aktuell.json, ohne datierte
+        # stand-datei (7.11.2026); das datum ist der tag des abrufs
+        datum = st["abruf_utc"][:10]
+        quelle = QUELLE % ("aktuell.json, Abruf %s" % st["abruf_utc"])
+    else:
+        raise SystemExit("erwartet stand-JJJJ-MM-TT.json oder aktuell.json, bekommen %r" % name)
     aus = {"hinweis": ("Gekuerzte Kopie des Zcash-Mainnet-Stands fuer /zcash-nu7, erzeugt mit "
                        "scripts/zcash_stand.py. Nicht von Hand aendern, neu holen."),
-           "quelle": QUELLE % name, "stand": m.group(1), "abruf_utc": st["abruf_utc"],
+           "quelle": quelle, "stand": datum, "abruf_utc": st["abruf_utc"],
            "nu7_hoehe": st["nu7_hoehe"], "bereich": st["bereich"],
            "pruefungen": st.get("pruefungen"),
            "gegenproben": [{"verglichen": g["verglichen"], "gleich": g["gleich"]}

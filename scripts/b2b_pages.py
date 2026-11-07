@@ -954,7 +954,24 @@ def zcash_mainnet_teile(st):
         un = mainnet_unsicher("nach_nu7", st)
         e = st.get("einpendeln") or {}
         pendel = ""
-        if e.get("eingependelt_ab_block"):
+        with open(os.path.join(REPO, MAINNET_UNSICHER), encoding="utf-8") as fh:
+            e250 = json.load(fh).get("einpendeln_250")
+        if e250 and e250.get("stand") == st["stand"]:
+            # Bens kriterium (7.11.2026): mittel ueber die letzten 250 abstaende,
+            # sein 95-%-intervall enthaelt die 25 s
+            l_ = e250["letzte"]
+            satz_l = ("The mean of the last %d intervals, up to block %s at %s, was %s s, 95%% "
+                      "interval %s to %s s, counted."
+                      % (e250["fenster"], betrag(l_["bis_hoehe"]), utc_lang(l_["bis_utc"]), "%.2f" % l_["mittel"],
+                         "%.2f" % l_["intervall"][0], "%.2f" % l_["intervall"][1]))
+            if l_["drin"]:
+                pendel = ("<p>Block times have settled near 25 s, counted. %s The interval contains 25 s, "
+                          "first so up to block %s at %s.</p>"
+                          % (satz_l, betrag(e250["erstmals_bis_hoehe"]), utc_lang(e250["erstmals_utc"])))
+            else:
+                pendel = ("<p>Block times have not settled near 25 s yet, counted. %s The interval does not "
+                          "contain the 25 s target.</p>" % satz_l)
+        elif e.get("eingependelt_ab_block"):
             pendel = ("<p>Block times settled near 25 s after %s blocks, about %s hours after the "
                       "first NU7 block, counted%s.</p>"
                       % (betrag(e["bloecke_bis_eingependelt"]), zahl1(e["stunden_bis_eingependelt"]),
@@ -973,16 +990,18 @@ def zcash_mainnet_teile(st):
         # unsere schaetzungen gegen die gezaehlte kopfzeit, aus dem track record
         tr_ = [x for x in lies_track_record() if x["art"] == "estimate" and x.get("result")
                and "3,543,405" in x["subject"]]
+        schaetz = ""
         if tr_:
-            teile_ = ["our estimate as of %s was %s" % (lang(x["estimate"]["as_of"]), abstand_text(x["deviation"]))
+            teile_ = ["%s (as of %s)" % (abstand_text(x["deviation"]), lang(x["estimate"]["as_of"]))
                       for x in tr_]
             imband = sum(x["status"] == "in band" for x in tr_)
-            pendel += ("<p>Against the counted header time of block 3,543,405 (ZIP 259), %s. %s inside their 90%% "
-                       "band, see our %s.</p>"
-                       % (", and ".join(teile_),
-                          ("Both lay" if len(tr_) == 2 else "All lay") if imband == len(tr_)
-                          else "%d of %d lay" % (imband, len(tr_)),
-                          a("/track-record", "track record")))
+            schaetz = ("\n<section id=\"estimates-scored\"><h2>How close were our estimates?</h2>\n"
+                       "<p>Against the counted header time of block 3,543,405 (ZIP 259), our estimates were %s, "
+                       "%s inside their 90%% band, see our %s.</p>\n%s\n</section>"
+                       % (" and ".join(teile_),
+                          ("both" if len(tr_) == 2 else "all") if imband == len(tr_)
+                          else "%d of %d" % (imband, len(tr_)),
+                          a("/track-record", "track record"), rw.verfahren_html(["PH-M-001", "PH-M-006"])))
         abschnitte = """<section id="after-activation"><h2>First counted numbers after activation</h2>
 <p>%s Up to %s we counted %s intervals on mainnet after NU7, with a mean of %s s and a median of %s s, against %s s for an ideal 25 s chain, computed.</p>
 %s<div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th>%s<th scope="col">Computed at 25 s</th></tr></thead><tbody>
@@ -1001,7 +1020,7 @@ def zcash_mainnet_teile(st):
                  zahl1(g["p90_s"]), un[1][2], zahl1(b["p90_s"]), zahl1(g["p99_s"]), un[1][3], zahl1(b["p99_s"]),
                  betrag(g["laengste_luecke_s"]), un[1][4], betrag(b["laengste_luecke_s"]),
                  betrag(nach["bereich"]["von_hoehe"]), betrag(nach["bereich"]["bis_hoehe"]), stand_text,
-                 un[2], rw.verfahren_html(["PH-M-001"]))
+                 un[2], rw.verfahren_html(["PH-M-001"])) + schaetz
         faq_akt = ("It activated at block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. "
                    "We counted that block at %s." % utc_lang(erster)) if erster else None
         faq_zeit = (" On mainnet after NU7 we counted a median of %s s over %s intervals up to %s."
