@@ -9,7 +9,8 @@ nie gedruckt, auch nicht in Fehlermeldungen.
 
 Inhalt: ein gezaehlter Wert mit Vergleich zur Vorwoche oder zum
 Erwartungswert, eine Zeile Deutung, Fenster in UTC, "method on pulsehawk.io".
-Grafik 1600 x 900 mit Fuss "Data from PulseHawk", im Wechsel zwei Layouts
+Grafik 1600 x 900 im Stil aus ph_stil.py (Inter, Falke oben mittig, Fuss
+"Data from PulseHawk · pulsehawk.io"), im Wechsel zwei Layouts
 (Verteilung der Blockabstaende, Verlauf) nach der Paritaet der ISO-Woche.
 
 Textregeln (Abbruch bei Verstoss, vor jedem Senden geprueft): alles klein,
@@ -228,39 +229,20 @@ def deutung(rows, ziel_s, alt_ziel_s, kette, ende_ts, wunsch="auto", ohne_vorwoc
 
 
 # ------------------------------------------------------------------ grafik
-FARBE = {"bg": "#080B0F", "txt": "#F2F5F4", "dim": "#A9B7B4", "teal": "#49EACB", "linie": "#1C2228",
-         "zweit": "#F2B84B"}
+# Stil aus ph_stil.py (Ben, 06. und 07.11.2026): Inter, filigran, Tuerkis nur
+# fuer die gezaehlten Werte, berechnete Werte grau gestrichelt, Falke oben mittig.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ph_stil as STIL  # noqa: E402
+
+FARBE = {"bg": STIL.FARBE["grund"], "txt": STIL.FARBE["text"], "dim": STIL.FARBE["neben"],
+         "teal": STIL.FARBE["tuerkis"], "linie": STIL.FARBE["linie"], "zweit": STIL.FARBE["neben"]}
 
 
 def grafik(pfad, titel, untertitel, zeichne):
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    fig = plt.figure(figsize=(16, 9), dpi=100, facecolor=FARBE["bg"])
-    ax = fig.add_axes([0.07, 0.17, 0.88, 0.62], facecolor=FARBE["bg"])
-    fig.text(0.07, 0.91, titel, color=FARBE["txt"], fontsize=30, fontweight="bold")
-    fig.text(0.07, 0.855, untertitel, color=FARBE["dim"], fontsize=17)
+    # Kleinschreibung (ph_stil, Ben 06.11.2026), auch wenn der Aufrufer gross schreibt
+    fig, ax = STIL.mpl_figur(titel.lower(), untertitel.lower())
     zeichne(ax)
-    for s in ax.spines.values():
-        s.set_color(FARBE["linie"])
-    ax.tick_params(colors=FARBE["dim"], labelsize=14)
-    ax.xaxis.label.set_color(FARBE["dim"])
-    ax.yaxis.label.set_color(FARBE["dim"])
-    ax.grid(color=FARBE["linie"], linewidth=1)
-    ax.set_axisbelow(True)
-    leg = ax.get_legend()
-    if leg:
-        leg.get_frame().set_facecolor(FARBE["bg"])
-        leg.get_frame().set_edgecolor(FARBE["linie"])
-        for t in leg.get_texts():
-            t.set_color(FARBE["txt"])
-    fig.text(0.07, 0.045, "Data from PulseHawk", color=FARBE["teal"], fontsize=16)
-    fig.text(0.95, 0.045, "pulsehawk.io", color=FARBE["dim"], fontsize=16, ha="right")
-    fig.savefig(pfad, facecolor=FARBE["bg"])
-    plt.close(fig)
-    from PIL import Image
-    with Image.open(pfad) as im:
-        assert im.size == (1600, 900), f"grafik hat {im.size}, erwartet 1600x900"
+    STIL.mpl_fertig(fig, ax, pfad)
 
 
 def zeichne_verteilung(abstaende, ziel_s, kette):
@@ -269,14 +251,15 @@ def zeichne_verteilung(abstaende, ziel_s, kette):
         breite = max(1, round(obergrenze / 60))
         kanten = list(range(0, int(obergrenze) + breite, breite))
         ax.hist([a for a in abstaende if 0 <= a <= kanten[-1]], bins=kanten, color=FARBE["teal"],
-                alpha=0.85, label="counted intervals")
+                alpha=0.9, rwidth=0.72, label="counted intervals")
         n = len(abstaende)
         xs = [k + breite / 2 for k in kanten[:-1]]
         ys = [n * (math.exp(-(x - breite / 2) / ziel_s) - math.exp(-(x + breite / 2) / ziel_s)) for x in xs]
-        ax.plot(xs, ys, color=FARBE["zweit"], linewidth=3, label=f"ideal {kette} chain")
-        ax.set_xlabel("seconds between blocks", fontsize=15)
-        ax.set_ylabel("blocks", fontsize=15)
-        ax.legend(fontsize=14)
+        ax.plot(xs, ys, color=FARBE["zweit"], linewidth=STIL.mpl_linie(), linestyle=(0, (4, 3)),
+                label=f"ideal {kette} chain, computed")
+        ax.set_xlabel("seconds between blocks")
+        ax.set_ylabel("blocks")
+        ax.legend(loc="upper right")
     return z
 
 
@@ -306,26 +289,25 @@ def zeichne_verlauf(tage, mediane, anzahl, _weg, ziel_s, kette):
     ideal = ziel_s * math.log(2)
 
     def z(ax):
-        ax.bar(range(len(tage)), mediane, color=FARBE["teal"], alpha=0.85, label="counted median per utc day")
-        ax.axhline(ideal, color=FARBE["zweit"], linewidth=3, label=f"median of an ideal {kette} chain")
-        if len(tage) > 16:
+        ax.bar(range(len(tage)), mediane, color=FARBE["teal"], alpha=0.9, width=0.56,
+               label="counted median per utc day")
+        ax.axhline(ideal, color=FARBE["zweit"], linewidth=STIL.mpl_linie(), linestyle=(0, (4, 3)),
+                   label=f"median of an ideal {kette} chain, computed")
+        if len(tage) > 8:
             # Mainnet 23.10.2026: 34 Tage, Beschriftungen liefen ineinander. Nur
             # jeder k-te Tag, die Blockzahl einmal als typischer Wert je Tag.
-            k = math.ceil(len(tage) / 12)
+            # Mit Inter 34 px passen hoechstens 8 Beschriftungen (07.11.2026).
+            k = math.ceil(len(tage) / 8)
             ax.set_xticks(range(0, len(tage), k))
-            ax.set_xticklabels(tage[::k], fontsize=12)
-            ax.set_xlabel(f"utc day, typically {statistics.median(anzahl):,.0f} blocks counted per day", fontsize=13)
-        elif len(tage) > 8:  # sonst laufen die Beschriftungen ineinander
-            ax.set_xticks(range(len(tage)))
-            ax.set_xticklabels([f"{t}\n{n:,}" for t, n in zip(tage, anzahl)], fontsize=11)
-            ax.set_xlabel("utc day and blocks counted that day", fontsize=13)
+            ax.set_xticklabels(tage[::k])
+            ax.set_xlabel(f"utc day, typically {statistics.median(anzahl):,.0f} blocks counted per day")
         else:
             ax.set_xticks(range(len(tage)))
-            ax.set_xticklabels([f"{t}\n{n:,} blocks" for t, n in zip(tage, anzahl)], fontsize=12)
-        ax.set_ylabel("seconds", fontsize=15)
+            ax.set_xticklabels([f"{t}\n{n:,} blocks" for t, n in zip(tage, anzahl)])
+        ax.set_ylabel("seconds")
         # Platz ueber den Balken, damit die Legende nichts verdeckt
-        ax.set_ylim(0, max(max(mediane), ideal) * 1.35)
-        ax.legend(fontsize=14, loc="upper right", ncol=2)
+        ax.set_ylim(0, max(max(mediane), ideal) * 1.6)
+        ax.legend(loc="upper right", ncol=2)
     return z
 
 
