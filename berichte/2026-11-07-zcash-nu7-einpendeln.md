@@ -68,3 +68,14 @@ Siehe die Zeile zum Merge unten. Keine Workflows, kein deploy, kein c2, kein Sec
 ## Was Ben tun muss
 
 Nichts. Die Abnahme auf pulsehawk.io folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme (7.11.2026)
+
+- **Merge:** PR #70 per Squash, Merge-Commit `d2657db`, Branch gelöscht.
+- **Abnahme auf pulsehawk.io:** /zcash-nu7 und /sitemap.xml sind live byte-gleich mit dem Bau aus `d2657db`.
+- **Im Browser bei 390 und 1440 px:**
+  - "In short", "First counted numbers after activation" mit "Block times have settled near 25 s, counted" und 24.82 s, 21.84 bis 27.80 s;
+  - "How close were our estimates?";
+  - kein waagerechtes Scrollen.
+- **Screenshots:** sechs Live-Ausschnitte (`*-live.jpg`) in `berichte/2026-11-07-zcash-nu7-einpendeln/`.
+- **Tägliche Läufe beendet:** Das Kriterium ist erfüllt. Es ist kein weiterer Lauf geplant.
