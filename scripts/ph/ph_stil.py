@@ -17,8 +17,9 @@ Vorgaben
      Farbe nur wenn noetig und gedaempft.
   4. Diagramme: Linien 1,5 px, Band als Flaeche mit etwa 6 % Deckkraft ohne
      Kasten, Punkte 6 px, keine dicken Rahmen.
-  5. Falke in Tuerkis #49EACB oben mittig, etwa 56 px (Ben, 07.11.2026),
-     keine grosse Wortmarke. Fuss "Data from PulseHawk · pulsehawk.io" klein
+  5. Falke in Tuerkis #49EACB oben rechts, etwa 48 px, auf Hoehe der ersten
+     Textzeile (Kicker), rechter Rand gleich dem Textrand 96 px (Ben,
+     07.11.2026, vorher oben mittig), keine grosse Wortmarke. Fuss "Data from PulseHawk · pulsehawk.io" klein
      unten. Der Falke ist die Marke und zaehlt nicht als das eine tuerkise
      Element der Daten.
   6. Kleinschreibung, Textregeln und Zahlen aus dem Bericht bleiben.
@@ -72,7 +73,7 @@ LINIE_PX = 1                  # Achsen, Trennlinien
 DIAGRAMM_LINIE_PX = 1.5       # Linien im Diagramm
 BAND_DECKKRAFT = 0.06
 PUNKT_PX = 6                  # Durchmesser
-FALKE_PX = 56
+FALKE_PX = 48
 FUSS = "Data from PulseHawk · pulsehawk.io"
 FORMAT = {"hoch": (1080, 1350), "quer": (1600, 900)}
 
@@ -92,6 +93,12 @@ def schrift_css():
     return "\n".join(teile)
 
 
+def falke_oben():
+    """Oberkante des Falken, mittig zur ersten Zeile (Kicker, Schrift klein, Zeilenhoehe 1.35)."""
+    zeile = SCHRIFT["klein"][0] * 1.35
+    return round(RAND + (zeile - FALKE_PX) / 2, 1)
+
+
 def basis_css(breite, hoehe, skala=1.0):
     F, S = FARBE, SCHRIFT
     return f"""{schrift_css()}
@@ -101,7 +108,10 @@ html,body {{ width:{round(breite * skala)}px; height:{round(hoehe * skala)}px; b
          transform:scale({skala:.8f}); transform-origin:0 0; padding:{RAND}px;
          font-family:'Inter',sans-serif; font-weight:400; font-feature-settings:'tnum' 1, 'cv11' 1;
          -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; }}
-.falke {{ width:{FALKE_PX}px; height:{FALKE_PX}px; object-fit:contain; display:block; margin:0 auto; flex:none; }}
+.karte {{ position:relative; }}
+.falke {{ position:absolute; right:{RAND}px; top:{falke_oben()}px; width:{FALKE_PX}px; height:{FALKE_PX}px;
+          object-fit:contain; display:block; }}
+.kicker {{ padding-right:{FALKE_PX + 24}px; }}
 .titel {{ font-size:{S["titel"][0]}px; font-weight:{S["titel"][1]}; letter-spacing:-0.5px; line-height:1.15; }}
 .zahl {{ font-size:{S["zahl"][0]}px; font-weight:{S["zahl"][1]}; letter-spacing:-4px; line-height:1.0; color:{F["text"]}; }}
 .unter {{ font-size:{S["unter"][0]}px; font-weight:{S["unter"][1]}; color:{F["neben"]}; line-height:1.25; }}
@@ -112,7 +122,9 @@ svg text {{ font-family:'Inter',sans-serif; font-feature-settings:'tnum' 1; }}
 
 
 def seite(inhalt, breite=1080, hoehe=1350, skala=1.0, extra_css=""):
-    """Ganze Seite: Falke oben mittig, Inhalt, Fuss unten."""
+    """Ganze Seite: Falke oben rechts auf Hoehe des Kickers, Inhalt, Fuss unten.
+    Die erste Zeile des Inhalts ist der Kicker (class "klein kicker"), ohne
+    Abstand nach oben, damit er auf der Hoehe des Falken steht."""
     return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 {basis_css(breite, hoehe, skala)}
 {extra_css}
@@ -250,7 +262,7 @@ def vorschau(png, ziel, breite_feed=390):
 # bei 100 dpi ist 1 px = 0.72 pt.
 SCHRIFT_QUER = {"titel": (60, 400), "unter": (38, 400), "achse": (34, 400), "legende": (34, 400),
                 "fuss": (32, 400)}
-FALKE_QUER_PX = 64
+FALKE_QUER_PX = 56
 
 
 def falke_farbe():
@@ -281,7 +293,7 @@ def mpl_figur(titel, untertitel, breite=1600, hoehe=900, achse_unten_px=118):
     import matplotlib.pyplot as plt
     F, T = FARBE, SCHRIFT_QUER
     fig = plt.figure(figsize=(breite / 100, hoehe / 100), dpi=100, facecolor=F["grund"])
-    y_titel = RAND + FALKE_QUER_PX + 26                 # oberkante titel, px von oben
+    y_titel = RAND                                       # oberkante titel, px von oben
     fig.text(RAND / breite, 1 - y_titel / hoehe, titel, color=F["text"], va="top",
              fontproperties=mpl_schrift("titel"))
     y_unter = y_titel + T["titel"][0] * 1.25
@@ -336,7 +348,9 @@ def mpl_fertig(fig, ax, pfad, breite=1600, hoehe=900):
         im = im.convert("RGBA")
         f = f.convert("RGBA")
         f = f.resize((round(f.width * FALKE_QUER_PX / f.height), FALKE_QUER_PX), Image.LANCZOS)
-        im.alpha_composite(f, ((breite - f.width) // 2, RAND))
+        # oben rechts, rechter Rand gleich dem Textrand, mittig zur Titelzeile
+        mitte = RAND + SCHRIFT_QUER["titel"][0] * 0.62
+        im.alpha_composite(f, (breite - RAND - f.width, round(mitte - f.height / 2)))
         im.convert("RGB").save(pfad)
     with Image.open(pfad) as im:
         assert im.size == (breite, hoehe), f"grafik hat {im.size}, erwartet {breite}x{hoehe}"
@@ -361,7 +375,7 @@ def selbsttest():
     ok("querformat nichts ueber 500, nichts unter 30", all(30 <= p and w <= GEWICHT_MAX
                                                          for p, w in SCHRIFT_QUER.values()))
     ok("falke da und tuerkis", os.path.exists(FALKE) and falke_farbe() == FARBE["tuerkis"].lower())
-    ok("falke 56 px", FALKE_PX == 56)
+    ok("falke 48 px", FALKE_PX == 48)
     ok("nichts ueber 500", max(w for _, w in SCHRIFT.values()) <= GEWICHT_MAX)
     ok("zahl hoechstens 160 und light", SCHRIFT["zahl"] == (160, 300))
     ok("keine schrift unter 30", min(p for p, _ in SCHRIFT.values()) >= SCHRIFT_MIN_PX)
