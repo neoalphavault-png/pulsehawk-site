@@ -962,8 +962,8 @@ def zcash_mainnet_teile(st):
             l_ = e250["letzte"]
             satz_l = ("The mean of the last %d intervals, up to block %s at %s, was %s s, 95%% "
                       "interval %s to %s s, counted."
-                      % (e250["fenster"], betrag(l_["bis_hoehe"]), utc_lang(l_["bis_utc"]), zahl1(l_["mittel"]),
-                         zahl1(l_["intervall"][0]), zahl1(l_["intervall"][1])))
+                      % (e250["fenster"], betrag(l_["bis_hoehe"]), utc_lang(l_["bis_utc"]), "%.2f" % l_["mittel"],
+                         "%.2f" % l_["intervall"][0], "%.2f" % l_["intervall"][1]))
             if l_["drin"]:
                 pendel = ("<p>Block times have settled near 25 s, counted. %s The interval contains 25 s, "
                           "first so up to block %s at %s.</p>"

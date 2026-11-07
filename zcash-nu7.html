@@ -60,7 +60,7 @@
    "description": "Zcash NU7 activated at block 3,543,405 on 6 November 2026 and cut the block time from 75 s to 25 s. First mainnet numbers and testnet block times, counted.",
    "url": "https://pulsehawk.io/zcash-nu7",
    "datePublished": "2026-10-18T06:00:00+00:00",
-   "dateModified": "2026-11-06T06:00:00+00:00",
+   "dateModified": "2026-11-07T06:00:00+00:00",
    "inLanguage": "en",
    "author": {
     "@id": "https://pulsehawk.io/#org"
@@ -116,7 +116,7 @@
      "name": "What is the Zcash block time after NU7?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "The block target spacing drops from 75 s to 25 s with NU7, per ZIP 218. On the testnet after NU7 we counted a mean of 23.68 s and a median of 17.0 s over 49,202 intervals, 4 to 18 October 2026. On mainnet after NU7 we counted a median of 25.0 s over 250 intervals up to 6 November 2026, 05:13 UTC."
+      "text": "The block target spacing drops from 75 s to 25 s with NU7, per ZIP 218. On the testnet after NU7 we counted a mean of 23.68 s and a median of 17.0 s over 49,202 intervals, 4 to 18 October 2026. On mainnet after NU7 we counted a median of 17.0 s over 4,628 intervals up to 7 November 2026, 11:48 UTC."
      }
     },
     {
@@ -166,17 +166,17 @@
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Zcash NU7 block times, expected and counted</span></nav>
 <h1>Zcash NU7 block times, expected and counted</h1>
 <p class="lead">Zcash NU7 cut the block target spacing from 75 s to 25 s, per ZIP 218. On mainnet it activated at block 3,543,405, per ZIP 259, with a header time of 6 November 2026, 02:34 UTC, counted. On the testnet after NU7 we counted a median interval of 17.0 s over 49,202 intervals from 4 to 18 October 2026, close to an ideal 25 s chain.</p>
-<section id="in-short" class="facts"><h2>Zcash NU7 in short</h2><dl><div><dt>Mainnet activation height</dt><dd class="fv">3,543,405</dd><dd class="fq">source <a href="https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0" rel="noopener">Zebra 7.0.0</a>, checked 26 October 2026</dd></div><div><dt>NU7 activated on mainnet</dt><dd class="fv">6 November 2026</dd><dd class="fq">counted, block 3,543,405 at 6 November 2026, 02:34 UTC</dd></div><div><dt>Mainnet after NU7, median interval</dt><dd class="fv">25.0 s</dd><dd class="fq">counted over 250 intervals up to 6 November 2026, 05:13 UTC, computed 17.3 s for an ideal 25 s chain</dd></div><div><dt>Block target spacing</dt><dd class="fv">75 s to 25 s</dd><dd class="fq">source <a href="https://github.com/zcash/zips/blob/main/zips/zip-0218.md" rel="noopener">ZIP 218</a></dd></div><div><dt>Testnet after NU7, median interval</dt><dd class="fv">17.0 s</dd><dd class="fq">counted over 49,202 intervals, 4 to 18 October 2026, computed 17.3 s for an ideal 25 s chain</dd></div></dl></section>
+<section id="in-short" class="facts"><h2>Zcash NU7 in short</h2><dl><div><dt>Mainnet activation height</dt><dd class="fv">3,543,405</dd><dd class="fq">source <a href="https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0" rel="noopener">Zebra 7.0.0</a>, checked 26 October 2026</dd></div><div><dt>NU7 activated on mainnet</dt><dd class="fv">6 November 2026</dd><dd class="fq">counted, block 3,543,405 at 6 November 2026, 02:34 UTC</dd></div><div><dt>Mainnet after NU7, median interval</dt><dd class="fv">17.0 s</dd><dd class="fq">counted over 4,628 intervals up to 7 November 2026, 11:48 UTC, computed 17.3 s for an ideal 25 s chain</dd></div><div><dt>Block target spacing</dt><dd class="fv">75 s to 25 s</dd><dd class="fq">source <a href="https://github.com/zcash/zips/blob/main/zips/zip-0218.md" rel="noopener">ZIP 218</a></dd></div><div><dt>Testnet after NU7, median interval</dt><dd class="fv">17.0 s</dd><dd class="fq">counted over 49,202 intervals, 4 to 18 October 2026, computed 17.3 s for an ideal 25 s chain</dd></div></dl></section>
 <section id="after-activation"><h2>First counted numbers after activation</h2>
-<p>Block 3,543,405, the first NU7 block, has a header time of 6 November 2026, 02:34 UTC, counted. Up to 6 November 2026, 05:13 UTC we counted 250 intervals on mainnet after NU7, with a mean of 38.21 s and a median of 25.0 s, against 17.3 s for an ideal 25 s chain, computed.</p>
-<p>Block times had not settled near 25 s within the first 250 blocks, counted. Difficulty 100 blocks in stood at 0.504 of its old level, counted, against 0.333 for a 25 s target at the same hashrate, computed.</p><div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">95% interval</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
-<tr id="mainnet-after-mean"><td class="c">Mean</td><td>38.21 s</td><td>33.58 to 42.84 s</td><td>25 s</td></tr>
-<tr id="mainnet-after-median"><td class="c">Median</td><td>25.0 s</td><td>22 to 31 s</td><td>17.3 s</td></tr>
-<tr><td class="c">p90</td><td>85.1 s</td><td>73 to 104 s</td><td>57.6 s</td></tr>
-<tr><td class="c">p99</td><td>162.6 s</td><td>138 to 249 s</td><td>115.1 s</td></tr>
-<tr><td class="c">Longest gap</td><td>249 s</td><td>single value</td><td>about 152 s</td></tr>
+<p>Block 3,543,405, the first NU7 block, has a header time of 6 November 2026, 02:34 UTC, counted. Up to 7 November 2026, 11:48 UTC we counted 4,628 intervals on mainnet after NU7, with a mean of 25.86 s and a median of 17.0 s, against 17.3 s for an ideal 25 s chain, computed.</p>
+<p>Block times have settled near 25 s, counted. The mean of the last 250 intervals, up to block 3,548,033 at 7 November 2026, 11:48 UTC, was 24.82 s, 95% interval 21.84 to 27.80 s, counted. The interval contains 25 s, first so up to block 3,543,859 at 6 November 2026, 06:46 UTC.</p><div class="tablewrap"><table class="nums"><thead><tr><th scope="col">Block interval</th><th scope="col">Counted</th><th scope="col">95% interval</th><th scope="col">Computed at 25 s</th></tr></thead><tbody>
+<tr id="mainnet-after-mean"><td class="c">Mean</td><td>25.86 s</td><td>25.10 to 26.61 s</td><td>25 s</td></tr>
+<tr id="mainnet-after-median"><td class="c">Median</td><td>17.0 s</td><td>16 to 18 s</td><td>17.3 s</td></tr>
+<tr><td class="c">p90</td><td>60.0 s</td><td>58 to 63 s</td><td>57.6 s</td></tr>
+<tr><td class="c">p99</td><td>122.7 s</td><td>113 to 132 s</td><td>115.1 s</td></tr>
+<tr><td class="c">Longest gap</td><td>249 s</td><td>single value</td><td>about 225 s</td></tr>
 </tbody></table></div>
-<p class="src">Our own header client, Zcash mainnet, blocks 3,543,406 to 3,543,655, as of 6 November 2026.</p>
+<p class="src">Our own header client, Zcash mainnet, blocks 3,543,406 to 3,548,033, as of 7 November 2026.</p>
 <p class="unc">Measurement uncertainty. The interval column is the 95% range of each value, from rank statistics and the standard error. Header times are whole seconds set by the miners.</p>
 <p class="meth">Methods used <a href="/method#ph-m-001">PH-M-001</a>.</p>
 </section>
@@ -242,7 +242,7 @@
 <p class="small">Data from PulseHawk, licensed CC BY 4.0. Cite as PulseHawk (2026), Zcash NU7 testnet block intervals, cut-off 18 October 2026.</p>
 <p class="src" style="overflow-wrap:anywhere">Our own measurement, Zcash NU7 testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC. SHA-256 c1cda3d79a470f5a8e508ebb8ba633dd4f3499eec79b5ecbba96b446dea603b6.</p>
 </section>
-<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>When does Zcash NU7 activate?</h3></summary><p>It activated at block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. We counted that block at 6 November 2026, 02:34 UTC.</p></details><details><summary><h3>What is the Zcash block time after NU7?</h3></summary><p>The block target spacing drops from 75 s to 25 s with NU7, per ZIP 218. On the testnet after NU7 we counted a mean of 23.68 s and a median of 17.0 s over 49,202 intervals, 4 to 18 October 2026. On mainnet after NU7 we counted a median of 25.0 s over 250 intervals up to 6 November 2026, 05:13 UTC.</p></details><details><summary><h3>How long do 500 blocks take after NU7?</h3></summary><p>At exactly 25 s, 500 blocks take 12,500 s, about 3.5 hours, computed. On the testnet after NU7 we counted a median of 3.46 hours for 500 consecutive blocks, 4 to 18 October 2026. At the old 75 s target they take about 10.4 hours, computed.</p></details><details><summary><h3>Did the NU7 testnet hit 25 second blocks?</h3></summary><p>Yes, close to it. Over 49,202 intervals from 4 to 18 October 2026 we counted a mean of 23.68 s against the 25 s target, about 5% faster, and a median of 17.0 s against 17.3 s computed for an ideal 25 s chain.</p></details></section>
+<section class="faq"><h2>Questions we get asked</h2><details><summary><h3>When does Zcash NU7 activate?</h3></summary><p>It activated at block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. We counted that block at 6 November 2026, 02:34 UTC.</p></details><details><summary><h3>What is the Zcash block time after NU7?</h3></summary><p>The block target spacing drops from 75 s to 25 s with NU7, per ZIP 218. On the testnet after NU7 we counted a mean of 23.68 s and a median of 17.0 s over 49,202 intervals, 4 to 18 October 2026. On mainnet after NU7 we counted a median of 17.0 s over 4,628 intervals up to 7 November 2026, 11:48 UTC.</p></details><details><summary><h3>How long do 500 blocks take after NU7?</h3></summary><p>At exactly 25 s, 500 blocks take 12,500 s, about 3.5 hours, computed. On the testnet after NU7 we counted a median of 3.46 hours for 500 consecutive blocks, 4 to 18 October 2026. At the old 75 s target they take about 10.4 hours, computed.</p></details><details><summary><h3>Did the NU7 testnet hit 25 second blocks?</h3></summary><p>Yes, close to it. Over 49,202 intervals from 4 to 18 October 2026 we counted a mean of 23.68 s against the 25 s target, about 5% faster, and a median of 17.0 s against 17.3 s computed for an ideal 25 s chain.</p></details></section>
 <p class="cta"><a href="/contact" class="btn ghost">Request a measurement for your upgrade</a></p>
 </div></main>
 <footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand</div><div><a href="/about">About</a> · <a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a> · <a href="/track-record">Track record</a> · <a href="/corrections">Corrections</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/contact">Contact</a></div></div></footer>

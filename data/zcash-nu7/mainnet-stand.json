@@ -1,15 +1,15 @@
 {
  "hinweis": "Gekuerzte Kopie des Zcash-Mainnet-Stands fuer /zcash-nu7, erzeugt mit scripts/zcash_stand.py. Nicht von Hand aendern, neu holen.",
- "quelle": "eigener Header-Client, Zcash Mainnet, stand-2026-11-06.json",
- "stand": "2026-11-06",
- "abruf_utc": "2026-11-06T05:13:54Z",
+ "quelle": "eigener Header-Client, Zcash Mainnet, aktuell.json, Abruf 2026-11-07T11:49:56Z",
+ "stand": "2026-11-07",
+ "abruf_utc": "2026-11-07T11:49:56Z",
  "nu7_hoehe": 3543405,
  "bereich": {
   "von_hoehe": 3489717,
-  "bis_hoehe": 3543655,
+  "bis_hoehe": 3548033,
   "von_utc": "2026-09-20 06:59:07",
-  "bis_utc": "2026-11-06 05:13:14",
-  "bloecke": 53939
+  "bis_utc": "2026-11-07 11:48:25",
+  "bloecke": 58317
  },
  "pruefungen": [
   "prev-hash-kette",
@@ -56,17 +56,17 @@
   }
  },
  "nach_nu7": {
-  "abstaende": 250,
+  "abstaende": 4628,
   "gezaehlt": {
-   "mittel_s": 38.21,
-   "median_s": 25.0,
-   "p90_s": 85.1,
-   "p99_s": 162.6,
+   "mittel_s": 25.86,
+   "median_s": 17.0,
+   "p90_s": 60.0,
+   "p99_s": 122.7,
    "laengste_luecke_s": 249,
    "laengste_luecke_vor_block": 3543445,
    "laengste_luecke_utc": "2026-11-06 03:11:24",
-   "anteil_ueber_3T_prozent": 13.2,
-   "anteil_ueber_T_ln1000_prozent": 0.8,
+   "anteil_ueber_3T_prozent": 5.25,
+   "anteil_ueber_T_ln1000_prozent": 0.13,
    "negativ": 0
   },
   "berechnet": {
@@ -75,28 +75,32 @@
    "median_s": 17.3,
    "p90_s": 57.6,
    "p99_s": 115.1,
-   "laengste_luecke_s": 152,
+   "laengste_luecke_s": 225,
    "anteil_ueber_3T_prozent": 4.98,
    "anteil_ueber_T_ln1000_prozent": 0.1
   },
   "bereich": {
    "von_hoehe": 3543406,
-   "bis_hoehe": 3543655
+   "bis_hoehe": 3548033
   },
   "erster_nu7_block_utc": "2026-11-06 02:34:02"
  },
  "einpendeln": {
-  "bloecke_nach_nu7": 250,
+  "bloecke_nach_nu7": 4628,
   "fenster": 100,
   "toleranz_prozent": 20,
   "halten_bloecke": 1000,
-  "eingependelt_ab_block": null,
+  "eingependelt_ab_block": 3544439,
+  "bloecke_bis_eingependelt": 1034,
+  "stunden_bis_eingependelt": 8.4,
+  "vorlaeufig": false,
   "schwierigkeit_relativ_zu_vor_nu7": {
    "block_nu7_plus_1": 0.794,
    "block_nu7_plus_10": 0.767,
-   "block_nu7_plus_100": 0.504
+   "block_nu7_plus_100": 0.504,
+   "block_nu7_plus_1000": 0.321
   },
-  "schwierigkeit_spitze_relativ": 0.417,
+  "schwierigkeit_spitze_relativ": 0.35,
   "berechnet_bei_gleicher_hashrate": 0.333
  }
 }
