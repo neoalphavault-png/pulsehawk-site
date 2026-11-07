@@ -1,6 +1,6 @@
 {
- "date": "2026-10-30",
- "count": 1503,
+ "date": "2026-11-07",
+ "count": 1502,
  "rows": [
   {
    "ticker": "MMM",
@@ -2693,16 +2693,6 @@
    ]
   },
   {
-   "ticker": "KVUE",
-   "name": "Kenvue",
-   "wiki": null,
-   "sector": "Consumer Staples",
-   "industry": "Personal Care Products",
-   "indices": [
-    "sp500"
-   ]
-  },
-  {
    "ticker": "KDP",
    "name": "Keurig Dr Pepper",
    "wiki": null,
@@ -3468,6 +3458,16 @@
    "wiki": null,
    "sector": "Energy",
    "industry": "Oil & Gas Exploration & Production",
+   "indices": [
+    "sp500"
+   ]
+  },
+  {
+   "ticker": "OKTA",
+   "name": "Okta, Inc.",
+   "wiki": null,
+   "sector": "Information Technology",
+   "industry": "Application Software",
    "indices": [
     "sp500"
    ]
@@ -6536,7 +6536,7 @@
   },
   {
    "ticker": "FORM",
-   "name": "FormFactor, Inc.",
+   "name": "FormFactor",
    "wiki": null,
    "sector": "Information Technology",
    "industry": "Semiconductor Materials & Equipment",
@@ -6643,6 +6643,17 @@
    "industry": "Education Services",
    "indices": [
     "sp400"
+   ]
+  },
+  {
+   "ticker": "GKOS",
+   "name": "Glaukos",
+   "wiki": null,
+   "sector": "Health Care",
+   "industry": "Health Care Equipment",
+   "indices": [
+    "sp400",
+    "sp600"
    ]
   },
   {
@@ -7611,16 +7622,6 @@
    "wiki": null,
    "sector": "Real Estate",
    "industry": "Health Care REITs",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
-   "ticker": "OKTA",
-   "name": "Okta, Inc.",
-   "wiki": null,
-   "sector": "Information Technology",
-   "industry": "Application Software",
    "indices": [
     "sp400"
    ]
@@ -11236,16 +11237,6 @@
    ]
   },
   {
-   "ticker": "GKOS",
-   "name": "Glaukos Corp.",
-   "wiki": null,
-   "sector": "Health Care",
-   "industry": "Health Care Equipment",
-   "indices": [
-    "sp600"
-   ]
-  },
-  {
    "ticker": "GNL",
    "name": "Global Net Lease, Inc.",
    "wiki": null,
@@ -12546,8 +12537,8 @@
    ]
   },
   {
-   "ticker": "MSGS",
-   "name": "Madison Square Garden Sports Corp.",
+   "ticker": "MSGK",
+   "name": "MSG Knickerbockers Corp.",
    "wiki": null,
    "sector": "Communication Services",
    "industry": "Movies & Entertainment",
@@ -14127,7 +14118,7 @@
   },
   {
    "ticker": "SUPN",
-   "name": "Supernus Pharmaceuticals, Inc.",
+   "name": "Supernus, Inc.",
    "wiki": null,
    "sector": "Health Care",
    "industry": "Pharmaceuticals",

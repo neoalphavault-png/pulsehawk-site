@@ -1,26 +1,26 @@
 {
- "date": "2026-11-06",
+ "date": "2026-11-07",
  "pick": {
-  "ticker": "ECPG",
-  "name": "Encore Capital Group, Inc.",
-  "sector": "Financials",
-  "industry": "Consumer Finance",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
-   "sp600"
+   "sp500"
   ],
-  "mult": 2.9513,
-  "pct": 195.1,
-  "from_1000": 2951,
-  "d": "2026-11-05",
-  "close": 126.17,
-  "d_1y": "2025-11-05",
-  "close_1y": 42.75,
-  "low": 42.75,
-  "high": 126.17,
-  "drawdown_pct": 0.0,
+  "mult": 10.4476,
+  "pct": 944.8,
+  "from_1000": 10448,
+  "d": "2026-11-06",
+  "close": 254.19,
+  "d_1y": "2025-11-06",
+  "close_1y": 24.33,
+  "low": 22.36,
+  "high": 258.38,
+  "drawdown_pct": -8.1,
   "verified": {
    "source": "tiingo",
-   "mult": 2.9513,
+   "mult": 10.4476,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,30 +28,26 @@
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 11,
-  "sp500_tripled": 4
+  "sp500_doubled": 6,
+  "sp500_tripled": 2
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 8.2,
-   "d": "2026-11-05",
-   "d_1y": "2025-11-05"
+   "pct": 9.7,
+   "d": "2026-11-06",
+   "d_1y": "2025-11-06"
   },
   "gold": {
-   "pct": 2.4,
-   "d": "2026-11-05",
-   "d_1y": "2025-11-05"
+   "pct": 1.8,
+   "d": "2026-11-06",
+   "d_1y": "2025-11-06"
   }
  },
- "candidates_total": 38,
+ "candidates_total": 28,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 10.8792
-  },
-  {
-   "ticker": "LITE",
-   "mult": 3.3274
+   "mult": 10.4476
   },
   {
    "ticker": "ECPG",
@@ -70,6 +66,10 @@
    "mult": 2.7921
   },
   {
+   "ticker": "GKOS",
+   "mult": 2.7437
+  },
+  {
    "ticker": "RNG",
    "mult": 2.7217
   },
@@ -78,23 +78,14 @@
    "mult": 2.6642
   },
   {
-   "ticker": "GKOS",
-   "mult": 2.6079
-  },
-  {
    "ticker": "SN",
    "mult": 2.5889
-  }
- ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (5.80%)"
   },
   {
-   "ticker": "LITE",
-   "reason": "quellen weichen ab (34.19%)"
+   "ticker": "XNCR",
+   "mult": 2.3695
   }
  ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
