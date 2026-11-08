@@ -23,6 +23,11 @@ Vorgaben
      unten. Der Falke ist die Marke und zaehlt nicht als das eine tuerkise
      Element der Daten.
   6. Kleinschreibung, Textregeln und Zahlen aus dem Bericht bleiben.
+  7. Zeitabstaende immer als Minuten und Sekunden ("6 min 56 s"), nie als
+     Dezimalminuten (Ben, 08.11.2026: "12.2 min" wurde als 12 min 20 s
+     gelesen). dauer() formatiert, pruefen_daten() meldet Dezimalminuten.
+  8. Eine Aussage in Worten, keine Achse, die man erst lesen muss (Ben,
+     08.11.2026, fuer die Karten nu7_karte und report_karte).
 
 Zwei Wege: HTML-Karten (seite, rendern, pruefen) fuer das Hochformat und
 matplotlib (mpl_figur, mpl_fertig) fuer die Querformat-Entwuerfe aus
@@ -76,6 +81,21 @@ PUNKT_PX = 6                  # Durchmesser
 FALKE_PX = 48
 FUSS = "Data from PulseHawk · pulsehawk.io"
 FORMAT = {"hoch": (1080, 1350), "quer": (1600, 900)}
+
+
+def dauer(sekunden):
+    """Zeitabstand als "6 min 56 s", "45 s" oder "1 h 2 min 3 s", ganze Sekunden, ohne Vorzeichen."""
+    s = int(round(abs(sekunden)))
+    h, rest = divmod(s, 3600)
+    m, sek = divmod(rest, 60)
+    if h:
+        return f"{h} h {m} min {sek} s"
+    if m:
+        return f"{m} min {sek} s"
+    return f"{sek} s"
+
+
+DEZIMALMINUTEN = re.compile(r"\d+[.,]\d+\s*min\b")
 
 
 def b64(pfad):
@@ -239,6 +259,8 @@ def pruefen_daten(d, breite, hoehe):
     if any(c.isupper() for c in d["sicht"].replace(FUSS, "")):
         k.append("grossbuchstaben ausserhalb des fusses")
     k += zeichen_pruefen(d["sicht"].replace(FUSS, ""))
+    for m in DEZIMALMINUTEN.findall(d["sicht"]):
+        k.append("dezimalminuten %r, als min und s schreiben" % m)
     for w in ("now", "live"):
         if (" %s " % w) in (" " + d["sicht"].lower().replace("\n", " ") + " "):
             k.append("wort %r" % w)
@@ -378,12 +400,16 @@ def selbsttest():
     ok("falke 48 px", FALKE_PX == 48)
     ok("nichts ueber 500", max(w for _, w in SCHRIFT.values()) <= GEWICHT_MAX)
     ok("zahl hoechstens 160 und light", SCHRIFT["zahl"] == (160, 300))
+    ok("dauer 416 s", dauer(416) == "6 min 56 s")
+    ok("dauer -730 s", dauer(-730) == "12 min 10 s")
+    ok("dauer 45 s", dauer(45) == "45 s")
+    ok("dauer 3723 s", dauer(3723) == "1 h 2 min 3 s")
     ok("keine schrift unter 30", min(p for p, _ in SCHRIFT.values()) >= SCHRIFT_MIN_PX)
-    gut = {"texte": [{"txt": "6.9 min", "px": 160, "gewicht": 300, "familie": "Inter", "zahl": True,
+    gut = {"texte": [{"txt": "6 min 56 s", "px": 160, "gewicht": 300, "familie": "Inter", "zahl": True,
                       "l": 96, "r": 600, "o": 300, "u": 460}],
            "tuerkis": ["gezaehlt", "gezaehlt"], "formen": [{"tag": "line", "strich": 1.5, "stroke": "x", "r": 0,
                                                             "fop": 1, "fill": ""}],
-           "sicht": "6.9 min\n" + FUSS, "fonts": ["300", "400", "500"]}
+           "sicht": "6 min 56 s\n" + FUSS, "fonts": ["300", "400", "500"]}
     ok("gute karte ohne klage", pruefen_daten(gut, 1080, 1350) == [])
     schlecht = json.loads(json.dumps(gut))
     schlecht["texte"][0].update(px=220, gewicht=800, l=40)
@@ -391,12 +417,12 @@ def selbsttest():
     schlecht["formen"] += [{"tag": "rect", "strich": 2, "stroke": "rgb(1,1,1)", "r": 0, "fop": 0.15, "fill": ""},
                            {"tag": "line", "strich": 9, "stroke": "x", "r": 0, "fop": 1, "fill": ""},
                            {"tag": "circle", "strich": 0, "stroke": "none", "r": 14, "fop": 1, "fill": ""}]
-    schlecht["sicht"] = "Zcash NU7: now\n"
+    schlecht["sicht"] = "Zcash NU7: now\n2 nov 5.8 min early\n"
     k = pruefen_daten(schlecht, 1080, 1350)
     schlecht["texte"].append(dict(schlecht["texte"][0], txt="drueber", zahl=False, px=40, gewicht=400))
     k = pruefen_daten(schlecht, 1080, 1350)
     for teil in ("ueberlappen", "staerke", "ueber 160", "rand", "tuerkis", "rahmen", "deckkraft", "9.0 px", "punkt", "fuss",
-                 "grossbuchstaben", "verbotenes zeichen", "'now'"):
+                 "grossbuchstaben", "verbotenes zeichen", "'now'", "dezimalminuten"):
         ok("schlechte karte faellt auf: %s" % teil, any(teil in x for x in k))
     print("")
     print("%d fehler" % len(fehler) if fehler else "alle testfaelle bestanden")
