@@ -187,7 +187,10 @@ JS_MESSEN = """const {chromium} = require('playwright');
             l:q.left, r:q.right, o:q.top, u:q.bottom, zahl:e.classList.contains('zahl')}); });
   const tuerkis=[]; document.querySelectorAll('.karte *').forEach(e => { const s=getComputedStyle(e);
     const f=[s.color, s.fill, s.stroke, s.backgroundColor].join(' ');
-    if (f.includes('73, 234, 203')) tuerkis.push((e.closest('[data-rolle]')||{dataset:{}}).dataset.rolle||e.tagName); });
+    if (!f.includes('73, 234, 203')) return;
+    const vorn=[s.color, s.fill, s.stroke].join(' ').includes('73, 234, 203'); const t=s.backgroundColor.split(','); const a=t.length===4 ? parseFloat(t[3]) : undefined;
+    if (!vorn && a !== undefined && a <= 0.1) { tuerkis.push('band_blass'); return; }
+    tuerkis.push((e.closest('[data-rolle]')||{dataset:{}}).dataset.rolle||e.tagName); });
   const formen=[]; document.querySelectorAll('svg line, svg rect, svg circle, svg path, svg polyline').forEach(e => {
     const s=getComputedStyle(e); formen.push({tag:e.tagName, strich:parseFloat(s.strokeWidth)||0, stroke:s.stroke,
       r:parseFloat(e.getAttribute('r')||0), fop:parseFloat(s.fillOpacity), fill:s.fill}); });
@@ -241,7 +244,9 @@ def pruefen_daten(d, breite, hoehe):
             a, b = tx[i], tx[j]
             if a["l"] < b["r"] - 1 and b["l"] < a["r"] - 1 and a["o"] < b["u"] - 4 and b["o"] < a["u"] - 4:
                 k.append("texte ueberlappen, %r und %r" % (a["txt"], b["txt"]))
-    rollen = {r for r in d["tuerkis"]}
+    # Blass tuerkiser Hintergrund fuer ein 90%-Band ist erlaubt (Ben 09.11.2026, Streifen der NU7-Karte),
+    # nur als Flaeche mit hoechstens 10 % Deckkraft. Kraeftiges Tuerkis bleibt dem einen gezaehlten Element.
+    rollen = {r for r in d["tuerkis"]} - {"band_blass"}
     if len(rollen) > 1 or (rollen and rollen != {"gezaehlt"}):
         k.append("tuerkis auf mehr als einem element: %s" % sorted(rollen))
     for f in d["formen"]:
@@ -416,6 +421,7 @@ def selbsttest():
     ok("gute karte ohne klage", pruefen_daten(gut, 1080, 1350) == [])
     schlecht = json.loads(json.dumps(gut))
     schlecht["texte"][0].update(px=220, gewicht=800, l=40)
+    ok("blasses band neben der zahl erlaubt", not [x for x in pruefen_daten(dict(gut, tuerkis=gut["tuerkis"] + ["band_blass"]), 1080, 1350) if "tuerkis" in x])
     schlecht["tuerkis"].append("band")
     schlecht["formen"] += [{"tag": "rect", "strich": 2, "stroke": "rgb(1,1,1)", "r": 0, "fop": 0.15, "fill": ""},
                            {"tag": "line", "strich": 9, "stroke": "x", "r": 0, "fop": 1, "fill": ""},
