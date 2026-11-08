@@ -95,6 +95,7 @@ def dauer(sekunden):
     return f"{sek} s"
 
 
+METHODEN_ID = re.compile(r"\bPH-M-\d{3}\b")
 DEZIMALMINUTEN = re.compile(r"\d+[.,]\d+\s*min\b")
 
 
@@ -256,7 +257,8 @@ def pruefen_daten(d, breite, hoehe):
         k.append("schriften geladen %s" % d["fonts"])
     if FUSS not in d["sicht"]:
         k.append("fuss %r fehlt" % FUSS)
-    if any(c.isupper() for c in d["sicht"].replace(FUSS, "")):
+    # Methoden-IDs (PH-M-001 bis PH-M-006) sind feste Bezeichner und bleiben gross (Ben 08.11.2026)
+    if any(c.isupper() for c in METHODEN_ID.sub("", d["sicht"].replace(FUSS, ""))):
         k.append("grossbuchstaben ausserhalb des fusses")
     k += zeichen_pruefen(d["sicht"].replace(FUSS, ""))
     for m in DEZIMALMINUTEN.findall(d["sicht"]):
@@ -404,6 +406,7 @@ def selbsttest():
     ok("dauer -730 s", dauer(-730) == "12 min 10 s")
     ok("dauer 45 s", dauer(45) == "45 s")
     ok("dauer 3723 s", dauer(3723) == "1 h 2 min 3 s")
+    ok("methoden-id darf gross bleiben", METHODEN_ID.sub("", "method PH-M-006.") == "method .")
     ok("keine schrift unter 30", min(p for p, _ in SCHRIFT.values()) >= SCHRIFT_MIN_PX)
     gut = {"texte": [{"txt": "6 min 56 s", "px": 160, "gewicht": 300, "familie": "Inter", "zahl": True,
                       "l": 96, "r": 600, "o": 300, "u": 460}],
