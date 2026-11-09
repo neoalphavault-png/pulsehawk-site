@@ -405,8 +405,24 @@ def schaetz_text(s):
 
 
 def dauer_text(s):
-    h, m = divmod(round(s / 60), 60)
-    return ("%d h %d min" % (h, m)) if h else ("%d min" % m)
+    """in h, min und s, nie gerundet oder als dezimalminuten (Ben, 9.11.2026)."""
+    s = int(s)
+    h, rest = divmod(s, 3600)
+    m, sek = divmod(rest, 60)
+    teile = (["%d h" % h] if h else []) + (["%d min" % m] if h or m else []) + ["%d s" % sek]
+    return " ".join(teile)
+
+
+def richtung_text(abw):
+    """die luecke zur prognose aus sicht des blocks, in min und s (Ben, 9.11.2026)."""
+    try:
+        d = int(abw)
+    except (TypeError, ValueError):
+        return ""
+    if d == 0:
+        return " The block came exactly at the forecast."
+    return " A gap of %s s means the block came %s %s than the forecast." % (
+        betrag(d) if d > 0 else "−" + betrag(-d), dauer_text(abs(d)), "later" if d > 0 else "earlier")
 
 
 def anzeige(k, x):
@@ -458,6 +474,21 @@ def body(kopf, w, csv_text):
     teile = ['<section id="in-short" class="facts"><h2>The report in short</h2><dl>%s</dl></section>' % fakten]
     if kopf.get("hinweis"):
         teile.append("<p>%s</p>" % E(kopf["hinweis"]))
+    # einschraenkungen der messung, wortgleich mit dem README der daten in
+    # pulsehawk/methods (Ben, 9.11.2026); je kennzahl ein verweis darauf
+    hinweise = kopf.get("hinweise") or []
+    hinweis_je_m = {}
+    for h_ in hinweise:
+        for m_ in h_.get("m", []):
+            hinweis_je_m.setdefault(m_, []).append(h_)
+    if hinweise and w:
+        teile.append('<section id="keep-in-mind"><h2>What should you keep in mind?</h2><ul class="list">%s</ul>'
+                     '<p class="src">As in the README of the data, %s.</p></section>'
+                     % ("".join('<li id="%s"><b>%s</b> %s</li>' % (E(h_["id"]), E(h_["titel"]), E(h_["text"]))
+                                for h_ in hinweise),
+                        '<a href="%s" rel="noopener">%s</a>' % (E(kopf["daten_readme"], quote=True),
+                                                                 "data/%s/README.md" % E(kopf.get("daten_ordner", "")))
+                        if kopf.get("daten_readme") else "in the methods repository"))
     s = kopf["schaetzung"]
     if not w:
         for mid, name, was in METRIKEN:
@@ -481,10 +512,13 @@ def body(kopf, w, csv_text):
                             for z in zeilen_)
             th = "".join('<th scope="col">%s</th>' % x for x in kopfzeile)
             mid = mid or sid[:2].upper()
+            verweis = "".join('<p class="note">%s See <a href="#%s">what to keep in mind</a>.</p>'
+                              % (E(h_["kurz"]), E(h_["id"]))
+                              for h_ in hinweis_je_m.get(mid, []) if h_.get("kurz"))
             return ('<section id="%s"><h2>%s</h2><div class="tablewrap"><table class="nums"><thead><tr>%s</tr>'
-                    '</thead><tbody>%s</tbody></table></div><p class="src">%s</p>%s'
+                    '</thead><tbody>%s</tbody></table></div><p class="src">%s</p>%s%s'
                     '<p class="unc">Measurement uncertainty, %s</p></section>'
-                    % (sid, h2, th, rows_, fussnote, verfahren_html(VERFAHREN_JE_M[mid]),
+                    % (sid, h2, th, rows_, fussnote, verweis, verfahren_html(VERFAHREN_JE_M[mid]),
                        unsicher or UNSICHER[mid]))
 
         def pi_text(teil):
@@ -567,7 +601,8 @@ def body(kopf, w, csv_text):
             "m7", "M7 First block at the activation height", ("Value", "Result"),
             [("Header time of block %s" % betrag(H), zelle(w, "erster_block_kopfzeit")),
              ("Gap to our forecast", zelle(w, "kopfzeit_minus_schaetzung"))],
-            "Window %s. Our forecast was %s." % (fenster_text(fenster(fw["t_akt"], fw["t_akt"])), schaetz_text(s))))
+            "Window %s. Our forecast was %s.%s" % (fenster_text(fenster(fw["t_akt"], fw["t_akt"])), schaetz_text(s),
+                                                     richtung_text(w["kz"]["kopfzeit_minus_schaetzung"]["wert"]))))
         sha = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
         n_rows = len([1 for _ in csv.DictReader(io.StringIO(csv_text))])
         teile.append(

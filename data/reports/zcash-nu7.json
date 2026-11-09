@@ -1,5 +1,5 @@
 {
- "hinweis_fuer_sitzungen": "Kopfdaten fuer scripts/report_waechter.py. Zahlen erst nach der Aktivierung, CSV unter reports/zcash-nu7.csv, Werte unter werte. Siehe data/reports/README.md.",
+ "hinweis_fuer_sitzungen": "Kopfdaten fuer scripts/report_waechter.py. Werte aus github.com/pulsehawk/methods 0820cde (data/zcash-mainnet-nu7, output/report-v1-zcash-mainnet-nu7.csv), Roh-CSV aus heads.csv.gz und raw/ mit scripts/report_import.py, am 9.11.2026. hinweise wortgleich mit dem README der Daten.",
  "id": "PH-UR-2026-001",
  "typ": "upgrade-report",
  "slug": "zcash-nu7",
@@ -68,11 +68,191 @@
   ]
  },
  "schaetzung": {
-  "zeit_utc": "2026-11-06T02:39:52Z",
-  "datum": "2026-11-02",
-  "band_von_utc": "2026-11-06T00:28:23Z",
-  "band_bis_utc": "2026-11-06T05:00:17Z"
+  "zeit_utc": "2026-11-06T02:40:58Z",
+  "datum": "2026-11-04",
+  "band_von_utc": "2026-11-06T01:14:45Z",
+  "band_bis_utc": "2026-11-06T04:07:28Z"
  },
- "csv": null,
- "werte": null
+ "csv": "reports/zcash-nu7.csv",
+ "werte": {
+  "p50_vor": {
+   "wert": "51.0",
+   "n": "1150"
+  },
+  "p50_vor_modell": {
+   "wert": "52.0",
+   "n": ""
+  },
+  "p90_vor": {
+   "wert": "169.1",
+   "n": "1150"
+  },
+  "p90_vor_modell": {
+   "wert": "172.7",
+   "n": ""
+  },
+  "p99_vor": {
+   "wert": "388.7",
+   "n": "1150"
+  },
+  "p99_vor_modell": {
+   "wert": "345.4",
+   "n": ""
+  },
+  "laengste_luecke_vor": {
+   "wert": "605",
+   "n": "1150"
+  },
+  "luecken_ueber_5x_ziel_vor": {
+   "wert": "13",
+   "n": "1150"
+  },
+  "p50_nach": {
+   "wert": "17.0",
+   "n": "10195"
+  },
+  "p50_nach_modell": {
+   "wert": "17.3",
+   "n": ""
+  },
+  "p90_nach": {
+   "wert": "59.0",
+   "n": "10195"
+  },
+  "p90_nach_modell": {
+   "wert": "57.6",
+   "n": ""
+  },
+  "p99_nach": {
+   "wert": "118.0",
+   "n": "10195"
+  },
+  "p99_nach_modell": {
+   "wert": "115.1",
+   "n": ""
+  },
+  "laengste_luecke_nach": {
+   "wert": "249",
+   "n": "10195"
+  },
+  "luecken_ueber_5x_ziel_nach": {
+   "wert": "81",
+   "n": "10195"
+  },
+  "reorgs_ab_tiefe_2_vor": {
+   "wert": "0",
+   "n": "1150"
+  },
+  "reorgs_tiefe_1_vor": {
+   "wert": "0",
+   "n": "0"
+  },
+  "reorgs_tiefe_2_vor": {
+   "wert": "0",
+   "n": "0"
+  },
+  "reorgs_tiefe_3_plus_vor": {
+   "wert": "0",
+   "n": "0"
+  },
+  "reorg_max_tiefe_vor": {
+   "wert": "0",
+   "n": "0"
+  },
+  "kettenspaltung_dauer_vor": {
+   "wert": "0",
+   "n": "0"
+  },
+  "kettenspaltung_laengste_vor": {
+   "wert": "0",
+   "n": "0"
+  },
+  "reorgs_ab_tiefe_2_nach": {
+   "wert": "0",
+   "n": "10195"
+  },
+  "reorgs_tiefe_1_nach": {
+   "wert": "19",
+   "n": "19"
+  },
+  "reorgs_tiefe_2_nach": {
+   "wert": "0",
+   "n": "19"
+  },
+  "reorgs_tiefe_3_plus_nach": {
+   "wert": "0",
+   "n": "19"
+  },
+  "reorg_max_tiefe_nach": {
+   "wert": "1",
+   "n": "19"
+  },
+  "kettenspaltung_dauer_nach": {
+   "wert": "0",
+   "n": "0"
+  },
+  "kettenspaltung_laengste_nach": {
+   "wert": "0",
+   "n": "0"
+  },
+  "peers_unter_min_protokoll_aktivierung": {
+   "wert": "7.1",
+   "n": "28"
+  },
+  "peers_unter_min_protokoll_aktivierung_plus_24h": {
+   "wert": "33.3",
+   "n": "6"
+  },
+  "peers_unter_min_protokoll_aktivierung_plus_72h": {
+   "wert": "25.0",
+   "n": "8"
+  },
+  "zeit_bis_stabil": {
+   "wert": "13016",
+   "n": "10128"
+  },
+  "erster_block_kopfzeit": {
+   "wert": "2026-11-06 02:34:02",
+   "n": "1"
+  },
+  "kopfzeit_minus_schaetzung": {
+   "wert": "-416",
+   "n": "1"
+  }
+ },
+ "daten_ordner": "zcash-mainnet-nu7",
+ "daten_readme": "https://github.com/pulsehawk/methods/blob/0820cde3507cc778741d828a049b119d125c6b14/data/zcash-mainnet-nu7/README.md",
+ "hinweise": [
+  {
+   "id": "watch-gap",
+   "m": [
+    "M3",
+    "M4"
+   ],
+   "titel": "Our watch hung.",
+   "text": "From about 02:50 to 08:11 UTC on 6 November 2026 the watch saw no new blocks, because the DNS seeds could not be resolved from its host. The block pause alarm in the log from 03:04 to 08:15 UTC comes from that, not from the chain. M1, M2 and M6 come from the heads and are not affected. M3 and M4 come from the watch log and may miss tip switches in those hours.",
+   "kurz": "From about 02:50 to 08:11 UTC on 6 November 2026 our watch saw no new blocks, so this value may miss tip switches in those hours."
+  },
+  {
+   "id": "probes",
+   "m": [
+    "M5"
+   ],
+   "titel": "Probes.",
+   "text": "The peer probes reached 28, 12, 6 and 8 peers. The shares in M5 are shares of these few reachable peers, not of all nodes.",
+   "kurz": "The shares are shares of the few peers our probes reached, not of all nodes."
+  },
+  {
+   "id": "forecast",
+   "m": [
+    "M7"
+   ],
+   "titel": "Forecast.",
+   "text": "The M7 rows use our forecast of 4 November 2026 with its 90% band. Block 3,543,405 came 6 min 56 s earlier than that forecast, inside the band."
+  }
+ ],
+ "kettenspaltung": {
+  "min_peers": 2,
+  "min_tiefe": 2
+ }
 }

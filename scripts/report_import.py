@@ -55,10 +55,47 @@ def szenario_aus_wache(cfg, koepfe, roh):
             "min_protokoll": cfg["min_protokoll"]}
 
 
+# format v1 in github.com/pulsehawk/methods (upgrade_report/report_v1.py, ab
+# 0e5019c) schreibt englische spalten und schluessel (metric,key,value,unit,
+# ...,n). Zuordnung zu den kennzahlen der spezifikation (Ben, 9.11.2026).
+V1_SCHLUESSEL = {}
+for _vn, _de in (("before", "vor"), ("after", "nach")):
+    for _q in ("p50", "p90", "p99"):
+        V1_SCHLUESSEL["%s_%s" % (_q, _vn)] = "%s_%s" % (_q, _de)
+        V1_SCHLUESSEL["%s_%s_model" % (_q, _vn)] = "%s_%s_modell" % (_q, _de)
+    V1_SCHLUESSEL.update({
+        "longest_gap_" + _vn: "laengste_luecke_" + _de,
+        "gaps_above_5x_target_" + _vn: "luecken_ueber_5x_ziel_" + _de,
+        "tip_switches_depth_2_plus_" + _vn: "reorgs_ab_tiefe_2_" + _de,
+        "tip_switches_depth_1_" + _vn: "reorgs_tiefe_1_" + _de,
+        "tip_switches_depth_2_" + _vn: "reorgs_tiefe_2_" + _de,
+        "tip_switches_depth_3_plus_" + _vn: "reorgs_tiefe_3_plus_" + _de,
+        "tip_switch_max_depth_" + _vn: "reorg_max_tiefe_" + _de,
+        "chain_split_duration_" + _vn: "kettenspaltung_dauer_" + _de,
+        "chain_split_longest_" + _vn: "kettenspaltung_laengste_" + _de,
+    })
+V1_SCHLUESSEL.update({
+    "peers_below_min_protocol_activation": "peers_unter_min_protokoll_aktivierung",
+    "peers_below_min_protocol_activation_plus_24h": "peers_unter_min_protokoll_aktivierung_plus_24h",
+    "peers_below_min_protocol_activation_plus_72h": "peers_unter_min_protokoll_aktivierung_plus_72h",
+    "time_to_stable": "zeit_bis_stabil",
+    "first_block_header_time": "erster_block_kopfzeit",
+    "header_time_minus_estimate": "kopfzeit_minus_schaetzung",
+})
+
+
 def werte_aus_metriken(pfad):
-    """wert und n jeder kennzahl, die der report zeigt, als text wie in der datei."""
+    """wert und n jeder kennzahl, die der report zeigt, als text wie in der datei.
+    Liest die messwert-csv aus kaspa-pulse (kennzahl,wert,einheit,n) oder
+    format v1 aus pulsehawk/methods (key,value,unit,n)."""
     with open(pfad, newline="") as f:
-        zeilen = {z["kennzahl"]: z for z in csv.DictReader(f)}
+        roh = list(csv.DictReader(f))
+    if roh and "key" in roh[0]:
+        zeilen = {V1_SCHLUESSEL[z["key"]]: {"kennzahl": V1_SCHLUESSEL[z["key"]], "wert": z["value"],
+                                              "einheit": z["unit"], "n": z["n"]}
+                  for z in roh if z["key"] in V1_SCHLUESSEL}
+    else:
+        zeilen = {z["kennzahl"]: z for z in roh}
     if "zeit_bis_stabil" in zeilen and zeilen["zeit_bis_stabil"]["einheit"] != "s":
         raise SystemExit("M6 zeit_bis_stabil in %r, die spezifikation v1.0 verlangt ganze sekunden. "
                          "report_v1.py ist noch nicht nachgezogen." % zeilen["zeit_bis_stabil"]["einheit"])

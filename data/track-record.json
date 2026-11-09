@@ -1,5 +1,5 @@
 {
- "hinweis": "Track record von PulseHawk (Ben, 4.11.2026). Nur Eintraege, die oeffentlich und datiert stehen, Quelle von Claude selbst geprueft. art 'estimate' ist eine eigene Prognose, art 'comparison' ein Vergleich mit einem veroeffentlichten Wert. status: in band, outside, open. Bei Vergleichen heisst in band, dass der veroeffentlichte Wert im 95-%-Intervall unseres gezaehlten Werts liegt (scripts/unsicherheit.py); bei Prognosen, dass das gezaehlte Ergebnis im 90-%-Band unserer Prognose liegt. Ohne Ergebnis ist der Status open. Nach dem Aendern: python3 scripts/b2b_pages.py TR-003 und TR-004 am 6.11.2026 mit der gezaehlten Kopfzeit von Block 3,543,405 geschlossen (stand-2026-11-06.json). TR-005 (23.10.) und TR-006 (4.11.) am 9.11.2026 nachgetragen (Ben 9.11.), Werte aus der Rechentabelle der NU7-Karte (8.11.), gegen die Datendateien geprueft. TR-005 verlinkt einen Auszug der Datendatei vom 23.10. auf pulsehawk.io (data/track-record/), weil die Originaldatei nur im Messrepo liegt, das pulsehawk.io nicht nennt.",
+ "hinweis": "Track record von PulseHawk (Ben, 4.11.2026). Nur Eintraege, die oeffentlich und datiert stehen, Quelle von Claude selbst geprueft. art 'estimate' ist eine eigene Prognose, art 'comparison' ein Vergleich mit einem veroeffentlichten Wert. status: in band, outside, open. Bei Vergleichen heisst in band, dass der veroeffentlichte Wert im 95-%-Intervall unseres gezaehlten Werts liegt (scripts/unsicherheit.py); bei Prognosen, dass das gezaehlte Ergebnis im 90-%-Band unserer Prognose liegt. Ohne Ergebnis ist der Status open. Nach dem Aendern: python3 scripts/b2b_pages.py TR-003 und TR-004 am 6.11.2026 mit der gezaehlten Kopfzeit von Block 3,543,405 geschlossen (stand-2026-11-06.json). TR-005 (23.10.) und TR-006 (4.11.) am 9.11.2026 nachgetragen (Ben 9.11.), Werte aus der Rechentabelle der NU7-Karte (8.11.), gegen die Datendateien geprueft. TR-005 verlinkt einen Auszug der Datendatei vom 23.10. auf pulsehawk.io (data/track-record/), weil die Originaldatei nur im Messrepo liegt, das pulsehawk.io nicht nennt. TR-004 verlinkt seit 9.11.2026 die Fassung der Report-Seite vom 4.11. (Commit db3cca7), weil der fertige Report in M7 die Prognose vom 4.11. nutzt.",
  "entries": [
   {
    "id": "TR-001",
@@ -82,8 +82,8 @@
    "id": "TR-004",
    "art": "estimate",
    "published": "2026-11-04",
-   "url": "https://pulsehawk.io/reports/zcash-nu7#m7",
-   "where": "pulsehawk.io/reports/zcash-nu7",
+   "url": "https://github.com/neoalphavault-png/pulsehawk-site/blob/db3cca7/reports/zcash-nu7.html#m7",
+   "where": "pulsehawk.io/reports/zcash-nu7 as published on 4 November 2026, page source",
    "network": "Zcash mainnet, NU7 (ZIP 259)",
    "subject": "time of block 3,543,405, the NU7 activation height",
    "estimate": {
