@@ -84,6 +84,7 @@ def lang(iso):
 # auf /contact bleiben.
 ANGEBOT_SATZ = "Scoped per network and window."
 PREIS_FREI_STAND = "2026-11-05"
+UPGRADE_V2_STAND = "2026-11-09"   # /upgrade-monitoring und /upgrades nach strategie v2 (Ben, 9.11.2026)
 
 
 def betrag(n):
@@ -95,7 +96,7 @@ def betrag(n):
 NAV = [
     ("/tps-verification", "TPS verification"),
     ("/launch-measurement", "Launch measurement"),
-    ("/upgrade-monitoring", "Upgrade monitoring"),
+    ("/upgrade-monitoring", "Upgrade readiness"),
     ("/upgrades", "Calendar"),
     ("/method", "Method"),
     ("/independence", "Independence"),
@@ -329,6 +330,8 @@ def kalender_tabelle(eintraege):
             # date_estimate, das datum ist geschaetzt (etwa aus der hoehe), die
             # hoehe steht dann dahinter (Ben, 26.10.2026)
             t = '<time datetime="%s">%s</time>' % (e["date"], lang(e["date"]))
+            if e.get("time_note"):
+                t += ", %s" % E(e["time_note"])
             if e.get("date_estimate"):
                 t = "around " + t
                 if e.get("height"):
@@ -345,8 +348,11 @@ def kalender_tabelle(eintraege):
 
     zeilen = []
     for e in sorted(eintraege, key=sortkey):
-        fall = a(e["case"], "case page") if e.get("case") and (
+        fall = a(e["case"], E(e.get("case_title") or "case page")) if e.get("case") and (
             ZCASH_OFFEN or "zcash" not in e["case"]) else ""
+        # weitere belege, etwa der track record (Ben, 9.11.2026)
+        for href, text in e.get("links") or []:
+            fall += (", " if fall else "") + a(href, E(text))
         zeilen.append(
             '<tr id="%s"><td class="c">%s</td><td>%s</td><td>%s</td><td>%s</td>'
             '<td>%s</td><td>%s</td><td>%s%s</td></tr>'
@@ -511,7 +517,7 @@ def leistungen():
     # auf die leistung, der link auf /contact steht darunter
     reihen = [("/tps-verification", "TPS verification", "Claimed vs measured throughput, from our own measurement.", ANGEBOT_SATZ),
               ("/launch-measurement", "Launch measurement", "The first week after a testnet or mainnet launch, set against the week before.", ANGEBOT_SATZ),
-              ("/upgrade-monitoring", "Upgrade monitoring", "Block time, difficulty and orphaned blocks before and after a hard fork.", ANGEBOT_SATZ)]
+              ("/upgrade-monitoring", "Upgrade readiness", "Version share, activation forecast, watch, report and monthly network health.", ANGEBOT_SATZ)]
     return "\n".join('<a class="lr" href="%s"><h3 class="ln">%s</h3><span class="ld">%s</span><span class="lp">%s</span></a>'
                      % r for r in reihen)
 
@@ -1254,7 +1260,8 @@ def seiten():
                                "The first week after a testnet or mainnet launch against the week before, from our own measurement.")],
     ))
 
-    # 4 upgrade
+    # 4 upgrade readiness and network health, strategie v2 (Ben, 9.11.2026).
+    # Gleiche URL, keine neue Seite. Kein Formular, keine Preise.
     upg_faq = [
         ("How long before the upgrade should measurement start?",
          "Four weeks before activation gives a clean baseline. Shorter works too, the report then says how long the baseline was."),
@@ -1263,53 +1270,53 @@ def seiten():
         ("Where can we see upcoming hard forks?",
          'In our <a href="/upgrades">network upgrade calendar</a>. Every entry links to its source.'),
     ]
+    # der beleg aus dem track record: alle prognosen fuer block 3,543,405
+    nu7_tr = [x for x in lies_track_record() if x["art"] == "estimate" and "3,543,405" in x["subject"]]
+    nu7_drin = sum(x["status"] == "in band" for x in nu7_tr)
+    zahlwort = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
+    nu7_satz = ("%s of %s published forecasts landed inside their 90%% band"
+                % (zahlwort.get(nu7_drin, str(nu7_drin)).capitalize(), zahlwort.get(len(nu7_tr), str(len(nu7_tr)))))
+    betreff = "scope for <network> upgrade"
+    mail_betreff = "mailto:%s?subject=%s" % (KONTAKT_MAIL, betreff.replace(" ", "%20").replace("<", "%3C").replace(">", "%3E"))
     S.append(dict(
-        datei="upgrade-monitoring.html", pfad="/upgrade-monitoring", og="upgrade-monitoring", lastmod=PREIS_FREI_STAND,
-        title="Hard fork and network upgrade monitoring | PulseHawk",
-        desc=("Hard fork monitoring from our own measurement. Block time, difficulty and orphaned "
-              "blocks compared before and after a network upgrade, with dated raw data."),
-        h1="Hard fork and network upgrade monitoring",
-        lead=("A hard fork changes the rules a network runs on. Hard fork monitoring "
-              "shows whether the change did what it set out to do. We measure block time, "
-              "difficulty and orphaned blocks ourselves, before and after the upgrade."),
+        datei="upgrade-monitoring.html", pfad="/upgrade-monitoring", og="upgrade-monitoring", lastmod=UPGRADE_V2_STAND,
+        title="Upgrade readiness and network health | PulseHawk",
+        desc=("Upgrade readiness and network health from our own measurement. Version share, an "
+              "activation forecast with bands, a watch, a report and monthly checks."),
+        h1="Upgrade readiness and network health",
+        lead=("Before an upgrade we measure whether the network is ready. Around activation we keep watch, "
+              "afterwards we report what changed, and between upgrades we check the health of the network "
+              "every month."),
         body="""
-<section><h2>What do we compare before and after the upgrade?</h2>
+<section id="parts"><h2>What do you get?</h2>
 <ul class="list">
-<li><b>Block time.</b> The distribution with median, p90, p99 and the longest gap between two blocks.</li>
-<li><b>Difficulty.</b> How fast it follows a change in hashrate.</li>
-<li><b>Stale and orphaned blocks.</b> How many valid blocks did not make the main chain.</li>
-<li><b>Propagation.</b> The delay until a block reaches all of our measurement points.</li>
-<li><b>Load.</b> Transactions per minute and fees.</li>
+<li><b>Readiness.</b> The share of peers on the new software version, read at the handshake, and a forecast of the activation time with an 80%% and a 95%% band, dated and updated as activation comes closer.</li>
+<li><b>Watch.</b> From 24 hours before to 72 hours after activation our listener follows the chain, and an alert goes to a named person on your team when one of our signals fires.</li>
+<li><b>Report after the upgrade.</b> An Upgrade Report with seven fixed values under our published %s, with the raw data and the commands to count it again.</li>
+<li><b>Monthly network health.</b> Block intervals, the longest gaps, reorgs and peer versions every month, each against its target and dated.</li>
 </ul>
-<p>Every network upgrade before and after comparison uses two windows of the same length, both in UTC.</p>
 </section>
-<section><h2>How does ongoing measurement work?</h2>
-%s
+<section id="proof"><h2>What have we shown so far?</h2>
+<p>Zcash NU7 (ZIP 259) activated on mainnet at block 3,543,405 on 6 November 2026, 02:34 UTC by header time, counted. %s, each scored on our %s.</p>
+<p>Our %s for it follows the same specification.</p>
 </section>
-<section><h2>What does it cost?</h2>
-%s
+<section id="independence"><h2>How do we stay independent?</h2>
+<p>We publish the method before anyone pays. A result is never changed for the client who paid for it. Every report names who paid. The full rules are on our %s page.</p>
 </section>
-<section><h2>Is it the right fit?</h2>
-%s
+<section id="start"><h2>How do we start?</h2>
+<p>Write to %s with the subject “%s”. Name the network, the upgrade and its height or date, and we reply within one business day with questions or a scope.</p>
+<p class="cta">%s</p>
 </section>
 %s
-<p class="cta">%s %s</p>
-""" % (schritte([
-            ("Baseline.", "Our measurement runs weeks before activation and records the old rules."),
-            ("Activation.", "We follow the upgrade height block by block, on testnet and mainnet."),
-            ("Monthly report.", "Each month you get a dated report with charts and the CSV."),
-            ("Publication.", "Results are published as measured, after you have seen them."),
-        ]), angebot_html(),
-            box(["Core teams shipping a hard fork",
-                 "Foundations and grant committees that track a network over time",
-                 "Mining pools and exchanges that plan around an upgrade"],
-                ["Teams that need their code reviewed",
-                 "A one day snapshot",
-                 "Questions about price or market"]),
-            faq_html(upg_faq), sample_button(), contact_button()),
+""" % (a("/standard/upgrade-report/", "specification"),
+       nu7_satz, a("/track-record", "track record"),
+       a("/reports/zcash-nu7", "Upgrade Report PH-UR-2026-001"), a("/independence", "independence"),
+       a(mail_betreff, E(KONTAKT_MAIL)), E(betreff), a(mail_betreff, "Write to us", "btn"),
+       faq_html(upg_faq)),
         faqs=upg_faq,
-        schema=[service_schema("Upgrade monitoring", "/upgrade-monitoring",
-                               "Block time, difficulty and orphaned blocks before and after a hard fork, from our own measurement.")],
+        schema=[service_schema("Upgrade readiness and network health", "/upgrade-monitoring",
+                               "Version share, activation forecast, watch, upgrade report and monthly network health, "
+                               "from our own measurement.")],
     ))
 
     # 5 method
@@ -1571,7 +1578,7 @@ def seiten():
 %s
 <p class="cta">%s</p>
 """ % (kalender_tabelle(up), len(up), lang(up_stand),
-       a("/upgrade-monitoring", "upgrade monitoring"), faq_html(u_faq), contact_button()),
+       a("/upgrade-monitoring", "upgrade readiness"), faq_html(u_faq), contact_button()),
         faqs=u_faq,
         schema=["ARTICLE:2026-10-16:%s" % up_stand],
     ))
