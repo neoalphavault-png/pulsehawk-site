@@ -31,3 +31,9 @@
 ## Was Ben tun muss
 
 Nichts. Die Abnahme auf pulsehawk.io folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme (9.11.2026)
+
+- PR #77 per Squash gemergt, Merge-Commit `0248023`, Branch gelöscht.
+- Live auf pulsehawk.io/reports/zcash-nu7 byte-gleich mit dem Bau.
+- Der Block "Reproduce this" hat `data-bestaetigt="true"` und zeigt alle drei Befehle, auch die Prüfung gegen `expected/report-v1-zcash-mainnet-nu7.sha256`.
