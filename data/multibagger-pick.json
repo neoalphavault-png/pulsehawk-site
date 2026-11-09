@@ -1,5 +1,5 @@
 {
- "date": "2026-11-08",
+ "date": "2026-11-09",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -28,7 +28,7 @@
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 6,
+  "sp500_doubled": 5,
   "sp500_tripled": 2
  },
  "benchmarks": {
@@ -43,7 +43,7 @@
    "d_1y": "2025-11-06"
   }
  },
- "candidates_total": 30,
+ "candidates_total": 29,
  "top10": [
   {
    "ticker": "MRNA",
@@ -58,16 +58,16 @@
    "mult": 2.9749
   },
   {
-   "ticker": "GKOS",
-   "mult": 2.7437
-  },
-  {
    "ticker": "VSTS",
    "mult": 2.7203
   },
   {
    "ticker": "RNG",
    "mult": 2.6712
+  },
+  {
+   "ticker": "GKOS",
+   "mult": 2.6585
   },
   {
    "ticker": "IRDM",
