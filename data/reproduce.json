@@ -1,14 +1,16 @@
 {
- "hinweis": "Befehle fuer den Block reproduce this. Die Mainnet-Befehle fuer PH-UR-2026-001 hat die Sitzung 'Zcash NU7 Testnet Messung' am 4.11.2026 genannt; sie bleiben als folgend markiert (bestaetigt false), bis der Daten-PR mit data/zcash-mainnet-nu7/ in pulsehawk/methods gemergt ist. Bis dahin zeigt die Seite nur den ersten Befehl.",
+ "hinweis": "Befehle fuer den Block reproduce this. reports/zcash-nu7 seit 9.11.2026 freigeschaltet (pulsehawk/methods PR 5, Merge 0820cde, Daten in data/zcash-mainnet-nu7/). zcash-nu7 (Testnet-CSV vom 18.10.) hat noch keinen Befehl im Repo und zeigt nur den ersten.",
  "eintraege": {
   "reports/zcash-nu7": {
-   "bestaetigt": false,
+   "bestaetigt": true,
    "folgt": "with the mainnet inputs, after the measurement window closes",
    "befehle": [
     "git clone https://github.com/pulsehawk/methods && cd methods",
     "python3 upgrade_report/report_v1.py --config upgrade_report/configs/zcash-mainnet-nu7.json --heads data/zcash-mainnet-nu7/heads.csv.gz --raw data/zcash-mainnet-nu7/raw --out out",
-    "cd out && sha256sum -c report-v1-zcash-mainnet-nu7.sha256"
-   ]
+    "cd out && sha256sum -c ../data/zcash-mainnet-nu7/expected/report-v1-zcash-mainnet-nu7.sha256"
+   ],
+   "commit": "0820cde3507cc778741d828a049b119d125c6b14",
+   "bestaetigt_von": "Sitzung 'Zcash NU7 Testnet Messung', 9.11.2026, auf frischem Clone getestet; Claude (pulsehawk-site) hat geprueft, dass output/ zu expected/ passt"
   },
   "zcash-nu7": {
    "bestaetigt": false,
