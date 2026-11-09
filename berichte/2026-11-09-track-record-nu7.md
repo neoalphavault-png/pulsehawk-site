@@ -59,3 +59,20 @@ Auftrag von Ben vom 9.11., Frist 10:30 Berlin, vor dem NU7-Post um 11:00. Die NU
 ## Was Ben tun muss
 
 Nichts. Die Abnahme auf pulsehawk.io folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme (9.11.2026, 08:22 UTC, also 09:22 Berlin, vor der Frist 10:30)
+
+- **Merge:** PR #75 per Squash, Merge-Commit `041c81d`, Branch gelöscht.
+- **Byte-gleich mit dem Bau aus `041c81d`:**
+  - /track-record, /zcash-nu7, Startseite
+  - /independence, /corrections, /about, /upgrades
+  - /reports/zcash-nu7, /standard/upgrade-report/v1-0
+  - /llms.txt und der Auszug /data/track-record/zcash-nu7-forecast-2026-10-23.json
+- **Im Browser auf pulsehawk.io/track-record bei 390 und 1440 px:**
+  - vier Forecast-Einträge in der Reihenfolge TR-005, TR-003, TR-004, TR-006;
+  - Zeile "Deviation": "The block came 12 min 10 s later / 7 min 46 s later / 5 min 50 s earlier / 6 min 56 s earlier";
+  - Bilanz 6 Einträge, 5 in band, 1 outside, 0 open;
+  - "estimate" kommt 0-mal vor;
+  - kein waagerechtes Scrollen.
+- **Screenshots:** `track-record-390-live.jpg` und `track-record-1440-live.jpg` in `berichte/2026-11-09-track-record-nu7/`.
+- **#ops-log:** keine Meldung nötig, die Frist ist gehalten.
