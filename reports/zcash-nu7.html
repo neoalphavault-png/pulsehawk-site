@@ -60,7 +60,7 @@
    "description": "Zcash NU7 upgrade report PH-UR-2026-001. Seven fixed values from 24 hours before to 72 hours after block 3,543,405, each dated, with raw data.",
    "url": "https://pulsehawk.io/reports/zcash-nu7",
    "datePublished": "2026-11-03T06:00:00+00:00",
-   "dateModified": "2026-11-04T06:00:00+00:00",
+   "dateModified": "2026-11-09T06:00:00+00:00",
    "inLanguage": "en",
    "author": {
     "@id": "https://pulsehawk.io/#org"
@@ -83,7 +83,7 @@
    "license": "https://creativecommons.org/licenses/by/4.0/",
    "version": "1.0",
    "datePublished": "2026-11-03T06:00:00+00:00",
-   "dateModified": "2026-11-04T06:00:00+00:00",
+   "dateModified": "2026-11-09T06:00:00+00:00",
    "measurementTechnique": "PulseHawk Upgrade Report, specification v1.0, https://pulsehawk.io/standard/upgrade-report/v1-0",
    "variableMeasured": [
     "M1 Block intervals",
@@ -139,13 +139,15 @@
 <section id="m6"><h2>M6 Time to stable</h2><p>The time from the activation block until the mean of the block intervals over the last hour lies within 20 % of the new target and stays there for 60 minutes without a break.</p><p class="note">Not yet counted. The numbers follow after block 3,543,405, from our own count.</p><p class="meth">Methods used <a href="/method#ph-m-001">PH-M-001</a>.</p><p class="unc">Measurement uncertainty, header times resolve to 1 s and the band edges are computed exactly. The first block that stays in the band can move by one block when header times run backwards.</p></section>
 <section id="m7"><h2>M7 First block at the activation height</h2><p>Its header time and the gap to our own forecast published before activation.</p><p>Our forecast before activation is 6 November 2026, 02:39 UTC, computed from our count of the block pace, with 9 in 10 of our draws between 6 November 2026, 00:28 UTC and 6 November 2026, 05:00 UTC, as of 2 November 2026.</p><p class="note">Not yet counted. The numbers follow after block 3,543,405, from our own count.</p><p class="meth">Methods used <a href="/method#ph-m-001">PH-M-001</a>, <a href="/method#ph-m-006">PH-M-006</a>.</p><p class="unc">Measurement uncertainty, the header time is set by the miner and resolves to 1 s. Our forecast carries its own 90 % band.</p></section>
 <section id="data"><h2>Data</h2><p>The CSV with every block, reorg, chain split signal and peer sample follows with the first numbers, with its sha256 and the method version.</p></section>
-<section id="reproduce" class="repro" data-bestaetigt="false"><h2>Reproduce this</h2><p>The code is in <a href="https://github.com/pulsehawk/methods" rel="noopener">github.com/pulsehawk/methods</a>. The command below fetches it. The commands to count again and compare follow with the mainnet inputs, after the measurement window closes.</p><pre id="repro-cmd">git clone https://github.com/pulsehawk/methods &amp;&amp; cd methods</pre><p><button type="button" class="cb" data-copy="repro-cmd">copy</button><span class="vh" aria-live="polite"></span></p></section>
-<section id="cite"><h2>How to cite</h2><div class="rcite"><p>Plain text</p><pre id="cite-text">PulseHawk, Zcash NU7 upgrade report, PH-UR-2026-001, method v1.0, version of 4 November 2026, https://pulsehawk.io/reports/zcash-nu7</pre><p><button type="button" class="cb" data-copy="cite-text">copy</button><span class="vh" aria-live="polite"></span></p><p>BibTeX</p><pre id="cite-bibtex">@misc{PH-UR-2026-001,
+<section id="reproduce" class="repro" data-bestaetigt="true"><h2>Reproduce this</h2><p>The code is in <a href="https://github.com/pulsehawk/methods" rel="noopener">github.com/pulsehawk/methods</a>. These three commands fetch it, count again and compare with the published values.</p><pre id="repro-cmd">git clone https://github.com/pulsehawk/methods &amp;&amp; cd methods
+python3 upgrade_report/report_v1.py --config upgrade_report/configs/zcash-mainnet-nu7.json --heads data/zcash-mainnet-nu7/heads.csv.gz --raw data/zcash-mainnet-nu7/raw --out out
+cd out &amp;&amp; sha256sum -c ../data/zcash-mainnet-nu7/expected/report-v1-zcash-mainnet-nu7.sha256</pre><p><button type="button" class="cb" data-copy="repro-cmd">copy</button><span class="vh" aria-live="polite"></span></p></section>
+<section id="cite"><h2>How to cite</h2><div class="rcite"><p>Plain text</p><pre id="cite-text">PulseHawk, Zcash NU7 upgrade report, PH-UR-2026-001, method v1.0, version of 9 November 2026, https://pulsehawk.io/reports/zcash-nu7</pre><p><button type="button" class="cb" data-copy="cite-text">copy</button><span class="vh" aria-live="polite"></span></p><p>BibTeX</p><pre id="cite-bibtex">@misc{PH-UR-2026-001,
   author = {{PulseHawk}},
   title = {Zcash NU7 upgrade report},
   number = {PH-UR-2026-001},
   year = {2026},
-  date = {2026-11-04},
+  date = {2026-11-09},
   url = {https://pulsehawk.io/reports/zcash-nu7},
   note = {PulseHawk Upgrade Report, method v1.0}
 }</pre><p><button type="button" class="cb" data-copy="cite-bibtex">copy</button><span class="vh" aria-live="polite"></span></p></div></section>
