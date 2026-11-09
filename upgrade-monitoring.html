@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hard fork and network upgrade monitoring | PulseHawk</title>
-<meta name="description" content="Hard fork monitoring from our own measurement. Block time, difficulty and orphaned blocks compared before and after a network upgrade, with dated raw data.">
+<title>Upgrade readiness and network health | PulseHawk</title>
+<meta name="description" content="Upgrade readiness and network health from our own measurement. Version share, an activation forecast with bands, a watch, a report and monthly checks.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://pulsehawk.io/upgrade-monitoring">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -13,8 +13,8 @@
 <meta name="theme-color" content="#080B0F">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PulseHawk">
-<meta property="og:title" content="Hard fork and network upgrade monitoring">
-<meta property="og:description" content="Hard fork monitoring from our own measurement. Block time, difficulty and orphaned blocks compared before and after a network upgrade, with dated raw data.">
+<meta property="og:title" content="Upgrade readiness and network health">
+<meta property="og:description" content="Upgrade readiness and network health from our own measurement. Version share, an activation forecast with bands, a watch, a report and monthly checks.">
 <meta property="og:url" content="https://pulsehawk.io/upgrade-monitoring">
 <meta property="og:image" content="https://pulsehawk.io/og/upgrade-monitoring.png">
 <meta property="og:image:width" content="1200">
@@ -56,10 +56,10 @@
   },
   {
    "@type": "Service",
-   "name": "Upgrade monitoring",
-   "serviceType": "Upgrade monitoring",
+   "name": "Upgrade readiness and network health",
+   "serviceType": "Upgrade readiness and network health",
    "url": "https://pulsehawk.io/upgrade-monitoring",
-   "description": "Block time, difficulty and orphaned blocks before and after a hard fork, from our own measurement.",
+   "description": "Version share, activation forecast, watch, upgrade report and monthly network health, from our own measurement.",
    "provider": {
     "@id": "https://pulsehawk.io/#org"
    },
@@ -106,7 +106,7 @@
     {
      "@type": "ListItem",
      "position": 2,
-     "name": "Hard fork and network upgrade monitoring",
+     "name": "Upgrade readiness and network health",
      "item": "https://pulsehawk.io/upgrade-monitoring"
     }
    ]
@@ -118,32 +118,31 @@
 </head>
 <body>
 <a class="skip" href="#inhalt">Skip to content</a>
-<header class="top"><div class="wrap"><a class="brand" href="/"><img src="/hawk.png" alt="" width="30" height="32">PulseHawk</a><nav class="main" aria-label="Main"><ul><li><a href="/tps-verification">TPS verification</a></li><li><a href="/launch-measurement">Launch measurement</a></li><li><a href="/upgrade-monitoring" aria-current="page">Upgrade monitoring</a></li><li><a href="/upgrades">Calendar</a></li><li><a href="/zcash-nu7">Zcash NU7</a></li><li><a href="/method">Method</a></li><li><a href="/independence">Independence</a></li><li><a class="nc" href="/contact">Contact</a></li></ul></nav></div></header>
+<header class="top"><div class="wrap"><a class="brand" href="/"><img src="/hawk.png" alt="" width="30" height="32">PulseHawk</a><nav class="main" aria-label="Main"><ul><li><a href="/tps-verification">TPS verification</a></li><li><a href="/launch-measurement">Launch measurement</a></li><li><a href="/upgrade-monitoring" aria-current="page">Upgrade readiness</a></li><li><a href="/upgrades">Calendar</a></li><li><a href="/zcash-nu7">Zcash NU7</a></li><li><a href="/method">Method</a></li><li><a href="/independence">Independence</a></li><li><a class="nc" href="/contact">Contact</a></li></ul></nav></div></header>
 <main id="inhalt"><div class="wrap">
-<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Hard fork and network upgrade monitoring</span></nav>
-<h1>Hard fork and network upgrade monitoring</h1>
-<p class="lead">A hard fork changes the rules a network runs on. Hard fork monitoring shows whether the change did what it set out to do. We measure block time, difficulty and orphaned blocks ourselves, before and after the upgrade.</p>
-<section><h2>What do we compare before and after the upgrade?</h2>
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Upgrade readiness and network health</span></nav>
+<h1>Upgrade readiness and network health</h1>
+<p class="lead">Before an upgrade we measure whether the network is ready. Around activation we keep watch, afterwards we report what changed, and between upgrades we check the health of the network every month.</p>
+<section id="parts"><h2>What do you get?</h2>
 <ul class="list">
-<li><b>Block time.</b> The distribution with median, p90, p99 and the longest gap between two blocks.</li>
-<li><b>Difficulty.</b> How fast it follows a change in hashrate.</li>
-<li><b>Stale and orphaned blocks.</b> How many valid blocks did not make the main chain.</li>
-<li><b>Propagation.</b> The delay until a block reaches all of our measurement points.</li>
-<li><b>Load.</b> Transactions per minute and fees.</li>
+<li><b>Readiness.</b> The share of peers on the new software version, read at the handshake, and a forecast of the activation time with an 80% and a 95% band, dated and updated as activation comes closer.</li>
+<li><b>Watch.</b> From 24 hours before to 72 hours after activation our listener follows the chain, and an alert goes to a named person on your team when one of our signals fires.</li>
+<li><b>Report after the upgrade.</b> An Upgrade Report with seven fixed values under our published <a href="/standard/upgrade-report/">specification</a>, with the raw data and the commands to count it again.</li>
+<li><b>Monthly network health.</b> Block intervals, the longest gaps, reorgs and peer versions every month, each against its target and dated.</li>
 </ul>
-<p>Every network upgrade before and after comparison uses two windows of the same length, both in UTC.</p>
 </section>
-<section><h2>How does ongoing measurement work?</h2>
-<ol class="steps"><li><b>Baseline.</b> Our measurement runs weeks before activation and records the old rules.</li><li><b>Activation.</b> We follow the upgrade height block by block, on testnet and mainnet.</li><li><b>Monthly report.</b> Each month you get a dated report with charts and the CSV.</li><li><b>Publication.</b> Results are published as measured, after you have seen them.</li></ol>
+<section id="proof"><h2>What have we shown so far?</h2>
+<p>Zcash NU7 (ZIP 259) activated on mainnet at block 3,543,405 on 6 November 2026, 02:34 UTC by header time, counted. Four of four published forecasts landed inside their 90% band, each scored on our <a href="/track-record">track record</a>.</p>
+<p>Our <a href="/reports/zcash-nu7">Upgrade Report PH-UR-2026-001</a> for it follows the same specification.</p>
 </section>
-<section><h2>What does it cost?</h2>
-<p class="quote">Scoped per network and window. <a href="/contact">Ask for a quote</a>.</p>
+<section id="independence"><h2>How do we stay independent?</h2>
+<p>We publish the method before anyone pays. A result is never changed for the client who paid for it. Every report names who paid. The full rules are on our <a href="/independence">independence</a> page.</p>
 </section>
-<section><h2>Is it the right fit?</h2>
-<div class="fit"><div><h3>Best for</h3><ul><li>Core teams shipping a hard fork</li><li>Foundations and grant committees that track a network over time</li><li>Mining pools and exchanges that plan around an upgrade</li></ul></div><div><h3>Not for</h3><ul><li>Teams that need their code reviewed</li><li>A one day snapshot</li><li>Questions about price or market</li></ul></div></div>
+<section id="start"><h2>How do we start?</h2>
+<p>Write to <a href="mailto:hello@pulsehawk.io?subject=scope%20for%20%3Cnetwork%3E%20upgrade">hello@pulsehawk.io</a> with the subject “scope for &lt;network&gt; upgrade”. Name the network, the upgrade and its height or date, and we reply within one business day with questions or a scope.</p>
+<p class="cta"><a href="mailto:hello@pulsehawk.io?subject=scope%20for%20%3Cnetwork%3E%20upgrade" class="btn">Write to us</a></p>
 </section>
 <section class="faq"><h2>Questions we get asked</h2><details><summary><h3>How long before the upgrade should measurement start?</h3></summary><p>Four weeks before activation gives a clean baseline. Shorter works too, the report then says how long the baseline was.</p></details><details><summary><h3>Do you cover the testnet activation as well?</h3></summary><p>Yes, and it is often the better test, because problems show there first. Many teams book both.</p></details><details><summary><h3>Where can we see upcoming hard forks?</h3></summary><p>In our <a href="/upgrades">network upgrade calendar</a>. Every entry links to its source.</p></details></section>
-<p class="cta"><p class="cta"><a href="/zcash-nu7" class="btn plausible-event-name=Sample+Report">See a sample report</a></p> <a href="/contact" class="btn ghost">Request a measurement</a></p>
 </div></main>
 <footer class="foot"><div class="wrap"><div>PulseHawk, a Vizora Digital UG brand</div><div><a href="/about">About</a> · <a href="/standard/">Measurement Framework</a> · <a href="/independence">Independence</a> · <a href="/track-record">Track record</a> · <a href="/corrections">Corrections</a> · <a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/contact">Contact</a></div></div></footer>
 </body>
