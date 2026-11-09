@@ -75,3 +75,10 @@ Jeder Eintrag hat `checked` 2026-11-09.
 ## Was Ben tun muss
 
 - PR prüfen und mergen. Danach nehme ich /upgrade-monitoring und /upgrades auf pulsehawk.io ab und trage das hier ein.
+
+## Merge und Abnahme (9.11.2026)
+
+- **Merge:** Ben hat PR #79 am 9.11.2026 um 12:48 UTC gemergt, Merge-Commit `c78b66c`. Branch gelöscht.
+- **Abnahme auf pulsehawk.io:** byte-gleich mit dem Bau aus `c78b66c` sind /upgrade-monitoring, /upgrades, die Startseite, /llms.txt, /sitemap.xml und /og/upgrade-monitoring.png.
+- **Im Browser bei 390 und 1440 px:** kein waagerechtes Scrollen der Seite. Die Kalendertabelle auf /upgrades scrollt bei 390 px in ihrem eigenen Kasten, wie bisher.
+- **Screenshots:** vier Live-Aufnahmen (`*-live.jpg`) in `berichte/2026-11-13-upgrade-seiten-v2/`.
