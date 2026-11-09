@@ -1,0 +1,21 @@
+{
+ "note": "Excerpt of the PulseHawk data file of 23 October 2026 with the Zcash NU7 mainnet forecast, first published 23 October 2026, 12:55:33 UTC (commit 9b20504). The full file has the sha256 below. Left out: per-peer software details and a third-party estimate.",
+ "first_published_utc": "2026-10-23T12:55:33Z",
+ "commit": "9b20504",
+ "original_sha256": "c5c53cb978d2265c331b1501b6229e6fd5db41d2f8eae32222a5531741c3481a",
+ "fetched_utc": "2026-10-23T12:50:07Z",
+ "nu7_height": 3543405,
+ "forecast": {
+  "zielhoehe": 3543405,
+  "fehlend": 15564,
+  "spitze_hoehe": 3527841,
+  "spitze_utc": "2026-10-23 12:49:15",
+  "tempo_fenster_tage": 14,
+  "tempo_mittel_s": 75.29,
+  "median_utc": "2026-11-06 02:21:52",
+  "band_5_utc": "2026-11-05 22:02:16",
+  "band_95_utc": "2026-11-06 06:40:25",
+  "berechnet_75s_utc": "2026-11-06 01:04:15",
+  "methode": "tempo 14 volle utc-tage, bootstrap ueber tagesmittel, gamma(n, tempo), 20000 ziehungen, seed 2027"
+ }
+}

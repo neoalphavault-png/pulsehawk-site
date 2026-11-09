@@ -17,7 +17,7 @@ auf jeder Seite. Und nie eine IP-Adresse im Quelltext.
 Dazu ab 4.11.2026 (Ben): ein Absatz, der ein Upgrade, eine Aktivierung oder
 eine Konsensregel einer Kette nennt, traegt die Spezifikationsnummer (ZIP,
 CHIP, KIP, BIP, EIP, SIMD, BEP); eine vorhergesagte Upgrade-Zeit steht nur als
-Blockhoehe plus "estimate"; Mess- und Report-Seiten tragen Methoden-IDs, eine
+Blockhoehe plus "forecast" (bis 8.11. "estimate"); Mess- und Report-Seiten tragen Methoden-IDs, eine
 Zeile "Measurement uncertainty" und den Block "reproduce this".
 Ab 5.11.2026 (Ben): "now" und "live" als ganzes Wort sind rot; ein Betrag mit
 €, EUR, $ oder USD im sichtbaren Text, in Title, Description oder Schema ist
@@ -76,7 +76,7 @@ UPGRADE_WORT = re.compile(r"\b(activat\w*|upgrade\w*|hard ?forks?|soft ?forks?|c
 BENANNT = re.compile(r"\b(NU\d+|Crescendo|Taproot|SegWit|Pectra|Dencun|Shapella|Faster Blocks)\b")
 RE_SPEZ = re.compile(r"\b(ZIP|CHIP|KIP|BIP|EIP|SIMD|BEP)[ -]?\d", re.I)
 PROGNOSE = re.compile(r"\b(forecasts?|expected|expect|arrives?|will (activate|reach|arrive)|puts block|"
-                      r"estimat\w*|draws)\b", re.I)
+                      r"estimat\w*|forecasts?|draws)\b", re.I)
 ZEITANGABE = re.compile(r"\b\d{1,2}:\d{2}\b|\b\d{1,2} (January|February|March|April|May|June|July|"
                         r"August|September|October|November|December)\b")
 # Keine Preise oeffentlich (Ben, 5.11.2026). Ein Betrag mit €, EUR, $ oder USD
@@ -107,8 +107,9 @@ def funde_spez(absaetze):
             f.append("upgrade ohne spezifikationsnummer (ZIP, CHIP, KIP, BIP) im absatz '%s'" % text[:90])
         # eine vorhergesagte zeit fuer ein upgrade oder eine blockhoehe
         if PROGNOSE.search(text) and ZEITANGABE.search(text) and (upgrade or re.search(r"\bblock [\d,]{4,}", text)):
-            if not re.search(r"\bblock [\d,]{4,}", text) or not re.search(r"estimat", text, re.I):
-                f.append("upgrade-zeit ohne blockhoehe und 'estimate' im absatz '%s'" % text[:90])
+            # seit 9.11.2026 heisst es "forecast" statt "estimate" (Ben)
+            if not re.search(r"\bblock [\d,]{4,}", text) or not re.search(r"forecast", text, re.I):
+                f.append("upgrade-zeit ohne blockhoehe und 'forecast' im absatz '%s'" % text[:90])
     return f
 
 
@@ -275,6 +276,10 @@ def funde_text(text, datei):
     m = re.search(r"(?<![a-z])stand(?![a-z])", low)
     if m:
         f.append("'stand' in '%s', englisch 'as of <datum>'" % t[max(0, m.start() - 30):m.end() + 25].strip())
+    # "forecast" statt "estimate" im sichtbaren text (Ben, 9.11.2026)
+    m = re.search(r"(?<![a-z])estimat", low)
+    if m:
+        f.append("'estimate' statt 'forecast' in '%s'" % t[max(0, m.start() - 30):m.end() + 25].strip())
     for w in ECHTZEIT:
         if re.search(r"(?<![a-z])%s(?![a-z])" % re.escape(w), low):
             f.append("echtzeit-wort '%s'" % w)
@@ -406,7 +411,8 @@ SPEZ_FAELLE = [
     ("Kaspa runs at 10 blocks per second since the Crescendo hardfork.", 1),
     ("Kaspa runs at 10 blocks per second since the Crescendo hardfork, KIP-14.", 0),
     ("Our forecast puts the Zcash NU7 activation (ZIP 259) at 6 November 2026, 02:39 UTC.", 1),
-    ("Our estimate puts block 3,543,405, the Zcash NU7 activation (ZIP 259), at 6 November 2026, 02:39 UTC.", 0),
+    ("Our forecast puts block 3,543,405, the Zcash NU7 activation (ZIP 259), at 6 November 2026, 02:39 UTC.", 0),
+    ("Our estimate puts block 3,543,405, the Zcash NU7 activation (ZIP 259), at 6 November 2026, 02:39 UTC.", 1),
     ("The median of 20,000 draws puts block 3,543,405 at 6 November 2026.", 1),
     ("Read the Zcash NU7 case", 0),
 ]
@@ -460,7 +466,10 @@ def selbsttest():
     falsch += not ok
     print("  %s  betrag, andere seite %d, contact mit betrag %d, contact nur budget %d, erwartet 1, 1, 0"
           % ("ok  " if ok else "FEHL", len(k_andere), len(k_contact), len(k_nur_budget)))
-    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 2))
+    k = [x for x in funde_text("Our estimate was early. Our forecast was late.", "x.html") if "forecast" in x]
+    falsch += len(k) != 1
+    print("  %s  estimate statt forecast, %d funde, erwartet 1" % ("ok  " if len(k) == 1 else "FEHL", len(k)))
+    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 3))
     return 1 if falsch else 0
 
 

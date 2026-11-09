@@ -500,7 +500,7 @@ def zitat_zeilen(eintraege, hoechstens=3):
     if len(eintraege) > hoechstens:
         mehr = '<p>%s</p>' % a("/independence#cited-by", "All %d citations" % len(eintraege))
     # dazu ein satz mit link auf den track record (Ben, 4.11.2026)
-    tr = ('<p class="small">How our own estimates turned out, with every counted result, is on our %s.</p>'
+    tr = ('<p class="small">How our own forecasts turned out, with every counted result, is on our %s.</p>'
           % a("/track-record", "track record"))
     return ('<section class="zit">%s<h2>Who cites our numbers?</h2>\n<p class="sub">%s</p>\n%s\n%s\n%s</section>'
             % (zaehler, ZITAT_SATZ, "\n".join(zeilen), mehr, tr))
@@ -622,7 +622,7 @@ var ss=document.querySelectorAll('.home main section');d.classList.add('mo');for
 # juengsten Mainnet-Stand, gekuerzt nach data/zcash-nu7/mainnet-stand.json
 # (scripts/zcash_stand.py). Jede Zahl traegt Datum und counted, computed
 # oder source.
-ZCASH_TEXT_STAND = "2026-11-04"   # letzte aenderung am text der seite (unsicherheit, methoden, Ben 4.11.2026)
+ZCASH_TEXT_STAND = "2026-11-09"   # letzte aenderung am text der seite (forecast statt estimate, Ben 9.11.2026)
 ZCASH_STAND_DATEI = "data/zcash-nu7/mainnet-stand.json"
 ZEBRA_700 = "https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0"
 ZIP_218 = "https://github.com/zcash/zips/blob/main/zips/zip-0218.md"
@@ -642,7 +642,7 @@ FRAMEWORK_STAND = "2026-11-02"   # measurement framework, erste fassung (Ben, 2.
 KORREKTUREN = "data/corrections.json"
 TRACK_RECORD = "data/track-record.json"
 GLAUB_STAND = "2026-11-04"   # track record, corrections, about (Ben, 4.11.2026)
-TR_STAND = "2026-11-06"      # track record, TR-003 und TR-004 nach der NU7-aktivierung geschlossen
+TR_STAND = "2026-11-09"      # track record, TR-005 und TR-006 nachgetragen, forecast statt estimate (Ben, 9.11.2026)
 KORR_STAND = "2026-11-05"    # /corrections und /independence ohne "now" (Ben, 5.11.2026)
 # gruender auf /about und als schema.org Person. Solange hier der platzhalter
 # steht, fehlt der abschnitt, und der neubau warnt (Ben entscheidet, 4.11.2026).
@@ -659,13 +659,13 @@ ABOUT_CSS = """
 .founder p{margin:0}
 """
 TR_STATUS = ("in band", "outside", "open")
-TR_ARTEN = {"estimate": "Our estimate", "comparison": "Against a published value"}
+TR_ARTEN = {"estimate": "Our forecast", "comparison": "Against a published value"}
 RE_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 TR_CSS = """
 .trl{display:grid;gap:14px;margin:14px 0}
 .tre{border:1px solid var(--line);border-radius:12px;padding:16px 18px}
-.tre h3{margin:0 0 8px}
+.tre h2{margin:0 0 8px;font-size:16px;line-height:1.35}
 .tre dl{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:6px 14px;margin:0}
 .tre dt{color:var(--dim);font-size:14px}.tre dd{margin:0}
 .st{display:inline-block;font:600 13px/1 var(--mono);padding:5px 9px;border-radius:99px;border:1px solid var(--line)}
@@ -751,7 +751,7 @@ def tr_eintrag(e):
     zeilen.append(("What", E(e["subject"][:1].upper() + e["subject"][1:])))
     if e["art"] == "estimate":
         s = e["estimate"]
-        zeilen.append(("Our estimate", "%s, 90%% band %s to %s, as of %s"
+        zeilen.append(("Our forecast", "%s, 90%% band %s to %s, as of %s"
                        % (E(s["value"]), *map(E, s["band"].split(" to ")), lang(s["as_of"]))))
     else:
         zeilen.append(("Published value", "%s, %s" % (E(e["reference"]["value"]), E(e["reference"]["what"]))))
@@ -764,12 +764,17 @@ def tr_eintrag(e):
         else:
             zeilen.append(("Result", "%s %s, 95%% interval %s, %s values, %s"
                            % (E(r["value"]), E(r["label"]), E(r["interval"]), betrag(r["n"]), E(r["window"]))))
-        zeilen.append(("Deviation", E(e["deviation"].replace("-", "−"))))
+        if e["art"] == "estimate":
+            # aus sicht des blocks, in min und s (Ben, 9.11.2026)
+            zeilen.append(("Deviation", E(abstand_text(e["deviation"])[:1].upper() + abstand_text(e["deviation"])[1:])))
+        else:
+            zeilen.append(("Deviation", E(e["deviation"].replace("-", "−"))))
     else:
         zeilen.append(("Result", "Not counted yet"))
     zeilen.append(("Methods", ", ".join(a("/method#" + m.lower(), m) for m in e["methods"])))
     zeilen.append(("Status", tr_status(e["status"])))
-    return ('<div class="tre" id="%s"><h3>%s, %s</h3><dl>%s</dl></div>'
+    # je eintrag eine h2, damit kein abschnitt ueber 250 woerter kommt (9.11.2026)
+    return ('<div class="tre" id="%s"><h2>%s, %s</h2><dl>%s</dl></div>'
             % (e["id"].lower(), E(e["id"]), E(e["subject"]),
                "".join("<dt>%s</dt><dd>%s</dd>" % z for z in zeilen)))
 
@@ -875,10 +880,10 @@ def zi_zellen(zi):
 
 
 def abstand_text(dev):
-    """abweichung gezaehlt minus geschaetzt: '+7 min 46 s' heisst, der block kam
-    spaeter, die schaetzung war also frueh ('7 min 46 s early')."""
+    """abweichung gezaehlt minus prognose, immer aus sicht des blocks (Ben, 9.11.2026):
+    '+7 min 46 s' -> 'the block came 7 min 46 s later'."""
     d = dev.strip()
-    return "%s %s" % (d.lstrip("+-−"), "early" if d.startswith("+") else "late")
+    return "the block came %s %s" % (d.lstrip("+-−"), "later" if d.startswith("+") else "earlier")
 
 
 def mainnet_unsicher(teil, st):
@@ -992,15 +997,16 @@ def zcash_mainnet_teile(st):
                and "3,543,405" in x["subject"]]
         schaetz = ""
         if tr_:
-            teile_ = ["%s (as of %s)" % (abstand_text(x["deviation"]), lang(x["estimate"]["as_of"]))
-                      for x in tr_]
+            tr_ = sorted(tr_, key=lambda x: x["estimate"]["as_of"])
+            teile_ = ["%s than our forecast as of %s" % (abstand_text(x["deviation"])[len("the block came "):],
+                                                          lang(x["estimate"]["as_of"])) for x in tr_]
             imband = sum(x["status"] == "in band" for x in tr_)
-            schaetz = ("\n<section id=\"estimates-scored\"><h2>How close were our estimates?</h2>\n"
-                       "<p>Against the counted header time of block 3,543,405 (ZIP 259), our estimates were %s, "
-                       "%s inside their 90%% band, see our %s.</p>\n%s\n</section>"
-                       % (" and ".join(teile_),
-                          ("both" if len(tr_) == 2 else "all") if imband == len(tr_)
-                          else "%d of %d" % (imband, len(tr_)),
+            schaetz = ("\n<section id=\"estimates-scored\"><h2>How close were our forecasts?</h2>\n"
+                       "<p>By its counted header time, block 3,543,405 (ZIP 259) came %s. %s inside their 90%% "
+                       "band, see our %s.</p>\n%s\n</section>"
+                       % (", ".join(teile_[:-1]) + ", and " + teile_[-1] if len(teile_) > 1 else teile_[0],
+                          ({2: "Both", 3: "All three", 4: "All four"}.get(len(tr_), "All") + " forecasts lay")
+                          if imband == len(tr_) else "%d of %d forecasts lay" % (imband, len(tr_)),
                           a("/track-record", "track record"), rw.verfahren_html(["PH-M-001", "PH-M-006"])))
         abschnitte = """<section id="after-activation"><h2>First counted numbers after activation</h2>
 <p>%s Up to %s we counted %s intervals on mainnet after NU7, with a mean of %s s and a median of %s s, against %s s for an ideal 25 s chain, computed.</p>
@@ -1031,13 +1037,13 @@ def zcash_mainnet_teile(st):
                        % (utc_lang(v["median_utc"]).split(", ", 1)[1], utc_lang(v["band_5_utc"], False),
                           utc_lang(v["band_95_utc"], False), stand_text)))
         faq_akt = ("At block 3,543,405 on mainnet, the height fixed in Zebra 7.0.0. At the pace we "
-                   "counted over the %d full UTC days up to %s, our estimate for that block is %s, "
+                   "counted over the %d full UTC days up to %s, our forecast for that block is %s, "
                    "with 9 in 10 of our draws between %s and %s."
                    % (v["tempo_fenster_tage"], tempo_fenster(v), utc_lang(v["median_utc"]),
                       utc_lang(v["band_5_utc"], False), utc_lang(v["band_95_utc"], False)))
         abschnitte = """<section id="mainnet-forecast"><h2>When does NU7 reach Zcash mainnet?</h2>
-<p>Block 3,543,405 is fixed in %s. On %s our header client stood at block %s, with %s blocks to go. At the pace we counted over the %d full UTC days up to %s, %s s per block, the median of %s draws puts block 3,543,405 at %s. That is our estimate.</p>
-<p>Nine in ten draws fall between %s and %s. At exactly 75 s per block it would be %s. All three are estimates computed from our count, not dates set by the project.</p>
+<p>Block 3,543,405 is fixed in %s. On %s our header client stood at block %s, with %s blocks to go. At the pace we counted over the %d full UTC days up to %s, %s s per block, the median of %s draws puts block 3,543,405 at %s. That is our forecast.</p>
+<p>Nine in ten draws fall between %s and %s. At exactly 75 s per block it would be %s. All three are forecasts computed from our count, not dates set by the project.</p>
 <p class="src">Our own header client, Zcash mainnet, as of %s. Method in %s.</p>
 <p class="unc">Measurement uncertainty. The 90%% band is the spread of the draws from the pace we counted. It does not cover a change in hashrate after %s, so we publish each new forecast with its date and score it on our %s.</p>
 %s
@@ -1407,7 +1413,7 @@ def seiten():
 <p>PulseHawk is run by Vizora Digital UG (haftungsbeschränkt). It is funded by fees for paid measurements.</p>
 </section>
 <section id="corrections"><h2>Where are corrections listed?</h2>
-<p>Every correction to a published page gets a dated entry on our %s page, with what was wrong, the corrected text and who reported it. Our estimates are scored against the result on our %s.</p>
+<p>Every correction to a published page gets a dated entry on our %s page, with what was wrong, the corrected text and who reported it. Our forecasts are scored against the result on our %s.</p>
 </section>
 <p>The rules for every report type are in the %s.</p>
 %s
@@ -1420,29 +1426,29 @@ def seiten():
 
     # 6a track record, 6b corrections, 6c about (Ben, 4.11.2026)
     tr = lies_track_record()
-    tr_schaetz = [e for e in tr if e["art"] == "estimate"]
+    tr_schaetz = sorted((e for e in tr if e["art"] == "estimate"), key=lambda e: e["estimate"]["as_of"])
     tr_vergl = [e for e in tr if e["art"] == "comparison"]
     tr_zahl = {st: sum(e["status"] == st for e in tr) for st in TR_STATUS}
     S.append(dict(
         datei="track-record.html", pfad="/track-record", og="method", lastmod=TR_STAND,
-        title="Track record of our estimates | PulseHawk",
-        desc=("Every PulseHawk estimate and comparison, scored against the counted result. "
+        title="Track record of our forecasts | PulseHawk",
+        desc=("Every PulseHawk forecast and comparison, scored against the counted result. "
               "With link, date, our value, the window, deviation and status for each entry."),
         h1="Track record",
-        lead=("Every estimate we publish, and every comparison of our count with a published value, "
+        lead=("Every forecast we publish, and every comparison of our count with a published value, "
               "gets an entry here. Each entry links the place it was first published, with its date, "
               "and stays open until there is a counted result."),
         css=TR_CSS,
         body="""
 <section id="scoring"><h2>How is an entry scored?</h2>
 <ul class="list">
-<li><b>In band.</b> For an estimate, the counted result fell inside the 90%% band we published. For a comparison, the published value lies inside the 95%% interval of our count.</li>
+<li><b>In band.</b> For a forecast, the counted result fell inside the 90%% band we published. For a comparison, the published value lies inside the 95%% interval of our count.</li>
 <li><b>Outside.</b> The result fell outside. For a comparison this is a finding about the network, which did not run at its published value.</li>
 <li><b>Open.</b> There is no counted result yet. An open entry never shows a result.</li>
 </ul>
 <p>The list has %d entries, %d in band, %d outside and %d open. Entries are never removed. A mistake in an entry is fixed on our %s page.</p>
 </section>
-<section id="estimates"><h2>Our estimates</h2>
+<section id="estimates"><h2>Our forecasts</h2>
 <div class="trl">%s</div>
 </section>
 <section id="comparisons"><h2>Our count against a published value</h2>
@@ -1472,7 +1478,7 @@ def seiten():
 </section>
 <section id="report"><h2>How do I report an error?</h2>
 <p>Write to %s with the page and what you think is wrong. If we correct it, the entry names you as the reporter, with the public name you choose, or PulseHawk if you prefer.</p>
-<p>How our own estimates turned out is on our %s.</p>
+<p>How our own forecasts turned out is on our %s.</p>
 </section>
 """ % ("".join(korrektur_eintrag(len(korr) - i, e) for i, e in enumerate(korr)),
        a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)), a("/track-record", "track record")),
@@ -1523,7 +1529,7 @@ def seiten():
 <section id="check"><h2>Where can you check our work?</h2>
 <ul class="list">
 <li>%s, with a fixed ID for each way of counting.</li>
-<li>%s, every estimate scored against the counted result.</li>
+<li>%s, every forecast scored against the counted result.</li>
 <li>%s, every correction, dated.</li>
 <li>%s, the code to repeat our counts.</li>
 </ul>
@@ -1554,7 +1560,7 @@ def seiten():
         body="""
 <section><h2>Which upgrades are coming?</h2>
 %s
-<p class="note">%d entries, checked on %s. Around marks an estimated date, for example from an announced block height. Measured by us means we measured that upgrade ourselves and a case page follows.</p>
+<p class="note">%d entries, checked on %s. Around marks an approximate date, for example from an announced block height. Measured by us means we measured that upgrade ourselves and a case page follows.</p>
 </section>
 <section><h2>How does an upgrade get on this calendar?</h2>
 <p>Only with a source from the project itself, a specification, release notes or an official announcement. Each source was checked on the date stated above, and a changed date replaces the old one on the same row.</p>

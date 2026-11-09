@@ -1,5 +1,5 @@
 {
- "hinweis": "Track record von PulseHawk (Ben, 4.11.2026). Nur Eintraege, die oeffentlich und datiert stehen, Quelle von Claude selbst geprueft. art 'estimate' ist eine eigene Prognose, art 'comparison' ein Vergleich mit einem veroeffentlichten Wert. status: in band, outside, open. Bei Vergleichen heisst in band, dass der veroeffentlichte Wert im 95-%-Intervall unseres gezaehlten Werts liegt (scripts/unsicherheit.py); bei Prognosen, dass das gezaehlte Ergebnis im 90-%-Band unserer Prognose liegt. Ohne Ergebnis ist der Status open. Nach dem Aendern: python3 scripts/b2b_pages.py TR-003 und TR-004 am 6.11.2026 mit der gezaehlten Kopfzeit von Block 3,543,405 geschlossen (stand-2026-11-06.json).",
+ "hinweis": "Track record von PulseHawk (Ben, 4.11.2026). Nur Eintraege, die oeffentlich und datiert stehen, Quelle von Claude selbst geprueft. art 'estimate' ist eine eigene Prognose, art 'comparison' ein Vergleich mit einem veroeffentlichten Wert. status: in band, outside, open. Bei Vergleichen heisst in band, dass der veroeffentlichte Wert im 95-%-Intervall unseres gezaehlten Werts liegt (scripts/unsicherheit.py); bei Prognosen, dass das gezaehlte Ergebnis im 90-%-Band unserer Prognose liegt. Ohne Ergebnis ist der Status open. Nach dem Aendern: python3 scripts/b2b_pages.py TR-003 und TR-004 am 6.11.2026 mit der gezaehlten Kopfzeit von Block 3,543,405 geschlossen (stand-2026-11-06.json). TR-005 (23.10.) und TR-006 (4.11.) am 9.11.2026 nachgetragen (Ben 9.11.), Werte aus der Rechentabelle der NU7-Karte (8.11.), gegen die Datendateien geprueft. TR-005 verlinkt einen Auszug der Datendatei vom 23.10. auf pulsehawk.io (data/track-record/), weil die Originaldatei nur im Messrepo liegt, das pulsehawk.io nicht nennt.",
  "entries": [
   {
    "id": "TR-001",
@@ -60,8 +60,8 @@
    "network": "Zcash mainnet, NU7 (ZIP 259)",
    "subject": "time of block 3,543,405, the NU7 activation height",
    "estimate": {
-    "value": "6 November 2026, 02:26 UTC",
-    "band": "5 November 2026, 23:01 UTC to 6 November 2026, 05:51 UTC",
+    "value": "6 November 2026, 02:26:16 UTC",
+    "band": "5 November 2026, 23:01:22 UTC to 6 November 2026, 05:51:31 UTC",
     "as_of": "2026-10-28"
    },
    "result": {
@@ -87,8 +87,8 @@
    "network": "Zcash mainnet, NU7 (ZIP 259)",
    "subject": "time of block 3,543,405, the NU7 activation height",
    "estimate": {
-    "value": "6 November 2026, 02:39 UTC",
-    "band": "6 November 2026, 00:28 UTC to 6 November 2026, 05:00 UTC",
+    "value": "6 November 2026, 02:39:52 UTC",
+    "band": "6 November 2026, 00:28:23 UTC to 6 November 2026, 05:00:17 UTC",
     "as_of": "2026-11-02"
    },
    "result": {
@@ -99,6 +99,60 @@
     "interval": "single value, header time in whole seconds set by the miner"
    },
    "deviation": "-5 min 50 s",
+   "status": "in band",
+   "methods": [
+    "PH-M-001",
+    "PH-M-006"
+   ]
+  },
+  {
+   "id": "TR-005",
+   "art": "estimate",
+   "published": "2026-10-23",
+   "url": "https://pulsehawk.io/data/track-record/zcash-nu7-forecast-2026-10-23.json",
+   "where": "our data file of 23 October 2026, 12:55 UTC, excerpt",
+   "network": "Zcash mainnet, NU7 (ZIP 259)",
+   "subject": "time of block 3,543,405, the NU7 activation height",
+   "estimate": {
+    "value": "6 November 2026, 02:21:52 UTC",
+    "band": "5 November 2026, 22:02:16 UTC to 6 November 2026, 06:40:25 UTC",
+    "as_of": "2026-10-23"
+   },
+   "result": {
+    "value": "6 November 2026, 02:34:02 UTC",
+    "label": "counted",
+    "window": "header time of block 3,543,405",
+    "n": 1,
+    "interval": "single value, header time in whole seconds set by the miner"
+   },
+   "deviation": "+12 min 10 s",
+   "status": "in band",
+   "methods": [
+    "PH-M-001",
+    "PH-M-006"
+   ]
+  },
+  {
+   "id": "TR-006",
+   "art": "estimate",
+   "published": "2026-11-04",
+   "url": "https://github.com/pulsehawk/methods/blob/04f3f6c/upgrade_report/configs/zcash-mainnet-nu7.json",
+   "where": "github.com/pulsehawk/methods, upgrade report config of 4 November 2026",
+   "network": "Zcash mainnet, NU7 (ZIP 259)",
+   "subject": "time of block 3,543,405, the NU7 activation height",
+   "estimate": {
+    "value": "6 November 2026, 02:40:58 UTC",
+    "band": "6 November 2026, 01:14:45 UTC to 6 November 2026, 04:07:28 UTC",
+    "as_of": "2026-11-04"
+   },
+   "result": {
+    "value": "6 November 2026, 02:34:02 UTC",
+    "label": "counted",
+    "window": "header time of block 3,543,405",
+    "n": 1,
+    "interval": "single value, header time in whole seconds set by the miner"
+   },
+   "deviation": "-6 min 56 s",
    "status": "in band",
    "methods": [
     "PH-M-001",
