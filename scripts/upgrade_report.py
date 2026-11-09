@@ -50,7 +50,7 @@ UNSICHER = {
     "M5": "a 95 % Wilson interval for each share, computed from n.",
     "M6": "header times resolve to 1 s and the band edges are computed exactly. The first block that stays in "
           "the band can move by one block when header times run backwards.",
-    "M7": "the header time is set by the miner and resolves to 1 s. Our estimate carries its own 90 % band.",
+    "M7": "the header time is set by the miner and resolves to 1 s. Our forecast carries its own 90 % band.",
 }
 
 # die quellenfelder, die der waechter unter d) prueft
@@ -94,7 +94,7 @@ METRIKEN = [
      "The time from the activation block until the mean of the block intervals over the last hour "
      "lies within 20 % of the new target and stays there for 60 minutes without a break."),
     ("M7", "First block at the activation height",
-     "Its header time and the gap to our own estimate published before activation."),
+     "Its header time and the gap to our own forecast published before activation."),
 ]
 
 
@@ -462,7 +462,7 @@ def body(kopf, w, csv_text):
     if not w:
         for mid, name, was in METRIKEN:
             # zu M7 gehoert unsere schaetzung, die vor der aktivierung feststeht
-            extra = ("<p>Our estimate before activation is %s.</p>" % schaetz_text(s)
+            extra = ("<p>Our forecast before activation is %s.</p>" % schaetz_text(s)
                      if mid == "M7" else "")
             teile.append('<section id="%s"><h2>%s %s</h2><p>%s</p>%s<p class="note">Not yet counted. '
                          'The numbers follow after block %s, from our own count.</p>%s'
@@ -566,8 +566,8 @@ def body(kopf, w, csv_text):
         teile.append(tabelle(
             "m7", "M7 First block at the activation height", ("Value", "Result"),
             [("Header time of block %s" % betrag(H), zelle(w, "erster_block_kopfzeit")),
-             ("Gap to our estimate", zelle(w, "kopfzeit_minus_schaetzung"))],
-            "Window %s. Our estimate was %s." % (fenster_text(fenster(fw["t_akt"], fw["t_akt"])), schaetz_text(s))))
+             ("Gap to our forecast", zelle(w, "kopfzeit_minus_schaetzung"))],
+            "Window %s. Our forecast was %s." % (fenster_text(fenster(fw["t_akt"], fw["t_akt"])), schaetz_text(s))))
         sha = hashlib.sha256(csv_text.encode("utf-8")).hexdigest()
         n_rows = len([1 for _ in csv.DictReader(io.StringIO(csv_text))])
         teile.append(
@@ -784,7 +784,7 @@ def spezifikation_html(version):
 <ul class="list">
 <li><b>Peer samples.</b> Our listener reads the protocol version that each peer it connects to sends in the handshake. A peer counts as pre-upgrade when its version is below the minimum protocol version of the upgrade. The share is given in %% of n, rounded to 0.1. The report shows the samples at activation, after 24 hours and after 72 hours. Further samples, such as one after 6 hours, stay in the raw data. Only the version is kept, no address.</li>
 <li><b>Time to stable.</b> For every block of the set after activation whose header time is at least one hour after the activation time, we take the mean of the intervals of the blocks in the hour up to it. That mean is in the band when it lies within 20 %% of the new target T. Time to stable is the time in whole seconds from the activation block to the first block from which the mean stays in the band for 60 minutes without a break, with the data covering those 60 minutes. If no block does within the window, the report says so.</li>
-<li><b>Our estimate.</b> M7 gives the header time of the activation block and its gap to our own estimate in whole seconds, published before activation with its date.</li>
+<li><b>Our forecast.</b> M7 gives the header time of the activation block and its gap to our own forecast in whole seconds, published before activation with its date.</li>
 </ul>
 </section>
 <section id="data"><h2>What does the data file contain?</h2>
