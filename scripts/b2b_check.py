@@ -113,6 +113,21 @@ def funde_spez(absaetze):
     return f
 
 
+# Versprechen und Beleg nennen dieselbe Bandangabe, oder der Unterschied
+# steht ausdruecklich da (Ben, 9.11.2026): sonst rot.
+RE_BAND = re.compile(r"(\d+)\s?%\s+(?:and an?\s+(\d+)\s?%\s+)?bands?\b", re.I)
+RE_BAND_UNTERSCHIED = re.compile(r"used an? \d+\s?% band\.\s+From the next \w+ on we publish", re.I)
+
+
+def funde_band(text):
+    werte = set()
+    for m in RE_BAND.finditer(text):
+        werte.update(x for x in m.groups() if x)
+    if len(werte) > 1 and not RE_BAND_UNTERSCHIED.search(text):
+        return ["bandangaben %s ohne ausdruecklichen unterschied" % "/".join(sorted(werte, key=int))]
+    return []
+
+
 def funde_messseite(roh):
     f = []
     if 'class="meth"' not in roh or "/method#ph-m-" not in roh:
@@ -276,6 +291,9 @@ def funde_text(text, datei):
     m = re.search(r"(?<![a-z])stand(?![a-z])", low)
     if m:
         f.append("'stand' in '%s', englisch 'as of <datum>'" % t[max(0, m.start() - 30):m.end() + 25].strip())
+    # ein verdoppeltes %% ist ein formatierungsfehler im generator (9.11.2026)
+    if "%%" in t:
+        f.append("'%%' im text, formatierungsfehler")
     # "forecast" statt "estimate" im sichtbaren text (Ben, 9.11.2026)
     m = re.search(r"(?<![a-z])estimat", low)
     if m:
@@ -338,6 +356,7 @@ def pruefe(datei, roh=None):
                 f.append("satz beginnt mit ziffer '%s'" % satz[:60])
     f += funde_zitierkasten(roh)
     f += funde_spez(p.absaetze)
+    f += funde_band(sichtbar)
     rel = os.path.relpath(os.path.join(REPO, datei), REPO) if not os.path.isabs(datei) else os.path.relpath(datei, REPO)
     if rel in MESS_SEITEN or (rel.startswith("reports/") and rel.endswith(".html")):
         f += funde_messseite(roh)
@@ -469,7 +488,18 @@ def selbsttest():
     k = [x for x in funde_text("Our estimate was early. Our forecast was late.", "x.html") if "forecast" in x]
     falsch += len(k) != 1
     print("  %s  estimate statt forecast, %d funde, erwartet 1" % ("ok  " if len(k) == 1 else "FEHL", len(k)))
-    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 3))
+    # bandangaben, versprechen gegen beleg (Ben, 9.11.2026)
+    band_faelle = [
+        ("A forecast with an 80% and a 95% band. Four of four forecasts landed inside their 90% band.", 1),
+        ("A forecast with an 80% and a 95% band. Four of four forecasts landed inside their 90% band. "
+         "Our NU7 forecasts used a 90% band. From the next upgrade on we publish an 80% and a 95% band.", 0),
+        ("A forecast with a dated band. Four of four forecasts landed inside their 90% band.", 0),
+    ]
+    for text, n in band_faelle:
+        k = len(funde_band(text))
+        falsch += k != n
+        print("  %s  band, %d funde, erwartet %d  %s" % ("ok  " if k == n else "FEHL", k, n, text[:60]))
+    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 3 + len(band_faelle)))
     return 1 if falsch else 0
 
 

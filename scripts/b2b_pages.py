@@ -84,7 +84,10 @@ def lang(iso):
 # auf /contact bleiben.
 ANGEBOT_SATZ = "Scoped per network and window."
 PREIS_FREI_STAND = "2026-11-05"
-UPGRADE_V2_STAND = "2026-11-09"   # /upgrade-monitoring und /upgrades nach strategie v2 (Ben, 9.11.2026)
+UPGRADE_V2_STAND = "2026-11-10"
+# 80-%- und 95-%-baender fuer alle kuenftigen prognosen, von Ben am 9.11.2026
+# bestaetigt. Mit False verspricht die seite nur ein datiertes band.
+BAENDER_80_95_BESTAETIGT = True   # /upgrade-monitoring und /upgrades nach strategie v2 (Ben, 9.11.2026)
 
 
 def betrag(n):
@@ -1290,14 +1293,14 @@ def seiten():
         body="""
 <section id="parts"><h2>What do you get?</h2>
 <ul class="list">
-<li><b>Readiness.</b> The share of peers on the new software version, read at the handshake, and a forecast of the activation time with an 80%% and a 95%% band, dated and updated as activation comes closer.</li>
+<li><b>Readiness.</b> The share of peers on the new software version, read at the handshake, and %s.</li>
 <li><b>Watch.</b> From 24 hours before to 72 hours after activation our listener follows the chain, and an alert goes to a named person on your team when one of our signals fires.</li>
 <li><b>Report after the upgrade.</b> An Upgrade Report with seven fixed values under our published %s, with the raw data and the commands to count it again.</li>
 <li><b>Monthly network health.</b> Block intervals, the longest gaps, reorgs and peer versions every month, each against its target and dated.</li>
 </ul>
 </section>
 <section id="proof"><h2>What have we shown so far?</h2>
-<p>Zcash NU7 (ZIP 259) activated on mainnet at block 3,543,405 on 6 November 2026, 02:34 UTC by header time, counted. %s, each scored on our %s.</p>
+<p>Zcash NU7 (ZIP 259) activated on mainnet at block 3,543,405 on 6 November 2026, 02:34 UTC by header time, counted. %s, each scored on our %s.%s</p>
 <p>Our %s for it follows the same specification.</p>
 </section>
 <section id="independence"><h2>How do we stay independent?</h2>
@@ -1308,8 +1311,13 @@ def seiten():
 <p class="cta">%s</p>
 </section>
 %s
-""" % (a("/standard/upgrade-report/", "specification"),
+""" % (("a forecast of the activation time with an 80% and a 95% band, dated and updated as activation "
+        "comes closer" if BAENDER_80_95_BESTAETIGT else
+        "a forecast of the activation time with a dated band, scored against the block afterwards"),
+       a("/standard/upgrade-report/", "specification"),
        nu7_satz, a("/track-record", "track record"),
+       (" Our NU7 forecasts used a 90% band. From the next upgrade on we publish an 80% and a 95% band."
+        if BAENDER_80_95_BESTAETIGT else ""),
        a("/reports/zcash-nu7", "Upgrade Report PH-UR-2026-001"), a("/independence", "independence"),
        a(mail_betreff, E(KONTAKT_MAIL)), E(betreff), a(mail_betreff, "Write to us", "btn"),
        faq_html(upg_faq)),
@@ -1573,7 +1581,7 @@ def seiten():
 <p>Only with a source from the project itself, a specification, release notes or an official announcement. Each source was checked on the date stated above, and a changed date replaces the old one on the same row.</p>
 </section>
 <section><h2>Want an upgrade measured?</h2>
-<p>We compare block time, difficulty and orphaned blocks before and after activation. See %s.</p>
+<p>We measure readiness before activation and report what changed after it. See %s.</p>
 </section>
 %s
 <p class="cta">%s</p>
