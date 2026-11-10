@@ -1,26 +1,26 @@
 {
- "date": "2026-11-09",
+ "date": "2026-11-10",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "IRDM",
+  "name": "Iridium Communications",
+  "sector": "Communication Services",
+  "industry": "Alternative Carriers",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 10.4476,
-  "pct": 944.8,
-  "from_1000": 10448,
-  "d": "2026-11-06",
-  "close": 254.19,
-  "d_1y": "2025-11-06",
-  "close_1y": 24.33,
-  "low": 22.36,
-  "high": 258.38,
-  "drawdown_pct": -8.1,
+  "mult": 2.7338,
+  "pct": 173.4,
+  "from_1000": 2734,
+  "d": "2026-11-09",
+  "close": 45.08,
+  "d_1y": "2025-11-10",
+  "close_1y": 16.49,
+  "low": 15.84,
+  "high": 55.72,
+  "drawdown_pct": -3.9,
   "verified": {
    "source": "tiingo",
-   "mult": 10.4476,
+   "mult": 2.7338,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 9.7,
-   "d": "2026-11-06",
-   "d_1y": "2025-11-06"
+   "pct": 10.5,
+   "d": "2026-11-09",
+   "d_1y": "2025-11-10"
   },
   "gold": {
-   "pct": 1.8,
-   "d": "2026-11-06",
-   "d_1y": "2025-11-06"
+   "pct": 0.3,
+   "d": "2026-11-09",
+   "d_1y": "2025-11-10"
   }
  },
- "candidates_total": 29,
+ "candidates_total": 32,
  "top10": [
   {
    "ticker": "MRNA",
@@ -51,11 +51,15 @@
   },
   {
    "ticker": "MXL",
-   "mult": 3.3185
+   "mult": 3.5905
   },
   {
    "ticker": "VSXY",
    "mult": 2.9749
+  },
+  {
+   "ticker": "IRDM",
+   "mult": 2.7338
   },
   {
    "ticker": "VSTS",
@@ -63,29 +67,38 @@
   },
   {
    "ticker": "RNG",
-   "mult": 2.6712
+   "mult": 2.6764
   },
   {
    "ticker": "GKOS",
    "mult": 2.6585
   },
   {
-   "ticker": "IRDM",
-   "mult": 2.6059
-  },
-  {
    "ticker": "SEZL",
-   "mult": 2.5768
+   "mult": 2.574
   },
   {
    "ticker": "XNCR",
    "mult": 2.5536
   },
   {
-   "ticker": "SN",
-   "mult": 2.426
+   "ticker": "RXO",
+   "mult": 2.4288
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (3.99%)"
+  },
+  {
+   "ticker": "MXL",
+   "reason": "quellen weichen ab (2.85%)"
+  },
+  {
+   "ticker": "VSXY",
+   "reason": "quellen weichen ab (9.06%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
