@@ -1,0 +1,34 @@
+== --pruefen --melden --probe --heute 2026-11-22
+stufe=gruen alter=13 rest=8 report=PH-UR-2026-001
+pulsehawk.io frische gruen: neuester report PH-UR-2026-001 ist 13 tage alt, noch 8 tage bis zur grenze.
+exit 0
+== --pruefen --melden --probe --heute 2026-11-23
+stufe=gelb alter=14 rest=7 report=PH-UR-2026-001
+pulsehawk.io frische GELB: neuester report PH-UR-2026-001 ist 14 tage alt (veroeffentlicht 2026-11-09), noch 7 tage bis zur grenze von 21 tagen.
+[log] probe, nicht an #ops-log gesendet (frische):
+pulsehawk.io frische GELB: neuester report PH-UR-2026-001 ist 14 tage alt (veroeffentlicht 2026-11-09), noch 7 tage bis zur grenze von 21 tagen.
+exit 0
+== --pruefen --melden --probe --heute 2026-11-30
+stufe=rot alter=21 rest=0 report=PH-UR-2026-001
+pulsehawk.io frische ROT: neuester report PH-UR-2026-001 ist 21 tage alt (veroeffentlicht 2026-11-09), die grenze ist 21 tage. Die startseite baut die zeitlose fassung ohne kopfzahl. Neuen report in data/reports.json eintragen.
+[log] probe, nicht an #ops-log gesendet (frische):
+pulsehawk.io frische ROT: neuester report PH-UR-2026-001 ist 21 tage alt (veroeffentlicht 2026-11-09), die grenze ist 21 tage. Die startseite baut die zeitlose fassung ohne kopfzahl. Neuen report in data/reports.json eintragen.
+exit 1
+== --pruefen --melden --probe --heute 2026-12-01
+stufe=rot alter=22 rest=-1 report=PH-UR-2026-001
+pulsehawk.io frische ROT: neuester report PH-UR-2026-001 ist 22 tage alt (veroeffentlicht 2026-11-09), die grenze ist 21 tage. Die startseite baut die zeitlose fassung ohne kopfzahl. Neuen report in data/reports.json eintragen.
+[log] probe, nicht an #ops-log gesendet (frische):
+pulsehawk.io frische ROT: neuester report PH-UR-2026-001 ist 22 tage alt (veroeffentlicht 2026-11-09), die grenze ist 21 tage. Die startseite baut die zeitlose fassung ohne kopfzahl. Neuen report in data/reports.json eintragen.
+exit 1
+== echter fehler: sha256 kaputt, bau bricht weiter ab
+datierte schicht, bau abgebrochen
+  PH-UR-2026-001 sha256 passt nicht zu /reports/zcash-nu7.csv
+exit 1
+== echter fehler im pruefmodus
+stufe=rot alter=2 rest=19 report=PH-UR-2026-001
+pulsehawk.io frische ROT, die datierte schicht hat fehler, der naechste bau bricht ab:
+- PH-UR-2026-001 sha256 passt nicht zu /reports/zcash-nu7.csv
+[log] probe, nicht an #ops-log gesendet (frische):
+pulsehawk.io frische ROT, die datierte schicht hat fehler, der naechste bau bricht ab:
+- PH-UR-2026-001 sha256 passt nicht zu /reports/zcash-nu7.csv
+exit 1
