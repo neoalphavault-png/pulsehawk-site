@@ -10,12 +10,20 @@ Veroeffentlichung sowieso aendert:
   data/measurements.json   die Messungen mit Wert, Fenster und Datum
   data/track-record.json   die gewerteten Prognosen und ihr interval score
 
-Der Bau bricht ab, statt zu warnen:
-  - der neueste Report ist aelter als FRISCH_TAGE Tage,
+Der Bau bricht ab, statt zu warnen, bei echten Fehlern:
   - einem Wert fehlt label, Fenster oder Veroeffentlichungsdatum,
   - die sha256 eines Reports passt nicht zu seiner CSV.
 
-    python3 scripts/datiert.py            pruefen, wie der bau
+Ist der neueste Report aelter als FRISCH_TAGE Tage, baut die Startseite die
+zeitlose Fassung (Ben, 11.11.2026, Teil 2): "Latest report" ohne Kopfzahl,
+Messkacheln mit Werten aelter als die Grenze entfallen zugunsten eines Links
+auf /reports/. Ein Bau fuer eine Korrektur scheitert daran nicht.
+
+Die taegliche Pruefung (Workflow datiert-pruefung.yml) liest nur und meldet
+nach #ops-log: gelb ab GELB_TAGE mit den Resttagen, rot ab FRISCH_TAGE.
+
+    python3 scripts/datiert.py                      pruefen, wie der bau
+    python3 scripts/datiert.py --pruefen [--melden] [--probe]
     python3 scripts/datiert.py --selbsttest
 """
 
@@ -29,8 +37,9 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 
-# die schwelle steht hier allein, damit sie sich aendern laesst (Ben, 11.11.2026)
-FRISCH_TAGE = 21
+# die schwellen stehen hier allein, damit sie sich aendern lassen (Ben, 11.11.2026)
+FRISCH_TAGE = 21     # danach baut die startseite die zeitlose fassung, die pruefung meldet rot
+GELB_TAGE = 14       # ab hier meldet die taegliche pruefung gelb mit den resttagen
 
 REPORTS = "data/reports.json"
 MESSUNGEN = "data/measurements.json"
@@ -50,6 +59,10 @@ class Abbruch(SystemExit):
 
 
 def heute():
+    """das datum des baus in utc. PH_HEUTE=JJJJ-MM-TT setzt es fuer proben und
+    selbsttests, etwa um die zeitlose fassung zu zeigen; im normalen bau leer."""
+    if os.environ.get("PH_HEUTE"):
+        return iso_datum(os.environ["PH_HEUTE"])
     return datetime.datetime.now(datetime.timezone.utc).date()
 
 
@@ -115,13 +128,34 @@ def pruefe_reports(reps, tag, repo=REPO):
             f.append("%s csv fehlt %s" % (rid, r.get("csv")))
         elif hashlib.sha256(open(csv, "rb").read()).hexdigest() != r.get("csv_sha256"):
             f.append("%s sha256 passt nicht zu %s" % (rid, r.get("csv")))
-    if not f:
-        neu = max(reps, key=lambda r: r["published"])
-        alter = (tag - iso_datum(neu["published"])).days
-        if alter > FRISCH_TAGE:
-            f.append("neuester report %s ist %d tage alt (veroeffentlicht %s), die grenze ist %d tage. "
-                     "Neuen report in data/reports.json eintragen." % (neu["id"], alter, neu["published"], FRISCH_TAGE))
+    # das alter ist kein fehler mehr, es schaltet auf die zeitlose fassung (Ben, 11.11.2026)
     return f
+
+
+def alter_tage(tag=None, repo=REPO):
+    """alter des neuesten reports in tagen."""
+    return ((tag or heute()) - iso_datum(neuester_report(repo)["published"])).days
+
+
+def zeitlos(tag=None, repo=REPO):
+    """True, wenn die startseite die zeitlose fassung baut."""
+    return alter_tage(tag, repo) > FRISCH_TAGE
+
+
+def frisch(datum, tag=None):
+    """ein wert gilt als frisch, solange er nicht aelter als die grenze ist."""
+    return ((tag or heute()) - iso_datum(datum)).days <= FRISCH_TAGE
+
+
+def stufe(tag=None, repo=REPO):
+    """gruen, gelb oder rot fuer die taegliche pruefung, mit alter und resttagen."""
+    alter = alter_tage(tag, repo)
+    rest = FRISCH_TAGE - alter
+    if alter >= FRISCH_TAGE:
+        return "rot", alter, rest
+    if alter >= GELB_TAGE:
+        return "gelb", alter, rest
+    return "gruen", alter, rest
 
 
 def pruefe_messungen(mes):
@@ -223,7 +257,13 @@ def headline(r, repo=REPO):
     return '<div class="dwert">%s s</div><p>%s.</p>' % (w, satz)
 
 
-def report_karte(r, link, repo=REPO):
+def report_karte(r, link, repo=REPO, ohne_zahl=False):
+    """mit ohne_zahl die zeitlose fassung: titel, kennung und link, keine kopfzahl."""
+    if ohne_zahl:
+        return ('<div class="drep"><p class="dkick">Latest report, %s</p><h3>%s</h3><p>%s, %s.</p>'
+                '<p>%s.</p></div>'
+                % (E(r["id"]), link(r["path"], E(r["title"])), E(r["network"]), E(r.get("subject", "")),
+                   link(r["path"], "Read the report with its window, date and raw data")))
     return ('<div class="drep dz"><p class="dkick">Latest report, %s</p><h3>%s</h3><p>%s, %s.</p>%s%s'
             '<p class="dmeta">Method v%s. %s, sha256 <code>%s…</code>.</p></div>'
             % (E(r["id"]), link(r["path"], E(r["title"])), E(r["network"]), E(r.get("subject", "")),
@@ -280,7 +320,7 @@ def selbsttest():
     import tempfile
     import shutil
     falsch = 0
-    anzahl = 8
+    anzahl = 10
     with tempfile.TemporaryDirectory() as tmp:
         for d in ("data", "data/reports", "reports"):
             os.makedirs(os.path.join(tmp, d), exist_ok=True)
@@ -291,15 +331,23 @@ def selbsttest():
             os.makedirs(os.path.dirname(ziel), exist_ok=True)
             shutil.copy(os.path.join(REPO, r["csv"].lstrip("/")), ziel)
         neu = iso_datum(neuester_report()["published"])
+        T = datetime.timedelta
+        # das alter bricht nicht ab, es schaltet auf die zeitlose fassung und
+        # stuft die taegliche pruefung (Ben, 11.11.2026, teil 2)
         faelle = [
-            ("frisch, am tag der veroeffentlichung", neu, 0),
-            ("genau an der grenze", neu + datetime.timedelta(days=FRISCH_TAGE), 0),
-            ("einen tag drueber", neu + datetime.timedelta(days=FRISCH_TAGE + 1), 1),
+            ("am tag der veroeffentlichung", neu, False, "gruen"),
+            ("ein tag vor gelb", neu + T(days=GELB_TAGE - 1), False, "gruen"),
+            ("ab gelb", neu + T(days=GELB_TAGE), False, "gelb"),
+            ("genau an der grenze", neu + T(days=FRISCH_TAGE), False, "rot"),
+            ("einen tag drueber", neu + T(days=FRISCH_TAGE + 1), True, "rot"),
         ]
-        for name, tag, n in faelle:
-            k = len(pruefe_reports(lade(REPORTS, tmp)["reports"], tag, tmp))
-            falsch += k != n
-            print("  %s  %s, %d funde, erwartet %d" % ("ok  " if k == n else "FEHL", name, k, n))
+        for name, tag, soll_zl, soll_st in faelle:
+            fe = len(pruefe_reports(lade(REPORTS, tmp)["reports"], tag, tmp))
+            zl, st = zeitlos(tag, tmp), stufe(tag, tmp)[0]
+            ok = fe == 0 and zl == soll_zl and st == soll_st
+            falsch += not ok
+            print("  %s  %s, %d fehler, zeitlos %s, stufe %s, erwartet 0, %s, %s"
+                  % ("ok  " if ok else "FEHL", name, fe, zl, st, soll_zl, soll_st))
         mes = lade(MESSUNGEN, tmp)["measurements"]
         ohne = [dict(mes[0], published=None)] + mes[1:]
         k = len(pruefe_messungen(ohne))
@@ -327,9 +375,42 @@ def selbsttest():
     return 1 if falsch else 0
 
 
+def pruefen(melden=False, probe=False, tag=None, repo=REPO):
+    """die taegliche pruefung: liest nur, baut nichts, schreibt nichts.
+    Meldet gelb und rot nach #ops-log, ebenso echte fehler. Exit 1 bei rot
+    oder fehler, sonst 0."""
+    fehler = alles_pruefen(tag, repo)
+    neu = neuester_report(repo)
+    st, alter, rest = stufe(tag, repo)
+    if fehler:
+        text = ("pulsehawk.io frische ROT, die datierte schicht hat fehler, der naechste bau bricht ab:\n- "
+                + "\n- ".join(fehler))
+        st = "rot"
+    elif st == "rot":
+        text = ("pulsehawk.io frische ROT: neuester report %s ist %d tage alt (veroeffentlicht %s), die grenze "
+                "ist %d tage. Die startseite baut die zeitlose fassung ohne kopfzahl. Neuen report in "
+                "data/reports.json eintragen." % (neu["id"], alter, neu["published"], FRISCH_TAGE))
+    elif st == "gelb":
+        text = ("pulsehawk.io frische GELB: neuester report %s ist %d tage alt (veroeffentlicht %s), noch %d "
+                "tage bis zur grenze von %d tagen." % (neu["id"], alter, neu["published"], rest, FRISCH_TAGE))
+    else:
+        text = ("pulsehawk.io frische gruen: neuester report %s ist %d tage alt, noch %d tage bis zur grenze."
+                % (neu["id"], alter, rest))
+    print("stufe=%s alter=%d rest=%d report=%s" % (st, alter, rest, neu["id"]))
+    print(text)
+    if melden and st != "gruen":
+        sys.path.insert(0, os.path.join(HERE, "ph"))
+        import ops_melden
+        ops_melden.log(text, was="frische", probe=probe)
+    return 1 if st == "rot" else 0
+
+
 if __name__ == "__main__":
     if sys.argv[1:] == ["--selbsttest"]:
         sys.exit(selbsttest())
+    if sys.argv[1:2] == ["--pruefen"]:
+        tag_ = iso_datum(sys.argv[sys.argv.index("--heute") + 1]) if "--heute" in sys.argv else None
+        sys.exit(pruefen(melden="--melden" in sys.argv, probe="--probe" in sys.argv, tag=tag_))
     try:
         oder_abbruch()
     except Abbruch as exc:
