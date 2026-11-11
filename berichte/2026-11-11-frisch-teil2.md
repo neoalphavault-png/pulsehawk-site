@@ -71,3 +71,28 @@
 
 - Den Workflow-PR für die tägliche Prüfung prüfen und mergen.
 - Die Abnahme von Punkt 1 auf pulsehawk.io folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme Punkt 1 (11.11.2026)
+
+- **Merge:** PR #86 per Squash, Merge-Commit `3797c56`, Branch gelöscht.
+- **Abnahme auf pulsehawk.io:** Startseite und /reports/ sind live byte-gleich mit dem Bau aus `3797c56`.
+- **Fassung:** Heute ist der neueste Report 2 Tage alt, darum steht die normale Fassung live. Die zeitlose Fassung zeigen die Bilder `*-zeitlos.jpg` oben.
+- **Live-Aufnahmen** bei 390 und 1440 px: `home-390-dark-live.jpg` und `home-1440-dark-live.jpg`. Kein waagerechtes Scrollen.
+
+## Punkt 2: Workflow `datiert-pruefung.yml` (eigener PR, Ben merged)
+
+- **Was er tut:**
+  - Läuft täglich um 07:17 UTC und auf Knopfdruck (workflow_dispatch).
+  - Führt erst `python3 scripts/datiert.py --selbsttest` aus, dann `python3 scripts/datiert.py --pruefen --melden`.
+  - Liest nur: kein Bau, kein Commit, kein Push, `permissions: contents: read`.
+- **Meldungen nach #ops-log:**
+  - gelb ab 14 Tagen mit den Resttagen;
+  - rot ab 21 Tagen und bei echten Fehlern, dann endet der Lauf mit Exit-Code 1;
+  - grün meldet nichts.
+- **Secret:** `DISCORD_WEBHOOK_LOG` steht nur im meldenden Schritt. Fehlt es, steht die Meldung nur im Job-Log.
+- **workflow_dispatch:** nimmt `heute` (Datum für eine Probe) und `probe` (nur Job-Log).
+- **Lokal geprüft:**
+  - Die YAML ist gültig.
+  - Die Shell-Zeile des Schritts ergibt heute grün mit Exit-Code 0.
+  - Mit `heute=2026-11-25` und `probe` ergibt sie gelb mit 5 Resttagen, ohne zu senden.
+- **Erste Gelb-Meldung:** Für PH-UR-2026-001 kommt sie am 23.11., die erste Rot-Meldung am 30.11., falls bis dahin kein neuer Report eingetragen ist.
