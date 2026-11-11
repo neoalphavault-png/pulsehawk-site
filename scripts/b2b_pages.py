@@ -64,7 +64,11 @@ ZCASH_PDF = "reports/zcash-nu7-sample-report.pdf"
 ZCASH_CSV = "data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv"
 ZCASH_CSV_SHA256 = "c1cda3d79a470f5a8e508ebb8ba633dd4f3499eec79b5ecbba96b446dea603b6"
 # bis Sonntag zeigt "See a sample report" auf den Aufbau eines Berichts
-SAMPLE_URL = "/zcash-nu7" if ZCASH_OFFEN else "/method#sample-report"
+# "See a sample report" fuehrt auf den neuesten report aus data/reports.json
+# (Ben, 11.11.2026), nicht mehr auf die fallseite
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import datiert  # noqa: E402
+SAMPLE_URL = datiert.neuester_report()["path"]
 
 STAND = "2026-10-16"          # stand der texte, fuer dateModified und sitemap
 METHODE = "Method version 1, 16 October 2026"
@@ -85,6 +89,7 @@ def lang(iso):
 ANGEBOT_SATZ = "Scoped per network and window."
 PREIS_FREI_STAND = "2026-11-05"
 UPGRADE_V2_STAND = "2026-11-10"
+STARTSEITE_V3_STAND = "2026-11-11"   # startseite in zwei schichten, navigation, /reports/ (Ben, 11.11.2026)
 # 80-%- und 95-%-baender fuer alle kuenftigen prognosen, von Ben am 9.11.2026
 # bestaetigt. Mit False verspricht die seite nur ein datiertes band.
 BAENDER_80_95_BESTAETIGT = True   # /upgrade-monitoring und /upgrades nach strategie v2 (Ben, 9.11.2026)
@@ -96,17 +101,17 @@ def betrag(n):
 
 # --- seiten --------------------------------------------------------------
 # datei, pfad (kanonisch), title, description, h1, leiste-name
+# reihenfolge nach Ben, 11.11.2026. TPS verification und launch measurement
+# stehen unter upgrade readiness und in der leistungsliste der startseite,
+# die zcash-fallseite unter /reports/.
 NAV = [
-    ("/tps-verification", "TPS verification"),
-    ("/launch-measurement", "Launch measurement"),
     ("/upgrade-monitoring", "Upgrade readiness"),
+    ("/reports/", "Reports"),
+    ("/track-record", "Track record"),
     ("/upgrades", "Calendar"),
     ("/method", "Method"),
     ("/independence", "Independence"),
 ]
-# die zcash-fallseite kommt mit ZCASH_OFFEN in die leiste (Ben, 16.10.2026)
-if ZCASH_OFFEN:
-    NAV.insert(4, ("/zcash-nu7", "Zcash NU7"))
 
 ORG_ID = SITE + "/#org"
 ORG = {
@@ -413,8 +418,10 @@ def puls_satz(h, iv, ts):
     return "Block %s, %d s after its parent by timestamp, %s." % (betrag(h), iv, utc_text(ts))
 
 
-def puls_figur():
-    """hero: die echten abstaende als balken, wurzel-skala, mit regler."""
+def puls_figur(m):
+    """die echten abstaende des zcash-testnets als balken, wurzel-skala, mit
+    regler. Seit 11.11.2026 in der datierten schicht, mit stand-zeile aus
+    data/measurements.json."""
     d = puls_daten()
     f = d["fenster"]
     hoch = 300.0
@@ -438,51 +445,14 @@ def puls_figur():
 <input id="puls-r" type="range" min="0" max="%(n)d" value="%(im)d" aria-describedby="puls-o">
 <output id="puls-o" for="puls-r">%(satz)s</output>
 <figcaption id="puls-cap">Zcash testnet after NU7, %(anz)d consecutive blocks from %(h0)s, measured by us. The tallest bar is the longest gap of our whole count of %(bl)s blocks, %(ivm)d s at block %(hm)s on %(dm)s. The line marks the 25 s target.</figcaption>
+%(stand)s
 <script type="application/json" id="puls-d">{"h0":%(h0j)d,"d":%(daten)s}</script>
 </figure>""" % {"w": len(f) * 4, "ziel": ziel, "pfad": pfad, "xm": d["i_max"] * 4, "n": len(f) - 1,
                   "im": d["i_max"], "satz": E(puls_satz(hm, ivm, tsm)), "anz": len(f), "h0": betrag(h0),
                   "bl": betrag(d["bloecke"]), "ivm": ivm, "hm": betrag(hm),
                   "dm": lang(datetime.datetime.fromtimestamp(tsm, datetime.timezone.utc).date().isoformat()),
-                  "h0j": h0, "daten": daten})
-
-
-def zcash_fragment():
-    zeilen = [("Mean", "23.68 s", "25 s"), ("Median", "17.0 s", "17.3 s"), ("p90", "52 s", "57.6 s"),
-              ("p99", "109 s", "115.1 s"), ("Longest gap", "451 s", "about 284 s")]
-    return ('<div class="frag" data-ui><table class="ft"><thead><tr><th scope="col">Block interval</th>'
-            '<th scope="col">Measured</th><th scope="col">Ideal 25 s chain</th></tr></thead><tbody>%s</tbody></table>'
-            '<p class="fs">Our count of 49,203 blocks, up to 18 October 2026, 06:00 UTC</p></div>'
-            % "".join('<tr><th scope="row">%s</th><td>%s</td><td>%s</td></tr>' % z for z in zeilen))
-
-
-def bch_fragment():
-    # zahlen wie in der bch-karte, eigene zaehlung bis 21.10.2026
-    return ('<div class="frag" data-ui><p class="fh">Median gap between blocks</p>'
-            '<div class="fb"><span class="fbl">Measured</span><span class="fbb" style="width:100%%"></span><span class="fbv">43 s</span></div>'
-            '<div class="fb"><span class="fbl">Expected</span><span class="fbb e" style="width:%.1f%%"></span><span class="fbv">41.6 s</span></div>'
-            '<p class="fs">Our count of 7,572 blocks, 15 to 21 October 2026</p></div>' % (41.6 / 43 * 100))
-
-
-def csv_fragment():
-    pfad = os.path.join(REPO, ZCASH_CSV)
-    with open(pfad, encoding="utf-8") as fh:
-        kopf = [next(fh).rstrip("\n") for _ in range(6)]
-    return ('<div class="frag csv" data-ui><pre><code>%s\n…</code></pre>'
-            '<p class="fs">Raw data, 49,203 rows up to 18 October 2026, SHA-256 %s…</p>'
-            '<p class="fs"><a class="plausible-event-name=CSV+Download" href="/%s" download>Download the CSV</a>, about 1 MB, licensed CC BY 4.0.</p></div>'
-            % ("\n".join(E(z) for z in kopf), ZCASH_CSV_SHA256[:16], ZCASH_CSV))
-
-
-def bch_kachel():
-    text = ("The testnet for 1 minute blocks, counted from our own header client since "
-            "activation on 15 October 2026. Up to 21 October, 7,572 blocks with a median "
-            "gap of 43 s against 41.6 s expected.")
-    fall = (' %s' % a("/cases/bitcoin-cash", "Read the Bitcoin Cash case")
-            if os.path.exists(os.path.join(REPO, BCH_FALL)) else "")
-    kasten = zitier_kasten("cite-bch", "Bitcoin Cash tempnet block intervals",
-                           "2026-10-21", "/#bch-median")
-    return ('<div class="tile w2" id="bch-median"><h3>Bitcoin Cash tempnet</h3><p>%s%s</p>%s%s</div>'
-            % (text, fall, bch_fragment(), kasten))
+                  "h0j": h0, "daten": daten,
+                  "stand": datiert.stand("counted", m["window"], m["published"]).replace('class="dstand"', 'class="dstand dz"')})
 
 
 def zitat_zeilen(eintraege, hoechstens=3):
@@ -520,10 +490,23 @@ def leistungen():
     # auf die leistung, der link auf /contact steht darunter
     reihen = [("/tps-verification", "TPS verification", "Claimed vs measured throughput, from our own measurement.", ANGEBOT_SATZ),
               ("/launch-measurement", "Launch measurement", "The first week after a testnet or mainnet launch, set against the week before.", ANGEBOT_SATZ),
-              ("/upgrade-monitoring", "Upgrade readiness", "Version share, activation forecast, watch, report and monthly network health.", ANGEBOT_SATZ)]
+              ("/upgrade-monitoring", "Upgrade readiness", "Version share, activation forecast, watch, report, network health and orphaned blocks.", ANGEBOT_SATZ)]
     return "\n".join('<a class="lr" href="%s"><h3 class="ln">%s</h3><span class="ld">%s</span><span class="lp">%s</span></a>'
                      % r for r in reihen)
 
+
+# die karten der datierten schicht ausserhalb der startseite, etwa auf /reports/
+HOME_CSS_DATIERT = """
+.drep,.dkarte{background:var(--card);border-radius:12px;padding:clamp(18px,2.4vw,28px)}
+.drep+.drep{margin-top:10px}.drep h3{margin:6px 0 10px}
+.dkick{font:600 14px 'IBM Plex Sans',sans-serif;color:var(--teal);margin:0}
+.dwert{font:800 clamp(26px,3vw,38px)/1 Archivo,sans-serif;letter-spacing:-.03em;color:var(--txt);margin:14px 0 6px}
+.dstand{font:400 13px/1.5 var(--mono);color:var(--dim);margin:10px 0 0}
+.dmeta{font-size:14px;color:var(--dim)}.dmeta code{word-break:break-all}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.dkarte{display:flex;flex-direction:column;gap:8px;scroll-margin-top:16px}.dkarte p{margin:0}.dkarte h3{margin:0}
+@media (max-width:700px){.dgrid{grid-template-columns:1fr}}
+"""
 
 HOME_CSS = """
 .home{--xl:clamp(34px,7.4vw,112px);--l:clamp(30px,3.6vw,52px);--m:clamp(22px,2.1vw,30px);--s:15px}
@@ -603,10 +586,25 @@ HOME_CSS = """
 .mo .home section.in>*:nth-child(4),.mo .home section.in .tile:nth-child(4){transition-delay:.21s}
 .mo .home section.in>*:nth-child(n+5),.mo .home section.in .tile:nth-child(n+5){transition-delay:.28s}
 .mo .home .tiles{opacity:1!important;transform:none!important}
+.datiert{border-top:1px solid var(--line);margin-top:clamp(88px,10vw,168px)}
+.datiert>section:first-child{padding-top:clamp(48px,6vw,96px)}
+.drep,.dkarte,.dprog .dz{background:var(--card);padding:clamp(20px,2.4vw,32px)}
+.drep h3{margin:6px 0 10px}.drep h3 a{color:var(--txt);text-decoration-color:var(--teal)}
+.dkick{font:600 var(--s) 'IBM Plex Sans',sans-serif;color:var(--teal);margin:0}
+.dwert{font:800 var(--l)/1 Archivo,sans-serif;letter-spacing:-.03em;color:var(--txt);margin:14px 0 6px}
+.dstand{font:400 13.5px/1.5 var(--mono);color:var(--dim);margin:10px 0 0}
+.home .dstand{font-size:13.5px;color:var(--dim)}
+.dmeta{font-size:var(--s);color:var(--dim)}.home .dmeta{font-size:var(--s);color:var(--dim)}
+.dmeta code{word-break:break-all}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:20px}
+.dkarte{display:flex;flex-direction:column;gap:8px;scroll-margin-top:16px}.dkarte p{margin:0}
+.dprog .dz{margin-top:16px}
+.gebaut{font:400 13.5px var(--mono);color:var(--dim);margin:0 0 24px}.home .gebaut{font-size:13.5px;color:var(--dim)}
 @media (prefers-reduced-motion:reduce){.puls .pb{animation:none}.home *{transition:none!important}}
 @media (max-width:900px){.home main>.wrap{grid-template-columns:1fr}.home main>.wrap>.hero-acts{grid-column:1;justify-content:flex-start}
 .tiles{grid-template-columns:1fr 1fr}.lr{grid-template-columns:1fr;gap:6px}.lp{text-align:left}
 .panel,.stmt,.ende,.zit .zr{grid-template-columns:1fr}}
+@media (max-width:700px){.dgrid{grid-template-columns:1fr}}
 @media (max-width:600px){.tiles{grid-template-columns:1fr}.tile.w2{grid-column:auto}.home p,.home li{font-size:17px}
 .home header.top .wrap{padding-top:10px;padding-bottom:10px}}
 """
@@ -780,6 +778,9 @@ def tr_eintrag(e):
             zeilen.append(("Deviation", E(e["deviation"].replace("-", "−"))))
     else:
         zeilen.append(("Result", "Not counted yet"))
+    sc = datiert.interval_score(e) if e["art"] == "estimate" else None
+    if sc is not None:
+        zeilen.append(("Interval score", "%s, computed" % datiert.dauer_text(sc)))
     zeilen.append(("Methods", ", ".join(a("/method#" + m.lower(), m) for m in e["methods"])))
     zeilen.append(("Status", tr_status(e["status"])))
     # je eintrag eine h2, damit kein abschnitt ueber 250 woerter kommt (9.11.2026)
@@ -1100,60 +1101,68 @@ def seiten():
     up_meta, up = lies_upgrades()
     up_stand = max([e.get("checked", STAND) for e in up] + [up_meta.get("updated", STAND)])
 
-    # 1 startseite, nach dem design-skill (Ben, 26.10.2026). Gleiche Aussagen,
-    # Preise und Zahlen wie vorher, neu angeordnet. CSS und Skript nur hier.
+    # 1 startseite in zwei schichten (Ben, 11.11.2026). Oben die zeitlose
+    # schicht ohne zahl, die altern kann. Darunter die datierte schicht, ganz
+    # aus data/reports.json, data/track-record.json, data/measurements.json und
+    # data/citations.json. Keine zahl der datierten schicht steht hier im code.
+    datiert.oder_abbruch()
+    rep_neu = datiert.neuester_report()
+    mess = datiert.lade(datiert.MESSUNGEN)["measurements"]
+    track = datiert.lade(datiert.TRACK)
+    gebaut = datiert.heute()
+    zcash_t = next((m for m in mess if m["id"] == "zcash-nu7-testnet"), None)
+    puls = puls_figur(zcash_t) if zcash_t else ""
     S.append(dict(
-        datei="index.html", pfad="/", og="home", lastmod=PREIS_FREI_STAND,
+        datei="index.html", pfad="/", og="home",
+        lastmod=max(rep_neu["published"], track["updated"], max(m["published"] for m in mess)),
         title="Independent blockchain measurement | PulseHawk",
         desc=("PulseHawk does its own blockchain measurement under load, with own nodes or "
               "header clients. Dated numbers, raw data and an open method for upgrades."),
         h1="Blockchains, measured under load",
         lead=("Independent measurement for foundations, core teams and grant committees. "
-              "We count blocks, transactions and confirmation times ourselves, and publish "
-              "dated numbers with raw data."),
+              "We count blocks, transactions and confirmation times ourselves, with our own nodes "
+              "or our own header clients, never from third party dashboards, and publish every "
+              "number with its date and raw data."),
         body="""
 <p class="acts hero-acts">%s %s</p>
+<section class="zeitlos"><div class="stmt"><h2>What does independent mean?</h2><div>
+<p class="gross">A grant pays for the measurement, never for the result.</p>
+<p>The method is published before anyone pays, a result is never changed for the client who paid for it, and every report names who paid. When a grant funds ongoing measurement, every result and its raw data are published openly for the whole ecosystem. The rules are on our %s page.</p>
+<p>To commission a measurement, tell us the network, what you want measured and when, at %s. We reply within one business day.</p>
+</div></div></section>
+<div class="datiert">
+<section class="dlatest" id="latest-report"><h2>What did we publish last?</h2>
 %s
+</section>
+%s
+<section id="measurements"><h2>Which networks have we measured?</h2>
+<p class="sub">Every number carries its window and the date it was published.</p>
+<div class="dgrid">%s</div>
+%s
+</section>
+%s
+</div>
 <section><h2>What can we measure for you?</h2>
-<p class="sub">We measure ourselves, with our own nodes or our own header clients, never from third party dashboards.</p>
 <div class="lst">%s</div>
 <p class="small">Custom scope, on request. %s</p>
 </section>
-<section><div class="tiles">
-<div class="tile w2 acc"><h2>Which networks have we measured?</h2><p>We publish dated numbers, raw data and an open method.</p></div>
-<div class="tile w2"><h3>Kaspa</h3><p>A network with a very high block rate, ten blocks per second since the Crescendo hardfork, KIP-14.</p><p>%s</p></div>
-<div class="tile w2"><h3>Zcash NU7 on testnet</h3><div class="big">23.68 s</div><p class="small">Mean block interval, against a 25 s target</p><p>Network Upgrade 7 (ZIP 259) on the Zcash testnet, measured independently over 49,203 blocks up to 18 October 2026.</p>%s<p>%s</p></div>
-%s
-<div class="tile w4"><h3>The Alexandria Protocol</h3><p>An independent technical and usability review, with dated findings and a checked anchoring transaction on Kaspa Testnet 10.</p><p>%s</p></div>
-</div></section>
-%s
-<section><div class="panel"><div><h2>What is in a report?</h2>
-<p>A short summary, the measurement window in UTC, charts, a table with median, p90 and p99, the method version and a CSV with every block we counted. Every number carries its date.</p>
-<p class="acts">%s</p></div>
-%s</div></section>
-<section><div class="stmt"><h2>For foundations and grant committees</h2><div>
-<p class="gross">A grant pays for the measurement, never for the result.</p>
-<p>Ongoing measurement of a network works best as a public good. When a grant funds it, every result and its raw data are published openly, for the whole ecosystem, with the same method and the same rules as paid work.</p>
-<p>The rules that make this hold are on our %s page. %s.</p>
-</div></div></section>
 <section class="ende"><h2>How do we start?</h2><div>
 <p>Tell us the network, what you want measured and when. We reply from %s within one business day.</p>
 <p class="acts">%s %s</p>
 </div></section>
+<p class="gebaut">pages built %s</p>
 """ % (a("/contact", "Request a measurement", "btn"),
-       a(SAMPLE_URL, "See a sample report", "btn ghost plausible-event-name=Sample+Report"),
-       puls_figur(),
-       leistungen(), "%s." % a("/contact", "Ask for a quote"),
-       a("/cases/kaspa", "Read the Kaspa case"),
-       zcash_fragment(), a("/zcash-nu7", "Read the Zcash NU7 case"),
-       bch_kachel(), a("/cases/alexandria", "Read the Alexandria case"),
+       a(rep_neu["path"], "See the latest report", "btn ghost plausible-event-name=Sample+Report"),
+       a("/independence", "independence"), a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)),
+       datiert.report_karte(rep_neu, a),
+       datiert.prognose_block(track, a),
+       "".join(datiert.messung_karte(m, a) for m in mess),
+       puls,
        zitat_zeilen(lies_zitate(), hoechstens=3),
-       a(SAMPLE_URL, "See a sample report", "btn ghost plausible-event-name=Sample+Report"),
-       csv_fragment(),
-       a("/independence", "independence"),
-       a("/upgrade-monitoring", "How ongoing measurement works"),
+       leistungen(), "%s." % a("/contact", "Ask for a quote"),
        E(KONTAKT_MAIL), a("/contact", "Request a measurement", "btn"),
-       a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL), "btn ghost")),
+       a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL), "btn ghost"),
+       datiert.lang(gebaut)),
         faqs=[],
         schema=[],
         css=HOME_CSS, bodyclass="home", script=HOME_JS,
@@ -1282,7 +1291,7 @@ def seiten():
     betreff = "scope for <network> upgrade"
     mail_betreff = "mailto:%s?subject=%s" % (KONTAKT_MAIL, betreff.replace(" ", "%20").replace("<", "%3C").replace(">", "%3E"))
     S.append(dict(
-        datei="upgrade-monitoring.html", pfad="/upgrade-monitoring", og="upgrade-monitoring", lastmod=UPGRADE_V2_STAND,
+        datei="upgrade-monitoring.html", pfad="/upgrade-monitoring", og="upgrade-monitoring", lastmod=STARTSEITE_V3_STAND,
         title="Upgrade readiness and network health | PulseHawk",
         desc=("Upgrade readiness and network health from our own measurement. Version share, an "
               "activation forecast with bands, a watch, a report and monthly checks."),
@@ -1297,7 +1306,9 @@ def seiten():
 <li><b>Watch.</b> From 24 hours before to 72 hours after activation our listener follows the chain, and an alert goes to a named person on your team when one of our signals fires.</li>
 <li><b>Report after the upgrade.</b> An Upgrade Report with seven fixed values under our published %s, with the raw data and the commands to count it again.</li>
 <li><b>Monthly network health.</b> Block intervals, the longest gaps, reorgs and peer versions every month, each against its target and dated.</li>
+<li><b>Orphaned blocks.</b> Blocks our listener heard that did not end up in the chain, counted per window. A count from one observation point is a lower bound, because a block that never reaches our listener cannot be counted.</li>
 </ul>
+<p>Beyond upgrades we also offer %s and %s, under the same rules.</p>
 </section>
 <section id="proof"><h2>What have we shown so far?</h2>
 <p>Zcash NU7 (ZIP 259) activated on mainnet at block 3,543,405 on 6 November 2026, 02:34 UTC by header time, counted. %s, each scored on our %s.%s</p>
@@ -1315,6 +1326,7 @@ def seiten():
         "comes closer" if BAENDER_80_95_BESTAETIGT else
         "a forecast of the activation time with a dated band, scored against the block afterwards"),
        a("/standard/upgrade-report/", "specification"),
+       a("/tps-verification", "TPS verification"), a("/launch-measurement", "launch measurement"),
        nu7_satz, a("/track-record", "track record"),
        (" Our NU7 forecasts used a 90% band. From the next upgrade on we publish an 80% and a 95% band."
         if BAENDER_80_95_BESTAETIGT else ""),
@@ -1323,8 +1335,9 @@ def seiten():
        faq_html(upg_faq)),
         faqs=upg_faq,
         schema=[service_schema("Upgrade readiness and network health", "/upgrade-monitoring",
-                               "Version share, activation forecast, watch, upgrade report and monthly network health, "
-                               "from our own measurement.")],
+                               "Version share, activation forecast, watch, upgrade report, monthly network health and "
+                               "orphaned blocks, from our own measurement. A count of orphaned blocks from one "
+                               "observation point is a lower bound.")],
     ))
 
     # 5 method
@@ -1439,6 +1452,40 @@ def seiten():
         schema=["ARTICLE:2026-10-16:%s" % KORR_STAND],
     ))
 
+    # /reports/, uebersicht aus data/reports.json und data/measurements.json
+    # (Ben, 11.11.2026). Eine neue veroeffentlichung ist ein neuer eintrag dort.
+    reps_alle = sorted(datiert.lade(datiert.REPORTS)["reports"], key=lambda r: r["published"], reverse=True)
+    S.append(dict(
+        datei="reports/index.html", pfad="/reports/", og="standard",
+        lastmod=max([r["published"] for r in reps_alle] + [m["published"] for m in mess]),
+        title="Reports and measurements | PulseHawk",
+        desc=("Every PulseHawk report and measurement with its window, date and raw data. Each report "
+              "follows a published method version and names its CSV with sha256."),
+        h1="Reports and measurements",
+        lead=("Every report follows a published method version and comes with its raw data. Every number "
+              "carries the window it was counted over and the date it was published."),
+        css=HOME_CSS_DATIERT,
+        body="""
+<section id="reports"><h2>Which reports have we published?</h2>
+%s
+</section>
+<section id="measurements"><h2>Which other measurements can you read?</h2>
+<div class="dgrid">%s</div>
+</section>
+<p>How we count is on %s. The rules for every report type are in the %s.</p>
+""" % ("".join(datiert.report_karte(r, a).replace("Latest report, ", "Report ", 1) if i else datiert.report_karte(r, a)
+               for i, r in enumerate(reps_alle)),
+       "".join(datiert.messung_karte(m, a) for m in mess),
+       a("/method", "our method page"), a("/standard/", "PulseHawk Measurement Framework")),
+        faqs=[],
+        schema=[{"@type": "CollectionPage", "@id": SITE + "/reports/#page", "url": SITE + "/reports/",
+                 "name": "Reports and measurements", "isPartOf": {"@id": ORG_ID},
+                 "dateModified": schema_zeit(max(r["published"] for r in reps_alle)),
+                 "hasPart": [{"@type": "Dataset", "name": r["title"], "identifier": r["id"],
+                              "url": SITE + r["path"], "datePublished": schema_zeit(r["published"])}
+                             for r in reps_alle]}],
+    ))
+
     # 6a track record, 6b corrections, 6c about (Ben, 4.11.2026)
     tr = lies_track_record()
     tr_schaetz = sorted((e for e in tr if e["art"] == "estimate"), key=lambda e: e["estimate"]["as_of"])
@@ -1460,6 +1507,7 @@ def seiten():
 <li><b>In band.</b> For a forecast, the counted result fell inside the 90%% band we published. For a comparison, the published value lies inside the 95%% interval of our count.</li>
 <li><b>Outside.</b> The result fell outside. For a comparison this is a finding about the network, which did not run at its published value.</li>
 <li><b>Open.</b> There is no counted result yet. An open entry never shows a result.</li>
+<li><b>Interval score.</b> For each scored forecast, the width of its band plus 20 times the distance by which the block missed a 90%% band, after Gneiting and Raftery (2007). Lower is better, and a forecast inside its band scores its width.</li>
 </ul>
 <p>The list has %d entries, %d in band, %d outside and %d open. Entries are never removed. A mistake in an entry is fixed on our %s page.</p>
 </section>

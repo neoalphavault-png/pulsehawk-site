@@ -1,0 +1,27 @@
+{
+ "note": "Quelle fuer alles Report-bezogene auf pulsehawk.io (Ben, 11.11.2026). Je Report ein Eintrag: Kennung, Netz, Titel, Fenster, Veroeffentlichung, Methodenversion, Pfad, CSV und deren sha256. Die Startseite zeigt den neuesten Eintrag, /reports/ alle. Der Bau bricht ab, wenn der neueste Eintrag aelter als 21 Tage ist (scripts/datiert.py, FRISCH_TAGE) oder die sha256 nicht zur CSV passt. headline nennt Kennzahlen aus data/reports/<slug>.json werte, keine getippten Zahlen. Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "reports": [
+  {
+   "id": "PH-UR-2026-001",
+   "network": "Zcash mainnet",
+   "title": "Zcash NU7 upgrade report",
+   "subject": "NU7 (ZIP 259), activation at block 3,543,405",
+   "window": {
+    "from_utc": "2026-11-05T02:34:58Z",
+    "to_utc": "2026-11-09T02:33:51Z"
+   },
+   "published": "2026-11-09",
+   "method_version": "1.0",
+   "path": "/reports/zcash-nu7",
+   "csv": "/reports/zcash-nu7.csv",
+   "csv_sha256": "f18cb9184ad77b4012df37d8a322af1d61d2fa001fffc52819fb887cccfb32ac",
+   "headline": {
+    "slug": "zcash-nu7",
+    "key": "p50_nach",
+    "model_key": "p50_nach_modell",
+    "what": "median block interval after activation",
+    "model_what": "for an ideal 25 s chain"
+   }
+  }
+ ]
+}

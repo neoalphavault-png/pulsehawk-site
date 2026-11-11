@@ -16,6 +16,7 @@ Services, each scoped per network and window. Ask for a quote at https://pulseha
 - [Upgrade readiness and network health](https://pulsehawk.io/upgrade-monitoring): Upgrade readiness and network health from our own measurement. Version share, an activation forecast with bands, a watch, a report and monthly checks.
 - [How we measure](https://pulsehawk.io/method): Our open method. Block time distribution, stale block rate, propagation delay, confirmation time and fees, from our own measurement in dated windows.
 - [How we stay independent](https://pulsehawk.io/independence): Five rules for every PulseHawk measurement. Data published whatever the result, paid work marked as paid, price fixed in advance, no client tokens.
+- [Reports and measurements](https://pulsehawk.io/reports/): Every PulseHawk report and measurement with its window, date and raw data. Each report follows a published method version and names its CSV with sha256.
 - [Track record](https://pulsehawk.io/track-record): Every PulseHawk forecast and comparison, scored against the counted result. With link, date, our value, the window, deviation and status for each entry.
 - [Corrections](https://pulsehawk.io/corrections): Every correction to a PulseHawk page, dated. What was wrong, the corrected text and who reported it. Found an error? Write to us and we add it here.
 - [About PulseHawk](https://pulsehawk.io/about): Who runs PulseHawk and who pays us. Fees for paid measurements, the price fixed before the first block, no tokens held. We measure, others decide.

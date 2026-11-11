@@ -1,0 +1,82 @@
+{
+ "note": "Laufende und abgeschlossene Messungen fuer die datierte Schicht der Startseite und /reports/ (Ben, 11.11.2026). Jeder Wert traegt label (counted, computed, source), Fenster und Veroeffentlichung, sonst bricht der Bau ab. Werte kommen aus der Datei der jeweiligen Messung, die Quelle steht in source_file.",
+ "measurements": [
+  {
+   "id": "bch-median",
+   "network": "Bitcoin Cash tempnet",
+   "subject": "Median block interval, CHIP-2025-03 Faster Blocks",
+   "value": "41.0 s",
+   "label": "counted",
+   "n": 37764,
+   "compare": {
+    "value": "41.6 s",
+    "label": "computed",
+    "what": "for an ideal chain at the 60 s target, 60 s × ln 2"
+   },
+   "window": {
+    "from_utc": "2026-10-15T12:56:56Z",
+    "to_utc": "2026-11-11T09:58:11Z"
+   },
+   "published": "2026-11-11",
+   "path": null,
+   "how": "our own header client, headers checked for linkage and proof of work",
+   "source_file": "BCH tempnet count, stand 2026-11-11 10:00 UTC (tempnet-2026-11-11.json)"
+  },
+  {
+   "id": "zcash-nu7-testnet",
+   "network": "Zcash testnet",
+   "subject": "Mean block interval after NU7 (ZIP 259)",
+   "value": "23.68 s",
+   "label": "counted",
+   "n": 49202,
+   "compare": {
+    "value": "25 s",
+    "label": "source",
+    "what": "the target spacing in ZIP 218"
+   },
+   "window": {
+    "from_utc": "2026-10-04T18:21:45Z",
+    "to_utc": "2026-10-18T05:59:48Z"
+   },
+   "published": "2026-10-18",
+   "path": "/zcash-nu7",
+   "how": "our own header client, 500 hashes compared with two Zebra peers",
+   "source_file": "data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv",
+   "link_text": "Read the Zcash NU7 testnet case"
+  },
+  {
+   "id": "alexandria",
+   "network": "Kaspa Testnet 10 (TN10)",
+   "subject": "The Alexandria Protocol, technical and usability review",
+   "value": null,
+   "label": "reviewed",
+   "n": null,
+   "compare": null,
+   "window": {
+    "from_date": "2026-10-07",
+    "to_date": "2026-10-16"
+   },
+   "published": "2026-11-04",
+   "path": "/cases/alexandria",
+   "how": "findings as of 12 October 2026, anchoring transaction checked on 2 November 2026",
+   "source_file": "cases/alexandria.html",
+   "link_text": "Read the Alexandria case"
+  },
+  {
+   "id": "kaspa",
+   "network": "Kaspa mainnet",
+   "subject": "Case page, block rate and fees against new issuance",
+   "value": null,
+   "label": "source",
+   "n": null,
+   "compare": null,
+   "window": null,
+   "checked": "2026-11-03",
+   "published": "2026-11-04",
+   "path": "/cases/kaspa",
+   "how": "every number on the case page is marked measured or source and dated",
+   "source_file": "cases/kaspa.html",
+   "link_text": "Read the Kaspa case"
+  }
+ ]
+}

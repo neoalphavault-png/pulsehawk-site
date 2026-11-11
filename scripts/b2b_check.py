@@ -128,6 +128,23 @@ def funde_band(text):
     return []
 
 
+# datierte schicht (Ben, 11.11.2026): jede grosse zahl (class dwert) braucht
+# danach, vor der naechsten, eine sichtbare stand-zeile mit "published <datum>"
+DATIERTE_SEITEN = ("index.html", "reports/index.html")
+RE_STAND = re.compile(r'class="dstand[^"]*">[^<]*published \d{1,2} (January|February|March|April|May|June|July|'
+                      r'August|September|October|November|December) \d{4}')
+
+
+def funde_datiert(roh):
+    f = []
+    teile = roh.split('class="dwert"')
+    for i, teil in enumerate(teile[1:], 1):
+        if not RE_STAND.search(teil):
+            wert = re.sub(r"<[^>]+>", "", teil[1:80]).strip()
+            f.append("zahl der datierten schicht ohne sichtbares stand-datum '%s'" % wert[:40])
+    return f
+
+
 def funde_messseite(roh):
     f = []
     if 'class="meth"' not in roh or "/method#ph-m-" not in roh:
@@ -358,8 +375,10 @@ def pruefe(datei, roh=None):
     f += funde_spez(p.absaetze)
     f += funde_band(sichtbar)
     rel = os.path.relpath(os.path.join(REPO, datei), REPO) if not os.path.isabs(datei) else os.path.relpath(datei, REPO)
-    if rel in MESS_SEITEN or (rel.startswith("reports/") and rel.endswith(".html")):
+    if rel in MESS_SEITEN or (rel.startswith("reports/") and rel.endswith(".html") and rel != "reports/index.html"):
         f += funde_messseite(roh)
+    if rel in DATIERTE_SEITEN:
+        f += funde_datiert(roh)
     # Kaspa Pulse steht nirgends auf pulsehawk.io, auch nicht im schema oder in
     # einem link; die marken sind getrennt (Ben, 3.11.2026)
     m = re.search(r"kaspa[ _-]?pulse", roh, re.I)
@@ -499,7 +518,13 @@ def selbsttest():
         k = len(funde_band(text))
         falsch += k != n
         print("  %s  band, %d funde, erwartet %d  %s" % ("ok  " if k == n else "FEHL", k, n, text[:60]))
-    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 3 + len(band_faelle)))
+    # datierte schicht, zahl ohne stand-datum (Ben, 11.11.2026)
+    gut_ = '<div class="dwert">41.0 s</div><p>x</p><p class="dstand">counted over a, published 11 November 2026</p>'
+    schlecht_ = '<div class="dwert">41.0 s</div><p>x</p><p class="dstand">counted over a</p>'
+    k1, k2 = len(funde_datiert(gut_)), len(funde_datiert(gut_ + schlecht_))
+    falsch += (k1, k2) != (0, 1)
+    print("  %s  datierte schicht, mit datum %d, ohne datum %d, erwartet 0 und 1" % ("ok  " if (k1, k2) == (0, 1) else "FEHL", k1, k2))
+    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 4 + len(band_faelle)))
     return 1 if falsch else 0
 
 
