@@ -96,3 +96,10 @@
   - Die Shell-Zeile des Schritts ergibt heute grün mit Exit-Code 0.
   - Mit `heute=2026-11-25` und `probe` ergibt sie gelb mit 5 Resttagen, ohne zu senden.
 - **Erste Gelb-Meldung:** Für PH-UR-2026-001 kommt sie am 23.11., die erste Rot-Meldung am 30.11., falls bis dahin kein neuer Report eingetragen ist.
+
+## Merge Punkt 2 (11.11.2026)
+
+- **Merge:** Ben hat PR #87 am 11.11.2026 um 20:12 UTC gemergt, Merge-Commit `8318fa7`, Branch gelöscht.
+- **Workflow:** "datiert pruefung" (`.github/workflows/datiert-pruefung.yml`) ist auf GitHub aktiv. Der erste geplante Lauf ist am 12.11.2026 um 07:17 UTC.
+- **Erwartung:** Der Prüfmodus auf main ergibt heute grün (PH-UR-2026-001, 2 Tage alt, noch 19 Tage). Der erste Lauf meldet also nichts nach #ops-log.
+- **Vorschlag:** Ein Probelauf von Hand (workflow_dispatch mit `heute=2026-11-25` und `probe`) zeigt die Gelb-Meldung im Job-Log, ohne zu senden. Ich löse ihn nur nach Bens Ja aus.
