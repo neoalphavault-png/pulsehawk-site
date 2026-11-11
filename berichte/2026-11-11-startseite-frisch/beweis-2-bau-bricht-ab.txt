@@ -1,0 +1,15 @@
+== data/reports.json: published kuenstlich auf 2026-10-17 gesetzt (25 tage vor dem 11.11.)
+-   "published": "2026-11-09",
++   "published": "2026-10-17",
+== bau
+datierte schicht, bau abgebrochen
+  neuester report PH-UR-2026-001 ist 25 tage alt (veroeffentlicht 2026-10-17), die grenze ist 21 tage. Neuen report in data/reports.json eintragen.
+exit code: 1
+== index.html unveraendert? vorher 0083ebe4c03b095b, nachher 0083ebe4c03b095b
+== zweiter fall: einem wert fehlt das stand-datum (measurements.json, bch-median ohne published)
+datierte schicht, bau abgebrochen
+  messung bch-median ohne veroeffentlichungsdatum
+exit code: 1
+== zurueckgesetzt, bau wieder gruen
+0 von 25 seiten mit funden
+exit code: 0
