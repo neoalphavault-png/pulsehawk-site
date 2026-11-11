@@ -1,0 +1,14 @@
+== git status vor dem bau (nur die datendatei geaendert)
+ M data/reports.json
+== bau
+0 von 25 seiten mit funden
+== git status nach dem bau
+ M data/reports.json
+ M index.html
+ M reports/index.html
+== diff der quelltexte scripts/ (leer = kein code angefasst)
+== sichtbarer text: latest report auf der startseite
+What did we publish last? Latest report, PH-UR-2026-099 TEST entry, not published Test network, proof that the home page follows data/reports.json. counted over 10 November 2026, 00:00 UTC to 11 November 2026, 00:00 UTC, published 11 November 2026 Method v1.0. Download the CSV , sha256 f18cb9184ad77b40… . Forecasts, scored in pu
+== diff index.html (nur erzeugt)
+-<div class="drep dz"><p class="dkick">Latest report, PH-UR-2026-001</p><h3><a href="/reports/zcash-nu7">Zcash NU7 upgrade report</a></h3><p>Zcash mainnet, NU7 (ZIP 259), activation at block 3,543,405.</p><div class="dwe
++<div class="drep dz"><p class="dkick">Latest report, PH-UR-2026-099</p><h3><a href="/reports/zcash-nu7">TEST entry, not published</a></h3><p>Test network, proof that the home page follows data/reports.json.</p><p class=

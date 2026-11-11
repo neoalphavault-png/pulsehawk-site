@@ -59,7 +59,7 @@
    "name": "Upgrade readiness and network health",
    "serviceType": "Upgrade readiness and network health",
    "url": "https://pulsehawk.io/upgrade-monitoring",
-   "description": "Version share, activation forecast, watch, upgrade report and monthly network health, from our own measurement.",
+   "description": "Version share, activation forecast, watch, upgrade report, monthly network health and orphaned blocks, from our own measurement. A count of orphaned blocks from one observation point is a lower bound.",
    "provider": {
     "@id": "https://pulsehawk.io/#org"
    },
@@ -118,7 +118,7 @@
 </head>
 <body>
 <a class="skip" href="#inhalt">Skip to content</a>
-<header class="top"><div class="wrap"><a class="brand" href="/"><img src="/hawk.png" alt="" width="30" height="32">PulseHawk</a><nav class="main" aria-label="Main"><ul><li><a href="/tps-verification">TPS verification</a></li><li><a href="/launch-measurement">Launch measurement</a></li><li><a href="/upgrade-monitoring" aria-current="page">Upgrade readiness</a></li><li><a href="/upgrades">Calendar</a></li><li><a href="/zcash-nu7">Zcash NU7</a></li><li><a href="/method">Method</a></li><li><a href="/independence">Independence</a></li><li><a class="nc" href="/contact">Contact</a></li></ul></nav></div></header>
+<header class="top"><div class="wrap"><a class="brand" href="/"><img src="/hawk.png" alt="" width="30" height="32">PulseHawk</a><nav class="main" aria-label="Main"><ul><li><a href="/upgrade-monitoring" aria-current="page">Upgrade readiness</a></li><li><a href="/reports/">Reports</a></li><li><a href="/track-record">Track record</a></li><li><a href="/upgrades">Calendar</a></li><li><a href="/method">Method</a></li><li><a href="/independence">Independence</a></li><li><a class="nc" href="/contact">Contact</a></li></ul></nav></div></header>
 <main id="inhalt"><div class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> · <span aria-current="page">Upgrade readiness and network health</span></nav>
 <h1>Upgrade readiness and network health</h1>
@@ -129,7 +129,9 @@
 <li><b>Watch.</b> From 24 hours before to 72 hours after activation our listener follows the chain, and an alert goes to a named person on your team when one of our signals fires.</li>
 <li><b>Report after the upgrade.</b> An Upgrade Report with seven fixed values under our published <a href="/standard/upgrade-report/">specification</a>, with the raw data and the commands to count it again.</li>
 <li><b>Monthly network health.</b> Block intervals, the longest gaps, reorgs and peer versions every month, each against its target and dated.</li>
+<li><b>Orphaned blocks.</b> Blocks our listener heard that did not end up in the chain, counted per window. A count from one observation point is a lower bound, because a block that never reaches our listener cannot be counted.</li>
 </ul>
+<p>Beyond upgrades we also offer <a href="/tps-verification">TPS verification</a> and <a href="/launch-measurement">launch measurement</a>, under the same rules.</p>
 </section>
 <section id="proof"><h2>What have we shown so far?</h2>
 <p>Zcash NU7 (ZIP 259) activated on mainnet at block 3,543,405 on 6 November 2026, 02:34 UTC by header time, counted. Four of four published forecasts landed inside their 90% band, each scored on our <a href="/track-record">track record</a>. Our NU7 forecasts used a 90% band. From the next upgrade on we publish an 80% and a 95% band.</p>

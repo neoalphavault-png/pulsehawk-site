@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://pulsehawk.io/</loc>
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-11</lastmod>
   </url>
   <url>
     <loc>https://pulsehawk.io/tps-verification</loc>
@@ -14,7 +14,7 @@
   </url>
   <url>
     <loc>https://pulsehawk.io/upgrade-monitoring</loc>
-    <lastmod>2026-11-10</lastmod>
+    <lastmod>2026-11-11</lastmod>
   </url>
   <url>
     <loc>https://pulsehawk.io/method</loc>
@@ -23,6 +23,10 @@
   <url>
     <loc>https://pulsehawk.io/independence</loc>
     <lastmod>2026-11-05</lastmod>
+  </url>
+  <url>
+    <loc>https://pulsehawk.io/reports/</loc>
+    <lastmod>2026-11-11</lastmod>
   </url>
   <url>
     <loc>https://pulsehawk.io/track-record</loc>
