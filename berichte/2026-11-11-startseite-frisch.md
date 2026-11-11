@@ -117,3 +117,19 @@ Der Code dafür steht im neuen Modul `scripts/datiert.py`.
 ## Was Ben tun muss
 
 Nichts. Die Abnahme auf pulsehawk.io folgt nach dem Merge als Zeile in diesem Bericht.
+
+## Selbst-Merge und Abnahme (11.11.2026)
+
+- **Merge:** PR #83 per Squash, Merge-Commit `72394f0`, Branch gelöscht.
+- **Byte-gleich mit dem Bau aus `72394f0` auf pulsehawk.io:**
+  - Startseite, /reports/, /track-record, /upgrade-monitoring, /upgrades;
+  - /method, /zcash-nu7, /tps-verification;
+  - /llms.txt, /sitemap.xml.
+- **Weiterleitung:** /reports ohne Schrägstrich leitet mit 301 auf /reports/.
+- **Im Browser bei 390 und 1440 px, hell und dunkel:**
+  - Startseite in zwei Schichten, "Latest report, PH-UR-2026-001", "4 of 4", Mittel 5 h 43 min 14 s;
+  - Messungen mit sichtbarem "counted over …, published …";
+  - als letzte Zeile "pages built 11 November 2026";
+  - neue Navigation;
+  - kein waagerechtes Scrollen.
+- **Screenshots:** 16 Live-Aufnahmen (`*-live.jpg`) in `berichte/2026-11-11-startseite-frisch/`.
