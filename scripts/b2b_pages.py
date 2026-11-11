@@ -1110,8 +1110,17 @@ def seiten():
     mess = datiert.lade(datiert.MESSUNGEN)["measurements"]
     track = datiert.lade(datiert.TRACK)
     gebaut = datiert.heute()
-    zcash_t = next((m for m in mess if m["id"] == "zcash-nu7-testnet"), None)
+    # zeitlose fassung, wenn der neueste report aelter als die grenze ist
+    # (Ben, 11.11.2026, teil 2): keine kopfzahl im latest report, messkacheln
+    # mit werten aelter als die grenze entfallen zugunsten eines links auf /reports/
+    ohne_zahl = datiert.zeitlos(gebaut)
+    mess_start = [m for m in mess if not (ohne_zahl and m.get("value") is not None
+                                          and not datiert.frisch(m["published"], gebaut))]
+    entfallen = len(mess) - len(mess_start)
+    zcash_t = next((m for m in mess_start if m["id"] == "zcash-nu7-testnet"), None)
     puls = puls_figur(zcash_t) if zcash_t else ""
+    mess_hinweis = ('<p>%s</p>' % a("/reports/", "Earlier measurements, each with its window and the date it was "
+                                                  "published, are on our reports page")) if entfallen else ""
     S.append(dict(
         datei="index.html", pfad="/", og="home",
         lastmod=max(rep_neu["published"], track["updated"], max(m["published"] for m in mess)),
@@ -1138,7 +1147,7 @@ def seiten():
 <section id="measurements"><h2>Which networks have we measured?</h2>
 <p class="sub">Every number carries its window and the date it was published.</p>
 <div class="dgrid">%s</div>
-%s
+%s%s
 </section>
 %s
 </div>
@@ -1154,10 +1163,10 @@ def seiten():
 """ % (a("/contact", "Request a measurement", "btn"),
        a(rep_neu["path"], "See the latest report", "btn ghost plausible-event-name=Sample+Report"),
        a("/independence", "independence"), a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)),
-       datiert.report_karte(rep_neu, a),
+       datiert.report_karte(rep_neu, a, ohne_zahl=ohne_zahl),
        datiert.prognose_block(track, a),
-       "".join(datiert.messung_karte(m, a) for m in mess),
-       puls,
+       "".join(datiert.messung_karte(m, a) for m in mess_start),
+       mess_hinweis, puls,
        zitat_zeilen(lies_zitate(), hoechstens=3),
        leistungen(), "%s." % a("/contact", "Ask for a quote"),
        E(KONTAKT_MAIL), a("/contact", "Request a measurement", "btn"),
