@@ -1,0 +1,66 @@
+# datiert-pruefung.yml - taegliche Frische-Pruefung der Startseite (Ben, 11.11.2026).
+#
+# Liest nur. Kein Bau, kein Commit, kein Push. Laesst einmal am Tag
+#   python3 scripts/datiert.py --pruefen --melden
+# laufen und meldet nach #ops-log:
+#   gelb ab 14 Tagen Alter des neuesten Reports in data/reports.json, mit den
+#        Resttagen bis zur Grenze;
+#   rot  ab 21 Tagen, und bei echten Fehlern der datierten Schicht (Wert ohne
+#        label, Fenster oder Datum, sha256 passt nicht zur CSV).
+# Gruen meldet nichts. Bei rot endet der Lauf mit Exit-Code 1, damit er auch
+# in der Actions-Liste rot steht.
+#
+# Das Secret DISCORD_WEBHOOK_LOG kommt nur in die Umgebung des einen Schritts,
+# der meldet, und erscheint nie in einer Ausgabe (scripts/ph/ops_melden.py).
+# Fehlt es, geht nichts raus, die Meldung steht dann nur im Job-Log.
+#
+# workflow_dispatch mit "heute" prueft fuer ein anderes Datum, mit "probe"
+# nur ins Job-Log.
+name: datiert pruefung
+
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+    inputs:
+      heute:
+        description: "Datum JJJJ-MM-TT fuer eine Probe (leer = heute, UTC)"
+        required: false
+        default: ""
+      probe:
+        description: "Probe, nicht an #ops-log, nur ins Job-Log"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: datiert-pruefung
+  cancel-in-progress: false
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: selbsttest
+        run: python3 scripts/datiert.py --selbsttest
+
+      - name: pruefen und melden
+        env:
+          DISCORD_WEBHOOK_LOG: ${{ secrets.DISCORD_WEBHOOK_LOG }}
+          HEUTE: ${{ inputs.heute }}
+          PROBE: ${{ inputs.probe && 'ja' || '' }}
+        run: |
+          ARGS="--pruefen --melden"
+          if [ -n "$HEUTE" ]; then ARGS="$ARGS --heute $HEUTE"; fi
+          if [ "$PROBE" = "ja" ]; then ARGS="$ARGS --probe"; fi
+          python3 scripts/datiert.py $ARGS
