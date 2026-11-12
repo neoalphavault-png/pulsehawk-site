@@ -19,7 +19,7 @@
     {
       "id": 3,
       "name": "portfolio-designer",
-      "prompt": "I'm Mara Lindqvist, a product designer in Stockholm with eight years in fintech and health apps. I need a portfolio homepage: six selected projects (make up plausible names, clients, years and one-line descriptions), a short about paragraph, and a way to contact me (mara@lindqvist.studio). I don't have project images ready, so design it so it still looks finished without them, or use placeholders that I can swap. Static HTML/CSS/JS.",
+      "prompt": "I'm Mara Lindqvist, a product designer in Stockholm with eight years in fintech and health apps. I need a portfolio homepage: six selected projects (make up believable names, clients, years and one-line descriptions), a short about paragraph, and a way to contact me (mara@lindqvist.studio). I don't have project images ready, so design it so it still looks finished without them, or use placeholders that I can swap. Static HTML/CSS/JS.",
       "expected_output": "A portfolio page that looks finished without project imagery (a typographic index, a name-led hero, or atmosphere photographs clearly marked for replacement), with a designed footer, a phone layout that is its own composition, and all house rules met.",
       "files": []
     },
@@ -40,7 +40,7 @@
     {
       "id": 6,
       "name": "conference-format",
-      "prompt": "Landing page for Format, a two-day design conference in Rotterdam on 14 and 15 May 2027. Twelve speakers (invent plausible names and talk titles), 400 seats, tickets at 390 euros, venue: Maassilo. Sections: what it is, the line-up, the schedule in brief, tickets, and a short FAQ. No brand exists yet beyond the name. Static HTML/CSS/JS.",
+      "prompt": "Landing page for Format, a two-day design conference in Rotterdam on 14 and 15 May 2027. Twelve speakers (invent believable names and talk titles), 400 seats, tickets at 390 euros, venue: Maassilo. Sections: what it is, the line-up, the schedule in brief, tickets, and a short FAQ. No brand exists yet beyond the name. Static HTML/CSS/JS.",
       "expected_output": "An event page with a strong typographic or colour idea, the line-up and schedule set as structured text without divider lines or index numbers, a ticket section that is not three cards, and all house rules met.",
       "files": []
     },

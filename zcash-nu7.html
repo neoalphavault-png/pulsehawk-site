@@ -21,12 +21,6 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@pulsehawkio">
-<!-- Privacy-friendly analytics by Plausible -->
-<script async src="https://plausible.io/js/pa-XESlUIPQAsUi8GQsRqS55.js"></script>
-<script>
-  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init()
-</script>
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -199,7 +193,7 @@
 <p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>
 <p class="unc">Measurement uncertainty. The interval column is the 95% range of each value, from rank statistics, the standard error or a Wilson interval. Header times are whole seconds set by the miners.</p>
 <p class="meth">Methods used <a href="/method#ph-m-001">PH-M-001</a>.</p>
-<div class="cite"><p class="ch">How to cite</p><div class="cr"><code id="cite-zcash">PulseHawk (@pulsehawkio), Zcash NU7 testnet block intervals, counted 18 October 2026, pulsehawk.io/zcash-nu7#mean</code><button type="button" class="cb" data-copy="cite-zcash">copy</button><span class="vh" aria-live="polite"></span></div><p class="small"><a class="plausible-event-name=CSV+Download" href="/data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv" download>Download the CSV</a>, 49,203 blocks up to 18 October 2026, licensed CC BY 4.0.</p><p class="small">Using our numbers? Tag @pulsehawkio and we add you to <a href="/independence#cited-by">the list</a>.</p></div>
+<div class="cite"><p class="ch">How to cite</p><div class="cr"><code id="cite-zcash">PulseHawk (@pulsehawkio), Zcash NU7 testnet block intervals, counted 18 October 2026, pulsehawk.io/zcash-nu7#mean</code><button type="button" class="cb" data-copy="cite-zcash">copy</button><span class="vh" aria-live="polite"></span></div><p class="small"><a href="/data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv" download>Download the CSV</a>, 49,203 blocks up to 18 October 2026, licensed CC BY 4.0.</p><p class="small">Using our numbers? Tag @pulsehawkio and we add you to <a href="/independence#cited-by">the list</a>.</p></div>
 </section>
 <section id="slow-blocks"><h2>How often is a block slower than the old 75 s target?</h2>
 <p>In 3.59% of intervals, against 4.98% for an ideal 25 s chain. Before NU7 the target itself was 75 s. Gaps over 150 s came in 0.203% of intervals, against 0.248% expected.</p>
@@ -238,7 +232,7 @@
 <li><b>timestamp</b> is the block header timestamp in Unix seconds, which count in UTC.</li>
 <li><b>interval_s</b> is that timestamp minus the timestamp of the parent block, in seconds. It stays empty for 4,465,026, because the first counted interval is that of 4,465,027.</li>
 </ul>
-<p class="cta"><a class="btn plausible-event-name=CSV+Download" href="/data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv" download>Download CSV, 49,203 blocks, about 1 MB</a></p>
+<p class="cta"><a class="btn" href="/data/zcash-nu7/zcash-nu7-testnet-intervals-2026-10-18.csv" download>Download CSV, 49,203 blocks, about 1 MB</a></p>
 <p class="small">Data from PulseHawk, licensed CC BY 4.0. Cite as PulseHawk (2026), Zcash NU7 testnet block intervals, cut-off 18 October 2026.</p>
 <p class="src" style="overflow-wrap:anywhere">Our own measurement, Zcash NU7 testnet, headers from testnet peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC. SHA-256 c1cda3d79a470f5a8e508ebb8ba633dd4f3499eec79b5ecbba96b446dea603b6.</p>
 </section>
@@ -254,5 +248,6 @@ function alt(t,b,c){var x=document.createElement('textarea'),ok=false;x.value=t;
 for(var i=0;i<bs.length;i++)bs[i].addEventListener('click',function(){var b=this,c=document.getElementById(b.getAttribute('data-copy')),t=c.textContent;
 if(navigator.clipboard&&navigator.clipboard.writeText&&window.isSecureContext){navigator.clipboard.writeText(t).then(function(){zeig(b,true)},function(){alt(t,b,c)})}else alt(t,b,c)})})();
 </script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "55800041c417470ba238caa057511116"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

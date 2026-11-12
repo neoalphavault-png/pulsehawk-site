@@ -144,7 +144,7 @@ When the brief supplies no proof, use what is true by construction:
 
 **Sample details are different from proof, and they are expected.** Where the brief gives the shape of
 the content but not every detail (six rooms "from €140", "a short menu", twelve speakers), write the
-full set of plausible details: each room with a name, a bed, a view and its own rate; each dish with
+full set of believable details: each room with a name, a bed, a view and its own rate; each dish with
 its price; each speaker with a talk title. A design can only be judged at its real density, and a page
 that shows one rate where six rooms exist looks unfinished. List every sample detail in the report so
 the client confirms or replaces it.
