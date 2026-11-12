@@ -171,3 +171,12 @@ Als Protokollwert zähle ich alles, was aus einer festen Regel folgt: Zielabstan
 - die Spezifikation: „How are the values computed?“;
 - /cases/alexandria: „cannot be computed again“;
 - `getComputedStyle` in `scripts/ph/ph_stil.py`.
+
+### Selbst-Merge und Abnahme Folgefix (12.11.2026)
+
+- **Merge:** PR #90 per Squash, Merge-Commit `797465d`, Branch gelöscht.
+- **Live auf pulsehawk.io, byte-gleich mit dem Bau aus `797465d`:** Startseite, /track-record, /reports/.
+- **Startseite:** zeigt „Our four forecasts landed inside their 90% band, counted. Mean interval score 5 h 43 min 14 s, lower is better.“
+- **/track-record:** jede Zeile „Interval score“ endet auf „lower is better“, zum Beispiel „8 h 38 min 9 s, lower is better“.
+- **Im Browser bei 390 und 1440 px, hell und dunkel:** kein waagerechtes Scrollen, keine JS-Fehler.
+- **Aufnahmen:** 8 Stück (`*-live.jpg`) in `berichte/2026-11-11-startseite-frisch/score/`.
