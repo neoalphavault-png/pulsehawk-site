@@ -1,6 +1,6 @@
 # Cloudflare Web Analytics statt Plausible (Auftrag Ben 12.11.2026)
 
-PR #89, Kopf: `a6b132a` auf `site/cloudflare-analytics`.
+PR #89, Kopf: `114572d` auf `site/cloudflare-analytics`.
 
 ## Was gemacht wurde
 
