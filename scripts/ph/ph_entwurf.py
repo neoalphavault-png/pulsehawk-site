@@ -17,7 +17,9 @@ Textregeln (Abbruch bei Verstoss, vor jedem Senden geprueft): alles klein,
 keine Gedankenstriche, Doppelpunkte (ausser in Uhrzeiten), Pfeile, Hashtags,
 Emojis, keine Echtzeitwoerter, keine Preise, "counted" genau einmal und nur
 im Satz mit unserem gezaehlten Wert, "computed" statt "expected" fuer Werte
-aus der Zielzeit (Ben, 23.10.2026).
+aus der Zielzeit (Ben, 23.10.2026). Dauern in min und s, nie nur in Minuten
+("4 min 9 s", nicht "4 min"). Verglichen wird mit einem benannten Fenster und
+seiner Zahl der Abstaende, nie mit "a week earlier" (Ben, 12.11.2026).
 
 Dieselbe Datei liegt in kaspa-pulse (scripts/ph/) und pulsehawk-site
 (scripts/ph/). Wer eine aendert, aendert beide.
@@ -82,6 +84,11 @@ def regel_pruefen(text, wert_zeile_index=1):
         fehler.append("hinweis 'method on pulsehawk.io' fehlt")
     if "utc" not in text:
         fehler.append("fenster in utc fehlt")
+    # Ben, 12.11.2026: Minuten immer mit Sekunden, Vergleich nur mit benanntem Fenster
+    if re.search(r"\d min(?! \d+ s)", woerter):
+        fehler.append("dauer in minuten ohne sekunden")
+    if re.search(r"(?<![a-z])(a|one) week (earlier|before|ago)|(?<![a-z])(last|previous|prior) week(?![a-z])", woerter):
+        fehler.append("vergleich ohne benanntes fenster, nie 'a week earlier'")
     return fehler
 
 
@@ -107,9 +114,17 @@ def selbsttest():
         "counted fehlt": gut.replace("we counted", "we saw"),
         "ohne methode": gut.replace("method on pulsehawk.io", "more soon"),
         "expected": gut.replace("computed", "expected"),
+        "nur minuten": gut.replace("that is close", "the longest gap was 4 min, that is close"),
+        "a week earlier": gut.replace("against 41.6 s computed", "against 41.0 s in our run a week earlier"),
+        "last week": gut.replace("that is close", "last week it was close"),
     }
     for name, t in schlecht.items():
         assert regel_pruefen(t), f"selbsttest: {name} wurde nicht erkannt"
+    for sek, soll in ((41, "41 s"), (249, "4 min 9 s"), (240, "4 min 0 s"), (20863, "5 h 47 min 43 s")):
+        assert dauer(sek) == soll, f"selbsttest: dauer({sek}) ist {dauer(sek)!r}, soll {soll!r}"
+    mit_fenster = gut.replace("against 41.6 s computed", "against 41.0 s over 37,764 intervals in our window "
+                              "15 oct 2026, 12:56 to 11 nov 2026, 09:58 utc")
+    assert regel_pruefen(mit_fenster) == [], regel_pruefen(mit_fenster)
     # jede Art der Deutungszeile muss die Regeln halten, auch mit Wertung
     import random
     zufall = random.Random(2027)
@@ -169,12 +184,17 @@ def wertung(r):
 
 
 def dauer(s):
-    if s < 120:
-        return f"{s} s"
-    m = round(s / 60)
-    if m < 60:
-        return f"{m} min"
-    return f"{m // 60} h" + (f" {m % 60} min" if m % 60 else "")
+    """In h, min und s wie auf der Seite (datiert.dauer_text), nie gerundete
+    Minuten: 249 s ist "4 min 9 s", nicht "4 min" (Ben, 12.11.2026)."""
+    s = int(round(s))
+    h, rest = divmod(s, 3600)
+    m, sek = divmod(rest, 60)
+    return " ".join(([f"{h} h"] if h else []) + ([f"{m} min"] if h or m else []) + [f"{sek} s"])
+
+
+def fenster(von_ts, bis_ts):
+    """Benanntes Fenster fuer Vergleiche, in utc."""
+    return f"{zeit(von_ts)} to {zeit(bis_ts)} utc"
 
 
 def prozent(x):
@@ -201,11 +221,16 @@ def deutung(rows, ziel_s, alt_ziel_s, kette, ende_ts, wunsch="auto", ohne_vorwoc
         woche = datetime.fromtimestamp(ende_ts, timezone.utc).isocalendar()[1]
         art = moeglich[(woche + versatz) % len(moeglich)]
     if art == "vorwoche":
+        # beide Fenster mit Ende und Zahl der Abstaende (Ben, 12.11.2026)
         m1, m2 = statistics.median(w1), statistics.median(w2)
+        mitte = ende_ts - 7 * 86400
         if m1 == m2:
-            return art, f"over the last seven days the median held at {zahl(m2, 1)} s, as in the seven days before."
-        return art, (f"over the last seven days the median {'rose' if m2 > m1 else 'fell'} to {zahl(m2, 1)} s, "
-                     f"from {zahl(m1, 1)} s in the seven days before.")
+            return art, (f"in the seven days to {zeit(ende_ts)} utc the median held at {zahl(m2, 1)} s over "
+                         f"{zahl(len(w2))} intervals, as over {zahl(len(w1))} intervals in the seven days to "
+                         f"{zeit(mitte)} utc.")
+        return art, (f"in the seven days to {zeit(ende_ts)} utc the median {'rose' if m2 > m1 else 'fell'} to "
+                     f"{zahl(m2, 1)} s over {zahl(len(w2))} intervals, from {zahl(m1, 1)} s over "
+                     f"{zahl(len(w1))} intervals in the seven days to {zeit(mitte)} utc.")
     if art == "luecke":
         h, t, a = max(rows, key=lambda r: r[2])
         d = datetime.fromtimestamp(t, timezone.utc)
@@ -321,11 +346,16 @@ def bch(args):
     frueher = [p for p in alle if os.path.basename(p)[8:18] < stichtag]
     vor = json.load(open(frueher[-1])) if frueher else None
     med = float(A["median"])
+    n = A.get("anzahl") or B["bis_hoehe"] - B["von_hoehe"]
     if vor:
-        wert = (f"we counted a median block interval of {zahl(med, 1)} s over {zahl(B['bloecke'])} blocks, "
-                f"against {zahl(float(vor['abstaende']['median']), 1)} s in our run a week earlier.")
+        # benanntes Fenster des frueheren Laufs mit seiner Zahl der Abstaende (Ben, 12.11.2026)
+        VB = vor["bereich"]
+        vn = vor["abstaende"].get("anzahl") or VB["bis_hoehe"] - VB["von_hoehe"]
+        wert = (f"we counted a median block interval of {zahl(med, 1)} s over {zahl(n)} intervals, "
+                f"against {zahl(float(vor['abstaende']['median']), 1)} s over {zahl(vn)} intervals in our window "
+                f"{fenster(ts_aus(VB['von_zeit_utc']), ts_aus(VB['bis_zeit_utc']))}.")
     else:
-        wert = (f"we counted a median block interval of {zahl(med, 1)} s over {zahl(B['bloecke'])} blocks, "
+        wert = (f"we counted a median block interval of {zahl(med, 1)} s over {zahl(n)} intervals, "
                 f"against {zahl(E['median'], 1)} s computed for an ideal 60 s chain.")
     bis = int(datetime.strptime(B["bis_zeit_utc"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
     with gzip.open(args.koepfe, "rt") as f:
@@ -400,7 +430,9 @@ def zcash_mainnet(args):
     ab = [a for _, _, a in rows]
     med = statistics.median(ab)
     von, bis = rows[0][1], rows[-1][1]
-    # Vorwoche: juengster frueherer Stand derselben Phase, mindestens 5 Tage alt
+    # Vorwoche: juengster frueherer Stand derselben Phase, mindestens 5 Tage alt.
+    # Genannt wird sein Fenster (Kopfzeiten aus den Koepfen) und seine Zahl der
+    # Abstaende, nie "a week earlier" (Ben, 12.11.2026).
     vor = None
     for pf in sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(args.stand)), "stand-20*.json")), reverse=True):
         if os.path.abspath(pf) == os.path.abspath(args.stand):
@@ -408,13 +440,16 @@ def zcash_mainnet(args):
         alt = json.load(open(pf))
         teil = alt.get("nach_nu7" if nach_nu7 else "vor_nu7")
         if teil and ts_aus(alt["bereich"]["bis_utc"]) <= bis - 5 * 86400:
-            vor = teil["gezaehlt"]["median_s"]
+            vb = teil["bereich"]
+            if vb["von_hoehe"] in zt and vb["bis_hoehe"] in zt:
+                vor = (teil["gezaehlt"]["median_s"], teil["abstaende"], zt[vb["von_hoehe"]], zt[vb["bis_hoehe"]])
             break
     if vor is not None:
-        vergleich = f"against {zahl(vor, 1)} s in our run a week earlier."
+        vergleich = (f"against {zahl(vor[0], 1)} s over {zahl(vor[1])} intervals in our window "
+                     f"{fenster(vor[2], vor[3])}.")
     else:
         vergleich = f"against {zahl(T * math.log(2), 1)} s computed for an ideal {kette} chain."
-    wert = f"we counted a median block interval of {zahl(med, 1)} s over {zahl(len(rows))} blocks, {vergleich}"
+    wert = f"we counted a median block interval of {zahl(med, 1)} s over {zahl(len(rows))} intervals, {vergleich}"
     art, d = deutung(rows, T, schwelle, kette, bis, args.deutung, ohne_vorwoche=vor is not None,
                      versatz=2, schwelle_text=schwelle_text)
     zeilen = [kopf, wert, d]
