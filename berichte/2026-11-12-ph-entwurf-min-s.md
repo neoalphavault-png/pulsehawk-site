@@ -43,3 +43,10 @@ Selbst-Merge nach der Regel vom 26.10. Geändert ist nur `scripts/ph/ph_entwurf.
    - Bis heute waren beide Dateien gleich. In kaspa-pulse kann ich nicht schreiben.
    - Bitte die Datei aus pulsehawk-site nach dem Merge 1:1 nach kaspa-pulse übernehmen. Prüfsumme: sha256 beginnt mit `3b2638dcd175c294`.
    - Ohne diesen Schritt geht am 18.11. noch „a week earlier“ und „4 min“ raus.
+
+## Selbst-Merge (12.11.2026)
+
+- **Merge:** PR #92 per Squash, Merge-Commit `bd85ec7`, Branch gelöscht.
+- **Auf main in pulsehawk-site:** das neue `scripts/ph/ph_entwurf.py`. Es greift beim nächsten Lauf von `ph-entwurf-zcash.yml` (Zcash-Testnet).
+- **Keine Seite betroffen**, deshalb keine Abnahme auf pulsehawk.io.
+- **Noch offen:** die Kopie in kaspa-pulse (siehe „Was Ben tun muss“). sha256 der Datei auf main beginnt mit `3b2638dcd175c294`.
