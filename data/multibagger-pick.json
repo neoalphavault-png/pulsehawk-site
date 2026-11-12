@@ -1,27 +1,27 @@
 {
- "date": "2026-11-11",
+ "date": "2026-11-12",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "VSXY",
+  "name": "Victoria's Secret",
+  "sector": "Consumer Discretionary",
+  "industry": "Apparel Retail",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 10.1305,
-  "pct": 913.0,
-  "from_1000": 10130,
+  "mult": 3.1652,
+  "pct": 216.5,
+  "from_1000": 3165,
   "d": "2026-11-10",
-  "close": 250.83,
+  "close": 110.75,
   "d_1y": "2025-11-10",
-  "close_1y": 24.76,
-  "low": 22.36,
-  "high": 269.0,
-  "drawdown_pct": -9.7,
+  "close_1y": 34.99,
+  "low": 33.79,
+  "high": 113.52,
+  "drawdown_pct": -3.4,
   "verified": {
    "source": "tiingo",
-   "mult": 10.1305,
-   "diff_pct": 0
+   "mult": 3.1415,
+   "diff_pct": 0.75
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 10.1,
-   "d": "2026-11-10",
-   "d_1y": "2025-11-10"
+   "pct": 11.3,
+   "d": "2026-11-11",
+   "d_1y": "2025-11-11"
   },
   "gold": {
-   "pct": -2.4,
-   "d": "2026-11-10",
-   "d_1y": "2025-11-10"
+   "pct": -3.9,
+   "d": "2026-11-11",
+   "d_1y": "2025-11-11"
   }
  },
- "candidates_total": 41,
+ "candidates_total": 42,
  "top10": [
   {
    "ticker": "MRNA",
@@ -51,7 +51,7 @@
   },
   {
    "ticker": "MXL",
-   "mult": 3.5905
+   "mult": 3.9032
   },
   {
    "ticker": "VSXY",
@@ -63,15 +63,15 @@
   },
   {
    "ticker": "IRDM",
-   "mult": 2.7338
+   "mult": 2.7834
+  },
+  {
+   "ticker": "GKOS",
+   "mult": 2.7496
   },
   {
    "ticker": "RNG",
    "mult": 2.6764
-  },
-  {
-   "ticker": "GKOS",
-   "mult": 2.6585
   },
   {
    "ticker": "VSTS",
@@ -82,10 +82,19 @@
    "mult": 2.574
   },
   {
-   "ticker": "VIR",
-   "mult": 2.4488
+   "ticker": "SN",
+   "mult": 2.4618
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (7.05%)"
+  },
+  {
+   "ticker": "MXL",
+   "reason": "quellen weichen ab (3.78%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
