@@ -133,3 +133,41 @@ Nichts. Die Abnahme auf pulsehawk.io folgt nach dem Merge als Zeile in diesem Be
   - neue Navigation;
   - kein waagerechtes Scrollen.
 - **Screenshots:** 16 Live-Aufnahmen (`*-live.jpg`) in `berichte/2026-11-11-startseite-frisch/`.
+
+## Folgefix Interval score ohne „computed“ (Ben, 12.11.2026)
+
+**Kopf:** `882e9b8` auf `site/score-ohne-computed`.
+
+- **Geändert an der Quelle:**
+  - In `scripts/datiert.py` (`prognose_block`) heißt der Satz jetzt „Mean interval score 5 h 43 min 14 s, lower is better.“
+  - In `scripts/b2b_pages.py` (`tr_eintrag`) hat die Zeile „Interval score“ jedes Eintrags auf /track-record statt „…, computed“ jetzt „…, lower is better“.
+  - /reports/ enthält den Satz nicht, dort war nichts zu ändern.
+- **Prüfungen:**
+  - `b2b_pages.py`: 0 von 25 Seiten mit Funden.
+  - Selbsttests: `datiert` 0 von 10 und `b2b_check` 0 von 26 Fällen falsch.
+  - Der Secret-Scan findet nichts.
+  - `git grep -i "interval score.*computed"` findet nichts mehr.
+
+### Treffer zu „computed“, die kein Protokollwert sind (nicht geändert)
+
+Als Protokollwert zähle ich alles, was aus einer festen Regel folgt: Zielabstand, ideale Kette (T × ln 2, ln 10, ln 100), 500 Blöcke × 25 s und die Emission. Diese Treffer sind in Ordnung und hier nicht aufgeführt. Folgende Stellen tragen „computed“ an Werten, die aus unseren Zählungen oder Prognosen gerechnet sind:
+
+1. **Report PH-UR-2026-001** (/reports/zcash-nu7, aus `scripts/upgrade_report.py`)
+   - „Gap to our forecast −416 s computed, n 1“ (Zeile „Gap to our forecast“, um Z. 603). Das ist die Differenz aus gezählter Kopfzeit und unserer Prognose.
+   - „Our forecast was 6 November 2026, 02:40 UTC, computed from our count of the block pace“ (Z. 400).
+   - „Measurement uncertainty, 95 % intervals from the rank statistics, computed, …“ unter M1 vor und nach der Aktivierung (Z. 42 und 531). Das ist Statistik über unsere Zählung.
+   - „95 % Wilson intervals, computed, …“ unter M5 (Z. 50 und 541).
+   - Zwischenfall: „Band 20.0 s to 30.0 s, 20 % around the target of 25 s, computed“ (Z. 597) und „the band edges are computed exactly“ (Z. 51). Das Band folgt aus dem Zielabstand und unserer 20-%-Regel. Ob das als Protokollwert gilt, entscheidet Ben.
+   - Der Report ist veröffentlicht und per sha256 festgelegt. Eine Änderung hieße Neuausgabe mit Eintrag unter /corrections.
+2. **/standard** (aus `scripts/b2b_pages.py`, Z. 2083): Die Regel lautet „computed is arithmetic from counted or source values“. Diese Definition ist weiter gefasst als Bens Gebrauch (nur feste Protokollregeln). Wird sie enger, passen die Treffer unter 1 nicht mehr zur Regel.
+3. **/zcash-nu7, Code nicht aktiv** (`scripts/b2b_pages.py`, Z. 1046 und 1056)
+   - „computed from our counted pace, median …, 90% band …“ und „All three are forecasts computed from our count“.
+   - Der Zweig erscheint nur vor der Aktivierung von NU7 und ist heute auf keiner Seite zu sehen.
+4. **/zcash-nu7, Schwierigkeit** (Z. 1001 bis 1002): „… against X for a 25 s target at the same hashrate, computed“. Das ist aus der gezählten Schwierigkeit und dem Ziel gerechnet, also gemischt. Es steht heute nicht auf der Seite, weil das Feld in den Daten fehlt.
+
+**Kein Label, sondern Verb, nicht gemeldet:**
+- /method: „The report rows are computed in …“;
+- /standard: „computed again from the CSV“, „how a value is computed“;
+- die Spezifikation: „How are the values computed?“;
+- /cases/alexandria: „cannot be computed again“;
+- `getComputedStyle` in `scripts/ph/ph_stil.py`.
