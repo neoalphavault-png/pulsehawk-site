@@ -305,7 +305,7 @@ def prognose_block(track, link):
             '<p>We publish activation times before they happen, dated and with a band, and score every '
             'forecast against the block afterwards, misses included.</p>'
             '<div class="dz"><div class="dwert">%d of %d</div>'
-            '<p>Our %s forecasts landed inside their %s band, counted. Mean interval score %s, computed, lower is better.</p>'
+            '<p>Our %s forecasts landed inside their %s band, counted. Mean interval score %s, lower is better.</p>'
             '%s</div><p>%s</p></section>'
             % (drin, len(gew), wort(len(gew)), " and ".join("%d%%" % s for s in stufen),
                dauer_text(mittel),

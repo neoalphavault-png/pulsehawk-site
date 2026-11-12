@@ -780,7 +780,7 @@ def tr_eintrag(e):
         zeilen.append(("Result", "Not counted yet"))
     sc = datiert.interval_score(e) if e["art"] == "estimate" else None
     if sc is not None:
-        zeilen.append(("Interval score", "%s, computed" % datiert.dauer_text(sc)))
+        zeilen.append(("Interval score", "%s, lower is better" % datiert.dauer_text(sc)))
     zeilen.append(("Methods", ", ".join(a("/method#" + m.lower(), m) for m in e["methods"])))
     zeilen.append(("Status", tr_status(e["status"])))
     # je eintrag eine h2, damit kein abschnitt ueber 250 woerter kommt (9.11.2026)
