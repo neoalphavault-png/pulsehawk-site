@@ -1,6 +1,6 @@
 # ph_entwurf.py in min und s, Vergleich mit benanntem Fenster (Ben, 12.11.2026)
 
-Kopf: `0256db1` auf `site/ph-entwurf-min-s`. Frist: vor der zweiten Woche am 18.11.
+PR #92, Kopf: `0256db1` auf `site/ph-entwurf-min-s`. Frist: vor der zweiten Woche am 18.11.
 
 ## Was gemacht wurde
 
