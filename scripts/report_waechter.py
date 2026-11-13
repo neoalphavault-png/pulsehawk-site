@@ -244,7 +244,7 @@ TLD = ("com|net|org|io|cash|dev|xyz|onion|local|lan|internal|info|co|app|cloud|n
 RE_HOST = re.compile(r"\b(?:[a-z0-9-]+\.)+(?:%s)\b" % TLD, re.I)
 # hosts, die die seite selbst nennt: eigene domain, quellen, schema, analytics
 HOSTS_ERLAUBT = {"pulsehawk.io", "github.com", "zips.z.cash", "x.com", "schema.org",
-                 "creativecommons.org", "plausible.io", "z.cash"}
+                 "creativecommons.org", "static.cloudflareinsights.com", "z.cash"}
 
 
 def funde_e(text, wo):

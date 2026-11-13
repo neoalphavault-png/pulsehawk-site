@@ -11,7 +11,7 @@ Regeln vom 16.10.2026 (Ben), fuer sichtbaren Text:
   /method und /independence.
 Dazu SEO: Title hoechstens 60 Zeichen, Description 140 bis 155, genau eine
 H1, Abschnitte unter 250 Woertern, JSON-LD gueltig, FAQ-Schema nur mit
-Fragen, die sichtbar dastehen, Canonical und og:image vorhanden, Plausible
+Fragen, die sichtbar dastehen, Canonical und og:image vorhanden, Cloudflare Web Analytics
 auf jeder Seite. Und nie eine IP-Adresse im Quelltext.
 
 Dazu ab 4.11.2026 (Ben): ein Absatz, der ein Upgrade, eine Aktivierung oder
@@ -156,6 +156,7 @@ def funde_messseite(roh):
     return f
 
 
+CF_TOKEN = "55800041c417470ba238caa057511116"   # oeffentlich, kein secret
 RE_ZEITPUNKT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$")
 
 
@@ -409,8 +410,11 @@ def pruefe(datei, roh=None):
         lokal = os.path.join(REPO, og.replace("https://pulsehawk.io/", ""))
         if not os.path.exists(lokal):
             f.append("og-bild fehlt auf platte %s" % og)
-    if "plausible.io/js/pa-" not in roh or "plausible.init()" not in roh:
-        f.append("plausible fehlt")
+    # Cloudflare Web Analytics genau einmal, direkt vor </body> (Ben, 12.11.2026)
+    if roh.count("static.cloudflareinsights.com/beacon.min.js") != 1 or CF_TOKEN not in roh:
+        f.append("cloudflare web analytics fehlt oder steht mehrfach")
+    elif not re.search(r"<!-- End Cloudflare Web Analytics -->\s*</body>", roh):
+        f.append("cloudflare web analytics steht nicht direkt vor </body>")
     if re.search(r"(?<![\d.])(\d{1,3}\.){3}\d{1,3}(?![\d.])", re.sub(r"<script type=\"application/ld\+json\">.*?</script>", "", roh, flags=re.S)):
         f.append("ip-adresse im quelltext")
     for blob in p.ld:

@@ -7,7 +7,7 @@ Seit dem 15.10.2026 ist pulsehawk.io die B2B-Seite der Messmarke (Ben).
 Zwoelf Seiten teilen sich Kopf, Leiste, Fuss, Schema und Zaehlung. Von Hand
 gepflegt liefen die auseinander, also stehen sie hier an einer Stelle, und
 dieses Skript schreibt fertiges, statisches HTML. Im Browser wird nichts
-nachgeladen ausser Plausible; jede Zahl steht im Quelltext.
+nachgeladen ausser Cloudflare Web Analytics; jede Zahl steht im Quelltext.
 
 DIE ALTEN DATENSEITEN (Ben, 27.10.2026)
 Die Bitcoin- und Marktseiten aus der frueheren DAY-Serie (Zyklus,
@@ -147,7 +147,7 @@ def a(href, text, cls=""):
 def sample_button():
     return ('<p class="cta">%s</p>'
             % a(SAMPLE_URL, "See a sample report",
-                "btn plausible-event-name=Sample+Report"))
+                "btn"))
 
 
 def contact_button(text="Request a measurement"):
@@ -1161,7 +1161,7 @@ def seiten():
 </div></section>
 <p class="gebaut">pages built %s</p>
 """ % (a("/contact", "Request a measurement", "btn"),
-       a(rep_neu["path"], "See the latest report", "btn ghost plausible-event-name=Sample+Report"),
+       a(rep_neu["path"], "See the latest report", "btn ghost"),
        a("/independence", "independence"), a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL)),
        datiert.report_karte(rep_neu, a, ohne_zahl=ohne_zahl),
        datiert.prognose_block(track, a),
@@ -1672,7 +1672,7 @@ def seiten():
             '<li><b>interval_s</b> is that timestamp minus the timestamp of the parent block, '
             'in seconds. It stays empty for 4,465,026, because the first counted interval is '
             'that of 4,465,027.</li>\n</ul>\n'
-            '<p class="cta"><a class="btn plausible-event-name=CSV+Download" href="/%s" '
+            '<p class="cta"><a class="btn" href="/%s" '
             'download>Download CSV, 49,203 blocks, about 1 MB</a></p>\n'
             '<p class="small">Data from PulseHawk, licensed CC BY 4.0. Cite as PulseHawk '
             '(2026), Zcash NU7 testnet block intervals, cut-off 18 October 2026.</p>\n'
@@ -1681,12 +1681,11 @@ def seiten():
             'October 2026, 06:00 UTC. SHA-256 %s.</p>' % (ZCASH_CSV, ZCASH_CSV_SHA256))
     if pdf:
         dl_teile.append('<p class="cta">%s</p>' % a("/" + ZCASH_PDF, "Download the sample report (PDF)",
-                                                   "btn plausible-event-name=PDF+Download"))
+                                                   "btn"))
     downloads = ('<section id="download"><h2>Download the raw intervals</h2>\n%s\n</section>'
                  % "\n".join(dl_teile)) if dl_teile else ""
     # CSV-zeile im zitierkasten, mit derselben klasse wie der download-knopf,
-    # damit Plausible sie als CSV Download zaehlt
-    z_csv = ('<a class="plausible-event-name=CSV+Download" href="/%s" download>Download the CSV</a>, '
+    z_csv = ('<a href="/%s" download>Download the CSV</a>, '
              '49,203 blocks up to 18 October 2026, licensed CC BY 4.0.' % ZCASH_CSV) if csv else ""
     quelle = ('<p class="src">Our own measurement, Zcash NU7 testnet, headers from testnet '
               'peers, blocks 4,465,026 to 4,514,228, snapshot 18 October 2026, 06:00 UTC.</p>')
@@ -1987,7 +1986,7 @@ def seiten():
         # einmal. BREVO_JS schickt das Formular per fetch und zeigt die
         # Erfolgsmeldung hier auf der Seite, statt auf eine Brevo-Seite zu
         # wechseln. Es meldet selbst kein Ereignis, sonst zaehlte es doppelt.
-        form_open = ('<form id="kontakt" class="form plausible-event-name=Contact+Form" method="post" '
+        form_open = ('<form id="kontakt" class="form" method="post" '
                      'action="%s" data-brevo>' % E(BREVO_FORM_URL, quote=True))
     else:
         # ohne Brevo traegt das Formular KEINE Klasse: MAILTO_JS haelt das
@@ -2055,7 +2054,7 @@ def seiten():
     S.append(dict(
         datei="datenschutz.html", pfad="/datenschutz.html", og="home",
         title="Datenschutz, privacy policy | PulseHawk",
-        desc="Privacy policy for pulsehawk.io. Hosting, contact form, cookieless Plausible analytics.",
+        desc="Privacy policy for pulsehawk.io. Hosting, contact form, reach measurement with Cloudflare Web Analytics without cookies.",
         h1="Privacy policy",
         lead="Datenschutzerklärung. Last updated on 16 October 2026.",
         body=DATENSCHUTZ % {"mail": a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL))},
@@ -2175,7 +2174,6 @@ MAILTO_JS = """
 (function(){var f=document.querySelector('form[data-mailto]');if(!f)return;
 f.addEventListener('submit',function(e){e.preventDefault();if(!f.reportValidity())return;
 var g=function(n){var x=f.elements[n];return x?x.value:'';};
-if(window.plausible)window.plausible('Contact Form');
 var b='Network '+g('NETWORK')+'\\nWhat to measure '+g('SCOPE')+'\\nWhen '+g('TIMING')+'\\nBudget '+g('BUDGET')+'\\nEmail '+g('EMAIL');
 location.href='mailto:'+f.getAttribute('data-mailto')+'?subject='+encodeURIComponent('Measurement request')+'&body='+encodeURIComponent(b);});})();
 </script>"""
@@ -2242,9 +2240,9 @@ DATENSCHUTZ = """
 <p>This website is hosted on GitHub Pages, a service of GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. When you visit the site, GitHub collects technically necessary data, in particular your IP address, in server logs in order to deliver the website and keep the service secure. We have no access to these logs and do not analyze them.</p>
 <p>Legal basis is Art. 6 (1)(f) GDPR, our legitimate interest in providing the website securely and efficiently. GitHub is certified under the EU U.S. Data Privacy Framework. More in the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub Privacy Statement</a>.</p>
 </section>
-<section><h2>3. Analytics with Plausible, without cookies</h2>
-<p>We count visits with Plausible Analytics, a service of Plausible Insights OÜ, Västriku tn 2, 50403 Tartu, Estonia. Plausible runs on servers in the EU, sets no cookies and stores no personal data. Your IP address is only used to form a daily changing anonymous identifier and is not stored. No data is shared with third parties or used for advertising, and visitors cannot be identified or followed across websites.</p>
-<p>We count page views and a few events, a click on See a sample report, a download of a PDF or CSV file, a sent contact form and a click on a link to another website. Legal basis is Art. 6 (1)(f) GDPR, our legitimate interest in knowing which pages are used. More in the <a href="https://plausible.io/data-policy" rel="noopener">Plausible data policy</a>.</p>
+<section><h2>3. Reach measurement with Cloudflare Web Analytics, without cookies</h2>
+<p>We measure the reach of this website with Cloudflare Web Analytics, a service of Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA. With each page a small script loads from static.cloudflareinsights.com and sends its measurements to Cloudflare. Cloudflare states that Web Analytics uses no client side state such as cookies or localStorage, does not fingerprint visitors through their IP address, user agent or other data, and does not collect or use the personal data of visitors. Cloudflare also states that it does not track individual visitors across websites.</p>
+<p>Collected are visits and page views, the page address, the referring page, the country, the device type, the browser, the operating system and timing values such as page load time and Core Web Vitals, which the script reads through the Performance API of your browser. Legal basis is Art. 6 (1)(f) GDPR, our legitimate interest in knowing how far the site reaches and which pages are used. For transfers to the USA Cloudflare relies on its certification under the EU U.S. Data Privacy Framework. More in the <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare privacy policy</a> and the <a href="https://developers.cloudflare.com/web-analytics/about/" rel="noopener">Web Analytics documentation</a>.</p>
 </section>
 <section><h2>4. Contact form and email</h2>
 <p>If you send the contact form or write to us, we process your email address and what you tell us about your project, only to answer your request. The contact form is sent through Brevo, a service of Brevo GmbH, Köpenicker Straße 126, 10179 Berlin, Germany, which transmits and stores your entries on our behalf in our contact list.</p>
@@ -2371,21 +2369,12 @@ nav.main{width:100%;overflow-x:auto}nav.main ul{flex-wrap:nowrap;white-space:now
 main{padding-top:30px}.lead{font-size:17px}}
 """
 
-# Snippet von Plausible fuer pulsehawk.io, genau so wie ausgegeben (Ben,
-# 17.10.2026). Es bleiben die vier eigenen Ereignisse, die automatische
-# Formular- und Downloaderfassung in Plausible bleibt aus (Ben), sonst
-# zaehlte doppelt:
-#   Sample Report  Klasse plausible-event-name=Sample+Report am Knopf
-#   PDF Download   Klasse am Download-Link auf /zcash-nu7
-#   CSV Download   Klasse am Download-Link auf /zcash-nu7
-#   Contact Form   mit Brevo die Klasse am <form>, ohne Brevo MAILTO_JS
-# Der Tracker wertet die Klassen immer aus, auch ohne Schalter im Dashboard.
-PLAUSIBLE = """<!-- Privacy-friendly analytics by Plausible -->
-<script async src="https://plausible.io/js/pa-XESlUIPQAsUi8GQsRqS55.js"></script>
-<script>
-  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init()
-</script>"""
+# Cloudflare Web Analytics statt des frueheren Zaehldienstes (Ben, 12.11.2026). Das Snippet genau
+# so wie von Cloudflare ausgegeben, direkt vor dem schliessenden body-Tag jeder
+# Seite. Das Token ist oeffentlich, kein Secret. Cloudflare wertet keine
+# eigenen Ereignisse und keine UTM-Parameter aus, das ist bekannt (Ben).
+CF_BEACON = ("<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' "
+             "data-cf-beacon='{\"token\": \"55800041c417470ba238caa057511116\"}'></script><!-- End Cloudflare Web Analytics -->")
 
 
 def fuss():
@@ -2464,7 +2453,6 @@ def render(seite):
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@pulsehawkio">
-{plausible}
 <script type="application/ld+json">
 {ld}
 </script>
@@ -2480,10 +2468,11 @@ def render(seite):
 {body}
 </div></main>
 {fuss}{script}
+{beacon}
 </body>
 </html>
 """.format(title=E(seite["title"]), desc=E(seite["desc"], quote=True), robots=robots,
-           can=can, og=og, ogtitle=E(seite["h1"], quote=True), plausible=PLAUSIBLE,
+           can=can, og=og, ogtitle=E(seite["h1"], quote=True), beacon=CF_BEACON,
            ld=ld, css=re.sub(r"\n", "", CSS), css2=re.sub(r"\n", "", seite.get("css", "")),
            bk=' class="%s"' % seite["bodyclass"] if seite.get("bodyclass") else "", kopf=kopfleiste(seite["pfad"]),
            crumbs=cr_html, h1=seite["h1"], lead=seite["lead"], body=seite["body"].strip(),

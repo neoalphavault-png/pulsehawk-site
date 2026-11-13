@@ -21,12 +21,6 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@pulsehawkio">
-<!-- Privacy-friendly analytics by Plausible -->
-<script async src="https://plausible.io/js/pa-XESlUIPQAsUi8GQsRqS55.js"></script>
-<script>
-  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init()
-</script>
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -105,7 +99,7 @@
 <h1>Request a measurement</h1>
 <p class="lead">Four questions and your email. Tell us which network, what you want measured and when, and we answer with questions or an offer. You can also write to <a href="mailto:hello@pulsehawk.io">hello@pulsehawk.io</a>.</p>
 <section><h2>What should we measure?</h2>
-<form id="kontakt" class="form plausible-event-name=Contact+Form" method="post" action="https://f926321f.sibforms.com/serve/MUIFAI2n0BTv1Y0_sa6l9ABLD6Y1dsCFy3mVrIG6it6dG89b7R1QbENQtPLV1j5zwZa-zaKNhZi1nqHeLl_nC_FvellYmKM4RklEV1XtOLrN48XbnZxFrXUhsv9zxPutHnBtu3sJfDYZnDbxdJjJMgrpNR-P32bYQrf6xGZbkVf3Ja8jNJQgGKj25csrXcVwNA1Lhv1rfZTpzEd52Q==" data-brevo>
+<form id="kontakt" class="form" method="post" action="https://f926321f.sibforms.com/serve/MUIFAI2n0BTv1Y0_sa6l9ABLD6Y1dsCFy3mVrIG6it6dG89b7R1QbENQtPLV1j5zwZa-zaKNhZi1nqHeLl_nC_FvellYmKM4RklEV1XtOLrN48XbnZxFrXUhsv9zxPutHnBtu3sJfDYZnDbxdJjJMgrpNR-P32bYQrf6xGZbkVf3Ja8jNJQgGKj25csrXcVwNA1Lhv1rfZTpzEd52Q==" data-brevo>
 <label for="f-network">Network</label>
 <input id="f-network" name="NETWORK" type="text" maxlength="200" required autocomplete="off" placeholder="Zcash testnet, Kaspa mainnet">
 <label for="f-scope">What to measure</label>
@@ -140,5 +134,6 @@ fetch(u,{method:'POST',body:new URLSearchParams(new FormData(f)),mode:'cors',cre
 .then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t)}catch(x){}if(!r.ok||(j&&j.success===false))throw new Error('brevo');});})
 .then(function(){f.hidden=true;ok.hidden=false;ok.focus();},function(){err.hidden=false;btn.disabled=false;});});})();
 </script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "55800041c417470ba238caa057511116"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
