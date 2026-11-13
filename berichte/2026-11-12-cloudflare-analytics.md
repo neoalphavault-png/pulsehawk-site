@@ -97,3 +97,19 @@ die Abnahme auf pulsehawk.io in einem eigenen kleinen Bericht-PR.
    Besuche auf pulsehawk.io ankommen.
 3. Bei Plausible kann das Konto für pulsehawk.io gekündigt werden. Von der
    Seite geht keine Anfrage mehr dorthin.
+
+## Merge und Abnahme (13.11.2026)
+
+- **Merge:** PR #89 durch Ben, Merge-Commit `4d42db3`.
+- **Live auf pulsehawk.io:** alle 34 HTML-Seiten (25 aus dem Generator, 9 Weiterleitungen) sind byte-gleich mit dem Bau aus `4d42db3`.
+- **Netzwerkprobe mit Playwright auf der echten Domain:** /, /datenschutz, /contact, /track-record, /reports/zcash-nu7. Auf jeder Seite:
+  - `GET 200` static.cloudflareinsights.com/beacon.min.js;
+  - `POST 204` cloudflareinsights.com/cdn-cgi/rum;
+  - keine Anfrage an plausible.io.
+
+  Ein zweiter Sendeaufruf beim Verlassen der Seite steht als abgebrochen im Log. Das ist der Seitenwechsel der Probe, kein Fehler.
+- **Datenschutzseite:** Abschnitt 3 „Reach measurement with Cloudflare Web Analytics, without cookies“ ist live, mit Anbieter, Zweck, erhobenen Werten, Rechtsgrundlage, DPF und beiden Links.
+- **Im Browser bei 390 und 1440 px, hell und dunkel:** Startseite und /datenschutz ohne waagerechtes Scrollen und ohne JS-Fehler.
+- **Aufnahmen:** 8 Stück (`*-live.jpg`) in `berichte/2026-11-12-cloudflare-analytics/`.
+
+**Was Ben noch tun muss:** im Cloudflare-Dashboard nachsehen, ob die Besuche auf pulsehawk.io ankommen. Die Probe von heute (5 Seiten) sollte dort schon zu sehen sein.
