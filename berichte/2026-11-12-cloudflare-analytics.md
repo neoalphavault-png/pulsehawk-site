@@ -113,3 +113,13 @@ die Abnahme auf pulsehawk.io in einem eigenen kleinen Bericht-PR.
 - **Aufnahmen:** 8 Stück (`*-live.jpg`) in `berichte/2026-11-12-cloudflare-analytics/`.
 
 **Was Ben noch tun muss:** im Cloudflare-Dashboard nachsehen, ob die Besuche auf pulsehawk.io ankommen. Die Probe von heute (5 Seiten) sollte dort schon zu sehen sein.
+
+## Folgefix Stand der Datenschutzseite (Ben, 13.11.2026)
+
+- **Kopf:** `0066468` auf `site/datenschutz-stand`.
+- **Neu:** Die Seite zeigt „Last updated on 13 November 2026“, den Tag, an dem #89 live ging, statt „16 October 2026“.
+- **An der Quelle:** neue Konstante `DATENSCHUTZ_STAND` in `scripts/b2b_pages.py`. Sie steuert auch `lastmod` der Seite.
+- **Prüfungen:**
+  - `b2b_pages`: 0 von 25 Seiten mit Funden.
+  - Selbsttests: `b2b_check` 0 von 26, `datiert` 0 von 10, `report_waechter` 0 von 55 Fällen falsch.
+  - pyflakes sauber, der Secret-Scan findet nichts.
