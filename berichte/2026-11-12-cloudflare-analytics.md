@@ -123,3 +123,5 @@ die Abnahme auf pulsehawk.io in einem eigenen kleinen Bericht-PR.
   - `b2b_pages`: 0 von 25 Seiten mit Funden.
   - Selbsttests: `b2b_check` 0 von 26, `datiert` 0 von 10, `report_waechter` 0 von 55 Fällen falsch.
   - pyflakes sauber, der Secret-Scan findet nichts.
+- **Selbst-Merge:** PR #95 per Squash, Merge-Commit `26a05ac`, Branch gelöscht.
+- **Live auf pulsehawk.io:** /datenschutz zeigt „Last updated on 13 November 2026“. /datenschutz und die Startseite sind byte-gleich mit dem Bau aus `26a05ac`, der Beacon steht weiter genau einmal auf der Seite.
