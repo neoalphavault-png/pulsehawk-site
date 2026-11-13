@@ -659,6 +659,7 @@ KORR_STAND = "2026-11-05"    # /corrections und /independence ohne "now" (Ben, 5
 GRUENDER = "Benjamin Alkanli"
 GRUENDER_BILD = "/assets/about/founder.jpg"
 ABOUT_STAND = "2026-11-05"
+DATENSCHUTZ_STAND = "2026-11-13"   # Cloudflare Web Analytics statt Plausible live mit #89 (Ben, 13.11.2026)
 ABOUT_CSS = """
 .founder{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:14px 0 18px}
 .founder img{width:200px;height:200px;border-radius:12px;display:block;object-fit:cover}
@@ -2052,11 +2053,11 @@ def seiten():
         faqs=[], schema=[], noindex=True, legal=True,
     ))
     S.append(dict(
-        datei="datenschutz.html", pfad="/datenschutz.html", og="home",
+        datei="datenschutz.html", pfad="/datenschutz.html", og="home", lastmod=DATENSCHUTZ_STAND,
         title="Datenschutz, privacy policy | PulseHawk",
         desc="Privacy policy for pulsehawk.io. Hosting, contact form, reach measurement with Cloudflare Web Analytics without cookies.",
         h1="Privacy policy",
-        lead="Datenschutzerklärung. Last updated on 16 October 2026.",
+        lead="Datenschutzerklärung. Last updated on %s." % lang(DATENSCHUTZ_STAND),
         body=DATENSCHUTZ % {"mail": a("mailto:" + KONTAKT_MAIL, E(KONTAKT_MAIL))},
         faqs=[], schema=[], noindex=True, legal=True,
     ))
