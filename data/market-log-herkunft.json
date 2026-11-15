@@ -14290,5 +14290,37 @@
    "zeit": "2026-11-14T23:36:09Z",
    "zeit_aus": "quelle"
   }
+ },
+ "2026-11-15": {
+  "btc": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-11-15T23:51:22Z",
+   "zeit_aus": "quelle"
+  },
+  "btc_dom": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-11-15T23:49:33Z",
+   "zeit_aus": "quelle"
+  },
+  "eth": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-11-15T23:51:07Z",
+   "zeit_aus": "quelle"
+  },
+  "stables": {
+   "quelle": "defillama",
+   "art": "tageswert",
+   "zeit": null,
+   "zeit_aus": "quelle-datum"
+  },
+  "total_mcap": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-11-15T23:49:33Z",
+   "zeit_aus": "quelle"
+  }
  }
 }
