@@ -1,39 +1,39 @@
 {
- "date": "2026-11-14",
+ "date": "2026-11-15",
  "pick": {
-  "ticker": "RNG",
-  "name": "RingCentral, Inc.",
-  "sector": "Information Technology",
-  "industry": "Application Software",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
-   "sp600"
+   "sp500"
   ],
-  "mult": 2.7506,
-  "pct": 175.1,
-  "from_1000": 2751,
-  "d": "2026-11-12",
-  "close": 75.89,
-  "d_1y": "2025-11-12",
-  "close_1y": 27.59,
-  "low": 24.82,
-  "high": 86.31,
-  "drawdown_pct": -10.0,
+  "mult": 8.9491,
+  "pct": 794.9,
+  "from_1000": 8949,
+  "d": "2026-11-13",
+  "close": 223.37,
+  "d_1y": "2025-11-13",
+  "close_1y": 24.96,
+  "low": 22.36,
+  "high": 269.0,
+  "drawdown_pct": -10.4,
   "verified": {
    "source": "tiingo",
-   "mult": 2.7829,
-   "diff_pct": 1.17
+   "mult": 8.9491,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 10,
+  "sp500_doubled": 11,
   "sp500_tripled": 3
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 12.2,
+   "pct": 12.3,
    "d": "2026-11-13",
    "d_1y": "2025-11-13"
   },
@@ -47,58 +47,45 @@
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 8.6616
+   "mult": 8.9491
   },
   {
    "ticker": "MXL",
-   "mult": 3.9032
+   "mult": 4.0479
   },
   {
    "ticker": "VSXY",
-   "mult": 2.9565
+   "mult": 3.0378
+  },
+  {
+   "ticker": "SEZL",
+   "mult": 2.9325
   },
   {
    "ticker": "RNG",
-   "mult": 2.7506
+   "mult": 2.7829
   },
   {
    "ticker": "IRDM",
    "mult": 2.7484
   },
   {
-   "ticker": "SEZL",
-   "mult": 2.6998
-  },
-  {
    "ticker": "GKOS",
    "mult": 2.6764
   },
   {
-   "ticker": "XNCR",
-   "mult": 2.6498
+   "ticker": "RXO",
+   "mult": 2.6736
   },
   {
-   "ticker": "DELL",
-   "mult": 2.6378
+   "ticker": "XNCR",
+   "mult": 2.6512
   },
   {
    "ticker": "VSTS",
-   "mult": 2.6327
+   "mult": 2.6336
   }
  ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (3.32%)"
-  },
-  {
-   "ticker": "MXL",
-   "reason": "quellen weichen ab (3.71%)"
-  },
-  {
-   "ticker": "VSXY",
-   "reason": "quellen weichen ab (2.75%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }

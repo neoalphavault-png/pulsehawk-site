@@ -1,5 +1,5 @@
 {
- "date": "2026-11-07",
+ "date": "2026-11-15",
  "count": 1502,
  "rows": [
   {
@@ -6987,6 +6987,16 @@
    ]
   },
   {
+   "ticker": "JHX",
+   "name": "James Hardie Industries",
+   "wiki": null,
+   "sector": "Materials",
+   "industry": "Construction Materials",
+   "indices": [
+    "sp400"
+   ]
+  },
+  {
    "ticker": "JLL",
    "name": "Jones Lang LaSalle",
    "wiki": null,
@@ -8052,16 +8062,6 @@
    "wiki": null,
    "sector": "Health Care",
    "industry": "Biotechnology",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
-   "ticker": "ROKU",
-   "name": "Roku, Inc.",
-   "wiki": null,
-   "sector": "Communication Services",
-   "industry": "Movies & Entertainment",
    "indices": [
     "sp400"
    ]
