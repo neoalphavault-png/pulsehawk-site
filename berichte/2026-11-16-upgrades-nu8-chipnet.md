@@ -28,7 +28,7 @@ Ich finde keine offizielle Bestätigung, dass das Upgrade am 15.11. aktiviert ha
 ## Offene Fragen an Ben
 
 1. Reicht dir für den Chipnet-Status eine BCHN-Quelle mit Aktivierungshöhe, sobald sie erscheint? Oder soll ich den Eintrag schon mit unserer eigenen Zählung als „measured by us“ führen? Die Zählung haben wir, die Quelle verlangt die Regel aber vom Projekt.
-2. Die Kalenderregel verlangt eine Quelle vom Projekt selbst. Der NU8-Eintrag nennt einen Forumsbeitrag. Soll der Eintrag einen Hinweis „proposal in the forum“ tragen, wenn ein ZIP oder eine Ankündigung der Foundation erscheint?
+2. Die Kalenderregel verlangt eine Quelle vom Projekt selbst, der NU8-Eintrag nennt einen Forumsbeitrag. Soll ich die Quelle auf den ZIP oder die Ankündigung umstellen, sobald es eines davon gibt?
 
 ## Was Ben tun muss
 
