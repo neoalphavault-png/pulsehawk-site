@@ -1,6 +1,6 @@
 {
  "hinweis": "Netzwerk-Upgrade-Kalender fuer /upgrades und den montaeglichen X-Entwurf (scripts/ph_kalender_post.py). x_handles sind offizielle X-Konten des Netzwerks, Ben prueft sie; leer, wo nicht sicher. Nur Eintraege mit Quelle vom Projekt selbst (Spezifikation, Release Notes, offizielle Ankuendigung). date null heisst 'not set'. date_estimate true heisst, das Datum ist eine Schaetzung (Seite und X-Entwurf schreiben 'around'). x_event ist ein kurzer Name nur fuer den X-Entwurf, wenn event zu lang ist. Nach dem Aendern: python3 scripts/b2b_pages.py time_note steht in der Datumsspalte hinter dem Datum (Uhrzeit, Bezug, Hoehe), links sind weitere Belege neben case (Ben, 9.11.2026).",
- "updated": "2026-11-09",
+ "updated": "2026-11-16",
  "entries": [
   {
    "id": "zcash-nu7-testnet",
@@ -48,6 +48,25 @@
     ]
    ],
    "time_note": "02:34:02 UTC by header time, block 3,543,405, counted"
+  },
+  {
+   "id": "zcash-nu8-mainnet",
+   "chain": "Zcash",
+   "event": "NU8, Network Upgrade 8",
+   "network": "mainnet",
+   "date": null,
+   "height": null,
+   "status": "proposed",
+   "source": "https://forum.zcashcommunity.com/t/59124",
+   "source_title": "Zcash Community Forum, thread 59124",
+   "checked": "2026-11-16",
+   "measured_by_us": false,
+   "note": "A list of changes proposed for NU8 in the community forum. No activation height and no date are set.",
+   "x_handles": [
+    "@Zcash",
+    "@ZcashFoundation"
+   ],
+   "x_event": "NU8"
   },
   {
    "id": "ethereum-glamsterdam-sepolia",

@@ -1614,7 +1614,9 @@ def seiten():
         schema=about_schema,
     ))
 
-    # 7 upgrades
+    # 7 upgrades. Zwei Tabellen, kommend und aktiviert, damit kein Abschnitt
+    # ueber 250 Woerter kommt (16.11.2026). Jede Zeile hat ihr eigenes
+    # Pruefdatum in data/upgrades.json, die Seite nennt nur die letzte Aenderung.
     u_faq = [
         ("Why does an upgrade show not set?",
          "Because the project has not announced a date or block height yet. The calendar only shows dates the project itself has published."),
@@ -1629,21 +1631,25 @@ def seiten():
         h1="Network upgrade calendar",
         lead=("Upcoming hard forks and network upgrades across chains, each with the "
               "official source it comes from. A date shows as not set until the project "
-              "announces one. Last checked on %s." % lang(up_stand)),
+              "announces one. Last updated on %s." % lang(up_stand)),
         body="""
 <section><h2>Which upgrades are coming?</h2>
 %s
-<p class="note">%d entries, checked on %s. Around marks an approximate date, for example from an announced block height. Measured by us means we measured that upgrade ourselves and a case page follows.</p>
+<p class="note">%d entries in both tables, last updated on %s. Around marks an approximate date, for example from an announced block height. Measured by us means we measured that upgrade ourselves and a case page follows.</p>
+</section>
+<section><h2>Which upgrades have activated?</h2>
+%s
 </section>
 <section><h2>How does an upgrade get on this calendar?</h2>
-<p>Only with a source from the project itself, a specification, release notes or an official announcement. Each source was checked on the date stated above, and a changed date replaces the old one on the same row.</p>
+<p>Only with a source from the project itself, a specification, release notes or an official announcement. Each entry keeps the date its source was last checked, and a changed date replaces the old one on the same row.</p>
 </section>
 <section><h2>Want an upgrade measured?</h2>
 <p>We measure readiness before activation and report what changed after it. See %s.</p>
 </section>
 %s
 <p class="cta">%s</p>
-""" % (kalender_tabelle(up), len(up), lang(up_stand),
+""" % (kalender_tabelle([e for e in up if e["status"] != "activated"]), len(up), lang(up_stand),
+       kalender_tabelle([e for e in up if e["status"] == "activated"]),
        a("/upgrade-monitoring", "upgrade readiness"), faq_html(u_faq), contact_button()),
         faqs=u_faq,
         schema=["ARTICLE:2026-10-16:%s" % up_stand],
