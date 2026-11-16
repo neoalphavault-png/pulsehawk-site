@@ -1,0 +1,57 @@
+# track-record-events.yml - Prognosen der Rubrik "scheduled protocol events"
+# auf pulsehawk.io uebernehmen (Ben, 16.11.2026).
+#
+# Stuendlich. Liest den oeffentlichen Zustand des Prognoselaufs (Quelle aus der
+# Repo-Variable TE_QUELLE, eine https-Adresse auf eine JSON-Datei), traegt neue
+# Prognosen und das Ergebnis mit scripts/te_sync.py in
+# data/track-record-events.json ein, baut die Seiten und committet nach main.
+# Der Commit ist der Zeitstempel der Prognose auf pulsehawk.io. Eine
+# veroeffentlichte Prognose wird nie geaendert; weicht die Quelle ab, bricht
+# der Lauf ab. Ohne TE_QUELLE tut der Lauf nichts. Kein Secret.
+name: track record events
+
+on:
+  schedule:
+    - cron: "25 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: track-record-events
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: selbsttest
+        run: python3 scripts/te_sync.py --selbsttest
+      - name: uebernehmen
+        id: sync
+        env:
+          TE_QUELLE: ${{ vars.TE_QUELLE }}
+        run: |
+          python3 scripts/te_sync.py | tee "$RUNNER_TEMP/sync.txt"
+          if grep -q "^neu:" "$RUNNER_TEMP/sync.txt"; then echo "neu=ja" >> "$GITHUB_OUTPUT"; fi
+      - name: bauen, pruefen, committen
+        if: steps.sync.outputs.neu == 'ja'
+        run: |
+          set -euo pipefail
+          python3 scripts/b2b_pages.py
+          python3 scripts/b2b_check.py track-record.html
+          python3 scripts/secret_scan.py --baum
+          git config user.name "pulsehawk bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/track-record-events.json track-record.html index.html sitemap.xml
+          git commit -m "track record events: $(sed -n 's/^neu: //p' "$RUNNER_TEMP/sync.txt") [bot]"
+          # uebrige bauaenderungen (etwa andere seiten) gehen nicht mit
+          git checkout -- . && git clean -fdq
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

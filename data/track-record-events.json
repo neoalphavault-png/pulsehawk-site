@@ -1,0 +1,22 @@
+{
+ "hinweis": "Track record, Rubrik scheduled protocol events (Ben, 16.11.2026). Getrennt von den Upgrade-Prognosen in track-record.json, mit eigener Zaehlung. Kleiner Test ohne Fixkosten bis nach dem Kaspa-Reward-Schritt um den 5.12.2026, dann entscheidet Ben. Prognosen 14 Tage, 7 Tage, 2 Tage und 24 Stunden vorher nach Activation Forecast v1 (PH-M-006) mit 80- und 95-%-Band. forecasts und result fuellt nur scripts/te_sync.py aus dem Zustand des Prognoselaufs; eine veroeffentlichte Prognose wird nie geaendert, der Commit dieser Datei ist ihr Zeitstempel. Wortlaut forecast, nie ein festes Datum. Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "updated": "2026-11-16",
+ "entries": [
+  {
+   "id": "TE-001",
+   "event": "Kaspa block reward step",
+   "network": "Kaspa mainnet",
+   "trigger_daa": 610101000,
+   "trigger": "the first DAA score of reward month 55 under the consensus rules of rusty-kaspa v2.1.0",
+   "reward": "1.94454365 KAS per block before, 1.83540480 KAS per block after",
+   "source": "https://github.com/kaspanet/rusty-kaspa/blob/v2.1.0/consensus/src/processes/coinbase.rs",
+   "source_title": "rusty-kaspa v2.1.0, coinbase.rs",
+   "counted_as": "header time of the first selected chain block with a DAA score at or above the trigger, counted by our own node",
+   "window": "selected chain blocks of our own node from its pruning point, about 400 points",
+   "methods": ["PH-M-006"],
+   "stages": ["14d", "7d", "2d", "24h"],
+   "forecasts": [],
+   "result": null
+  }
+ ]
+}
