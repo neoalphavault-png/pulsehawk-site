@@ -219,6 +219,7 @@
    "checked": "2026-11-09",
    "measured_by_us": false,
    "note": "Chipnet activates the upgrade six months early, at the first block whose median time past reaches 15 November 2026, 12:00 UTC (1794744000). BCHN marks it tentative.",
+   "confirmer": "BCHN",
    "x_handles": [],
    "time_note": "12:00 UTC by median time past"
   },

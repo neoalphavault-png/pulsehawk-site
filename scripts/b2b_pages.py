@@ -332,7 +332,24 @@ def lies_upgrades():
     return d, [e for e in d["entries"] if str(e.get("source", "")).startswith("https://")]
 
 
-def kalender_tabelle(eintraege):
+# Termin vorbei, aber keine offizielle Bestaetigung (Ben, 17.11.2026). Bestaetigt
+# ist ein Upgrade erst, wenn data/upgrades.json es mit Quelle auf activated
+# setzt. Bis dahin bleibt das Datum stehen, der Status zeigt das Warten.
+WARTET = "awaiting confirmation"
+
+
+def upgrade_stand(e, heute=None):
+    """(status, notiz) fuer die Kalenderzeile. Ein Eintrag mit Status scheduled
+    und einem Datum vor heute ist awaiting confirmation, mit Notiz. Am Tag
+    selbst bleibt er scheduled, die Uhrzeit steht ja noch aus."""
+    heute = heute or datiert.heute().isoformat()
+    if e.get("status") == "scheduled" and e.get("date") and e["date"] < heute:
+        wer = e.get("confirmer") or e["chain"]
+        return WARTET, "The scheduled time has passed. %s has not confirmed the activation yet." % wer
+    return e["status"], None
+
+
+def kalender_tabelle(eintraege, heute=None):
     def datum(e):
         if e.get("date"):
             # date_estimate, das datum ist geschaetzt (etwa aus der hoehe), die
@@ -356,6 +373,11 @@ def kalender_tabelle(eintraege):
 
     zeilen = []
     for e in sorted(eintraege, key=sortkey):
+        status, notiz = upgrade_stand(e, heute)
+        if notiz:
+            status = '%s<span class="small"><br>%s</span>' % (E(status), E(notiz))
+        else:
+            status = E(status)
         fall = a(e["case"], E(e.get("case_title") or "case page")) if e.get("case") and (
             ZCASH_OFFEN or "zcash" not in e["case"]) else ""
         # weitere belege, etwa der track record (Ben, 9.11.2026)
@@ -365,7 +387,7 @@ def kalender_tabelle(eintraege):
             '<tr id="%s"><td class="c">%s</td><td>%s</td><td>%s</td><td>%s</td>'
             '<td>%s</td><td>%s</td><td>%s%s</td></tr>'
             % (E(e["id"]), E(e["chain"]), E(e["event"]), E(e["network"]), datum(e),
-               E(e["status"]), a(e["source"], E(e.get("source_title") or "source")),
+               status, a(e["source"], E(e.get("source_title") or "source")),
                "yes" if e.get("measured_by_us") else "no",
                (", " + fall) if fall else ""))
     return ('<div class="tablewrap"><table><thead><tr><th scope="col">Chain</th>'
@@ -2151,7 +2173,8 @@ def seiten():
                   "unchanged so that every report that follows it can be checked against it." % (v, lang(d))),
             body=ur.spezifikation_html(v) + "<p>The current version is at %s.</p>"
                  % a("/standard/upgrade-report/", "/standard/upgrade-report/"),
-            schema=["ARTICLE:%s:%s" % (d, d)], noindex=True,
+            # canonical auf die aktuelle fassung statt noindex (Ben, 17.11.2026)
+            schema=["ARTICLE:%s:%s" % (d, d)], canonical="/standard/upgrade-report/",
             crumbs=[("Measurement Framework", "/standard/"), ("Upgrade Report", "/standard/upgrade-report/"),
                     ("v" + v, ur.versionspfad(v))],
         ))
@@ -2420,7 +2443,7 @@ def crumbs(seite):
 
 
 def render(seite):
-    can = SITE + seite["pfad"]
+    can = SITE + seite.get("canonical", seite["pfad"])
     og = SITE + "/og/%s.png" % seite["og"]
     graph = [ORG]
     for s in seite["schema"]:
@@ -2521,10 +2544,16 @@ def weiterleitung_html(ziel):
 """ % {"z": ziel, "u": url}
 
 
+def indexiert(s):
+    """in sitemap und llms.txt nur seiten, die fuer sich selbst stehen: kein
+    noindex und kein canonical auf eine andere seite."""
+    return not s.get("noindex") and s.get("canonical", s["pfad"]) == s["pfad"]
+
+
 def sitemap(S):
     zeilen = []
     for s in S:
-        if s.get("noindex"):
+        if not indexiert(s):
             continue
         zeilen.append("  <url>\n    <loc>%s%s</loc>\n    <lastmod>%s</lastmod>\n  </url>"
                       % (SITE, s["pfad"], s.get("lastmod", STAND)))
@@ -2564,7 +2593,7 @@ def llms(S):
              "- Upgrade monitoring, ongoing measurement",
              "- Custom scope, on request", "", "## Pages", ""]
     for s in S:
-        if s.get("noindex"):
+        if not indexiert(s):
             continue
         teile.append("- [%s](%s%s): %s" % (s["h1"], SITE, s["pfad"], s["desc"]))
     teile += ["", "## Contact", "", "- %s" % KONTAKT_MAIL, "- https://x.com/pulsehawkio", ""]
