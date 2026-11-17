@@ -47,3 +47,12 @@ PR #100, Kopf: `6b145cc` auf `site/upgrades-awaiting`.
 ## Was Ben tun muss
 
 Nichts außer der Frage oben. Die Abnahme auf pulsehawk.io folgt nach dem Merge in diesem Bericht.
+
+## Selbst-Merge und Abnahme (17.11.2026)
+
+- **Merge:** PR #100 per Squash, Merge-Commit `36f9312`, Branch gelöscht.
+- **Live auf pulsehawk.io, byte-gleich mit dem Bau aus `36f9312`:** /upgrades, /standard/upgrade-report/v1-0, /sitemap.xml, /llms.txt und die Startseite.
+- **/upgrades:** Die Zeile BCH Chipnet zeigt „15 November 2026, 12:00 UTC by median time past“ und „awaiting confirmation“ mit der Notiz „The scheduled time has passed. BCHN has not confirmed the activation yet.“
+- **/standard/upgrade-report/v1-0:** Die Seite steht live auf `index, follow`, mit canonical auf https://pulsehawk.io/standard/upgrade-report/.
+- **Im Browser bei 390 und 1440 px, hell und dunkel:** kein waagerechtes Scrollen der Seite und keine JS-Fehler. Bei 390 px scrollt die Tabelle wie bisher in ihrem eigenen Rahmen.
+- **Aufnahmen:** 4 Stück (`upgrades-*-live.jpg`) in `berichte/2026-11-17-upgrades-awaiting/`.
