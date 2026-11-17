@@ -1,6 +1,6 @@
 # Upgrade-Kalender: awaiting confirmation, v1.0 mit canonical, NU8-Quelle (Ben, 17.11.2026)
 
-Kopf: `6b145cc` auf `site/upgrades-awaiting`.
+PR #100, Kopf: `6b145cc` auf `site/upgrades-awaiting`.
 
 ## Was gemacht wurde
 
