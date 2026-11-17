@@ -145,6 +145,20 @@ def funde_datiert(roh):
     return f
 
 
+def funde_kalender(roh, heute=None):
+    """Kalenderzeile mit Status scheduled und einem Datum vor heute (Ben,
+    17.11.2026). Der Generator zeigt dann awaiting confirmation."""
+    import datetime as _dt
+    heute = heute or os.environ.get("PH_HEUTE") or _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+    f = []
+    for zeile in re.findall(r'<tr id="[^"]*">.*?</tr>', roh, flags=re.S):
+        d = re.search(r'<time datetime="(\d{4}-\d{2}-\d{2})"', zeile)
+        zellen = re.findall(r"<td[^>]*>(.*?)</td>", zeile, flags=re.S)
+        if d and len(zellen) > 4 and zellen[4].strip() == "scheduled" and d.group(1) < heute:
+            f.append("kalender scheduled mit vergangenem datum %s" % d.group(1))
+    return f
+
+
 def funde_messseite(roh):
     f = []
     if 'class="meth"' not in roh or "/method#ph-m-" not in roh:
@@ -375,6 +389,7 @@ def pruefe(datei, roh=None):
     f += funde_zitierkasten(roh)
     f += funde_spez(p.absaetze)
     f += funde_band(sichtbar)
+    f += funde_kalender(roh)
     rel = os.path.relpath(os.path.join(REPO, datei), REPO) if not os.path.isabs(datei) else os.path.relpath(datei, REPO)
     if rel in MESS_SEITEN or (rel.startswith("reports/") and rel.endswith(".html") and rel != "reports/index.html"):
         f += funde_messseite(roh)
@@ -528,7 +543,32 @@ def selbsttest():
     k1, k2 = len(funde_datiert(gut_)), len(funde_datiert(gut_ + schlecht_))
     falsch += (k1, k2) != (0, 1)
     print("  %s  datierte schicht, mit datum %d, ohne datum %d, erwartet 0 und 1" % ("ok  " if (k1, k2) == (0, 1) else "FEHL", k1, k2))
-    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 4 + len(band_faelle)))
+    # kalender, termin vorbei ohne bestaetigung (Ben, 17.11.2026)
+    e = {"id": "x", "chain": "Bitcoin Cash", "event": "May 2027 network upgrade", "network": "testnet",
+         "date": "2026-11-15", "status": "scheduled", "confirmer": "BCHN",
+         "source": "https://example.org/", "source_title": "s"}
+    kal_faelle = [
+        ("datum vorbei", e, "2026-11-17", "awaiting confirmation", True),
+        ("am tag selbst", e, "2026-11-15", "scheduled", False),
+        ("datum kommt", e, "2026-11-14", "scheduled", False),
+        ("bestaetigt", dict(e, status="activated"), "2026-11-17", "activated", False),
+        ("ohne datum", dict(e, date=None, status="proposed"), "2026-11-17", "proposed", False),
+    ]
+    for name, x, tag, soll, mit_notiz in kal_faelle:
+        st, notiz = b2b_pages.upgrade_stand(x, tag)
+        tabelle = b2b_pages.kalender_tabelle([x], tag)
+        ok = (st == soll and bool(notiz) == mit_notiz and not funde_kalender(tabelle, tag)
+              and (not mit_notiz or "BCHN has not confirmed the activation yet." in tabelle))
+        falsch += not ok
+        print("  %s  kalender %s, status %r, erwartet %r" % ("ok  " if ok else "FEHL", name, st, soll))
+    # der waechter selbst: eine alte zeile mit scheduled und vergangenem datum ist rot
+    alt = ('<tr id="x"><td class="c">B</td><td>E</td><td>testnet</td><td><time datetime="2026-11-15">'
+           '15 November 2026</time></td><td>scheduled</td><td>s</td><td>no</td></tr>')
+    k = len(funde_kalender(alt, "2026-11-17"))
+    falsch += k != 1
+    print("  %s  kalender alte zeile scheduled nach dem datum, %d funde, erwartet 1" % ("ok  " if k == 1 else "FEHL", k))
+    print("%d von %d faellen falsch" % (falsch, len(SPEZ_FAELLE) + len(faelle) + 4 + len(band_faelle)
+                                         + len(kal_faelle) + 1))
     return 1 if falsch else 0
 
 
