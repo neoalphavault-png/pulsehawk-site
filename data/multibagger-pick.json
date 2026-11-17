@@ -1,91 +1,104 @@
 {
- "date": "2026-11-16",
+ "date": "2026-11-17",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "VSXY",
+  "name": "Victoria's Secret",
+  "sector": "Consumer Discretionary",
+  "industry": "Apparel Retail",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 8.9491,
-  "pct": 794.9,
-  "from_1000": 8949,
-  "d": "2026-11-13",
-  "close": 223.37,
-  "d_1y": "2025-11-13",
-  "close_1y": 24.96,
-  "low": 22.36,
-  "high": 269.0,
-  "drawdown_pct": -10.4,
+  "mult": 2.9367,
+  "pct": 193.7,
+  "from_1000": 2937,
+  "d": "2026-11-17",
+  "close": 103.05,
+  "d_1y": "2025-11-17",
+  "close_1y": 35.09,
+  "low": 33.79,
+  "high": 113.52,
+  "drawdown_pct": -3.7,
   "verified": {
    "source": "tiingo",
-   "mult": 8.9491,
-   "diff_pct": 0
+   "mult": 2.9025,
+   "diff_pct": 1.16
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 11,
-  "sp500_tripled": 3
+  "sp500_doubled": 12,
+  "sp500_tripled": 2
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 12.3,
-   "d": "2026-11-13",
-   "d_1y": "2025-11-13"
+   "pct": 11.2,
+   "d": "2026-11-16",
+   "d_1y": "2025-11-17"
   },
   "gold": {
-   "pct": -7.2,
-   "d": "2026-11-13",
-   "d_1y": "2025-11-13"
+   "pct": -5.0,
+   "d": "2026-11-16",
+   "d_1y": "2025-11-17"
   }
  },
- "candidates_total": 39,
+ "candidates_total": 42,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 8.9491
+   "mult": 8.3522
   },
   {
    "ticker": "MXL",
-   "mult": 4.0479
-  },
-  {
-   "ticker": "VSXY",
-   "mult": 3.0378
+   "mult": 4.0488
   },
   {
    "ticker": "SEZL",
-   "mult": 2.9325
+   "mult": 3.2327
   },
   {
-   "ticker": "RNG",
-   "mult": 2.7829
+   "ticker": "VSXY",
+   "mult": 2.9367
   },
   {
    "ticker": "IRDM",
-   "mult": 2.7484
+   "mult": 2.7677
+  },
+  {
+   "ticker": "RNG",
+   "mult": 2.7046
+  },
+  {
+   "ticker": "RXO",
+   "mult": 2.6957
   },
   {
    "ticker": "GKOS",
    "mult": 2.6764
   },
   {
-   "ticker": "RXO",
-   "mult": 2.6736
-  },
-  {
-   "ticker": "XNCR",
-   "mult": 2.6512
-  },
-  {
    "ticker": "VSTS",
-   "mult": 2.6336
+   "mult": 2.6448
+  },
+  {
+   "ticker": "DELL",
+   "mult": 2.6007
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (4.10%)"
+  },
+  {
+   "ticker": "MXL",
+   "reason": "quellen weichen ab (2.90%)"
+  },
+  {
+   "ticker": "SEZL",
+   "reason": "quellen weichen ab (1.73%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
