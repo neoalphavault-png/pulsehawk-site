@@ -63,7 +63,7 @@ Im Discord-Entwurf steht „settled near 25 s“. Damit ist das Mittel gemeint. 
 
 ## Offene Fragen an Ben
 
-1. **Täglicher Lauf:** Mit dieser CSV ist der Auftrag vom 23.10. erfüllt. Soll der tägliche Lauf von `zcash-mainnet.yml` jetzt abgeschaltet werden? Davon hängen auch der tägliche PH-Entwurf und die Kopfkette für die wöchentliche Auswertung des Zuhörers „dauer“ ab. Die Zuhörer-Kette selbst holt ihre Köpfe eigenständig. Eine Abschaltung wäre eine Workflow-Änderung als PR an dich.
+1. **Täglicher Lauf:** Mit dieser CSV ist der Auftrag vom 23.10. erfüllt. Soll der tägliche Lauf von `zcash-mainnet.yml` jetzt abgeschaltet werden? Davon hängt auch der tägliche PH-Entwurf ab, denn er startet nach jedem Lauf. Ob die wöchentliche Auswertung des Zuhörers „dauer“ diese Köpfe braucht, prüfe ich vor einer Abschaltung. Eine Abschaltung wäre eine Workflow-Änderung als PR an dich.
 
 ## Was Ben tun muss
 
