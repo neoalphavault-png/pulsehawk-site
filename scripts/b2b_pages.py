@@ -671,7 +671,7 @@ FRAMEWORK_STAND = "2026-11-02"   # measurement framework, erste fassung (Ben, 2.
 KORREKTUREN = "data/corrections.json"
 TRACK_RECORD = "data/track-record.json"
 GLAUB_STAND = "2026-11-04"   # track record, corrections, about (Ben, 4.11.2026)
-TR_STAND = "2026-11-09"      # track record, TR-005 und TR-006 nachgetragen, forecast statt estimate (Ben, 9.11.2026)
+TR_STAND = "2026-11-16"      # track record, rubrik scheduled protocol events (Ben, 16.11.2026); vorher 9.11. TR-005 und TR-006
 KORR_STAND = "2026-11-05"    # /corrections und /independence ohne "now" (Ben, 5.11.2026)
 # gruender auf /about und als schema.org Person. Solange hier der platzhalter
 # steht, fehlt der abschnitt, und der neubau warnt (Ben entscheidet, 4.11.2026).
@@ -810,6 +810,87 @@ def tr_eintrag(e):
     return ('<div class="tre" id="%s"><h2>%s, %s</h2><dl>%s</dl></div>'
             % (e["id"].lower(), E(e["id"]), E(e["subject"]),
                "".join("<dt>%s</dt><dd>%s</dd>" % z for z in zeilen)))
+
+
+TE_DATEI = "data/track-record-events.json"
+TE_HISTORIE = "https://github.com/neoalphavault-png/pulsehawk-site/commits/main/data/track-record-events.json"
+TE_STUFEN = {"14d": "14 days", "7d": "7 days", "2d": "2 days", "24h": "24 hours"}
+TE_STATUS = ("in 80 % band", "in 95 % band", "outside")
+
+
+def lies_te():
+    """rubrik scheduled protocol events, eigene zaehlung (Ben, 16.11.2026)."""
+    with open(os.path.join(REPO, TE_DATEI), encoding="utf-8") as fh:
+        d = json.load(fh)
+    f = []
+    for e in d["entries"]:
+        for k in ("id", "event", "network", "trigger_daa", "trigger", "source", "counted_as", "methods", "stages"):
+            if not e.get(k):
+                f.append("%s ohne %s" % (e.get("id", "?"), k))
+        for x in e.get("forecasts") or []:
+            for k in ("stufe", "erstellt_utc", "p50_utc", "band80_utc", "band95_utc"):
+                if not x.get(k):
+                    f.append("%s prognose ohne %s" % (e["id"], k))
+        r = e.get("result")
+        if r and not r.get("fehler"):
+            if not r.get("zeit_utc") or any(w.get("status") not in TE_STATUS for w in r.get("wertung") or []):
+                f.append("%s ergebnis ohne zeit oder mit unbekanntem status" % e["id"])
+    if f:
+        _rot(TE_DATEI, f)
+    return d["entries"]
+
+
+def te_zeit(s):
+    """2026-12-05T00:20:41Z wird 5 December 2026, 00:20 UTC."""
+    return "%s, %s UTC" % (lang(s[:10]), s[11:16])
+
+
+def te_eintrag(e):
+    wert = {w["stufe"]: w for w in (e.get("result") or {}).get("wertung") or []}
+    zeilen = [("Network", E(e["network"])),
+              ("Trigger", "DAA score %s, %s, see %s" % (betrag(e["trigger_daa"]), E(e["trigger"]),
+                                                       a(e["source"], E(e["source_title"])))),
+              ("Counted as", E(e["counted_as"][:1].upper() + e["counted_as"][1:]))]
+    da = {x["stufe"]: x for x in e.get("forecasts") or []}
+    for st in e["stages"]:
+        x = da.get(st)
+        name = "Forecast %s before" % TE_STUFEN[st]
+        if not x:
+            zeilen.append((name, "Not published yet"))
+            continue
+        lead = int(x.get("vorlauf_s") or 0)
+        txt = ("%s, published %s with a lead of %d d %d h, 80%% band %s to %s, 95%% band %s to %s"
+               % (te_zeit(x["p50_utc"]), te_zeit(x["erstellt_utc"]), lead // 86400, lead % 86400 // 3600,
+                  te_zeit(x["band80_utc"][0]), te_zeit(x["band80_utc"][1]),
+                  te_zeit(x["band95_utc"][0]), te_zeit(x["band95_utc"][1])))
+        if st in wert:
+            txt += ", %s" % tr_status(wert[st]["status"])
+        zeilen.append((name, txt))
+    r = e.get("result")
+    if r and r.get("zeit_utc"):
+        zeilen.append(("Result", "%s by header time, counted, DAA score %s" % (te_zeit(r["zeit_utc"]), betrag(r["daa"]))))
+    elif r:
+        zeilen.append(("Result", "Not counted, the trigger block fell outside the window of our node"))
+    else:
+        zeilen.append(("Result", "Not counted yet"))
+    zeilen.append(("Methods", ", ".join(a("/method#" + m.lower(), m) for m in e["methods"])))
+    return ('<div class="tre" id="%s"><h2>%s, %s</h2><dl>%s</dl></div>'
+            % (e["id"].lower(), E(e["id"]), E(e["event"]),
+               "".join("<dt>%s</dt><dd>%s</dd>" % z for z in zeilen)))
+
+
+def te_zahl(eintraege):
+    n = {"forecasts": 0, "open": 0}
+    n.update({s: 0 for s in TE_STATUS})
+    for e in eintraege:
+        wert = {w["stufe"]: w["status"] for w in (e.get("result") or {}).get("wertung") or []}
+        for x in e.get("forecasts") or []:
+            n["forecasts"] += 1
+            if x["stufe"] in wert:
+                n[wert[x["stufe"]]] += 1
+            else:
+                n["open"] += 1
+    return n
 
 
 def verfahren_abschnitte():
@@ -1523,6 +1604,8 @@ def seiten():
     tr_schaetz = sorted((e for e in tr if e["art"] == "estimate"), key=lambda e: e["estimate"]["as_of"])
     tr_vergl = [e for e in tr if e["art"] == "comparison"]
     tr_zahl = {st: sum(e["status"] == st for e in tr) for st in TR_STATUS}
+    te = lies_te()
+    te_n = te_zahl(te)
     S.append(dict(
         datei="track-record.html", pfad="/track-record", og="method", lastmod=TR_STAND,
         title="Track record of our forecasts | PulseHawk",
@@ -1549,9 +1632,18 @@ def seiten():
 <section id="comparisons"><h2>Our count against a published value</h2>
 <div class="trl">%s</div>
 </section>
+<section id="protocol-events"><h2>Scheduled protocol events</h2>
+<p>A separate test of the same forecast method on events a protocol triggers by itself, such as a block reward step. This list keeps its own count and does not change the score of the forecasts above.</p>
+<p>Our upgrade forecasts above used a 90%% band. From the next event on we publish an 80%% and a 95%% band. For each event we publish a forecast 14 days, 7 days, 2 days and 24 hours before the forecast time, each with an 80%% and a 95%% band. Each forecast is stored with its date in our public site repository before the event, see %s. After the event a forecast is scored as in the 80%% band, in the 95%% band or outside.</p>
+<p>The list has %d published forecasts, %d in the 80%% band, %d in the 95%% band only, %d outside and %d open.</p>
+</section>
+%s
 <p>How each number is counted is on %s, under the method IDs named in each entry.</p>
 """ % (len(tr), tr_zahl["in band"], tr_zahl["outside"], tr_zahl["open"], a("/corrections", "corrections"),
        "".join(tr_eintrag(e) for e in tr_schaetz), "".join(tr_eintrag(e) for e in tr_vergl),
+       a(TE_HISTORIE, "the history of the data file"),
+       te_n["forecasts"], te_n["in 80 % band"], te_n["in 95 % band"], te_n["outside"], te_n["open"],
+       '<div class="trl">%s</div>' % "".join(te_eintrag(e) for e in te),
        a("/method#method-ids", "our method page")),
         faqs=[],
         schema=["ARTICLE:%s:%s" % (GLAUB_STAND, TR_STAND)],
