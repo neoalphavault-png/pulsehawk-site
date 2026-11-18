@@ -1,49 +1,49 @@
 {
- "date": "2026-11-17",
+ "date": "2026-11-18",
  "pick": {
-  "ticker": "VSXY",
-  "name": "Victoria's Secret",
-  "sector": "Consumer Discretionary",
-  "industry": "Apparel Retail",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
-   "sp600"
+   "sp500"
   ],
-  "mult": 2.9367,
-  "pct": 193.7,
-  "from_1000": 2937,
+  "mult": 8.3522,
+  "pct": 735.2,
+  "from_1000": 8352,
   "d": "2026-11-17",
-  "close": 103.05,
+  "close": 206.8,
   "d_1y": "2025-11-17",
-  "close_1y": 35.09,
-  "low": 33.79,
-  "high": 113.52,
-  "drawdown_pct": -3.7,
+  "close_1y": 24.76,
+  "low": 22.36,
+  "high": 269.0,
+  "drawdown_pct": -9.7,
   "verified": {
    "source": "tiingo",
-   "mult": 2.9025,
-   "diff_pct": 1.16
+   "mult": 8.3522,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 12,
-  "sp500_tripled": 2
+  "sp500_doubled": 11,
+  "sp500_tripled": 1
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 11.2,
-   "d": "2026-11-16",
+   "pct": 10.0,
+   "d": "2026-11-17",
    "d_1y": "2025-11-17"
   },
   "gold": {
-   "pct": -5.0,
-   "d": "2026-11-16",
+   "pct": -5.2,
+   "d": "2026-11-17",
    "d_1y": "2025-11-17"
   }
  },
- "candidates_total": 42,
+ "candidates_total": 43,
  "top10": [
   {
    "ticker": "MRNA",
@@ -66,6 +66,10 @@
    "mult": 2.7677
   },
   {
+   "ticker": "GKOS",
+   "mult": 2.7517
+  },
+  {
    "ticker": "RNG",
    "mult": 2.7046
   },
@@ -74,31 +78,14 @@
    "mult": 2.6957
   },
   {
-   "ticker": "GKOS",
-   "mult": 2.6764
+   "ticker": "CBRL",
+   "mult": 2.6585
   },
   {
-   "ticker": "VSTS",
-   "mult": 2.6448
-  },
-  {
-   "ticker": "DELL",
-   "mult": 2.6007
+   "ticker": "SN",
+   "mult": 2.6449
   }
  ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (4.10%)"
-  },
-  {
-   "ticker": "MXL",
-   "reason": "quellen weichen ab (2.90%)"
-  },
-  {
-   "ticker": "SEZL",
-   "reason": "quellen weichen ab (1.73%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
