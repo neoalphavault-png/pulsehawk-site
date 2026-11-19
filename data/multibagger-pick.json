@@ -1,27 +1,27 @@
 {
- "date": "2026-11-18",
+ "date": "2026-11-19",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "VSXY",
+  "name": "Victoria's Secret",
+  "sector": "Consumer Discretionary",
+  "industry": "Apparel Retail",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 8.3522,
-  "pct": 735.2,
-  "from_1000": 8352,
-  "d": "2026-11-17",
-  "close": 206.8,
-  "d_1y": "2025-11-17",
-  "close_1y": 24.76,
-  "low": 22.36,
-  "high": 269.0,
-  "drawdown_pct": -9.7,
+  "mult": 2.9189,
+  "pct": 191.9,
+  "from_1000": 2919,
+  "d": "2026-11-19",
+  "close": 101.55,
+  "d_1y": "2025-11-19",
+  "close_1y": 34.79,
+  "low": 33.79,
+  "high": 113.52,
+  "drawdown_pct": -2.9,
   "verified": {
    "source": "tiingo",
-   "mult": 8.3522,
-   "diff_pct": 0
+   "mult": 2.9311,
+   "diff_pct": 0.42
   },
   "company_sentence": null,
   "wiki": null
@@ -33,17 +33,17 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 10.0,
-   "d": "2026-11-17",
-   "d_1y": "2025-11-17"
+   "pct": 10.6,
+   "d": "2026-11-18",
+   "d_1y": "2025-11-18"
   },
   "gold": {
-   "pct": -5.2,
-   "d": "2026-11-17",
-   "d_1y": "2025-11-17"
+   "pct": -8.9,
+   "d": "2026-11-18",
+   "d_1y": "2025-11-18"
   }
  },
- "candidates_total": 43,
+ "candidates_total": 44,
  "top10": [
   {
    "ticker": "MRNA",
@@ -51,19 +51,19 @@
   },
   {
    "ticker": "MXL",
-   "mult": 4.0488
+   "mult": 3.8889
   },
   {
    "ticker": "SEZL",
-   "mult": 3.2327
+   "mult": 2.9417
   },
   {
    "ticker": "VSXY",
-   "mult": 2.9367
+   "mult": 2.9189
   },
   {
    "ticker": "IRDM",
-   "mult": 2.7677
+   "mult": 2.7895
   },
   {
    "ticker": "GKOS",
@@ -71,11 +71,11 @@
   },
   {
    "ticker": "RNG",
-   "mult": 2.7046
+   "mult": 2.7025
   },
   {
-   "ticker": "RXO",
-   "mult": 2.6957
+   "ticker": "DELL",
+   "mult": 2.669
   },
   {
    "ticker": "CBRL",
@@ -86,6 +86,19 @@
    "mult": 2.6449
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (5.45%)"
+  },
+  {
+   "ticker": "MXL",
+   "reason": "quellen weichen ab (2.78%)"
+  },
+  {
+   "ticker": "SEZL",
+   "reason": "quellen weichen ab (4.33%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
