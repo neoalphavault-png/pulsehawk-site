@@ -1,6 +1,6 @@
 # Scope statt Kosten, alte Marktseiten, Kalender in der täglichen Prüfung, TE-Commit (Ben, 20.11.2026)
 
-Kopf: `dcbe05f` auf `site/scope-und-termine`. Frist Mi 25.11. 16:00 Berlin.
+PR #103, Kopf: `dcbe05f` auf `site/scope-und-termine`. Frist Mi 25.11. 16:00 Berlin.
 
 ## 1. „What does it cost?“ wird „How is it scoped?“
 
