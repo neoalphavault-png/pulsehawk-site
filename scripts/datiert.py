@@ -32,6 +32,7 @@ import hashlib
 import html
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -44,6 +45,7 @@ GELB_TAGE = 14       # ab hier meldet die taegliche pruefung gelb mit den restta
 REPORTS = "data/reports.json"
 MESSUNGEN = "data/measurements.json"
 TRACK = "data/track-record.json"
+UPGRADES = "data/upgrades.json"
 LABELS = {"counted", "computed", "source"}
 MONATE = ["January", "February", "March", "April", "May", "June", "July", "August",
           "September", "October", "November", "December"]
@@ -320,7 +322,7 @@ def selbsttest():
     import tempfile
     import shutil
     falsch = 0
-    anzahl = 10
+    anzahl = 15
     with tempfile.TemporaryDirectory() as tmp:
         for d in ("data", "data/reports", "reports"):
             os.makedirs(os.path.join(tmp, d), exist_ok=True)
@@ -362,6 +364,40 @@ def selbsttest():
         k = len(pruefe_reports(kaputt, neu, tmp))
         falsch += k != 1
         print("  %s  falsche sha256, %d funde, erwartet 1" % ("ok  " if k == 1 else "FEHL", k))
+    # abgelaufene termine (Ben, 20.11.2026)
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, "data"))
+        basis = {"chain": "Bitcoin Cash", "network": "testnet", "event": "May 2027 network upgrade",
+                 "source": "https://example.org/", "confirmer": "BCHN"}
+        eintraege = [dict(basis, id="vorbei", date="2026-11-15", status="scheduled"),
+                     dict(basis, id="heute", date="2026-11-17", status="scheduled"),
+                     dict(basis, id="kommt", date="2026-12-01", status="scheduled"),
+                     dict(basis, id="bestaetigt", date="2026-11-10", status="activated"),
+                     dict(basis, id="ohne", date=None, status="proposed")]
+        with open(os.path.join(tmp, UPGRADES), "w", encoding="utf-8") as fh:
+            json.dump({"entries": eintraege}, fh)
+        zeile = '<tr id="vorbei"><td>a</td><td>b</td><td>c</td><td>d</td><td>%s</td><td>f</td></tr>'
+        tag = iso_datum("2026-11-17")
+        for name, seite, soll in (("seite alt, zeigt scheduled", zeile % "scheduled", [("vorbei", True)]),
+                                  ("seite neu gebaut", zeile % "awaiting confirmation", [("vorbei", False)]),
+                                  ("ohne seite", None, [("vorbei", False)])):
+            pf = os.path.join(tmp, "upgrades.html")
+            if seite is None:
+                if os.path.exists(pf):
+                    os.remove(pf)
+            else:
+                with open(pf, "w", encoding="utf-8") as fh:
+                    fh.write(seite)
+            ist = [(e["id"], alt) for e, alt in abgelaufene_termine(tag, tmp)]
+            falsch += ist != soll
+            print("  %s  termine %s, %s, erwartet %s" % ("ok  " if ist == soll else "FEHL", name, ist, soll))
+        ist = abgelaufene_termine(iso_datum("2026-11-15"), tmp)
+        falsch += ist != []
+        print("  %s  termine am tag selbst, %d, erwartet 0" % ("ok  " if ist == [] else "FEHL", len(ist)))
+        text = termine_text(abgelaufene_termine(tag, tmp))
+        ok_t = "BCHN hat nicht bestaetigt" in text and "15 November 2026" in text
+        falsch += not ok_t
+        print("  %s  termine meldetext nennt bestaetiger und datum" % ("ok  " if ok_t else "FEHL"))
     # interval score, zwei faelle von hand
     e_in = {"estimate": {"band_utc": ["2026-01-01T00:00:00Z", "2026-01-01T01:00:00Z"], "band_level": 90},
             "result": {"value_utc": "2026-01-01T00:30:00Z"}}
@@ -373,6 +409,41 @@ def selbsttest():
         print("  %s  interval score %s, %.0f s, erwartet %.0f s" % ("ok  " if abs(ist - soll) < 1e-6 else "FEHL", name, ist, soll))
     print("%d von %d faellen falsch" % (falsch, anzahl))
     return 1 if falsch else 0
+
+
+# --- abgelaufene termine im kalender (Ben, 20.11.2026) -------------------
+
+def abgelaufene_termine(tag=None, repo=REPO):
+    """Eintraege in data/upgrades.json mit status scheduled und einem datum vor
+    tag. Bestaetigt ist ein upgrade erst mit status activated und quelle. Je
+    eintrag (eintrag, zeigt_scheduled): zeigt_scheduled ist wahr, wenn die
+    gebaute upgrades.html die zeile noch als scheduled fuehrt, die seite also
+    seit dem termin nicht neu gebaut wurde."""
+    tag = (tag or heute()).isoformat()
+    try:
+        with open(os.path.join(repo, "upgrades.html"), encoding="utf-8") as fh:
+            seite = fh.read()
+    except OSError:
+        seite = ""
+    aus = []
+    for e in lade(UPGRADES, repo)["entries"]:
+        if e.get("status") == "scheduled" and e.get("date") and e["date"] < tag:
+            m = re.search(r'<tr id="%s">(.*?)</tr>' % re.escape(e["id"]), seite, flags=re.S)
+            zellen = re.findall(r"<td[^>]*>(.*?)</td>", m.group(1), flags=re.S) if m else []
+            aus.append((e, len(zellen) > 4 and zellen[4].strip() == "scheduled"))
+    return aus
+
+
+def termine_text(abgelaufen):
+    zeilen = []
+    for e, alt in abgelaufen:
+        wer = e.get("confirmer") or e["chain"]
+        zeilen.append("%s %s, %s (%s), termin %s vorbei, %s hat nicht bestaetigt. %s"
+                      % (e["chain"], e["network"], e["event"], e["id"], lang(e["date"]), wer,
+                         "upgrades.html zeigt noch scheduled, seiten neu bauen." if alt
+                         else "upgrades.html zeigt awaiting confirmation."))
+    return ("pulsehawk.io kalender GELB: %d termin(e) vorbei ohne bestaetigung. Bestaetigung mit quelle in "
+            "data/upgrades.json eintragen (status activated).\n- " % len(abgelaufen)) + "\n- ".join(zeilen)
 
 
 def pruefen(melden=False, probe=False, tag=None, repo=REPO):
@@ -402,6 +473,18 @@ def pruefen(melden=False, probe=False, tag=None, repo=REPO):
         sys.path.insert(0, os.path.join(HERE, "ph"))
         import ops_melden
         ops_melden.log(text, was="frische", probe=probe)
+    # abgelaufene termine im kalender, eigene meldung, aendert den exit nicht
+    # (Ben, 20.11.2026)
+    abgelaufen = abgelaufene_termine(tag, repo)
+    if abgelaufen:
+        t_text = termine_text(abgelaufen)
+        print(t_text)
+        if melden:
+            sys.path.insert(0, os.path.join(HERE, "ph"))
+            import ops_melden
+            ops_melden.log(t_text, was="termine", probe=probe)
+    else:
+        print("kalender: kein termin vorbei ohne bestaetigung")
     return 1 if st == "rot" else 0
 
 
