@@ -1305,7 +1305,7 @@ def seiten():
 <section><h2>How does a TPS verification work?</h2>
 %s
 </section>
-<section><h2>What does it cost?</h2>
+<section><h2>How is it scoped?</h2>
 %s
 <p>Longer windows or a measured testnet stress test are custom scope, on request.</p>
 </section>
@@ -1359,7 +1359,7 @@ def seiten():
 <p>Blocks per second and per minute, the block time distribution, transactions per minute, confirmation time, fees, stale and orphaned blocks and the propagation delay. The full list is in our %s.</p>
 <p>For a new chain the week before is the last testnet week. For a testnet stress test measurement it is the quiet week before the test.</p>
 </section>
-<section><h2>What does it cost?</h2>
+<section><h2>How is it scoped?</h2>
 %s
 </section>
 <section><h2>Is it the right fit?</h2>
