@@ -1,0 +1,148 @@
+{
+ "hinweis": "Wochenbericht 1 (Ben 20.11.2026). Werte aus kaspa-pulse, Datenbranches messung/zcash-mainnet und messung/bch-chipnet-xo, je Zahl label, Fenster und Quelle. Erzeugt aus dem Rechenlauf, nicht von Hand. Nach dem Aendern: python3 scripts/b2b_pages.py",
+ "published": "2026-11-22",
+ "number": 1,
+ "zcash": {
+  "window": {
+   "from_utc": "2026-11-12T21:36:48Z",
+   "to_utc": "2026-11-20T14:11:00Z"
+  },
+  "listener_window": {
+   "from_utc": "2026-11-12T21:36:48Z",
+   "to_utc": "2026-11-20T12:20:55Z"
+  },
+  "heights": [
+   3566683,
+   3593294
+  ],
+  "intervals": 26612,
+  "median_s": 17.0,
+  "mean_s": 24.97,
+  "over_75_pct": 4.74,
+  "wait": {
+   "1": {
+    "median_s": 17.0,
+    "p90_s": 57.0
+   },
+   "3": {
+    "median_s": 67.0,
+    "p90_s": 132.0
+   },
+   "6": {
+    "median_s": 141.0,
+    "p90_s": 231.0
+   }
+  },
+  "ideal": {
+   "1": {
+    "median_s": 17,
+    "p90_s": 58
+   },
+   "3": {
+    "median_s": 67,
+    "p90_s": 133
+   },
+   "6": {
+    "median_s": 142,
+    "p90_s": 232
+   }
+  },
+  "chain_blocks": 26339,
+  "orphaned": 110,
+  "orphaned_without_header": 13,
+  "max_depth": 1,
+  "gaps": [],
+  "cross_checks": [
+   [
+    500,
+    500
+   ]
+  ]
+ },
+ "bch": {
+  "activation_height": 332451,
+  "window": {
+   "from_utc": "2026-11-15T12:33:16Z",
+   "to_utc": "2026-11-19T15:30:39Z"
+  },
+  "listener_window": {
+   "from_utc": "2026-11-17T19:46:11Z",
+   "to_utc": "2026-11-20T12:19:42Z"
+  },
+  "listener_heights": [
+   335748,
+   339609
+  ],
+  "intervals": 5900,
+  "median_s": 53.0,
+  "mean_s": 60.38,
+  "diff1_pct": 28.2,
+  "wait": {
+   "1": {
+    "median_s": 53.6,
+    "p90_s": 121.8,
+    "p99_s": 128.3,
+    "header_median_s": 54.0,
+    "header_p90_s": 122.0
+   },
+   "3": {
+    "median_s": 177.2,
+    "p90_s": 280.1,
+    "p99_s": 366.4,
+    "header_median_s": 182.0,
+    "header_p90_s": 299.0
+   },
+   "6": {
+    "median_s": 360.7,
+    "p90_s": 512.0,
+    "p99_s": 638.7,
+    "header_median_s": 367.0,
+    "header_p90_s": 532.3000000000002
+   },
+   "12": {
+    "median_s": 721.0,
+    "p90_s": 952.4,
+    "p99_s": 1163.8,
+    "header_median_s": 733.0,
+    "header_p90_s": 986.0
+   }
+  },
+  "mainnet_computed": {
+   "1": {
+    "median_s": 416,
+    "p90_s": 1382,
+    "p99_s": 2763
+   },
+   "3": {
+    "median_s": 1604,
+    "p90_s": 3193,
+    "p99_s": 5044
+   },
+   "6": {
+    "median_s": 3402,
+    "p90_s": 5565,
+    "p99_s": 7865
+   },
+   "12": {
+    "median_s": 7001,
+    "p90_s": 9959,
+    "p99_s": 12894
+   }
+  },
+  "gaps": [],
+  "cross_checks": [
+   [
+    500,
+    500
+   ],
+   [
+    500,
+    500
+   ],
+   [
+    500,
+    500
+   ]
+  ]
+ }
+}
