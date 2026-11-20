@@ -113,3 +113,15 @@ Selbst-Merge nach der Regel vom 26.10. Geändert sind nur `scripts/b2b_pages.py`
 
 - Die zwei Fragen beantworten.
 - Am 16.12. in der Search Console nachsehen, ob die Impressionen der alten Adressen gesunken sind.
+
+## Selbst-Merge und Abnahme (20.11.2026)
+
+- **Merge:** PR #103 per Squash, Merge-Commit `7114e41`, Branch gelöscht.
+- **Live auf pulsehawk.io, byte-gleich mit dem Bau aus `7114e41`:** /tps-verification, /launch-measurement und die Startseite. „What does it cost?“ kommt auf keiner der drei Seiten mehr vor.
+- **Abschnitt „How is it scoped?“ bei 390 und 1440 px:**
+  - /tps-verification: „Scoped per network and window. Ask for a quote. Longer windows or a measured testnet stress test are custom scope, on request.“
+  - /launch-measurement: „Scoped per network and window. Ask for a quote.“
+- **Im Browser:** kein waagerechtes Scrollen, keine JS-Fehler.
+- **Aufnahmen:** 4 Stück (`*-scope-*-live.png`) in `berichte/2026-11-20-scope-marktseiten-termine/`.
+- **Kalendermeldung:** Sie geht ab dem nächsten Lauf der täglichen Prüfung (07:17 UTC) nach #ops-log.
+- **TE-Commit:** noch offen, die Zeile folgt.
