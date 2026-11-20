@@ -1,53 +1,53 @@
 {
- "date": "2026-11-19",
+ "date": "2026-11-20",
  "pick": {
-  "ticker": "VSXY",
-  "name": "Victoria's Secret",
-  "sector": "Consumer Discretionary",
-  "industry": "Apparel Retail",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
-   "sp600"
+   "sp500"
   ],
-  "mult": 2.9189,
-  "pct": 191.9,
-  "from_1000": 2919,
+  "mult": 8.2436,
+  "pct": 724.4,
+  "from_1000": 8244,
   "d": "2026-11-19",
-  "close": 101.55,
+  "close": 199.33,
   "d_1y": "2025-11-19",
-  "close_1y": 34.79,
-  "low": 33.79,
-  "high": 113.52,
-  "drawdown_pct": -2.9,
+  "close_1y": 24.18,
+  "low": 22.36,
+  "high": 269.0,
+  "drawdown_pct": -7.5,
   "verified": {
    "source": "tiingo",
-   "mult": 2.9311,
-   "diff_pct": 0.42
+   "mult": 8.2436,
+   "diff_pct": 0
   },
   "company_sentence": null,
   "wiki": null
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 11,
-  "sp500_tripled": 1
+  "sp500_doubled": 8,
+  "sp500_tripled": 2
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 10.6,
-   "d": "2026-11-18",
-   "d_1y": "2025-11-18"
+   "pct": 8.0,
+   "d": "2026-11-19",
+   "d_1y": "2025-11-19"
   },
   "gold": {
-   "pct": -8.9,
-   "d": "2026-11-18",
-   "d_1y": "2025-11-18"
+   "pct": -10.6,
+   "d": "2026-11-19",
+   "d_1y": "2025-11-19"
   }
  },
- "candidates_total": 44,
+ "candidates_total": 41,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 8.3522
+   "mult": 8.2436
   },
   {
    "ticker": "MXL",
@@ -66,10 +66,6 @@
    "mult": 2.7895
   },
   {
-   "ticker": "GKOS",
-   "mult": 2.7517
-  },
-  {
    "ticker": "RNG",
    "mult": 2.7025
   },
@@ -82,23 +78,14 @@
    "mult": 2.6585
   },
   {
-   "ticker": "SN",
-   "mult": 2.6449
-  }
- ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (5.45%)"
+   "ticker": "RXO",
+   "mult": 2.6204
   },
   {
-   "ticker": "MXL",
-   "reason": "quellen weichen ab (2.78%)"
-  },
-  {
-   "ticker": "SEZL",
-   "reason": "quellen weichen ab (4.33%)"
+   "ticker": "PENG",
+   "mult": 2.5893
   }
  ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
