@@ -125,3 +125,22 @@ Selbst-Merge nach der Regel vom 26.10. Geändert sind nur `scripts/b2b_pages.py`
 - **Aufnahmen:** 4 Stück (`*-scope-*-live.png`) in `berichte/2026-11-20-scope-marktseiten-termine/`.
 - **Kalendermeldung:** Sie geht ab dem nächsten Lauf der täglichen Prüfung (07:17 UTC) nach #ops-log.
 - **TE-Commit:** noch offen, die Zeile folgt.
+
+## Nachtrag 21.11.2026: TE-Commit und Kalendermeldung
+
+**TE_QUELLE, erster Commit auf main:**
+- **Commit:** `8a2745b` „track record events: prognose 14d [bot]“, am 21.11.2026 um 00:04 UTC vom Workflow „track record events“.
+- **Geändert:** `data/track-record-events.json`, `track-record.html` und `index.html`.
+- **Vorlauf:** Der Prognoselauf hat die 14-Tage-Stufe am 20.11. um 22:56 UTC veröffentlicht, der Sync hat sie im nächsten Lauf übernommen.
+- **Live auf pulsehawk.io:** /track-record und die Startseite sind byte-gleich mit main. /track-record zeigt „Forecast 14 days before 5 December 2026, 00:15 UTC, published 20 November 2026, 22:56 UTC with a lead of 14 d 1 h, 80% band 5 December 2026, 00:08 UTC to 5 December 2026, 00:23 UTC, 95% band 5 December 2026, 00:03 UTC to 5 December 2026, 00:28 UTC“.
+
+**Kalendermeldung:**
+- Die tägliche Prüfung lief am 20.11. um 16:08 UTC schon mit dem neuen Code, auf `d20cb93`. GitHub startet den Lauf, der für 07:17 UTC geplant ist, mit Stunden Verzögerung.
+- Im Job-Log stehen „kalender GELB“ und die Chipnet-Zeile.
+- **Gesendet wurde nichts.** Im Log steht „kein DISCORD_WEBHOOK_LOG, nichts an #ops-log gesendet, nur im job-log“.
+- Das Secret `DISCORD_WEBHOOK_LOG` ist in pulsehawk-site nicht gesetzt oder leer. Das gilt auch für die Frische-Meldungen gelb und rot. Bisher war die Frische immer grün, deshalb ist es nicht aufgefallen.
+
+**Was Ben tun muss:**
+- In pulsehawk-site unter Settings, Secrets and variables, Actions das Secret `DISCORD_WEBHOOK_LOG` anlegen, mit der Webhook-Adresse von #ops-log.
+- Der Workflow liest es schon, eine Änderung am Workflow ist nicht nötig.
+- Den Wert nie in den Chat oder in eine Datei schreiben.
