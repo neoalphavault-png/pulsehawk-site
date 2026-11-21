@@ -5,20 +5,20 @@
  "zcash": {
   "window": {
    "from_utc": "2026-11-12T21:36:48Z",
-   "to_utc": "2026-11-20T14:11:00Z"
+   "to_utc": "2026-11-21T06:34:04Z"
   },
   "listener_window": {
    "from_utc": "2026-11-12T21:36:48Z",
-   "to_utc": "2026-11-20T12:20:55Z"
+   "to_utc": "2026-11-21T04:27:43Z"
   },
   "heights": [
    3566683,
-   3593294
+   3595652
   ],
-  "intervals": 26612,
+  "intervals": 28970,
   "median_s": 17.0,
   "mean_s": 24.97,
-  "over_75_pct": 4.74,
+  "over_75_pct": 4.73,
   "wait": {
    "1": {
     "median_s": 17.0,
@@ -47,12 +47,16 @@
     "p90_s": 232
    }
   },
-  "chain_blocks": 26339,
-  "orphaned": 110,
+  "chain_blocks": 28665,
+  "orphaned": 120,
   "orphaned_without_header": 13,
   "max_depth": 1,
   "gaps": [],
   "cross_checks": [
+   [
+    500,
+    500
+   ],
    [
     500,
     500
@@ -63,48 +67,48 @@
   "activation_height": 332451,
   "window": {
    "from_utc": "2026-11-15T12:33:16Z",
-   "to_utc": "2026-11-19T15:30:39Z"
+   "to_utc": "2026-11-21T06:31:50Z"
   },
   "listener_window": {
    "from_utc": "2026-11-17T19:46:11Z",
-   "to_utc": "2026-11-20T12:19:42Z"
+   "to_utc": "2026-11-21T04:25:41Z"
   },
   "listener_heights": [
    335748,
-   339609
+   340629
   ],
-  "intervals": 5900,
-  "median_s": 53.0,
-  "mean_s": 60.38,
-  "diff1_pct": 28.2,
+  "intervals": 8310,
+  "median_s": 52.0,
+  "mean_s": 59.77,
+  "diff1_pct": 25.9,
   "wait": {
    "1": {
-    "median_s": 53.6,
-    "p90_s": 121.8,
-    "p99_s": 128.3,
-    "header_median_s": 54.0,
+    "median_s": 52.0,
+    "p90_s": 121.6,
+    "p99_s": 127.7,
+    "header_median_s": 52.0,
     "header_p90_s": 122.0
    },
    "3": {
-    "median_s": 177.2,
-    "p90_s": 280.1,
-    "p99_s": 366.4,
-    "header_median_s": 182.0,
-    "header_p90_s": 299.0
+    "median_s": 175.5,
+    "p90_s": 278.3,
+    "p99_s": 365.6,
+    "header_median_s": 176.0,
+    "header_p90_s": 284.0
    },
    "6": {
-    "median_s": 360.7,
-    "p90_s": 512.0,
-    "p99_s": 638.7,
-    "header_median_s": 367.0,
-    "header_p90_s": 532.3000000000002
+    "median_s": 355.8,
+    "p90_s": 508.6,
+    "p99_s": 633.7,
+    "header_median_s": 358.0,
+    "header_p90_s": 514.0
    },
    "12": {
-    "median_s": 721.0,
-    "p90_s": 952.4,
-    "p99_s": 1163.8,
-    "header_median_s": 733.0,
-    "header_p90_s": 986.0
+    "median_s": 713.4,
+    "p90_s": 944.5,
+    "p99_s": 1153.6,
+    "header_median_s": 715.0,
+    "header_p90_s": 950.0
    }
   },
   "mainnet_computed": {
