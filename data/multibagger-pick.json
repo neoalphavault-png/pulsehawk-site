@@ -1,26 +1,26 @@
 {
- "date": "2026-11-20",
+ "date": "2026-11-21",
  "pick": {
-  "ticker": "MRNA",
-  "name": "Moderna",
-  "sector": "Health Care",
-  "industry": "Biotechnology",
+  "ticker": "MXL",
+  "name": "MaxLinear, Inc.",
+  "sector": "Information Technology",
+  "industry": "Semiconductors",
   "indices": [
-   "sp500"
+   "sp600"
   ],
-  "mult": 8.2436,
-  "pct": 724.4,
-  "from_1000": 8244,
-  "d": "2026-11-19",
-  "close": 199.33,
-  "d_1y": "2025-11-19",
-  "close_1y": 24.18,
-  "low": 22.36,
-  "high": 269.0,
-  "drawdown_pct": -7.5,
+  "mult": 3.1762,
+  "pct": 217.6,
+  "from_1000": 3176,
+  "d": "2026-11-20",
+  "close": 41.45,
+  "d_1y": "2025-11-20",
+  "close_1y": 13.05,
+  "low": 13.05,
+  "high": 128.03,
+  "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 8.2436,
+   "mult": 3.1762,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -28,22 +28,22 @@
  },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 8,
+  "sp500_doubled": 7,
   "sp500_tripled": 2
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 8.0,
-   "d": "2026-11-19",
-   "d_1y": "2025-11-19"
+   "pct": 5.7,
+   "d": "2026-11-20",
+   "d_1y": "2025-11-20"
   },
   "gold": {
-   "pct": -10.6,
-   "d": "2026-11-19",
-   "d_1y": "2025-11-19"
+   "pct": -13.9,
+   "d": "2026-11-20",
+   "d_1y": "2025-11-20"
   }
  },
- "candidates_total": 41,
+ "candidates_total": 32,
  "top10": [
   {
    "ticker": "MRNA",
@@ -51,41 +51,46 @@
   },
   {
    "ticker": "MXL",
-   "mult": 3.8889
-  },
-  {
-   "ticker": "SEZL",
-   "mult": 2.9417
+   "mult": 3.1762
   },
   {
    "ticker": "VSXY",
-   "mult": 2.9189
-  },
-  {
-   "ticker": "IRDM",
-   "mult": 2.7895
-  },
-  {
-   "ticker": "RNG",
-   "mult": 2.7025
-  },
-  {
-   "ticker": "DELL",
-   "mult": 2.669
+   "mult": 2.7988
   },
   {
    "ticker": "CBRL",
-   "mult": 2.6585
+   "mult": 2.7243
   },
   {
    "ticker": "RXO",
-   "mult": 2.6204
+   "mult": 2.6966
   },
   {
-   "ticker": "PENG",
-   "mult": 2.5893
+   "ticker": "IRDM",
+   "mult": 2.6566
+  },
+  {
+   "ticker": "SEZL",
+   "mult": 2.6225
+  },
+  {
+   "ticker": "OKTA",
+   "mult": 2.5827
+  },
+  {
+   "ticker": "SN",
+   "mult": 2.5703
+  },
+  {
+   "ticker": "RNG",
+   "mult": 2.5502
   }
  ],
- "rejected": [],
+ "rejected": [
+  {
+   "ticker": "MRNA",
+   "reason": "quellen weichen ab (5.79%)"
+  }
+ ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
