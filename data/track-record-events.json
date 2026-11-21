@@ -13,9 +13,41 @@
    "source_title": "rusty-kaspa v2.1.0, coinbase.rs",
    "counted_as": "header time of the first selected chain block with a DAA score at or above the trigger, counted by our own node",
    "window": "selected chain blocks of our own node from its pruning point, about 400 points",
-   "methods": ["PH-M-006"],
-   "stages": ["14d", "7d", "2d", "24h"],
-   "forecasts": [],
+   "methods": [
+    "PH-M-006"
+   ],
+   "stages": [
+    "14d",
+    "7d",
+    "2d",
+    "24h"
+   ],
+   "forecasts": [
+    {
+     "stufe": "14d",
+     "erstellt_utc": "2026-11-20T22:56:03Z",
+     "p50_utc": "2026-12-05T00:15:54Z",
+     "band80_utc": [
+      "2026-12-05T00:08:02Z",
+      "2026-12-05T00:23:50Z"
+     ],
+     "band95_utc": [
+      "2026-12-05T00:03:55Z",
+      "2026-12-05T00:28:01Z"
+     ],
+     "vorlauf_s": 1214390,
+     "ref_utc": "2026-11-20T22:55:57Z",
+     "ref_daa": 597948824,
+     "fenster": {
+      "von_utc": "2026-11-19T07:48:45Z",
+      "bis_utc": "2026-11-20T22:55:57Z",
+      "intervalle": 402,
+      "daa_je_s": 10.0068
+     },
+     "ziehungen": 20000,
+     "saat": 2027
+    }
+   ],
    "result": null
   }
  ]
