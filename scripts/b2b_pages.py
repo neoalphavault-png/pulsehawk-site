@@ -893,6 +893,71 @@ def te_zahl(eintraege):
     return n
 
 
+WOCHE_DATEI = "data/weekly/2026-11-22.json"
+
+
+def wochen_liste():
+    """alle wochenberichte aus data/weekly/, neueste zuerst."""
+    aus = []
+    ordner = os.path.join(REPO, "data", "weekly")
+    for n in sorted(os.listdir(ordner), reverse=True) if os.path.isdir(ordner) else []:
+        if n.endswith(".json"):
+            with open(os.path.join(ordner, n), encoding="utf-8") as fh:
+                w = json.load(fh)
+            aus.append({"pfad": "/weekly/" + n[:-5], "titel": "Weekly report %d, Zcash and Bitcoin Cash" % w["number"],
+                        "published": w["published"]})
+    return aus
+
+
+def woche_seite(d):
+    """Wochenbericht Zcash und Bitcoin Cash (Ben 20.11.2026). Alle Zahlen aus
+    WOCHE_DATEI, die der Rechenlauf aus unseren Datenbranches schreibt."""
+    dt_ = datiert.dauer_text
+    zc, bc = d["zcash"], d["bch"]
+    def fz(f):
+        return datiert.fenster_text(f)
+    def luecken(g):
+        if not g:
+            return "none, the runs overlap"
+        return ", ".join("%s to %s UTC" % (a, b) for a, b, _ in g)
+    zt = "".join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+                 % ({"1": "1 block", "3": "3 blocks", "6": "6 blocks"}[k], dt_(zc["wait"][k]["median_s"]),
+                    dt_(zc["wait"][k]["p90_s"]), dt_(zc["ideal"][k]["median_s"]), dt_(zc["ideal"][k]["p90_s"]))
+                 for k in ("1", "3", "6"))
+    bt = "".join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+                 % ({"1": "1 block", "3": "3 blocks", "6": "6 blocks", "12": "12 blocks"}[k],
+                    dt_(bc["wait"][k]["median_s"]), dt_(bc["wait"][k]["p90_s"]), dt_(bc["wait"][k]["p99_s"]),
+                    dt_(bc["wait"][k]["header_median_s"]), dt_(bc["mainnet_computed"][k]["median_s"]))
+                 for k in ("1", "3", "6", "12"))
+    rate = 100.0 * zc["orphaned"] / (zc["chain_blocks"] + zc["orphaned"])
+    return """
+<section id="zcash"><h2>How did Zcash mainnet run this week?</h2>
+<p>We counted %s chain blocks and %s orphaned blocks, %s, at our one listener over %s. That is a lower bound, because a block that never reached us is not in the count. Of the orphaned blocks, %s came without a header, and none was deeper than %s block.</p>
+<p>Over %s we counted %s block intervals from our own headers, heights %s to %s. The median interval was %s and %s of the intervals were longer than 75 s.</p>
+</section>
+<section id="zcash-wait"><h2>How long did Zcash take for 1, 3 and 6 confirmations?</h2>
+<p>The time from one block until 1, 3 or 6 more blocks had followed it, by header time, counted. Usual means the median, 9 of 10 means the 90th percentile. The ideal chain is computed for exponential intervals at the 25 s target.</p>
+<div class="tablewrap"><table><thead><tr><th scope="col">Wait for</th><th scope="col">usual</th><th scope="col">9 of 10 within</th><th scope="col">ideal 25 s chain, usual</th><th scope="col">ideal, 9 of 10</th></tr></thead><tbody>%s</tbody></table></div>
+</section>
+<section id="bch"><h2>How did Bitcoin Cash chipnet run since the activation?</h2>
+<p>By our own headers the one minute blocks started at block %s. Over %s we counted %s intervals, with a median of %s and a mean of %s. Of these blocks, %s carry difficulty 1, a testnet rule that lets a block through after a long pause, so they are part of every wait below.</p>
+<p>The waits come from the time our listener first saw each block, over %s, blocks %s to %s. Header time is given beside them. The mainnet column is computed for the 600 s target, we have not counted mainnet yet.</p>
+<div class="tablewrap"><table><thead><tr><th scope="col">Wait for</th><th scope="col">usual</th><th scope="col">9 of 10 within</th><th scope="col">99 of 100 within</th><th scope="col">by header time, usual</th><th scope="col">mainnet 600 s, computed</th></tr></thead><tbody>%s</tbody></table></div>
+</section>
+<section id="gaps"><h2>Where is our data incomplete?</h2>
+<p>Gaps in the Zcash listener, %s. Gaps in the chipnet listener, %s. Both listeners run in the cloud, on one network path each.</p>
+<p>How we count is on %s, under %s.</p>
+</section>
+""" % (betrag(zc["chain_blocks"]), betrag(zc["orphaned"]), "%.2f %% of all blocks we saw" % rate, fz(zc["listener_window"]),
+       betrag(zc["orphaned_without_header"]),
+       zc["max_depth"], fz(zc["window"]), betrag(zc["intervals"]), betrag(zc["heights"][0]), betrag(zc["heights"][1]),
+       dt_(zc["median_s"]), "%.2f %%" % zc["over_75_pct"], zt,
+       betrag(bc["activation_height"]), fz(bc["window"]), betrag(bc["intervals"]), dt_(bc["median_s"]), dt_(bc["mean_s"]),
+       "%.1f %%" % bc["diff1_pct"], fz(bc["listener_window"]), betrag(bc["listener_heights"][0]),
+       betrag(bc["listener_heights"][1]), bt, luecken(zc["gaps"]), luecken(bc["gaps"]),
+       a("/method", "our method page"), a("/method#ph-m-001", "PH-M-001"))
+
+
 def verfahren_abschnitte():
     """die festen verfahrens-ids auf /method, aus report_waechter.VERFAHREN.
     Jeder report nennt die ids, die er nutzt (Ben, 4.11.2026)."""
@@ -1565,6 +1630,22 @@ def seiten():
         schema=["ARTICLE:2026-10-16:%s" % KORR_STAND],
     ))
 
+    # wochenbericht 1, zcash und bitcoin cash (Ben 20.11.2026)
+    with open(os.path.join(REPO, WOCHE_DATEI), encoding="utf-8") as fh:
+        woche = json.load(fh)
+    S.append(dict(
+        datei="weekly/2026-11-22.html", pfad="/weekly/2026-11-22", og="standard", lastmod=woche["published"],
+        title="Weekly report 1, Zcash and Bitcoin Cash | PulseHawk",
+        desc=("Zcash orphaned blocks and block intervals, Bitcoin Cash chipnet waits for 1, 3, 6 and 12 "
+              "confirmations, counted by our listeners, with every gap named."),
+        h1="Weekly report 1, Zcash and Bitcoin Cash",
+        lead=("What two networks did in the week to %s, counted from our own headers and listeners. "
+              "Every number names its window, and every gap in our data is listed." % datiert.lang(woche["published"])),
+        body=woche_seite(woche),
+        faqs=[],
+        schema=["ARTICLE:%s:%s" % (woche["published"], woche["published"])],
+    ))
+
     # /reports/, uebersicht aus data/reports.json und data/measurements.json
     # (Ben, 11.11.2026). Eine neue veroeffentlichung ist ein neuer eintrag dort.
     reps_alle = sorted(datiert.lade(datiert.REPORTS)["reports"], key=lambda r: r["published"], reverse=True)
@@ -1585,10 +1666,15 @@ def seiten():
 <section id="measurements"><h2>Which other measurements can you read?</h2>
 <div class="dgrid">%s</div>
 </section>
+<section id="weekly"><h2>Which weekly reports have we published?</h2>
+<p>Every week we publish what Zcash mainnet and Bitcoin Cash did, with every gap in our data named.</p>
+<ul class="list">%s</ul>
+</section>
 <p>How we count is on %s. The rules for every report type are in the %s.</p>
 """ % ("".join(datiert.report_karte(r, a).replace("Latest report, ", "Report ", 1) if i else datiert.report_karte(r, a)
                for i, r in enumerate(reps_alle)),
        "".join(datiert.messung_karte(m, a) for m in mess),
+       "".join("<li>%s, published %s</li>" % (a(w["pfad"], E(w["titel"])), datiert.lang(w["published"])) for w in wochen_liste()),
        a("/method", "our method page"), a("/standard/", "PulseHawk Measurement Framework")),
         faqs=[],
         schema=[{"@type": "CollectionPage", "@id": SITE + "/reports/#page", "url": SITE + "/reports/",
