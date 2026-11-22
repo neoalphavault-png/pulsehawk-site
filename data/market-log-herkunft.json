@@ -14746,5 +14746,31 @@
    "zeit": "2026-11-21T01:09:35Z",
    "zeit_aus": "quelle"
   }
+ },
+ "2026-11-22": {
+  "btc": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-11-22T00:10:33Z",
+   "zeit_aus": "quelle"
+  },
+  "btc_dom": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-11-22T00:03:23Z",
+   "zeit_aus": "quelle"
+  },
+  "eth": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-11-22T00:10:42Z",
+   "zeit_aus": "quelle"
+  },
+  "total_mcap": {
+   "quelle": "coingecko",
+   "art": "momentaufnahme",
+   "zeit": "2026-11-22T00:03:23Z",
+   "zeit_aus": "quelle"
+  }
  }
 }
