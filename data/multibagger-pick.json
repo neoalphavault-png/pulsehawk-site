@@ -1,26 +1,26 @@
 {
- "date": "2026-11-21",
+ "date": "2026-11-22",
  "pick": {
-  "ticker": "MXL",
-  "name": "MaxLinear, Inc.",
-  "sector": "Information Technology",
-  "industry": "Semiconductors",
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
   "indices": [
-   "sp600"
+   "sp500"
   ],
-  "mult": 3.1762,
-  "pct": 217.6,
-  "from_1000": 3176,
+  "mult": 8.7209,
+  "pct": 772.1,
+  "from_1000": 8721,
   "d": "2026-11-20",
-  "close": 41.45,
+  "close": 195.0,
   "d_1y": "2025-11-20",
-  "close_1y": 13.05,
-  "low": 13.05,
-  "high": 128.03,
+  "close_1y": 22.36,
+  "low": 22.36,
+  "high": 269.0,
   "drawdown_pct": 0.0,
   "verified": {
    "source": "tiingo",
-   "mult": 3.1762,
+   "mult": 8.7209,
    "diff_pct": 0
   },
   "company_sentence": null,
@@ -43,11 +43,11 @@
    "d_1y": "2025-11-20"
   }
  },
- "candidates_total": 32,
+ "candidates_total": 30,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 8.2436
+   "mult": 8.7209
   },
   {
    "ticker": "MXL",
@@ -74,23 +74,18 @@
    "mult": 2.6225
   },
   {
-   "ticker": "OKTA",
-   "mult": 2.5827
+   "ticker": "RNG",
+   "mult": 2.5502
+  },
+  {
+   "ticker": "CAKE",
+   "mult": 2.5023
   },
   {
    "ticker": "SN",
-   "mult": 2.5703
-  },
-  {
-   "ticker": "RNG",
-   "mult": 2.5502
+   "mult": 2.4984
   }
  ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (5.79%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
