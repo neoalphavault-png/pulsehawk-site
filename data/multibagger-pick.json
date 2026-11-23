@@ -1,5 +1,5 @@
 {
- "date": "2026-11-22",
+ "date": "2026-11-23",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -43,7 +43,7 @@
    "d_1y": "2025-11-20"
   }
  },
- "candidates_total": 30,
+ "candidates_total": 29,
  "top10": [
   {
    "ticker": "MRNA",
@@ -51,39 +51,39 @@
   },
   {
    "ticker": "MXL",
-   "mult": 3.1762
-  },
-  {
-   "ticker": "VSXY",
-   "mult": 2.7988
+   "mult": 3.3969
   },
   {
    "ticker": "CBRL",
-   "mult": 2.7243
-  },
-  {
-   "ticker": "RXO",
-   "mult": 2.6966
-  },
-  {
-   "ticker": "IRDM",
-   "mult": 2.6566
+   "mult": 2.7463
   },
   {
    "ticker": "SEZL",
-   "mult": 2.6225
+   "mult": 2.7357
+  },
+  {
+   "ticker": "IRDM",
+   "mult": 2.6667
+  },
+  {
+   "ticker": "VSXY",
+   "mult": 2.5814
   },
   {
    "ticker": "RNG",
-   "mult": 2.5502
-  },
-  {
-   "ticker": "CAKE",
-   "mult": 2.5023
+   "mult": 2.5158
   },
   {
    "ticker": "SN",
    "mult": 2.4984
+  },
+  {
+   "ticker": "GKOS",
+   "mult": 2.4928
+  },
+  {
+   "ticker": "OKTA",
+   "mult": 2.4446
   }
  ],
  "rejected": [],

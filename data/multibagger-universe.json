@@ -1,5 +1,5 @@
 {
- "date": "2026-11-15",
+ "date": "2026-11-23",
  "count": 1502,
  "rows": [
   {
@@ -5513,16 +5513,6 @@
    ]
   },
   {
-   "ticker": "BKH",
-   "name": "Black Hills Corporation",
-   "wiki": null,
-   "sector": "Utilities",
-   "industry": "Multi-Utilities",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
    "ticker": "BMRN",
    "name": "BioMarin Pharmaceutical",
    "wiki": null,
@@ -5798,6 +5788,16 @@
    "wiki": null,
    "sector": "Consumer Discretionary",
    "industry": "Other Specialty Retail",
+   "indices": [
+    "sp400"
+   ]
+  },
+  {
+   "ticker": "CHYM",
+   "name": "Chime Financial",
+   "wiki": null,
+   "sector": "Financials",
+   "industry": "Consumer Finance",
    "indices": [
     "sp400"
    ]
@@ -6887,6 +6887,16 @@
    ]
   },
   {
+   "ticker": "HZN",
+   "name": "Bright Horizon Energy Corporation",
+   "wiki": null,
+   "sector": "Utilities",
+   "industry": "Multi-Utilities",
+   "indices": [
+    "sp400"
+   ]
+  },
+  {
    "ticker": "IBOC",
    "name": "Intl Bancshares Corp",
    "wiki": null,
@@ -7552,16 +7562,6 @@
    "wiki": null,
    "sector": "Industrials",
    "industry": "Electrical Components & Equipment",
-   "indices": [
-    "sp400"
-   ]
-  },
-  {
-   "ticker": "NWE",
-   "name": "NorthWestern Energy",
-   "wiki": null,
-   "sector": "Utilities",
-   "industry": "Multi-Utilities",
    "indices": [
     "sp400"
    ]
