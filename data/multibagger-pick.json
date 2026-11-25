@@ -1,31 +1,6 @@
 {
- "date": "2026-11-24",
- "pick": {
-  "ticker": "MXL",
-  "name": "MaxLinear, Inc.",
-  "sector": "Information Technology",
-  "industry": "Semiconductors",
-  "indices": [
-   "sp600"
-  ],
-  "mult": 3.3969,
-  "pct": 239.7,
-  "from_1000": 3397,
-  "d": "2026-11-23",
-  "close": 50.24,
-  "d_1y": "2025-11-24",
-  "close_1y": 14.79,
-  "low": 14.79,
-  "high": 128.03,
-  "drawdown_pct": 0.0,
-  "verified": {
-   "source": "tiingo",
-   "mult": 3.4016,
-   "diff_pct": 0.14
-  },
-  "company_sentence": null,
-  "wiki": null
- },
+ "date": "2026-11-25",
+ "pick": null,
  "base_rate": {
   "sp500_scanned": 498,
   "sp500_doubled": 7,
@@ -33,37 +8,25 @@
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 8.0,
-   "d": "2026-11-23",
+   "pct": 7.5,
+   "d": "2026-11-24",
    "d_1y": "2025-11-24"
   },
   "gold": {
-   "pct": -12.4,
-   "d": "2026-11-23",
+   "pct": -14.4,
+   "d": "2026-11-24",
    "d_1y": "2025-11-24"
   }
  },
- "candidates_total": 29,
+ "candidates_total": 23,
  "top10": [
   {
    "ticker": "MRNA",
    "mult": 9.2716
   },
   {
-   "ticker": "MXL",
-   "mult": 3.3969
-  },
-  {
    "ticker": "CBRL",
-   "mult": 2.7463
-  },
-  {
-   "ticker": "SEZL",
-   "mult": 2.7357
-  },
-  {
-   "ticker": "IRDM",
-   "mult": 2.6667
+   "mult": 2.6594
   },
   {
    "ticker": "ANF",
@@ -74,22 +37,50 @@
    "mult": 2.5891
   },
   {
-   "ticker": "VSXY",
-   "mult": 2.5814
-  },
-  {
    "ticker": "GKOS",
    "mult": 2.5581
   },
   {
+   "ticker": "IRDM",
+   "mult": 2.51
+  },
+  {
+   "ticker": "MXL",
+   "mult": 2.4295
+  },
+  {
    "ticker": "RNG",
-   "mult": 2.5158
+   "mult": 2.4247
+  },
+  {
+   "ticker": "SN",
+   "mult": 2.4109
+  },
+  {
+   "ticker": "SEZL",
+   "mult": 2.4017
   }
  ],
  "rejected": [
   {
    "ticker": "MRNA",
-   "reason": "quellen weichen ab (5.28%)"
+   "reason": "quellen weichen ab (1.55%)"
+  },
+  {
+   "ticker": "CBRL",
+   "reason": "quellen weichen ab (8.04%)"
+  },
+  {
+   "ticker": "ANF",
+   "reason": "quellen weichen ab (3.14%)"
+  },
+  {
+   "ticker": "OKTA",
+   "reason": "quellen weichen ab (3.32%)"
+  },
+  {
+   "ticker": "GKOS",
+   "reason": "quellen weichen ab (2.44%)"
   }
  ],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
