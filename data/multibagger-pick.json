@@ -1,48 +1,69 @@
 {
- "date": "2026-11-25",
- "pick": null,
+ "date": "2026-11-26",
+ "pick": {
+  "ticker": "MRNA",
+  "name": "Moderna",
+  "sector": "Health Care",
+  "industry": "Biotechnology",
+  "indices": [
+   "sp500"
+  ],
+  "mult": 8.9228,
+  "pct": 792.3,
+  "from_1000": 8923,
+  "d": "2026-11-25",
+  "close": 220.84,
+  "d_1y": "2025-11-25",
+  "close_1y": 24.75,
+  "low": 24.06,
+  "high": 269.0,
+  "drawdown_pct": -2.8,
+  "verified": {
+   "source": "tiingo",
+   "mult": 8.9228,
+   "diff_pct": 0
+  },
+  "company_sentence": null,
+  "wiki": null
+ },
  "base_rate": {
   "sp500_scanned": 498,
-  "sp500_doubled": 7,
+  "sp500_doubled": 5,
   "sp500_tripled": 1
  },
  "benchmarks": {
   "s&p 500": {
-   "pct": 7.5,
-   "d": "2026-11-24",
-   "d_1y": "2025-11-24"
+   "pct": 6.2,
+   "d": "2026-11-25",
+   "d_1y": "2025-11-25"
   },
   "gold": {
-   "pct": -14.4,
-   "d": "2026-11-24",
-   "d_1y": "2025-11-24"
+   "pct": -13.8,
+   "d": "2026-11-25",
+   "d_1y": "2025-11-25"
   }
  },
- "candidates_total": 23,
+ "candidates_total": 20,
  "top10": [
   {
    "ticker": "MRNA",
-   "mult": 9.2716
+   "mult": 8.9228
   },
   {
    "ticker": "CBRL",
    "mult": 2.6594
   },
   {
-   "ticker": "ANF",
-   "mult": 2.6452
-  },
-  {
-   "ticker": "OKTA",
-   "mult": 2.5891
+   "ticker": "IRDM",
+   "mult": 2.51
   },
   {
    "ticker": "GKOS",
-   "mult": 2.5581
+   "mult": 2.4907
   },
   {
-   "ticker": "IRDM",
-   "mult": 2.51
+   "ticker": "OKTA",
+   "mult": 2.4861
   },
   {
    "ticker": "MXL",
@@ -59,29 +80,12 @@
   {
    "ticker": "SEZL",
    "mult": 2.4017
+  },
+  {
+   "ticker": "VSXY",
+   "mult": 2.3816
   }
  ],
- "rejected": [
-  {
-   "ticker": "MRNA",
-   "reason": "quellen weichen ab (1.55%)"
-  },
-  {
-   "ticker": "CBRL",
-   "reason": "quellen weichen ab (8.04%)"
-  },
-  {
-   "ticker": "ANF",
-   "reason": "quellen weichen ab (3.14%)"
-  },
-  {
-   "ticker": "OKTA",
-   "reason": "quellen weichen ab (3.32%)"
-  },
-  {
-   "ticker": "GKOS",
-   "reason": "quellen weichen ab (2.44%)"
-  }
- ],
+ "rejected": [],
  "source": "daily closes twelve data, counted by us; cross-checked against a second source"
 }
