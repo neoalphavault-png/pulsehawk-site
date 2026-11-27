@@ -893,7 +893,7 @@ def te_zahl(eintraege):
     return n
 
 
-WOCHE_DATEI = "data/weekly/2026-11-22.json"
+WOCHE_DATEI = "data/weekly/2026-11-22.json"  # erster wochenbericht; alle wochen liegen in data/weekly
 
 
 def wochen_liste():
@@ -957,6 +957,77 @@ def woche_seite(d):
        betrag(bc["listener_heights"][1]), bt, luecken(zc["gaps"]), luecken(bc["gaps"]),
        a("/method", "our method page"), a("/method#ph-m-001", "PH-M-001"))
 
+
+
+def woche_seite2(d):
+    """Wochenbericht ab Nummer 2 (Ben 23.11.2026): Zcash mit 99 von 100 und dem
+    Anteil der Zebra-Verbindungen ab 7.1.0, Chipnet fuer die Woche mit 120
+    Bloecken, BCH-Mainnet gezaehlt neben gerechnet. Alle Zahlen aus der
+    Datei, die der Rechenlauf aus unseren Datenbranches schreibt."""
+    dt_ = datiert.dauer_text
+    zc, bc, bm = d["zcash"], d["bch"], d["bch_mainnet"]
+    fz = datiert.fenster_text
+    def luecken(g):
+        if not g:
+            return "none, the runs overlap"
+        return ", ".join("%s to %s UTC" % (x, y) for x, y, _ in g)
+    namen = {"1": "1 block", "3": "3 blocks", "6": "6 blocks", "12": "12 blocks", "120": "120 blocks"}
+    zt = "".join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+                 % (namen[k], dt_(zc["wait"][k]["median_s"]), dt_(zc["wait"][k]["p90_s"]), dt_(zc["wait"][k]["p99_s"]),
+                    dt_(zc["ideal"][k]["median_s"]), dt_(zc["ideal"][k]["p90_s"]), dt_(zc["ideal"][k]["p99_s"]))
+                 for k in ("1", "3", "6"))
+    bt = "".join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+                 % (namen[k], dt_(bc["wait"][k]["median_s"]), dt_(bc["wait"][k]["p90_s"]), dt_(bc["wait"][k]["p99_s"]),
+                    dt_(bc["wait"][k]["header_median_s"]), dt_(bc["computed_60s"][k]))
+                 for k in ("1", "3", "6", "12", "120"))
+    mt = "".join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'
+                 % (namen[k], dt_(r["counted"]["0.5"]), dt_(r["computed"]["0.5"]), dt_(r["counted"]["0.9"]),
+                    dt_(r["computed"]["0.9"]), dt_(r["counted"]["0.99"]), dt_(r["computed"]["0.99"]))
+                 for k, r in ((k, bm["rows"][k]) for k in ("1", "3", "6")))
+    rate = 100.0 * zc["orphaned"] / (zc["chain_blocks"] + zc["orphaned"])
+    zb = zc["zebra"]
+    tiefe = "none was deeper than 1 block" if zc["max_depth"] <= 1 else "the deepest branch had %s blocks" % zc["max_depth"]
+    uberlapp = (" The first run of this week started %s before the last run of weekly report 1 ended, so a few blocks may be in both reports."
+                % dt_(zc["overlap_s"])) if zc["overlap_s"] else ""
+    return """
+<section id="zcash"><h2>How did Zcash mainnet run this week?</h2>
+<p>We counted %s chain blocks and %s orphaned blocks, %s, at our one listener over %s. That is a lower bound, because a block that never reached us is not in the count. Of the orphaned blocks, %s came without a header, and %s.%s</p>
+<p>Over %s we counted %s block intervals from our own headers, heights %s to %s. The median interval was %s, the mean %s, and %s of the intervals were longer than 75 s.</p>
+</section>
+<section id="zcash-wait"><h2>How long did Zcash take for 1, 3 and 6 confirmations?</h2>
+<p>The time from one block until 1, 3 or 6 more blocks had followed it, by header time, counted. Usual means the median, 9 of 10 means the 90th percentile, 99 of 100 the 99th. The ideal chain is computed for exponential intervals at the 25 s target.</p>
+<div class="tablewrap"><table><thead><tr><th scope="col">Wait for</th><th scope="col">usual</th><th scope="col">9 of 10 within</th><th scope="col">99 of 100 within</th><th scope="col">ideal, usual</th><th scope="col">ideal, 9 of 10</th><th scope="col">ideal, 99 of 100</th></tr></thead><tbody>%s</tbody></table></div>
+</section>
+<section id="zebra"><h2>Which Zebra versions did our listener meet?</h2>
+<p>Of %s connections to Zebra nodes over %s listener runs, %s, or %s, reported version 7.1.0 or newer. Per run the share was between %s and %s. These are connections of one listener to nodes found through the DNS seeds, not a count of distinct nodes, and a release candidate or alpha of 7.1.0 does not count as 7.1.0.</p>
+</section>
+<section id="bch"><h2>How did Bitcoin Cash chipnet run this week?</h2>
+<p>Over %s we counted %s intervals from our own headers, blocks %s to %s, with a median of %s and a mean of %s. Of these blocks, %s carry difficulty 1, a testnet rule that lets a block through after a long pause. They are part of every wait below, and mainnet has no such rule.</p>
+</section>
+<section id="bch-wait"><h2>How long did chipnet take for 1 to 120 confirmations?</h2>
+<p>The waits come from the time our listener first saw each block, over %s, blocks %s to %s. Header time is given beside them, and the last column is computed for exponential intervals at the 60 s target.</p>
+<div class="tablewrap"><table><thead><tr><th scope="col">Wait for</th><th scope="col">usual</th><th scope="col">9 of 10 within</th><th scope="col">99 of 100 within</th><th scope="col">by header time, usual</th><th scope="col">ideal 60 s chain, usual</th></tr></thead><tbody>%s</tbody></table></div>
+</section>
+<section id="bch-mainnet"><h2>How long does Bitcoin Cash mainnet take for 1, 3 and 6 confirmations?</h2>
+<p>We counted %s intervals from our own mainnet headers over %s, by header time, and set them beside the values computed for the 600 s target.</p>
+<div class="tablewrap"><table><thead><tr><th scope="col">Wait for</th><th scope="col">usual, counted</th><th scope="col">usual, computed</th><th scope="col">9 of 10, counted</th><th scope="col">9 of 10, computed</th><th scope="col">99 of 100, counted</th><th scope="col">99 of 100, computed</th></tr></thead><tbody>%s</tbody></table></div>
+</section>
+<section id="gaps"><h2>Where is our data incomplete?</h2>
+<p>Gaps in the Zcash listener, %s. Gaps in the chipnet listener, %s.%s Both listeners run in the cloud, on one network path each.</p>
+<p>How we count is on %s, under %s.</p>
+</section>
+""" % (betrag(zc["chain_blocks"]), betrag(zc["orphaned"]), "%.2f %% of all blocks we saw" % rate, fz(zc["listener_window"]),
+       betrag(zc["orphaned_without_header"]), tiefe, uberlapp,
+       fz(zc["window"]), betrag(zc["intervals"]), betrag(zc["heights"][0]), betrag(zc["heights"][1]),
+       dt_(zc["median_s"]), "%.2f s" % zc["mean_s"], "%.2f %%" % zc["over_75_pct"], zt,
+       betrag(zb["connections"]), betrag(zb["runs"]), betrag(zb["at_least_7_1_0"]), "%.1f %%" % zb["pct"],
+       "%.1f %%" % zb["run_min_pct"], "%.1f %%" % zb["run_max_pct"],
+       fz(bc["window"]), betrag(bc["intervals"]), betrag(bc["heights"][0]), betrag(bc["heights"][1]),
+       dt_(bc["median_s"]), "%.2f s" % bc["mean_s"], "%.1f %%" % bc["diff1_pct"],
+       fz(bc["listener_window"]), betrag(bc["listener_heights"][0]), betrag(bc["listener_heights"][1]), bt,
+       betrag(bm["intervals"]), fz(bm["window"]), mt,
+       luecken(zc["gaps"]), luecken(bc["gaps"]), (" " + E(bc["gap_note"])) if bc.get("gap_note") else "",
+       a("/method", "our method page"), a("/method#ph-m-001", "PH-M-001"))
 
 def verfahren_abschnitte():
     """die festen verfahrens-ids auf /method, aus report_waechter.VERFAHREN.
@@ -1630,21 +1701,28 @@ def seiten():
         schema=["ARTICLE:2026-10-16:%s" % KORR_STAND],
     ))
 
-    # wochenbericht 1, zcash und bitcoin cash (Ben 20.11.2026)
-    with open(os.path.join(REPO, WOCHE_DATEI), encoding="utf-8") as fh:
-        woche = json.load(fh)
-    S.append(dict(
-        datei="weekly/2026-11-22.html", pfad="/weekly/2026-11-22", og="standard", lastmod=woche["published"],
-        title="Weekly report 1, Zcash and Bitcoin Cash | PulseHawk",
-        desc=("Zcash orphaned blocks and block intervals, Bitcoin Cash chipnet waits for 1, 3, 6 and 12 "
-              "confirmations, counted by our listeners, with every gap named."),
-        h1="Weekly report 1, Zcash and Bitcoin Cash",
-        lead=("What two networks did in the week to %s, counted from our own headers and listeners. "
-              "Every number names its window, and every gap in our data is listed." % datiert.lang(woche["published"])),
-        body=woche_seite(woche),
-        faqs=[],
-        schema=["ARTICLE:%s:%s" % (woche["published"], woche["published"])],
-    ))
+    # wochenberichte, zcash und bitcoin cash (Ben 20.11.2026), je datei in data/weekly eine seite
+    for name in sorted(os.listdir(os.path.join(REPO, "data", "weekly"))):
+        if not name.endswith(".json"):
+            continue
+        with open(os.path.join(REPO, "data", "weekly", name), encoding="utf-8") as fh:
+            woche = json.load(fh)
+        tag = name[:-5]
+        neu2 = woche.get("format", 1) >= 2
+        S.append(dict(
+            datei="weekly/%s.html" % tag, pfad="/weekly/%s" % tag, og="standard", lastmod=woche["published"],
+            title="Weekly report %d, Zcash and Bitcoin Cash | PulseHawk" % woche["number"],
+            desc=(("Zcash orphaned blocks and confirmation waits, Bitcoin Cash chipnet waits up to 120 blocks, "
+                   "and mainnet waits counted beside computed, every gap named.") if neu2 else
+                  ("Zcash orphaned blocks and block intervals, Bitcoin Cash chipnet waits for 1, 3, 6 and 12 "
+                   "confirmations, counted by our listeners, with every gap named.")),
+            h1="Weekly report %d, Zcash and Bitcoin Cash" % woche["number"],
+            lead=("What two networks did in the week to %s, counted from our own headers and listeners. "
+                  "Every number names its window, and every gap in our data is listed." % datiert.lang(woche["published"])),
+            body=woche_seite2(woche) if neu2 else woche_seite(woche),
+            faqs=[],
+            schema=["ARTICLE:%s:%s" % (woche["published"], woche["published"])],
+        ))
 
     # /reports/, uebersicht aus data/reports.json und data/measurements.json
     # (Ben, 11.11.2026). Eine neue veroeffentlichung ist ein neuer eintrag dort.

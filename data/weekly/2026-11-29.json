@@ -1,0 +1,186 @@
+{
+ "number": 2,
+ "published": "2026-11-29",
+ "format": 2,
+ "zcash": {
+  "window": {
+   "from_utc": "2026-11-21T06:34:04Z",
+   "to_utc": "2026-11-27T05:31:38Z"
+  },
+  "heights": [
+   3595653,
+   3616221
+  ],
+  "intervals": 20569,
+  "median_s": 17,
+  "mean_s": 25.02,
+  "over_75_pct": 4.73,
+  "wait": {
+   "1": {
+    "median_s": 17.0,
+    "p90_s": 57.0,
+    "p99_s": 114.0
+   },
+   "3": {
+    "median_s": 67.0,
+    "p90_s": 133.0,
+    "p99_s": 208.0
+   },
+   "6": {
+    "median_s": 142.0,
+    "p90_s": 231.0,
+    "p99_s": 328.0
+   }
+  },
+  "ideal": {
+   "1": {
+    "median_s": 17.3,
+    "p90_s": 57.6,
+    "p99_s": 115.1
+   },
+   "3": {
+    "median_s": 66.9,
+    "p90_s": 133.1,
+    "p99_s": 210.1
+   },
+   "6": {
+    "median_s": 141.8,
+    "p90_s": 231.9,
+    "p99_s": 327.7
+   }
+  },
+  "listener_window": {
+   "from_utc": "2026-11-21T04:20:03Z",
+   "to_utc": "2026-11-27T05:28:40Z"
+  },
+  "chain_blocks": 20884,
+  "orphaned": 78,
+  "orphaned_without_header": 6,
+  "max_depth": 1,
+  "gaps": [],
+  "overlap_s": 460,
+  "zebra": {
+   "runs": 27,
+   "connections": 604,
+   "at_least_7_1_0": 492,
+   "pct": 81.5,
+   "run_min_pct": 50.0,
+   "run_max_pct": 96.0
+  }
+ },
+ "bch": {
+  "activation_height": 332451,
+  "window": {
+   "from_utc": "2026-11-21T06:31:50Z",
+   "to_utc": "2026-11-27T05:31:27Z"
+  },
+  "heights": [
+   340761,
+   349139
+  ],
+  "intervals": 8379,
+  "median_s": 45,
+  "mean_s": 61.44,
+  "diff1_pct": 26.6,
+  "listener_window": {
+   "from_utc": "2026-11-21T04:25:41Z",
+   "to_utc": "2026-11-25T15:51:53Z"
+  },
+  "listener_heights": [
+   340629,
+   346134
+  ],
+  "wait": {
+   "1": {
+    "median_s": 61.3,
+    "p90_s": 123.7,
+    "p99_s": 246.5,
+    "header_median_s": 45.0
+   },
+   "3": {
+    "median_s": 188.3,
+    "p90_s": 365.4,
+    "p99_s": 627.5,
+    "header_median_s": 169.0
+   },
+   "6": {
+    "median_s": 380.1,
+    "p90_s": 726.8,
+    "p99_s": 1198.4,
+    "header_median_s": 348.0
+   },
+   "12": {
+    "median_s": 760.4,
+    "p90_s": 1429.3,
+    "p99_s": 2257.1,
+    "header_median_s": 712.0
+   },
+   "120": {
+    "median_s": 7519.4,
+    "p90_s": 14082.1,
+    "p99_s": 20718.0,
+    "header_median_s": 7225.0
+   }
+  },
+  "computed_60s": {
+   "1": 41.6,
+   "3": 160.4,
+   "6": 340.2,
+   "12": 700.1,
+   "120": 7180.0
+  },
+  "gaps": [
+   [
+    "2026-11-25 15:53:16",
+    "2026-11-27 05:36:39",
+    135803
+   ]
+  ],
+  "gap_note": "The listener stopped after its run ended, because the start of the next run failed at the code host, and we started it again by hand. The waits above therefore end on 25 November, the header counts do not."
+ },
+ "bch_mainnet": {
+  "window": {
+   "from_utc": "2026-05-15T12:55:32Z",
+   "to_utc": "2026-11-22T09:49:02Z"
+  },
+  "intervals": 27314,
+  "rows": {
+   "1": {
+    "counted": {
+     "0.5": 408.0,
+     "0.9": 1411.0,
+     "0.99": 2906.6
+    },
+    "computed": {
+     "0.5": 415.9,
+     "0.9": 1381.6,
+     "0.99": 2763.1
+    }
+   },
+   "3": {
+    "counted": {
+     "0.5": 1598.0,
+     "0.9": 3285.0,
+     "0.99": 5284.9
+    },
+    "computed": {
+     "0.5": 1604.4,
+     "0.9": 3193.4,
+     "0.99": 5043.6
+    }
+   },
+   "6": {
+    "counted": {
+     "0.5": 3401.0,
+     "0.9": 5731.0,
+     "0.99": 8248.8
+    },
+    "computed": {
+     "0.5": 3402.1,
+     "0.9": 5564.8,
+     "0.99": 7865.1
+    }
+   }
+  }
+ }
+}
