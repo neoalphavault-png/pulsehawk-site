@@ -1,5 +1,5 @@
 {
- "date": "2026-11-26",
+ "date": "2026-11-27",
  "pick": {
   "ticker": "MRNA",
   "name": "Moderna",
@@ -43,19 +43,27 @@
    "d_1y": "2025-11-25"
   }
  },
- "candidates_total": 20,
+ "candidates_total": 23,
  "top10": [
   {
    "ticker": "MRNA",
    "mult": 8.9228
   },
   {
-   "ticker": "CBRL",
-   "mult": 2.6594
+   "ticker": "MXL",
+   "mult": 2.8247
   },
   {
    "ticker": "IRDM",
-   "mult": 2.51
+   "mult": 2.6665
+  },
+  {
+   "ticker": "CBRL",
+   "mult": 2.6321
+  },
+  {
+   "ticker": "RNG",
+   "mult": 2.5218
   },
   {
    "ticker": "GKOS",
@@ -66,20 +74,12 @@
    "mult": 2.4861
   },
   {
-   "ticker": "MXL",
-   "mult": 2.4295
-  },
-  {
-   "ticker": "RNG",
-   "mult": 2.4247
+   "ticker": "SEZL",
+   "mult": 2.41
   },
   {
    "ticker": "SN",
-   "mult": 2.4109
-  },
-  {
-   "ticker": "SEZL",
-   "mult": 2.4017
+   "mult": 2.3908
   },
   {
    "ticker": "VSXY",
